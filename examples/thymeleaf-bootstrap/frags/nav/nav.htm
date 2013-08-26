@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!-- All relative href/src URLs should be relative to the application's context defined on the Thymus script  -->
+<body>
+	<!-- Top navigation fragment (with multi-level nested fragments) -->
+	<div th:fragment="topnav">
+		<div class="navbar navbar-inverse navbar-fixed-top">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse"
+						data-target=".topnav-collapse">
+						<span class="icon-bar"></span> <span class="icon-bar"></span> <span
+							class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" th:title="#{home}" title="Home"
+						th:href="@{/index.htm}" href="index.htm"><img
+						src="https://secure.gravatar.com/avatar/e46c1c9ed5fbfebc5277b2661a2350cd?s=140&d=https://github.com/images/gravatars/gravatar-140.png"
+						width="32" height="32" /></a>
+				</div>
+				<div class="collapse navbar-collapse topnav-collapse">
+					<ul class="nav navbar-nav navbar-right">
+						<li class="mteal-hover dropdown"><a
+							href="javascript:void(0);" class="dropdown-toggle"
+							data-toggle="dropdown"> <span th:text="${user.name}"
+								class="user-title">Guest User</span> <i
+								class="icon-chevron-down"></i></a>
+							<ul class="dropdown-menu app-right-menu">
+								<li class="user-info"><a
+									th:include="frags/user/user :: user" href="user/info.htm"
+									th:href="@{user/info}"></a></li>
+								<li><a th:href="@{/login.htm}" href="login.htm"><i
+										class="icon-off"></i> <span th:text="#{signout}">Sign
+											Out</span></a></li>
+							</ul></li>
+					</ul>
+					<ul class="nav navbar-nav navbar-left">
+						<li class="dropdown"><a href="javascript:void(0);"
+							th:title="#{user.info}" title="User Menu" class="dropdown-toggle"
+							data-toggle="dropdown"><i class="icon-user"></i> <i
+								class="icon-chevron-down"></i></a>
+							<ul class="dropdown-menu">
+								<li><a href="javascript:void(0);"> <i
+										class="icon-phone-sign"></i> Contact Info
+								</a></li>
+								<li><a href="javascript:void(0);"> <i
+										class="icon-bookmark"></i> Bookmarks
+								</a></li>
+								<li><a href="javascript:void(0);"> <i
+										class="icon-wrench"></i> Settings
+								</a></li>
+							</ul></li>
+					</ul>
+					<ul class="nav navbar-nav navbar-left">
+						<li class="dropdown"><a href="javascript:void(0);"
+							th:title="#{user.android}" title="Android"
+							class="dropdown-toggle" data-toggle="dropdown"><i
+								class="icon-android"></i> <i class="icon-chevron-down"></i></a>
+							<ul class="dropdown-menu">
+								<li><a href="javascript:void(0);"> <i
+										class="icon-barcode"></i> Applications
+								</a></li>
+								<li><a href="javascript:void(0);"> <i
+										class="icon-puzzle-piece"></i> Plug-ins
+								</a></li>
+								<li><a href="javascript:void(0);"> <i class="icon-code"></i>
+										Source Code
+								</a></li>
+							</ul></li>
+					</ul>
+					<ul class="nav navbar-nav navbar-left">
+						<li class="dropdown"><a href="javascript:void(0);"
+							th:title="#{user.apple}" title="Apple" class="dropdown-toggle"
+							data-toggle="dropdown"><i class="icon-apple"></i> <i
+								class="icon-chevron-down"></i></a>
+							<ul class="dropdown-menu">
+								<li><a href="javascript:void(0);"> <i
+										class="icon-barcode"></i> Applications
+								</a></li>
+								<li><a href="javascript:void(0);"> <i
+										class="icon-puzzle-piece"></i> Plug-ins
+								</a></li>
+								<li><a href="javascript:void(0);"> <i class="icon-code"></i>
+										Source Code
+								</a></li>
+							</ul></li>
+					</ul>
+					<ul class="nav navbar-nav navbar-left">
+						<li class="dropdown"><a href="javascript:void(0);"
+							th:title="#{user.windows}" title="Windows"
+							class="dropdown-toggle" data-toggle="dropdown"><i
+								class="icon-windows"></i> <i class="icon-chevron-down"></i></a>
+							<ul class="dropdown-menu">
+								<li><a href="javascript:void(0);"> <i
+										class="icon-barcode"></i> Applications
+								</a></li>
+								<li><a href="javascript:void(0);"> <i
+										class="icon-puzzle-piece"></i> Plug-ins
+								</a></li>
+								<li><a href="javascript:void(0);"> <i class="icon-code"></i>
+										Source Code
+								</a></li>
+							</ul></li>
+					</ul>
+					<ul class="nav navbar-nav navbar-left">
+						<li class="dropdown"><a href="javascript:void(0);"
+							th:title="#{user.linux}" title="Linux" class="dropdown-toggle"
+							data-toggle="dropdown"><i class="icon-linux"></i> <i
+								class="icon-chevron-down"></i></a>
+							<ul class="dropdown-menu">
+								<li><a href="javascript:void(0);"> <i
+										class="icon-barcode"></i> Applications
+								</a></li>
+								<li><a href="javascript:void(0);"> <i
+										class="icon-puzzle-piece"></i> Plug-ins
+								</a></li>
+								<li><a href="javascript:void(0);"> <i class="icon-code"></i>
+										Source Code
+								</a></li>
+							</ul></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- Bottom navigation fragment -->
+	<div th:fragment="bottomnav"
+		class="navbar navbar-inverse navbar-fixed-bottom">
+		<div class="container">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse"
+					data-target=".bottomnav-collapse">
+					<span class="icon-bar"></span> <span class="icon-bar"></span> <span
+						class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" style="font-size: 12px; font-weight: bold;"
+					href="index.htm">&copy; <span th:text="#{label.company}">Your
+						Company</span> <span th:text="${#calendars.year(#calendars.createNow())}"></span>
+					<span class="app-loading-label">(Loading...)</span></a>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

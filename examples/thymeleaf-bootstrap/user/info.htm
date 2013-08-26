@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:substituteby="frags/head :: header">
+<meta charset="utf-8" />
+<!-- Thymus script -->
+<script th:remove="all" src="../../../thymus.js" id="thymus" 
+	data-context-path="../"
+	data-head-frag="th:substituteby=frags/head :: header"
+	data-onfragsloaded="init(this)"></script>
+</head>
+<body>
+	<div th:substituteby="frags/nav/nav :: topnav"></div>
+	<div th:with="user=${#object}"
+		th:substituteby="frags/user/profile :: profile"></div>
+	<div th:substituteby="frags/nav/nav :: bottomnav"></div>
+	<div th:substituteby="frags/script :: scripts"></div>
+</body>
+</html>

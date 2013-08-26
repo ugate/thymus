@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!-- All relative href/src URLs should be relative to the application's context defined on the Thymus script  -->
+<body>
+	<div th:fragment="profile" class="container app-scroll">
+		<div th:id="'profile' + (${user} ? ${user.id} : 'None')" id="profile" class="app-scroll-nav">
+			<ul class="nav">
+				<li><a th:title="#{access.assigned}"
+					class="app-tooltip-top" title="User Info" href="#user"><i
+						class="icon-male"></i></a></li>
+				<li><a th:title="#{access.assigned}"
+					class="app-tooltip-top" title="Assigned Access" href="#access"><i
+						class="icon-key"></i></a></li>
+				<li><a th:title="#{groups.assigned}"
+					class="app-tooltip-top" title="Assigned Groups" href="#groups"><i
+						class="icon-group"></i></a></li>
+				<li><a th:title="#{roles.assigned}"
+					class="app-tooltip-top" title="Assigned Roles" href="#roles"><i
+						class="icon-user"></i></a></li>
+			</ul>
+		</div>
+		<section
+			th:attr="data-target='#profile' + (${user} ? ${user.id} : 'None')"
+			data-spy="scroll" data-target="#profile" data-offset="20"
+			class="scroll-spy">
+			<div class="panel panel-default">
+				<div id="user" class="panel-body" th:with="user=${#object}"
+					th:include="frags/user/user :: user"></div>
+			</div>
+			<div id="access" class="panel panel-default">
+				<div class="panel-heading">
+					<h4>
+						<i class="icon-key"></i> <span th:text="#{access.assigned}">Assigned
+							Access</span>
+					</h4>
+				</div>
+				<div class="panel-body row">
+					<div th:if="${user}" th:each="f,fs : ${user.access}"
+						class="col-lg-3">
+						<i
+							th:class="${f.enabled} ? 'icon-circle icon-green' : 'icon-circle icon-red'"
+							class="icon-circle icon-red"></i> <span
+							th:text="${f.name} + ' (' + ${f.value} + ')'">Some Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+					</div>
+					<div th:remove="all" class="col-lg-3">
+						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+					</div>
+				</div>
+			</div>
+			<div id="groups" class="panel panel-default">
+				<div class="panel-heading">
+					<h4>
+						<i class="icon-group"></i> <span th:text="#{groups.assigned}">Assigned
+							Groups</span>
+					</h4>
+				</div>
+				<div class="panel-body row">
+					<div th:if="${user}" th:each="grp,grps : ${user.groups}"
+						th:text="${grp}" class="col-lg-3">Some Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+					<div th:remove="all" class="col-lg-3">Some Other Group</div>
+				</div>
+			</div>
+			<div id="roles" class="panel panel-default">
+				<div class="panel-heading">
+					<h4>
+						<i class="icon-user"></i> <span th:text="#{roles.assigned}">Assigned
+							Roles</span>
+					</h4>
+				</div>
+				<div class="panel-body row">
+					<div th:if="${user}" th:each="r,rs : ${user.roles}" th:text="${r}"
+						class="col-lg-3">Some Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+					<div th:remove="all" class="col-lg-3">Some Other Role</div>
+				</div>
+			</div>
+		</section>
+	</div>
+</body>
+</html>

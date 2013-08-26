@@ -18,19 +18,22 @@ Thymus.JQUERY_DEFAULT_URL = '//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquer
 Thymus.DEFAULT_FRAG_ATTR = 'th\\:fragment';
 Thymus.DEFAULT_INC_ATTR = 'th\\:include';
 Thymus.DEFAULT_SUB_ATTR = 'th\\:substituteby';
+Thymus.DEFAULT_SEP = '::';
 Thymus.ID = 'thymus';
 Thymus.CONTEXT_PATH_ATTR = 'data-context-path';
 Thymus.JQUERY_URL_ATTR = 'data-jquery-url';
-Thymus.INIT_ATTR = 'data-init-func-name';
+Thymus.INIT_ATTR = 'data-onfragsloaded';
 Thymus.FRAG_HEAD_ATTR = 'data-head-frag';
 Thymus.FRAG_ATTR = 'data-fragment-attr';
 Thymus.FRAG_INC_ATTR = 'data-include-attr';
 Thymus.FRAG_SUB_ATTR = 'data-substitute-attr';
+Thymus.FRAG_SEP_ATTR = 'data-separator';
 Thymus.FRAG = null;
 Thymus.FRAG_INC = null;
 Thymus.FRAG_SUB = null;
 Thymus.FRAG_TO_SELECT = null;
-Thymus.FRAG_SEP = '::';
+Thymus.FRAG_SEP = null;
+Thymus.PROTOCOL_FOR_FILE = null;
 Thymus.SCRIPT_INIT = null;
 Thymus.jqueryLoaded = false;
 Thymus.pageLoaded = false;
@@ -150,6 +153,14 @@ Thymus.loadFragments = function(selector, func) {
 	var Track = function() {
 		this.cnt = 0;
 		this.len = 0;
+		var e = '';
+		this.addError = function(em) {
+			e += (e.length > 0 ? ',' : '') + em;
+			return e;
+		};
+		this.getError = function() {
+			return e;
+		};
 	};
 	var t = new Track();
 	var ext = location.href.split('.');
@@ -164,17 +175,25 @@ Thymus.loadFragments = function(selector, func) {
 		}
 		this.a = this.a ? this.a.split(Thymus.FRAG_SEP) : null;
 		this.u = this.a && this.a.length > 0 ? $.trim(this.a[0]) : null;
-		this.e = this.a && this.a.length > 1 ? $.trim(this.a[1]) : null;
+		this.t = this.a && this.a.length > 1 ? $.trim(this.a[1]) : null;
 		if (ext && this.u && this.u.indexOf('.') < 0) {
 			this.u += ('.' + ext);
 		}
 		if (this.u && this.u.length > 0) {
 			this.u = Thymus.absolutefragPath(this.u);
 		}
-		this.s = this.e ? Thymus.getFragFromSel(this.e) : null;// + ' > *';
+		this.s = this.t ? Thymus.getFragFromSel(this.t) : null;// + ' > *';
+		this.toString = function() {
+			return ':: Fragment ' + (this.r ? 'subsitution' : 'include')
+					+ ' | url: ' + this.u + ' | target: ' + this.t
+					+ ' | search: ' + this.s + ' :: ';
+		};
 	};
 	var done = function(t) {
 		if (t.cnt == t.len) {
+			if (t.getError().length > 0) {
+				throw new Error(t.getError());
+			}
 			if (typeof func === 'function') {
 				func($s, t.cnt);
 			}
@@ -206,6 +225,7 @@ Thymus.loadFragments = function(selector, func) {
 		var f = new Frag($fl);
 		cb = typeof cb === 'function' ? cb : function(){};
 		if (!f.u) {
+			t.addError('Invalid URL for ' + f.toString());
 			cb(null, f);
 			return;
 		}
@@ -224,7 +244,7 @@ Thymus.loadFragments = function(selector, func) {
 				hr = hr.substring(0, hr.indexOf('>') + 1);
 				var $hr = $(hr + '</div>');
 				var ha = $hr.attr(Thymus.FRAG.replace('\\', ''));
-				if (ha && ha == f.e) {
+				if (ha && ha == f.t) {
 					hr = hr.replace(/div/g, 'head');
 					hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
 					// TODO : strip out script tags and load them dynamically 
@@ -241,7 +261,14 @@ Thymus.loadFragments = function(selector, func) {
 			// (links need to be converted via raw results to
 			// prevent warnings)
 			var $c = $(Thymus.linksToAbsolute(r));
-			$c.filter(f.s).each(function() {
+			var fs = $c.filter(f.s);
+			if (fs.length <= 0) {
+				t.addError('No matching results for ' + f.toString()
+						+ ' in\n' + r);
+				cb(null, f);
+				return;
+			}
+			fs.each(function() {
 				var $cf = $(this);
 				//Thymus.linksToAbsolute($cf);
 				var doScript = function($x) {
@@ -274,7 +301,9 @@ Thymus.loadFragments = function(selector, func) {
 				}
 				cb($cf, f);
 			});
-		}, 'html');
+		}, 'html').fail(function(jqXhr, ts, e) {
+			t.addError('Error at ' + f.toString() + ': ' + ts + '- ' + e);
+		});
 		return f;
 	};
 	var lfc = null;
@@ -378,8 +407,8 @@ Thymus.linksToAbsolute = function(s) {
 Thymus.absolutePath = function(relPath, absPath) {
 	var absStack, relStack, i, d;
 	relPath = relPath || '';
-	if (relPath.charAt(0) === '/' || relPath.indexOf('data:') == 0) {
-		return relPath;
+	if (/^(([a-z]+)?:|\/\/|#)/i.test(relPath)) {
+		return Thymus.urlAdjust(relPath);
 	}
 	absPath = absPath ? absPath.replace(/^\/|(\/[^\/]*|[^\/]+)$/g, '') : '';
 	absStack = absPath ? absPath.split('/') : [];
@@ -400,6 +429,25 @@ Thymus.absolutePath = function(relPath, absPath) {
 	return absStack.join('/');
 };
 /**
+ * Navigates to the specified URL (converting it to it's absolute counterpart
+ * when needed)
+ * 
+ * @param relPath
+ *            the relative path to convert
+ */
+Thymus.nav = function(relPath) {
+	var url = Thymus.absolutefragPath(relPath);
+	document.location.href = url;
+};
+/**
+ * Performs any URL adjustments that may be needed for proper resolution
+ */
+Thymus.urlAdjust = function(url) {
+	return Thymus.PROTOCOL_FOR_FILE && url.indexOf('//') == 0 ? Thymus.PROTOCOL_FOR_FILE
+			+ url
+			: url;
+};
+/**
  * Loads JQuery if it hasn't been loaded yet
  * 
  * @param url
@@ -411,7 +459,7 @@ Thymus.absolutePath = function(relPath, absPath) {
 Thymus.loadJQuery = function(url, cb) {
 	if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
 		var s = document.createElement('script');
-		s.src = url;
+		s.src = Thymus.urlAdjust(url);
 		var head = document.getElementsByTagName('head')[0];
 		s.onload = s.onreadystatechange = function() {
 			if (!Thymus.jqueryLoaded
@@ -468,8 +516,13 @@ Thymus.startUp = function() {
 		if (!Thymus.FRAG_SUB) {
 			Thymus.FRAG_SUB = Thymus.DEFAULT_SUB_ATTR;
 		}
+		Thymus.FRAG_SEP = getAttr(sh, Thymus.FRAG_SEP_ATTR);
+		if (!Thymus.FRAG_SEP) {
+			Thymus.FRAG_SEP = Thymus.DEFAULT_SEP;
+		}
 		Thymus.FRAG_TO_SELECT = '[' + Thymus.FRAG_INC + '],[' + 
 			Thymus.FRAG_SUB + ']';
+		Thymus.PROTOCOL_FOR_FILE = /^(file:?)/i.test(location.protocol) ? 'http:' : null;
 		with (document.createElement('b')) {
 			id = 4;
 			while (innerHTML = '<!--[if gt IE ' + ++id + ']>1<![endif]-->', innerHTML > 0);
@@ -488,9 +541,16 @@ Thymus.startUp = function() {
 					// now that all of the includes/substitutions have been
 					// loaded we need to execute any inititialization that may
 					// be defined in the script definition of the page
-					var initFunc = window[Thymus.SCRIPT_INIT];
-					if (typeof initFunc === 'function') {
-						initFunc();
+					var fa = Thymus.SCRIPT_INIT.split('(');
+					var fn = fa.shift();
+					if (typeof window[fn] === 'function') {
+						var f = window[fn];
+						if (fa.length > 0) {
+							var p = fa.join('(');
+							f.apply(undefined, p.split(','));
+						} else {
+							f();
+						}
 					}
 
 				}

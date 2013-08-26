@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:substituteby="frags/head :: header">
+<meta charset="utf-8" />
+<!-- Thymus script -->
+<script th:remove="all" src="../../thymus.js" id="thymus" 
+	data-context-path="."
+	data-head-frag="th:substituteby=frags/head :: header"
+	data-onfragsloaded="init(this)"></script>
+</head>
+<body>
+	<div th:substituteby="frags/nav/nav :: topnav"></div>
+	<form th:action="@{/authenticate.htm}" method="post" class="form-signin">
+		<div class="container">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<img
+						src="https://secure.gravatar.com/avatar/e46c1c9ed5fbfebc5277b2661a2350cd?s=140&d=https://github.com/images/gravatars/gravatar-140.png" />
+					<h2>Sign In</h2>
+				</div>
+				<div class="panel-body">
+					<div th:with="loginMsg=${loginError} ? #{error.credentials} : ${sessionExpired} ? #{warn.sessionexpired} : ${logoutSuccess} ? #{success.logout} : null"
+						th:if="${loginMsg}"
+						th:class="'alert alert-' + (${sessionExpired} ? 'warning' : ${logoutSuccess} ? 'success' : 'danger')"
+						class="alert alert-danger">
+						<button type="button" class="close" data-dismiss="alert">&times;</button>
+						<strong th:text="${loginMsg}">Login Error Message Example</strong>
+					</div>
+					<div class="form-group">
+						<div class="input-group">
+							<span class="input-group-addon"><i class="icon-user"></i></span><input
+								class="form-control" id="username" name="username" type="text"
+								th:placeholder="#{username}" placeholder="Username"
+								required="required" />
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="input-group">
+							<span class="input-group-addon"><i class="icon-key"></i></span><input
+								class="form-control" id="password" name="password" type="password"
+								th:placeholder="#{password}" placeholder="Password"
+								required="required" />
+						</div>
+					</div>
+					<div class="container">
+						<button class="btn btn-primary btn-lg btn-block" th:type="'submit'"
+							th:onclick="'void(0)'" th:text="#{signin}"
+							onclick="Thymus.nav('index.htm')" type="button">Sign
+							in</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+	<div th:substituteby="frags/nav/nav :: bottomnav"></div>
+	<div th:substituteby="frags/script :: scripts"></div>
+</body>
+</html>

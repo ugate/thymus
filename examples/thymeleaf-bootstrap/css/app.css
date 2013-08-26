@@ -1,0 +1,227 @@
+@CHARSET "ISO-8859-1";
+
+/* Miscellaneous
+-------------------------------------------------- */
+html,body {
+	font-family: 'Bree Serif', 'Open Sans', 'Droid Sans', Arial, sans-serif;
+	background: #c0c0c0 no-repeat center center fixed;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-ms-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+	scrollbar-face-color: #555;
+	scrollbar-shadow-color: #555;
+	scrollbar-highlight-color: #555;
+	scrollbar-3dlight-color: #555;
+	scrollbar-darkshadow-color: #555;
+	scrollbar-track-color: #999;
+	scrollbar-arrow-color: #fff;
+	width: 100%;
+	height: 100%;
+	padding-top: 40px;
+	padding-bottom: 40px;
+}
+
+::-webkit-scrollbar-track {
+	-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+	background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar {
+	width: 12px;
+	background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar-thumb {
+	-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
+	background-color: #555;
+}
+
+body>.container {
+	height: 100%;
+}
+
+div.app-scroll {
+	height: 100%;
+}
+
+div.app-scroll>.app-scroll-nav {
+	position: fixed;
+	width: 100%;
+	top: 60px;
+	left: 0;
+	background-color: #f8f8f8;
+	-webkit-box-shadow: 0 0 8px #000;
+	-moz-box-shadow: 0 0 8px #000;
+	-ms-box-shadow: 0 0 8px #000;
+	-o-box-shadow: 0 0 8px #000;
+	box-shadow: 0 0 8px #000;
+}
+
+div.app-scroll>.app-scroll-nav>ul {
+	position: fixed;
+	width: 100%;
+	background-color: #f8f8f8;
+}
+
+div.app-scroll>.app-scroll-nav li {
+	position: relative;
+	display: table-cell;
+	float: none;
+	width: 1%;
+	text-align: center;
+}
+
+div.app-scroll>.app-scroll-nav li.active>a {
+	color: #fff;
+	background-color: #428bca;
+}
+
+div.app-scroll>.app-scroll-nav li+li {
+	border-left: 1px solid #ddd;
+}
+
+div.app-scroll .scroll-spy {
+	position: relative;
+	height: 100%;
+	margin-top: 30px;
+	margin-bottom: 80px;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.icon-green {
+	color: #00ff00 !important;
+}
+
+.icon-yellow {
+	color: #ffff00 !important;
+}
+
+.icon-red {
+	color: #ff0000 !important;
+}
+/* User Rolodex
+-------------------------------------------------- */
+.user-info {
+	padding-bottom: 5px;
+	border-bottom: 1px solid #bebebe;
+	-webkit-box-shadow: 0 2px 4px rgba(0, 0, 0, .12);
+	-moz-box-shadow: 0 2px 4px rgba(0, 0, 0, .12);
+	-ms-box-shadow: 0 2px 4px rgba(0, 0, 0, .12);
+	-o-box-shadow: 0 2px 4px rgba(0, 0, 0, .12);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, .12);
+	zoom: 1;
+}
+
+.rolodex>div {
+	display: inline-block;
+	vertical-align: text-top;
+	line-height: 1.5em;
+}
+
+.rolodex strong {
+	font-size: 1.25em;
+}
+
+img.user-thumb {
+	min-height: 100px;
+	min-width: 75px;
+	width: 100px;
+	height: 125px;
+	margin-right: 20px;
+}
+span.user-btn-region {
+	display: block;
+	width: 80%;
+}
+span.user-btn {
+	display: block !important;
+	font-weight: normal;
+	text-align: center !important;
+	vertical-align: baseline !important;
+	width: 100%;
+	min-width: 100px;
+}
+/* Sections
+-------------------------------------------------- */
+section {
+/* 	background-color: rgb(255, 255, 255); */
+}
+
+section,.form-signin {
+/* 	min-height: 40px; */
+/* 	padding: 0 29px 29px; */
+/* 	margin: auto auto auto; */
+/* 	border: 1px solid #e5e5e5; */
+/* 	-webkit-border-radius: 5px; */
+/* 	-moz-border-radius: 5px; */
+/* 	-ms-border-radius: 5px; */
+/* 	-o-border-radius: 5px; */
+/* 	border-radius: 5px; */
+/* 	-webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, .05); */
+/* 	-moz-box-shadow: 0 1px 2px rgba(0, 0, 0, .05); */
+/* 	-ms-box-shadow: 0 1px 2px rgba(0, 0, 0, .05); */
+/* 	-o-box-shadow: 0 1px 2px rgba(0, 0, 0, .05); */
+/* 	box-shadow: 0 1px 2px rgba(0, 0, 0, .05); */
+}
+
+.form-signin {
+	max-width: 500px;
+	margin: 0 auto;
+/* 	background-color: rgba(255, 255, 255, .9); */
+/* 	filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, */
+/* 		startColorstr='#deffffff', endColorstr='#deffffff' ); */
+}
+
+.form-signin .form-signin-heading,.form-signin .checkbox {
+	margin-bottom: 10px;
+}
+
+.form-signin>.input-group {
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+.form-signin>.container {
+	padding-top: 20px;
+}
+/* ============== Responsive
+-------------------------------------------------- */
+/* Desktop large
+------------------------- */
+@media ( min-width : 1200px) {
+
+}
+/* Desktop
+------------------------- */
+@media ( max-width : 980px) {
+
+}
+/* Tablet to desktop
+------------------------- */
+@media ( min-width : 768px) and (max-width: 979px) {
+	.user-info {
+		border: none;
+	}
+}
+
+/* Tablet
+------------------------- */
+@media ( max-width : 767px) {
+	.user-info {
+		border: none;
+	}
+}
+
+/* Landscape phones
+------------------------- */
+@media ( max-width : 480px) {
+	.user-info {
+		border: none;
+	}
+	.rolodex>div {
+		display: inherit;
+	}
+}
