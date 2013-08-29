@@ -87,15 +87,28 @@ Thymus.getFragFromSel = function(v) {
 /**
  * Gets a file extension from a URL
  */
-Thymus.getFileExtension = function(url) {
-	var ext = '';
+Thymus.getFile = function(url) {
+	var f = '';
 	if (url) {
-		var fs = url.match(/[^.]+(\.[^?#]+)?/)[1];
+		var fs = url.match(/[^\/?#]+(?=$|[?#])/)[0];
 		if (fs) {
-			ext = fs;
+			f = fs;
 		}
 	}
-	return ext;
+	return f;
+};
+/**
+ * Gets a file extension from a URL
+ */
+Thymus.getFileExtension = function(url) {
+	var x = Thymus.getFile(url);
+	if (x) {
+		x = x.split('.');
+		if (x.length > 1) {
+			x = '.' + x[x.length - 1];
+		}
+	}
+	return x;
 };
 /**
  * Extracts a fragment/include/substitution attribute from a given element. When
