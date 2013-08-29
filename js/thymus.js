@@ -90,9 +90,9 @@ Thymus.getFragFromSel = function(v) {
 Thymus.getFile = function(url) {
 	var f = '';
 	if (url) {
-		var fs = url.match(/[^\/?#]+(?=$|[?#])/)[0];
-		if (fs) {
-			f = fs;
+		var fs = url.match(/[^\/?#]+(?=$|[?#])/);
+		if (fs && fs.length > 0) {
+			f = fs[0];
 		}
 	}
 	return f;
