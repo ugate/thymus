@@ -192,6 +192,9 @@ Thymus.loadFragments = function(selector, func) {
 	};
 	var t = new Track();
 	var ext = Thymus.getFileExtension(location.href);
+	if (!ext) {
+		ext = Thymus.FRAG_EXT;
+	}
 	var Frag = function($fl) {
 		// use the fragment value as the attribute key to use as the replacement/include
 		this.r = false;
