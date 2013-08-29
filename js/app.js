@@ -1,16 +1,31 @@
 function init() {
+	// add some flare to the demo by adding a background splash
+	flickr('vine', 'body');
 	// initialize bootstrap scroll spy (if needed)
-	//var navHeight = $('.navbar').outerHeight(true) + 10;
 	$('[data-spy="scroll"]').each(function() {
 		$(this).scrollspy('refresh');
 	});
-	// add some flare to the demo by adding a background splash
-	flickr('scenic', 'body');
+	initToolTips('[class*="app-tooltip"]');
+	// update load indicator
 	var $l = $('.app-loading-label');
 	$l.html('(Loaded)');
 	setTimeout(function() {
 		$l.html(' ');
 	}, 5000);
+}
+function initToolTips(cssSelector) {
+	$(cssSelector).each(function () {
+		var $t = $(this);
+		var p = $t.hasClass('app-tooltip-top') ? 'top' : $t
+				.hasClass('app-tooltip-right') ? 'right' : $t
+				.hasClass('app-tooltip-left') ? 'left' : $t
+				.hasClass('app-tooltip-bottom') ? 'bottom' : 'auto';
+		$t.tooltip({
+		     delay: { show: 300 },
+		     animation: false,
+		     placement: p
+		});
+	});
 }
 function flickr(key, sel) {
 	$.getJSON(

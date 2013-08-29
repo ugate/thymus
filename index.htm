@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:substituteby="frags/head :: header">
+<meta charset="utf-8" />
+<!-- Thymus script -->
+<script th:remove="all" src="js/thymus.js" id="thymus" 
+	data-context-path="."
+	data-head-frag="th:substituteby=frags/head :: header"
+	data-onfragsloaded="init(this)"></script>
+</head>
+<body>
+	<div th:substituteby="frags/nav/nav :: topnav"></div>
+	<div class="container app-scroll">
+		<div id="docs" class="app-scroll-nav">
+			<ul class="nav navbar-inverse">
+				<li><a th:title="#{intro}"
+					class="app-tooltip-bottom" title="Introduction/Download" href="#intro"><i
+						class="icon-folder-close"></i></a></li>
+				<li><a th:title="#{basic}"
+					class="app-tooltip-bottom" title="Basic Usage" href="#basic"><i
+						class="icon-code"></i></a></li>
+				<li><a th:title="#{thymeleaf}"
+					class="app-tooltip-bottom" title="Thymeleaf Integration" href="#thymeleaf"><i
+						class="icon-leaf"></i></a></li>
+			</ul>
+		</div>
+		<section
+			data-spy="scroll" data-target="#docs" data-offset="20"
+			class="scroll-spy">
+			<div id="intro" class="panel panel-default">
+				<div class="panel-heading">
+					<span class="icon-stack icon-3x"> <i
+						class="icon-sign-blank icon-dark icon-stack-base"></i> <i
+						class="icon-leaf icon-thymus-stacked"></i> <i
+						class="icon-thymus-text">Thymus</i>
+					</span>
+					<div class="pull-right">
+						<a href="https://github.com/ugate/thymus/tarball/master"><span
+							class="icon-stack icon-3x"> <i
+								class="icon-folder-close icon-stack-base"></i><i
+								class="icon-light icon-text">tar.gz</i>
+						</span></a>
+						<a href="https://github.com/ugate/thymus/zipball/master"><span
+							class="icon-stack icon-3x"> <i
+								class="icon-folder-close icon-stack-base"></i> <i
+								class="icon-light icon-text">.zip</i>
+						</span></a>
+					</div>
+				</div>
+				<div class="panel-body">
+					<p>Thymus is a simple JavaScript template library that allows
+						client side includes/substitutions using separate fragment files.</p>
+					<p>Menandri tincidunt ut vix. Ad has putent commune vivendum,
+						mei ei ipsum expetenda disputando, wisi viris aliquip his ex.
+						Aliquam salutandi intellegam ut est, tibique menandri
+						concludaturque cu vim. Nec at hendrerit posidonium. Vix docendi
+						maiestatis ex, cum fugit movet elaboraret eu, ex minim commodo has.
+						Ne sea autem posidonium neglegentur, mazim vulputate ius ea, sed ne
+						suas iusto. Semper commodo bonorum at nec. Est at dicant senserit
+						accusamus. Omnis virtute sanctus ne est, quo integre verterem at.
+						Mea cu dico malorum, ea cetero consequat repudiandae has. Pri eu
+						habeo probatus, dicat option definiebas per ut, an nec option
+						appetere nominati.</p>
+					<p>Odio adversarium ius ad, at agam nostro imperdiet vix.
+						Epicurei complectitur vim te, similique quaerendum reprehendunt an
+						per. Veritus mnesarchum elaboraret an vel, sed fugit omittam no. Ad
+						his porro fuisset, ne fabulas ornatus recusabo vel. Eam an soleat
+						denique abhorreant. Veri appareat vis ea, sed ut malis verterem,
+						eam alia volutpat ex. Ius consul pertinacia in, graece quodsi et
+						sea.</p>
+					<p>Duo clita legimus insolens ut, sit an semper persius
+						oporteat. Graece doming expetendis qui in, vel quot pertinacia no.
+						Sit enim offendit partiendo in. Vim vitae salutatus gubergren ne.
+						Et vix nullam melius conceptam. Nec alia dicam labitur no, ei mel
+						numquam perpetua. Putent malorum ne cum, ex mel tollit minimum
+						detraxit, sed id justo praesent consetetur. His an dicunt scaevola
+						ponderum, vim iudico cetero eligendi ei. Quod pertinax elaboraret
+						quo ut, nibh eligendi expetendis ut vix. Eos suas vituperata cu,
+						reque tantas id mea. Argumentum efficiendi repudiandae ei ius. At
+						duo munere complectitur definitiones. Essent vidisse inermis pro
+						in, at vis virtute nominavi suavitate. Vis ei lucilius tacimates,
+						est cu aeque epicurei, imperdiet deterruisset vim ei. Esse
+						voluptatum duo ex, eam ex meis fastidii. Iusto aeterno
+						mediocritatem eam te, quo ut viderer elaboraret. Ad sit justo facer
+						nonumy, pri ne epicuri commune, diam possim dissentiunt cum in. At
+						consequat consequuntur nam, audire iuvaret aliquando qui ei, in
+						audiam similique qui. Quaeque referrentur consequuntur ad has, tota
+						invidunt posidonium ea vel. Vel eu munere laoreet. At quo simul
+						definitionem.</p>
+					<div class="panel panel-default">
+						<div class="panel-heading">Requirements</div>
+						<div class="panel-body">
+							<ul>
+								<li><a href="https://github.com/jquery/jquery">JQuery
+										~1.9.1</a></li>
+							</ul>
+						</div>
+					</div>
+					<div class="highlight">
+						<pre>
+							<code class="js">$('.carousel');</code>
+						</pre>
+					</div>
+				</div>
+			</div>
+			<div id="basic" class="panel panel-default">
+				<div class="panel-heading">
+					<h2>
+						Basic Usage
+					</h2>
+				</div>
+				<div class="panel-body">
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #007700">&lt;head</span> <span style="color: #0000CC">th:substituteby=</span><span style="background-color: #fff0f0">&quot;frags/head :: header&quot;</span><span style="color: #007700">&gt;</span>
+<span style="color: #007700">&lt;meta</span> <span style="color: #0000CC">charset=</span><span style="background-color: #fff0f0">&quot;utf-8&quot;</span> <span style="color: #007700">/&gt;</span>
+<span style="color: #888888">&lt;!-- Thymus script --&gt;</span>
+<span style="color: #007700">&lt;script </span><span style="color: #0000CC">th:remove=</span><span style="background-color: #fff0f0">&quot;all&quot;</span> <span style="color: #0000CC">src=</span><span style="background-color: #fff0f0">&quot;js/thymus.js&quot;</span> <span style="color: #0000CC">id=</span><span style="background-color: #fff0f0">&quot;thymus&quot;</span> 
+	<span style="color: #0000CC">data-context-path=</span><span style="background-color: #fff0f0">&quot;.&quot;</span>
+	<span style="color: #0000CC">data-head-frag=</span><span style="background-color: #fff0f0">&quot;th:substituteby=frags/head :: header&quot;</span>
+	<span style="color: #0000CC">data-onfragsloaded=</span><span style="background-color: #fff0f0">&quot;init(this)&quot;</span><span style="color: #007700">&gt;&lt;/script&gt;</span>
+<span style="color: #007700">&lt;/head&gt;</span>
+</pre></div>
+				</div>
+			</div>
+			<div id="thymeleaf" class="panel panel-default">
+				<div class="panel-heading">
+					<h2>
+						Thymeleaf Integration
+					</h2>
+				</div>
+				<div class="panel-body">
+					<p>
+						<a href="http://www.thymeleaf.org/">Thymeleaf</a> is a great
+						server-side template engine for Java and is the inspiration behind
+						Thymus. In fact, by default Thymus uses the same default HTML5
+						attributes for includes/substitutions and fragment definitions. Similar
+					</p>
+				</div>
+			</div>
+		</section>
+	</div>
+	<div th:substituteby="frags/nav/nav :: bottomnav"></div>
+	<div th:substituteby="frags/script :: scripts"></div>
+</body>
+</html>

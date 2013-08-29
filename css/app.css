@@ -49,7 +49,7 @@ div.app-scroll {
 div.app-scroll>.app-scroll-nav {
 	position: fixed;
 	width: 100%;
-	top: 60px;
+	top: 50px;
 	left: 0;
 	background-color: #f8f8f8;
 	-webkit-box-shadow: 0 0 8px #000;
@@ -102,6 +102,62 @@ div.app-scroll .scroll-spy {
 .icon-red {
 	color: #ff0000 !important;
 }
+
+.icon-text {
+	font-size: .5em !important;
+}
+
+.icon-thymus,.icon-thymus-stacked {
+	color: #16a085;
+}
+
+.icon-thymus-stacked {
+	line-height: 1.7em !important;
+}
+
+.icon-thymus-text,.icon-thymus-text-dark {
+	line-height: 10.5em !important;
+	font-size: .3em !important;
+	color: #fff;
+}
+
+.icon-thymus-text-dark {
+	color: #000;	
+}
+
+.tooltip {
+	z-index: 5000;
+}
+/* .navbar-inverse { */
+/*   text-shadow: 0 -1px 0 rgba(0,0,0,.15); */
+/*   background-color: #563d7c; */
+/*   border-color: #463265; */
+/*   box-shadow: 0 1px 0 rgba(255,255,255,.1); */
+/* } */
+/* .navbar-inverse .navbar-collapse { */
+/*   border-color: #463265; */
+/* } */
+/* .navbar-inverse .navbar-brand { */
+/*   color: #fff; */
+/* } */
+/* .navbar-inverse .navbar-nav > li > a { */
+/*   color: #cdbfe3; */
+/* } */
+/* .navbar-inverse .navbar-nav > li > a:hover { */
+/*   color: #fff; */
+/* } */
+/* .navbar-inverse .navbar-nav > .active > a, */
+/* .navbar-inverse .navbar-nav > .active > a:hover { */
+/*   color: #fff; */
+/*   background-color: #463265; */
+/* } */
+/* .navbar-inverse .navbar-toggle { */
+/*   border-color: #563d7c; */
+/* } */
+/* .navbar-inverse .navbar-toggle:hover { */
+/*   background-color: #463265; */
+/*   border-color: #463265; */
+/* } */
 /* User Rolodex
 -------------------------------------------------- */
 .user-info {
@@ -186,6 +242,10 @@ section,.form-signin {
 
 .form-signin>.container {
 	padding-top: 20px;
+}
+
+.navbar-brand {
+	padding: 10px 15px;
 }
 /* ============== Responsive
 -------------------------------------------------- */
