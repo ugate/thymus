@@ -15,9 +15,9 @@
  */// ============================================
 var Thymus = {};
 Thymus.JQUERY_DEFAULT_URL = '//code.jquery.com/jquery.min.js';
-Thymus.DEFAULT_FRAG_ATTR = 'th\\:fragment';
-Thymus.DEFAULT_INC_ATTR = 'th\\:include';
-Thymus.DEFAULT_SUB_ATTR = 'th\\:substituteby';
+Thymus.DEFAULT_FRAG_ATTR = 'data-th-fragment';
+Thymus.DEFAULT_INC_ATTR = 'data-th-include';
+Thymus.DEFAULT_SUB_ATTR = 'data-th-substitute';
 Thymus.DEFAULT_SEP = '::';
 Thymus.ID = 'thymusScript';
 Thymus.CONTEXT_PATH_ATTR = 'data-th-context-path';
@@ -29,6 +29,12 @@ Thymus.FRAG_INC_ATTR = 'data-th-include-attr';
 Thymus.FRAG_SUB_ATTR = 'data-th-substitute-attr';
 Thymus.FRAG_SEP_ATTR = 'data-th-separator';
 Thymus.FRAG_EXT_ATTR = 'data-th-frag-extension';
+Thymus.ENGINE_ATTR = 'data-th-engine';
+Thymus.THYMELEAF = 'thymeleaf';
+Thymus.THYMELEAF_FRAG_ATTR = 'th\\:fragment';
+Thymus.THYMELEAF_INC_ATTR = 'th\\:include';
+Thymus.THYMELEAF_SUB_ATTR = 'th\\:substituteby';
+Thymus.ENGINE = null;
 Thymus.FRAG = null;
 Thymus.FRAG_INC = null;
 Thymus.FRAG_SUB = null;
@@ -191,10 +197,7 @@ Thymus.loadFragments = function(selector, func) {
 		};
 	};
 	var t = new Track();
-	var ext = Thymus.getFileExtension(location.href);
-	if (!ext) {
-		ext = Thymus.FRAG_EXT;
-	}
+	var ext = Thymus.FRAG_EXT ? Thymus.FRAG_EXT : Thymus.getFileExtension(location.href);
 	var Frag = function($fl) {
 		// use the fragment value as the attribute key to use as the replacement/include
 		this.r = false;
@@ -214,7 +217,7 @@ Thymus.loadFragments = function(selector, func) {
 		}
 		this.s = this.t ? Thymus.getFragFromSel(this.t) : null;// + ' > *';
 		this.toString = function() {
-			return ':: Fragment ' + (this.r ? 'subsitution' : 'include')
+			return '--> Fragment ' + (this.r ? 'subsitution' : 'include')
 					+ ' | url: ' + this.u + ' | target: ' + this.t
 					+ ' | search: ' + this.s + ' :: ';
 		};
@@ -532,9 +535,16 @@ Thymus.startUp = function() {
 		}
 		var url = getAttr(sh, Thymus.JQUERY_URL_ATTR, Thymus.JQUERY_DEFAULT_URL);
 		Thymus.SCRIPT_INIT = getAttr(sh, Thymus.INIT_ATTR);
-		Thymus.FRAG = getAttr(sh, Thymus.FRAG_ATTR, Thymus.DEFAULT_FRAG_ATTR);
-		Thymus.FRAG_INC = getAttr(sh, Thymus.FRAG_INC_ATTR, Thymus.DEFAULT_INC_ATTR);
-		Thymus.FRAG_SUB = getAttr(sh, Thymus.FRAG_SUB_ATTR, Thymus.DEFAULT_SUB_ATTR);
+		Thymus.ENGINE = getAttr(sh, Thymus.ENGINE_ATTR);
+		Thymus.FRAG = getAttr(sh, Thymus.FRAG_ATTR,
+				Thymus.ENGINE == Thymus.THYMELEAF ? Thymus.THYMELEAF_FRAG_ATTR
+						: Thymus.DEFAULT_FRAG_ATTR);
+		Thymus.FRAG_INC = getAttr(sh, Thymus.FRAG_INC_ATTR,
+				Thymus.ENGINE == Thymus.THYMELEAF ? Thymus.THYMELEAF_INC_ATTR
+						: Thymus.DEFAULT_INC_ATTR);
+		Thymus.FRAG_SUB = getAttr(sh, Thymus.FRAG_SUB_ATTR,
+				Thymus.ENGINE == Thymus.THYMELEAF ? Thymus.THYMELEAF_SUB_ATTR
+						: Thymus.DEFAULT_SUB_ATTR);
 		Thymus.FRAG_SEP = getAttr(sh, Thymus.FRAG_SEP_ATTR, Thymus.DEFAULT_SEP);
 		Thymus.FRAG_EXT = getAttr(sh, Thymus.FRAG_EXT_ATTR);
 		Thymus.FRAG_TO_SELECT = '[' + Thymus.FRAG_INC + '],[' + 

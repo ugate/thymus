@@ -21,7 +21,7 @@ function initToolTips(cssSelector) {
 				.hasClass('app-tooltip-left') ? 'left' : $t
 				.hasClass('app-tooltip-bottom') ? 'bottom' : 'auto';
 		$t.tooltip({
-		     delay: { show: 300 },
+		     delay: { show: 100 },
 		     animation: false,
 		     placement: p
 		});

@@ -12,13 +12,14 @@
 						<span class="icon-bar"></span> <span class="icon-bar"></span> <span
 							class="icon-bar"></span>
 					</button>
-					<a class="navbar-brand" th:title="#{home}" title="Thymus"
-						th:href="@{/index.htm}" href="index.htm"> <span
-						class="icon-stack"> <i
+					<a class="navbar-brand app-tooltip-bottom" th:title="#{home}"
+						title="Thymus Home" th:href="@{/index.htm}" href="index.htm">
+						<span class="icon-stack"> <i
 							class="icon-sign-blank icon-muted icon-stack-base"></i> <i
 							class="icon-leaf icon-thymus-stacked"></i> <i
 							class="icon-thymus-text-dark">Thymus</i>
-					</span></a>
+					</span>
+					</a>
 				</div>
 				<div class="collapse navbar-collapse topnav-collapse">
 					<ul class="nav navbar-nav navbar-right">
@@ -37,89 +38,19 @@
 							</ul></li>
 					</ul>
 					<ul class="nav navbar-nav navbar-left">
-						<li class="dropdown"><a href="javascript:void(0);"
-							th:title="#{download}" title="Download" class="dropdown-toggle"
-							data-toggle="dropdown"><i class="icon-github"></i> <i
-								class="icon-chevron-down"></i></a>
-							<ul class="dropdown-menu">
-								<li><a href="https://github.com/ugate/thymus/zipball/master"> <i
-										class="icon-download"></i> Download .zip file
-								</a></li>
-								<li><a href="https://github.com/ugate/thymus/tarball/master"> <i
-										class="icon-circle-arrow-down"></i> Download .tar.gz file
-								</a></li>
-								<li><a href="https://github.com/ugate/thymus"> <i
-										class="icon-github-sign"></i> View project on GitHub
-								</a></li>
-							</ul></li>
-					</ul>
-					<ul class="nav navbar-nav navbar-left">
-						<li class="dropdown"><a href="javascript:void(0);"
-							th:title="#{user.android}" title="Android"
-							class="dropdown-toggle" data-toggle="dropdown"><i
-								class="icon-android"></i> <i class="icon-chevron-down"></i></a>
-							<ul class="dropdown-menu">
-								<li><a href="javascript:void(0);"> <i
-										class="icon-barcode"></i> Applications
-								</a></li>
-								<li><a href="javascript:void(0);"> <i
-										class="icon-puzzle-piece"></i> Plug-ins
-								</a></li>
-								<li><a href="javascript:void(0);"> <i class="icon-code"></i>
-										Source Code
-								</a></li>
-							</ul></li>
-					</ul>
-					<ul class="nav navbar-nav navbar-left">
-						<li class="dropdown"><a href="javascript:void(0);"
-							th:title="#{user.apple}" title="Apple" class="dropdown-toggle"
-							data-toggle="dropdown"><i class="icon-apple"></i> <i
-								class="icon-chevron-down"></i></a>
-							<ul class="dropdown-menu">
-								<li><a href="javascript:void(0);"> <i
-										class="icon-barcode"></i> Applications
-								</a></li>
-								<li><a href="javascript:void(0);"> <i
-										class="icon-puzzle-piece"></i> Plug-ins
-								</a></li>
-								<li><a href="javascript:void(0);"> <i class="icon-code"></i>
-										Source Code
-								</a></li>
-							</ul></li>
-					</ul>
-					<ul class="nav navbar-nav navbar-left">
-						<li class="dropdown"><a href="javascript:void(0);"
-							th:title="#{user.windows}" title="Windows"
-							class="dropdown-toggle" data-toggle="dropdown"><i
-								class="icon-windows"></i> <i class="icon-chevron-down"></i></a>
-							<ul class="dropdown-menu">
-								<li><a href="javascript:void(0);"> <i
-										class="icon-barcode"></i> Applications
-								</a></li>
-								<li><a href="javascript:void(0);"> <i
-										class="icon-puzzle-piece"></i> Plug-ins
-								</a></li>
-								<li><a href="javascript:void(0);"> <i class="icon-code"></i>
-										Source Code
-								</a></li>
-							</ul></li>
-					</ul>
-					<ul class="nav navbar-nav navbar-left">
-						<li class="dropdown"><a href="javascript:void(0);"
-							th:title="#{user.linux}" title="Linux" class="dropdown-toggle"
-							data-toggle="dropdown"><i class="icon-linux"></i> <i
-								class="icon-chevron-down"></i></a>
-							<ul class="dropdown-menu">
-								<li><a href="javascript:void(0);"> <i
-										class="icon-barcode"></i> Applications
-								</a></li>
-								<li><a href="javascript:void(0);"> <i
-										class="icon-puzzle-piece"></i> Plug-ins
-								</a></li>
-								<li><a href="javascript:void(0);"> <i class="icon-code"></i>
-										Source Code
-								</a></li>
-							</ul></li>
+						<li><a href="https://github.com/ugate/thymus"> <i
+								class="icon-github app-icon-navbar app-tooltip-bottom"
+								title="View project on GitHub" th:title="#{github.view}"></i>
+						</a></li>
+						<li><a href="https://github.com/ugate/thymus/tarball/master">
+								<i
+								class="icon-circle-arrow-down app-icon-navbar app-tooltip-bottom"
+								title="Download .tar.gz file" th:title="#{github.download.gz}"></i>
+						</a></li>
+						<li><a href="https://github.com/ugate/thymus/zipball/master">
+								<i class="icon-download app-icon-navbar app-tooltip-bottom"
+								title="Download .zip file" th:title="#{github.download.zip}"></i>
+						</a></li>
 					</ul>
 				</div>
 			</div>
@@ -136,11 +67,12 @@
 						class="icon-bar"></span>
 				</button>
 				<a class="navbar-brand" style="font-size: 12px; font-weight: bold;"
-					href="index.htm"><img
+					href="http://ugate.org" target="_blank"><img
 					src="https://secure.gravatar.com/avatar/e46c1c9ed5fbfebc5277b2661a2350cd?s=140&d=https://github.com/images/gravatars/gravatar-140.png"
-					width="32" height="32" /> is maintained by <span th:text="#{company}">UGate</span>
-					<span th:text="${#calendars.year(#calendars.createNow())}"></span>
-					<span class="app-loading-label">(Loading...)</span></a>
+					width="32" height="32" /> is maintained by <span
+					th:text="#{company}">ugate.org</span> <span
+					th:text="${#calendars.year(#calendars.createNow())}"></span> <span
+					class="app-loading-label">(Loading...)</span></a>
 			</div>
 		</div>
 	</div>

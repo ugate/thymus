@@ -2,8 +2,10 @@
 
 /* Miscellaneous
 -------------------------------------------------- */
-html,body {
-	font-family: 'Bree Serif', 'Open Sans', 'Droid Sans', Arial, sans-serif;
+html,body  {
+	font: 100%/1.5 'Open Sans', sans-serif, 'Helvetica Neue', Helvetica, Arial;
+/* 	text-shadow: 0 0 1px rgba(51, 51, 51, 0.2); */
+	color: #222;
 	background: #c0c0c0 no-repeat center center fixed;
 	-webkit-background-size: cover;
 	-moz-background-size: cover;
@@ -51,6 +53,7 @@ div.app-scroll>.app-scroll-nav {
 	width: 100%;
 	top: 50px;
 	left: 0;
+	z-index: 1000;
 	background-color: #f8f8f8;
 	-webkit-box-shadow: 0 0 8px #000;
 	-moz-box-shadow: 0 0 8px #000;
@@ -85,7 +88,7 @@ div.app-scroll>.app-scroll-nav li+li {
 div.app-scroll .scroll-spy {
 	position: relative;
 	height: 100%;
-	margin-top: 30px;
+	margin-top: 40px;
 	margin-bottom: 80px;
 	overflow-x: hidden;
 	overflow-y: auto;
@@ -125,9 +128,54 @@ div.app-scroll .scroll-spy {
 	color: #000;	
 }
 
+.panel-body b {
+	color: #36a978;
+}
+
 .tooltip {
 	z-index: 5000;
 }
+
+.navbar-brand {
+	padding: 10px 15px;
+}
+
+.app-icon-navbar {
+	font-size: 1.5em;
+}
+
+.tooltip-inner {
+	background-color: #16a085 !important;
+}
+
+.tooltip-arrow {
+	border-bottom-color: #16a085 !important;
+}
+
+.app-code>p,.app-code>div {
+	margin-bottom: 20px;
+}
+
+.app-code pre {
+	color: #888;
+	white-space: pre;
+	word-wrap: normal;
+	word-break: normal;
+	overflow: auto;
+	transition: background-color .2s, color .2s;
+	-moz-transition: background-color .2s, color .2s;
+	-webkit-transition: background-color .2s, color .2s;
+	transition: background-color .2s, color .2s;
+	word-wrap: normal;
+	word-break: normal;
+	overflow: auto;
+}
+
+.app-code pre:hover {
+	background-color: #eee;
+	color: #444;
+}
+
 /* .navbar-inverse { */
 /*   text-shadow: 0 -1px 0 rgba(0,0,0,.15); */
 /*   background-color: #563d7c; */
@@ -242,10 +290,6 @@ section,.form-signin {
 
 .form-signin>.container {
 	padding-top: 20px;
-}
-
-.navbar-brand {
-	padding: 10px 15px;
 }
 /* ============== Responsive
 -------------------------------------------------- */

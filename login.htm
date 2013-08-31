@@ -3,7 +3,8 @@
 <head th:substituteby="frags/head :: header">
 <meta charset="utf-8" />
 <!-- Thymus script -->
-<script th:remove="all" src="js/thymus.js" id="thymusScript" 
+<script th:remove="all" src="js/thymus.js" id="thymusScript"
+	data-th-engine="thymeleaf"
 	data-th-context-path="." data-th-frag-extension=".htm"
 	data-th-head-frag="th:substituteby=frags/head :: header"
 	data-th-onfragsloaded="init(this)"></script>
