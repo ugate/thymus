@@ -128,6 +128,15 @@ div.app-scroll .scroll-spy {
 	color: #000;	
 }
 
+.row-thymus>div {
+	background-color: rgba(86, 61, 124, .15);
+	border: 1px solid rgba(86, 61, 124, .2);
+}
+
+.row-thymus>div:nth-child(2n) {
+	background-color: rgba(127, 127, 127, .15);
+}
+
 .panel-body b {
 	color: #36a978;
 }

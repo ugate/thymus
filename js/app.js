@@ -1,10 +1,8 @@
 function init() {
 	// add some flare to the demo by adding a background splash
 	flickr('vine', 'body');
-	// initialize bootstrap scroll spy (if needed)
-	$('[data-spy="scroll"]').each(function() {
-		$(this).scrollspy('refresh');
-	});
+	// initialize bootstrap components
+	initScrollSpy('[data-spy="scroll"]');
 	initToolTips('[class*="app-tooltip"]');
 	// update load indicator
 	var $l = $('.app-loading-label');
@@ -12,6 +10,11 @@ function init() {
 	setTimeout(function() {
 		$l.html(' ');
 	}, 5000);
+}
+function initScrollSpy(cssSelector) {
+	$(cssSelector).each(function() {
+		$(this).scrollspy('refresh');
+	});
 }
 function initToolTips(cssSelector) {
 	$(cssSelector).each(function () {

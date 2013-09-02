@@ -7,7 +7,7 @@
 	data-th-engine="thymeleaf"
 	data-th-context-path="../" data-th-frag-extension=".htm"
 	data-th-head-frag="th:substituteby=frags/head :: header"
-	data-th-onfragsloaded="init(this)"></script>
+	data-th-oncomplete="init(event)"></script>
 </head>
 <body>
 	<div th:substituteby="frags/nav/nav :: topnav"></div>

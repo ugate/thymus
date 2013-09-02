@@ -7,22 +7,25 @@
 	data-th-engine="thymeleaf"
 	data-th-context-path="." data-th-frag-extension=".htm"
 	data-th-head-frag="th:substituteby=frags/head :: header"
-	data-th-onfragsloaded="init(this)"></script>
+	data-th-oncomplete="init(event)"></script>
 </head>
 <body>
 	<div th:substituteby="frags/nav/nav :: topnav"></div>
 	<div class="container app-scroll">
 		<div id="docs" class="app-scroll-nav">
 			<ul class="nav navbar-inverse">
-				<li><a th:title="#{intro}"
-					class="app-tooltip-bottom" title="Introduction/Download" href="#intro"><i
+				<li><a th:title="#{about}"
+					class="app-tooltip-bottom" title="About/Download" href="#about"><i
 						class="icon-leaf"></i></a></li>
 				<li><a th:title="#{features}"
 					class="app-tooltip-bottom" title="Features" href="#features"><i
 						class="icon-check"></i></a></li>
-				<li><a th:title="#{basic}"
-					class="app-tooltip-bottom" title="Basic Usage" href="#basic"><i
+				<li><a th:title="#{usage}"
+					class="app-tooltip-bottom" title="Usage" href="#usage"><i
 						class="icon-code"></i></a></li>
+				<li><a th:title="#{paths}"
+					class="app-tooltip-bottom" title="Path Resolution" href="#paths"><i
+						class="icon-link"></i></a></li>
 				<li><a th:title="#{thymeleaf}"
 					class="app-tooltip-bottom" title="Thymeleaf Integration" href="#thymeleaf"><i
 						class="icon-cogs"></i></a></li>
@@ -31,7 +34,7 @@
 		<section
 			data-spy="scroll" data-target="#docs" data-offset="0"
 			class="scroll-spy">
-			<div id="intro" class="panel panel-default">
+			<div id="about" class="panel panel-default">
 				<div class="panel-heading">
 					<span class="icon-stack icon-3x"> <i
 						class="icon-sign-blank icon-light icon-stack-base"></i> <i
@@ -52,7 +55,7 @@
 					</div>
 				</div>
 				<div class="panel-body">
-					<p>
+					<p th:substituteby="readme.md">
 						<b>thymus.js</b> is a small (<b>1k minified</b>) JavaScript
 						template library for including/substituting client side fragments
 						using HTML5 resources that reside in different paths on a server
@@ -82,7 +85,7 @@
 						<div class="panel-body">
 							<ul>
 								<li><a href="https://github.com/jquery/jquery">JQuery
-										&gt;= 1.9.1</a></li>
+										&gt;= 1.9.1</a> (see <a href="#attrs">JQuery URL attribute</a>)</li>
 							</ul>
 						</div>
 					</div>
@@ -111,10 +114,10 @@
 					</ul>
 				</div>
 			</div>
-			<div id="basic" class="panel panel-default">
+			<div id="usage" class="panel panel-default">
 				<div class="panel-heading">
 					<h2>
-						Basic Usage
+						Usage
 					</h2>
 				</div>
 				<div class="panel-body app-code">
@@ -129,22 +132,143 @@
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
 </pre></div>
 					<p>
-						There are two required attributes for <b>thymus.js</b>. The <b>thymusScript</b>
-						id is used to capture various attribute options on the script tag
-						while the <b>data-th-context-path</b> is used for <a href="#fragpath">fragment path
-						resolution</a>.
+						There are two required <b>thymus.js</b> attributes. The <b>thymusScript</b>
+						id is used to identify the <b>thymus.js</b> script in order to
+						capture various attribute options on the script tag while the <b>data-th-context-path</b>
+						is used for <a href="#fragpath">fragment path resolution</a> and <a
+							href="#attrpaths">attribute path resolution</a>. It should point
+						to the root context of the application relative to the page in
+						which <b>thymus.js</b> is loaded.
 					</p>
-
-<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head</span> <span style="color: #FF0000">data-substitue=</span><span style="color: #0000FF">&quot;frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+					<p>
+						Fragments are simply defined using the <b>data-th-fragment</b>
+						attribute and assigning a fragment unique value to it. Any other
+						content that surrounds the fragment will be ignored. The site you
+						are viewing uses the following fragment for the top navigation
+						bar:
+					</p>
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-th-fragment=</span><span style="color: #0000FF">&quot;topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
+					
+					<h3 id="headfrags">Head Fragments</h3>
+					<p>
+						Almost every browser removes <b>head</b> attributes when parsing
+						an HTML DOM. So, the <b>thymus.js</b> script definition needs to
+						have an additional attribute to handle <b>head</b> fragment
+						inclusions (subsititutions are treated the same as includes for <b>head</b>
+						tags). If the browser doesn't strip out the <b>data-th-include</b>
+						on the <b>head</b> tag it will be used. Otherwise, an attempt will
+						be made to capture <b>data-th-head-frag</b> as in the following
+						example:
+					</p>
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head</span> <span style="color: #FF0000">data-th-include=</span><span style="color: #0000FF">&quot;frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- Thymus script --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymusScript&quot;</span>
 	<span style="color: #FF0000">data-th-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span>
-	<span style="color: #FF0000">data-th-head-frag=</span><span style="color: #0000FF">&quot;data-substitue=frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+	<span style="color: #FF0000">data-th-head-frag=</span><span style="color: #0000FF">&quot;data-th-include=frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
 </pre></div>
-
-					<h3 id="#fragpath">Fragment Path Resolution</h3>
+					<p>
+						Although this duplicates the inclusion defintion it does provide
+						for cross-browser support. If this redundency disrupts your inner
+						chi you can ommit the <b>data-th-include</b> attribute from the <b>head</b>
+						tag and the <b>data-th-head-frag</b> will still be picked up.
+					</p>
+					<h3 id="scriptfrags">Script Fragments</h3>
+					<p>
+						Script tags will be inserted individually in the order they are
+						defined within a fragment. Script tags found within a fragment
+						will also fire a <a href="#loadevents">fragment load event</a> for
+						each script that is loaded within the fragment destination.
+					</p>
+					<h3 id="loadevents">Fragment Load Events</h3>
+					<p>
+						Each time a fragment is loaded a <b>fragment load event</b> is
+						fired. Also, each script tag within a fragment will also fire its
+						own <b>fragment load event</b>. Event propigation is linear and
+						non-cancellable and therefore, can only be defined on the <b>thymus.js</b>
+						tag itself using the <b>data-th-onfragloaded</b> attribute.
+					</p>
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- Thymus script --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymusScript&quot;</span>
+	<span style="color: #FF0000">data-th-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span> <span style="color: #FF0000">data-th-frag-extension=</span><span style="color: #0000FF">&quot;.htm&quot;</span>
+	<span style="color: #FF0000">data-th-onfragloaded=</span><span style="color: #0000FF">&quot;init(event)&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
+</pre></div>
+					<p>
+						In the example above a function called <i>init</i> is defined as
+						the <b>data-th-onfragloaded</b>. Every time a fragment is
+						successfully loaded the an <i>window.init</i> function will be
+						called. If the function contains an <b>event</b> parameter (w/o
+						quotes) the <b>fragment load event</b> will be passed at the
+						specified parameter index. The <b>fragment load event</b> contains
+						the following properties:
+					</p>
+					<div id="fragloadevent" class="panel panel-default">
+						<div class="panel-heading">
+							<h2>Fragment Load Event</h2>
+						</div>
+						<div class="panel-body">
+							<div class="row row-thymus">
+								<div class="col-md-2">url</div>
+								<div class="col-md-10">the URL of the fragment that was
+									loaded</div>
+							</div>
+							<div class="row row-thymus">
+								<div class="col-md-2">fragCount</div>
+								<div class="col-md-10">the number of total fragments
+									loaded</div>
+							</div>
+							<div class="row row-thymus">
+								<div class="col-md-2">fragCurrTotal</div>
+								<div class="col-md-10">the current number of total
+									fragments that have or will be loaded (may grow as new script
+									tags or nested fragments are discovered)</div>
+							</div>
+							<div class="row row-thymus">
+								<div class="col-md-2">element</div>
+								<div class="col-md-10">the DOM element that was included
+									or subituted</div>
+							</div>
+							<div class="row row-thymus">
+								<div class="col-md-2">error</div>
+								<div class="col-md-10">the Error object (if the fragment
+									loaded successfully, error will be null)</div>
+							</div>
+						</div>
+					</div>
+					<div id="loadcompleteevent" class="panel panel-default">
+						<div class="panel-heading">
+							<h2>Load Complete Event</h2>
+						</div>
+						<div class="panel-body">
+							<div class="row row-thymus">
+								<div class="col-md-2">fragsNumLoaded</div>
+								<div class="col-md-10">the total number of fragments
+									loaded (including nested fragments and scripts)</div>
+							</div>
+							<div class="row row-thymus">
+								<div class="col-md-2">errors</div>
+								<div class="col-md-10">an Array of Error objects (if all
+									fragments loaded successfully, errors will be null)</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="paths" class="panel panel-default">
+				<div class="panel-heading">
+					<h2>
+						Path Resolution
+					</h2>
+				</div>
+				<div class="panel-body app-code">
+					<h3 id="fragpath">Fragment Path Resolution</h3>
 					<p>
 						Because <b>thymus.js</b> runs on the client it's not inheriently
 						application context aware. Therefore, <b>thymus.js</b> uses a
@@ -155,68 +279,101 @@
 						different path levels. So, it's imporant that the <b>data-th-context-path</b>
 						synchronizes with the path defined within the fragment. For
 						example, a fragment that resides in <b>example.com/my-app/frags/nav.htm</b>
-						may be included in <b>example.com/my-app/index.htm</b> as well as
-						<b>example.com/my-app/user/info.htm</b>. If the fragment is
-						defined something like:
+						may also be included in <b>example.com/my-app/index.htm</b> as
+						well as <b>example.com/my-app/user/info.htm</b>. If the fragment
+						is defined something like:
 					</p>
 <div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-th-fragment=</span><span style="color: #0000FF">&quot;topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	...
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
 					<p>
-						Then both <b>example.com/my-app/index.htm</b> and <b>example.com/my-app/user/info.htm</b>
-						could both contain a corresponding include (or substitution) that
-						has the same fragment path:
+						And both <b>example.com/my-app/index.htm</b> and <b>example.com/my-app/user/info.htm</b>
+						contain a corresponding include (or substitution):
 					</p>
 <div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-th-include=</span><span style="color: #0000FF">&quot;frags/nav/nav :: topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	...
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
 					<p>
+						Then the <b>thymus.js</b> script definitions would be as follows:
+					</p>
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- example.com/my-app/index.htm --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymusScript&quot;</span> <span style="color: #FF0000">data-th-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span>
+	<span style="color: #FF0000">data-th-frag-extension=</span><span style="color: #0000FF">&quot;.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
+</pre></div>
+
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- example.com/my-app/user/info.htm --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymusScript&quot;</span>
+	<span style="color: #FF0000">data-th-context-path=</span><span style="color: #0000FF">&quot;../&quot;</span> <span style="color: #FF0000">data-th-frag-extension=</span><span style="color: #0000FF">&quot;.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
+</pre></div>
+					<p>
+						Notice that in both resources the <b>data-th-context-path</b>
+						points to <b>example.com/my-app</b> with <b>my-app</b> being the
+						root context (<b>example.com/my-app/index.htm</b> uses <b>"."</b>
+						which infers the current path; which would be <b>example.com/my-app/</b>
+						while <b>example.com/my-app/user/info.htm</b> uses <b>"../"</b>
+						which infers one directory up; which would be <b>example.com/my-app/</b>).
 						This vasly simplifies fragment path resolution (escpecially for
-						nested fragments) and ensures that <b>thymus.js</b> uses the
-						proper path. In the case of <b>example.com/my-app/index.htm</b>
-						and <b>example.com/my-app/user/info.htm</b> where <b>data-th-context-path="."</b>
-						the path within <b>data-th-include="frags/nav/nav :: topnav"</b>
-						would get resolved to <b>example.com/my-app/</b> <b>example.com/my-app/user/info.htm</b>
+						nested fragments) and ensures that all fragment
+						inclusions/substitutions paths are relative to the root context
+						path of the application.
 					</p>
-
-					<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head</span> <span style="color: #FF0000">data-substitue=</span><span style="color: #0000FF">&quot;frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- Thymus script --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymusScript&quot;</span>
-	<span style="color: #FF0000">data-th-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span>
-	<span style="color: #FF0000">data-th-head-frag=</span><span style="color: #0000FF">&quot;data-substitue=frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
-</pre></div>
+					<h3 id="attrpaths">Attribute Path Resolution</h3>
 					<p>
-						While <b>info.htm</b> is within a sub-directory of the root directory called <b>user</b>.
-						So, we could define <b>data-th-context-path</b> within <b>info.htm</b>
-						as:
+						As with <a href="#fragpath">Fragment Path Resolution</a>, relative
+						URLs within fragments are resolved to their absolute URL
+						counterparts relative to the root context of the application as
+						defined by the <b>data-th-context-path</b> on script. Only <b>href</b>
+						and <b>src</b> attributes with relative paths are eligable for
+						updating. Any <b>href</b>/<b>src</b> attributes that contain URLs
+						that begin with an <a
+							href="http://en.wikipedia.org/wiki/URI_scheme#Official_IANA-registered_schemes">IANA
+							registered scheme</a> or begin with a <b>/</b> will <i>NOT</i> be
+						updated by <b>thymus.js</b>. When any <b>href</b>/<b>src</b>
+						attributes within a fragment begin with a <a
+							href="http://tools.ietf.org/html/rfc3986#section-4.2">protocol-relative
+							URL</a> (i.e. <b>//</b>) and the page is being called using a <a
+							href="http://en.wikipedia.org/wiki/File_URI_scheme">file URI
+							scheme</a> the URL will default to <b>http:</b> in order to preserve
+						external URL integrity. Here are a few examples:
 					</p>
-<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head</span> <span style="color: #FF0000">data-substitue=</span><span style="color: #0000FF">&quot;frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- Thymus script --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymusScript&quot;</span>
-	<span style="color: #FF0000">data-th-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span>
-	<span style="color: #FF0000">data-th-head-frag=</span><span style="color: #0000FF">&quot;data-substitue=frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- a page at: http://example.com/my-app/login.htm --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- with a data-th-context-path=&quot;.&quot; that contains a fragment with a --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;a</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;index.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>...<span style="color: #000080; font-weight: bold">&lt;/a&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- will be result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;a</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;http://example.com/my-app/index.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/a&gt;</span>
 </pre></div>
-					<p>
-						Also, URLs contained
-						within <b>nav.htm</b> can contain relative paths within <b>src</b>
-						and <b>href</b> attributes. <b>thymus.js</b> will automatically
-						resolve any relative paths to absolute paths relative to the <b>data-th-context-path</b>.
-					</p>
 
-					<!-- HTML generated using hilite.me -->
-					<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head</span> <span style="color: #FF0000">data-substitue=</span><span style="color: #0000FF">&quot;frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- Thymus script --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymusScript&quot;</span>
-	<span style="color: #FF0000">data-th-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span>
-	<span style="color: #FF0000">data-th-head-frag=</span><span style="color: #0000FF">&quot;data-substitue=frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- a page at: http://example.com/my-app/user/info.htm --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- with a data-th-context-path=&quot;../&quot; that contains a fragment with a --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;a</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;index.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>...<span style="color: #000080; font-weight: bold">&lt;/a&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- will be result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;a</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;http://example.com/my-app/index.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/a&gt;</span>
+</pre></div>
+
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- a page at: http://example.com/my-app/index.htm --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- with a data-th-context-path=&quot;.&quot; that contains a fragment with a --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;a</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;user/info.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>...<span style="color: #000080; font-weight: bold">&lt;/a&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- will be result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;a</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;http://example.com/my-app/user/info.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/a&gt;</span>
+</pre></div>
+
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- a page at: file://example.com/my-app/index.htm (notice the file: scheme) --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- with a data-th-context-path=&quot;.&quot; that contains a fragment with a --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;link</span>
+	<span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;//code.jquery.com/ui/jquery-ui-git.css&quot;</span>
+	<span style="color: #FF0000">rel=</span><span style="color: #0000FF">&quot;stylesheet&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- will be result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;link</span>
+	<span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;http://code.jquery.com/ui/jquery-ui-git.css&quot;</span>
+	<span style="color: #FF0000">rel=</span><span style="color: #0000FF">&quot;stylesheet&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 </pre></div>
 				</div>
 			</div>
