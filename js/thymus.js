@@ -22,8 +22,8 @@ Thymus.DEFAULT_SEP = '::';
 Thymus.ID = 'thymusScript';
 Thymus.CONTEXT_PATH_ATTR = 'data-th-context-path';
 Thymus.JQUERY_URL_ATTR = 'data-th-jquery-url';
-Thymus.FRAG_LOADED_ATTR = 'data-th-onfragloaded';
-Thymus.LOADED_ATTR = 'data-th-oncomplete';
+Thymus.FRAG_COMPLETE_ATTR = 'data-th-onfragcomplete';
+Thymus.FRAGS_COMPLETE_ATTR = 'data-th-onfragscomplete';
 Thymus.FRAG_HEAD_ATTR = 'data-th-head-frag';
 Thymus.FRAG_ATTR = 'data-th-fragment-attr';
 Thymus.FRAG_INC_ATTR = 'data-th-include-attr';
@@ -43,8 +43,8 @@ Thymus.FRAG_TO_SELECT = null;
 Thymus.FRAG_SEP = null;
 Thymus.FRAG_EXT = null;
 Thymus.PROTOCOL_FOR_FILE = null;
-Thymus.FRAG_LOADED = null;
-Thymus.LOADED = null;
+Thymus.FRAG_COMPLETE = null;
+Thymus.FRAGS_COMPLETE = null;
 Thymus.jqueryLoaded = false;
 Thymus.pageLoaded = false;
 Thymus.fragmentsLoaded = false;
@@ -187,19 +187,6 @@ Thymus.getFragAttr = function($f, attr) {
  */
 Thymus.loadFragments = function(selector, func) {
 	var $s = $(selector);
-	var Track = function() {
-		this.cnt = 0;
-		this.len = 0;
-		var e = '';
-		this.addError = function(em) {
-			e += (e.length > 0 ? ',' : '') + em;
-			return e;
-		};
-		this.getError = function() {
-			return e;
-		};
-	};
-	var t = new Track();
 	var ext = Thymus.FRAG_EXT ? Thymus.FRAG_EXT : Thymus.getFileExtension(location.href);
 	var Frag = function($fl) {
 		// use the fragment value as the attribute key to use as the replacement/include
@@ -222,129 +209,179 @@ Thymus.loadFragments = function(selector, func) {
 		this.el = $fl;
 		this.e = null;
 		this.toString = function() {
-			return '--> Fragment ' + (this.r ? 'subsitution' : 'include')
-					+ ' | url: ' + this.u + ' | target: ' + this.t
-					+ ' | search: ' + this.s + ' :: ';
+			return '[Fragment, type: ' + (this.r ? 'subsitution"' : 'include"')
+					+ ', URL: ' + this.u + ', target: ' + this.t + ', select: '
+					+ this.s + ']';
 		};
 	};
-	var FragEvent = function(t, f) {
-		this.url = f ? f.u : undefined;
+	var FragCompleteEvent = function(t, f) {
 		this.fragCount = t.cnt;
 		this.fragCurrTotal = t.len;
+		this.url = f ? f.u : undefined;
 		this.element = f ? f.el : undefined;
 		this.error = f ? f.e : undefined;
+		this.log = function() {
+			if (typeof window.console !== 'undefined'
+					&& typeof window.console.log !== 'undefined') {
+				window.console.log(Thymus.ieVersion <= 0
+						|| Thymus.ieVersion > 9 ? this : this
+						.toFormattedString());
+			}
+		};
+		this.toFormattedString = function() {
+			return '[Fragment Complete Event, fragCount: ' + this.fragCount
+					+ ', fragCurrTotal: ' + this.fragCurrTotal + ', URL: '
+					+ this.url + ', element: ' + this.element + ', error: '
+					+ this.error + ']';
+		};
 	};
+	var Track = function() {
+		this.cnt = 0;
+		this.len = 0;
+		var e = [];
+		this.addError = function(em, f) {
+			e[e.length] = em;
+			if (f) {
+				f.e = em;
+			}
+			return e;
+		};
+		this.getErrors = function() {
+			return e;
+		};
+	};
+	var t = new Track();
 	var done = function(t, f) {
 		if (t.cnt > t.len) {
-			throw new Error('Expected ' + t.len + ' fragments, but recieved ' + t.cnt);
+			t.addError('Expected ' + t.len + ' fragments, but recieved ' + t.cnt, f);
 		}
-		Thymus.fireEvent(Thymus.FRAG_LOADED, Thymus.EVENT_NAME, new FragEvent(t, f));
-		if (t.cnt == t.len) {
-			if (t.getError().length > 0) {
-				throw new Error(t.getError());
-			}
+		Thymus.fireEvent(Thymus.FRAG_COMPLETE, Thymus.EVENT_NAME, 
+				new FragCompleteEvent(t, f));
+		if (t.cnt >= t.len) {
 			if (typeof func === 'function') {
-				func($s, t.cnt);
+				func($s, t.cnt, t.getErrors());
 			}
 		}
 	};
 	var lfi = null;
 	var lfg = function($fl, cb) {
-		var f = new Frag($fl);
-		cb = typeof cb === 'function' ? cb : function(){};
-		if (!f.u) {
-			t.addError('Invalid URL for ' + f.toString());
-			cb(null, f);
-			return;
-		}
-		// use get vs load w/content target for more granular control
-		$.get(f.u, null, function(r, status, xhr) {
-			var mt = xhr.getResponseHeader('Content-Type');
-			if (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0) {
-				if (f.r) {
-					$fl.replaceWith(r);
-				} else {
-					$fl.append(r);
-				}
+		var f = null;
+		try {
+			f = new Frag($fl);
+			cb = typeof cb === 'function' ? cb : function(){};
+			if (!f.u) {
+				t.addError('Invalid URL for ' + f.toString(), f);
 				cb(null, f);
 				return;
-			} else if (mt.indexOf('json') >= 0) {
-				// TODO : handle JSON data using name matching
 			}
-			// just about every browser strips out BODY/HEAD when parsing an
-			// HTML DOM, all but Opera strip out HTML, many strip out
-			// TITLE/BASE/META and some strip out KEYGEN/PROGRESS/SOURCE. so, we
-			// can't use the typical JQuery/browser parsing on the result for
-			// those tags.
-			var hs = '<head ';
-			var he = '</head>';
-			var his = r.indexOf(hs);
-			if (his > -1) {
-				var hie = r.indexOf(he);
-				var hr = '<div ' + r.substring(his + hs.length, hie) + '</div>';
-				hr = hr.substring(0, hr.indexOf('>') + 1);
-				var $hr = $(hr + '</div>');
-				var ha = $hr.attr(Thymus.FRAG.replace('\\', ''));
-				if (ha && ha == f.t) {
-					hr = hr.replace(/div/g, 'head');
-					hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
-					// TODO : strip out script tags and load them dynamically 
-					// to capture completion/error/etc.
-					// /<script[^>]*>([\\S\\s]*?)<\/script>/img
-					var $h = $('head');
-					hr = Thymus.linksToAbsolute(hr);
-					$h.append(hr);
-					cb($h, f);
+			// use get vs load w/content target for more granular control
+			$.ajax({
+				url: f.u
+			}).done(function(r, status, xhr) {
+				var mt = xhr.getResponseHeader('Content-Type');
+				if (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0) {
+					if (f.r) {
+						$fl.replaceWith(r);
+					} else {
+						$fl.append(r);
+					}
+					cb(null, f);
+					return;
+				} else if (mt.indexOf('json') >= 0) {
+					// TODO : handle JSON data using name matching
+				}
+				// just about every browser strips out BODY/HEAD when parsing an
+				// HTML DOM, all but Opera strip out HTML, many strip out
+				// TITLE/BASE/META and some strip out KEYGEN/PROGRESS/SOURCE. so, we
+				// can't use the typical JQuery/browser parsing on the result for
+				// those tags.
+				var hs = '<head ';
+				var he = '</head>';
+				var his = r.indexOf(hs);
+				if (his > -1) {
+					var hie = r.indexOf(he);
+					var hr = '<div ' + r.substring(his + hs.length, hie) + '</div>';
+					hr = hr.substring(0, hr.indexOf('>') + 1);
+					var $hr = $(hr + '</div>');
+					var ha = $hr.attr(Thymus.FRAG.replace('\\', ''));
+					if (ha && ha == f.t) {
+						hr = hr.replace(/div/g, 'head');
+						hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
+						// TODO : strip out script tags and load them dynamically 
+						// to capture completion/error/etc.
+						// /<script[^>]*>([\\S\\s]*?)<\/script>/img
+						var $h = $('head');
+						hr = Thymus.linksToAbsolute(hr);
+						$h.append(hr);
+						cb($h, f);
+						return;
+					}
+				}
+				// process non-head tags the normal JQuery way
+				// (links need to be converted via raw results to
+				// prevent warnings)
+				var $c = $(Thymus.linksToAbsolute(r));
+				var fs = $c.filter(f.s);
+				if (fs.length <= 0) {
+					t.addError('No matching results for ' + f.toString()
+							+ ' in\n' + r, f);
+					cb(null, f);
 					return;
 				}
-			}
-			// process non-head tags the normal JQuery way
-			// (links need to be converted via raw results to
-			// prevent warnings)
-			var $c = $(Thymus.linksToAbsolute(r));
-			var fs = $c.filter(f.s);
-			if (fs.length <= 0) {
-				t.addError('No matching results for ' + f.toString()
-						+ ' in\n' + r);
-				cb(null, f);
-				return;
-			}
-			fs.each(function() {
-				var $cf = $(this);
-				//Thymus.linksToAbsolute($cf);
-				var doScript = function($x) {
-					if (!$cf.is($x)) {
-						$x.remove();
-					}
-					var url = $x.prop('src');
-					if (url && url.length > 0) {
-						t.len++;
-						$.getScript(url, function(data, textStatus, jqxhr) {
-							cb($cf, f);
-							if (jqxhr.status != 200) {
-								throw new Error(jqxhr.status + ': ' + 
-										textStatus + ' URL="' + url + '"');
+				fs.each(function() {
+					var $cf = $(this);
+					//Thymus.linksToAbsolute($cf);
+					var doScript = function($x) {
+						if (!$cf.is($x)) {
+							$x.remove();
+						}
+						var url = $x.prop('src');
+						if (url && url.length > 0) {
+							t.len++;
+							var sf = new Frag($x);
+							sf.u = url;
+							sf.t = $cf;
+							if (url.indexOf('data:text/javascript,') >= 0) {
+								$('<script>' + url.substr('data:text/javascript,'.length) + 
+										'</script>').appendTo($cf);
+								cb(null, sf);
+								return;
 							}
-						});
-					}
-				};
-				$cf.find('script').each(function() {
-					doScript($(this));
-				});
-				if (!$cf.is('script')) {
-					if (f.r) {
-						$fl.replaceWith($cf);
+							$.getScript(url).done(function(data, textStatus, jqxhr) {
+								if (jqxhr.status != 200) {
+									t.addError(jqxhr.status + ': ' + 
+											textStatus + ' URL="' + url + '"', sf);
+								}
+								cb($cf, sf);
+							}).fail(function(xhr, ts, e) {
+								t.addError('Error at ' + sf.toString() + ': ' + 
+										ts + '- ' + e, sf);
+								cb(null, sf);
+							});
+						}
+					};
+					$cf.find('script').each(function() {
+						doScript($(this));
+					});
+					if (!$cf.is('script')) {
+						if (f.r) {
+							$fl.replaceWith($cf);
+						} else {
+							$fl.append($cf);
+						}
 					} else {
-						$fl.append($cf);
+						doScript($cf);
 					}
-				} else {
-					doScript($cf);
-				}
-				cb($cf, f);
+					cb($cf, f);
+				});
+			}).fail(function(xhr, ts, e) {
+				t.addError('Error at ' + f.toString() + ': ' + ts + '- ' + e, f);
+				cb(null, f);
 			});
-		}).fail(function(jqXhr, ts, e) {
-			t.addError('Error at ' + f.toString() + ': ' + ts + '- ' + e);
-		});
+		} catch (e) {
+			t.addError('Error at ' + f.toString() + ': ' + e, f);
+			cb(null, f);
+		}
 		return f;
 	};
 	var lfc = null;
@@ -353,7 +390,7 @@ Thymus.loadFragments = function(selector, func) {
 			t.cnt++;
 			// process any nested fragments
 			if ($cf) {
-				lfi($cf);
+				lfi($cf, f);
 			} else {
 				done(t, f);
 			}
@@ -373,13 +410,15 @@ Thymus.loadFragments = function(selector, func) {
 		}
 	}
 	// recursivly process all the includes/substitutions
-	lfi = function($f) {
+	lfi = function($f, f) {
 		var $fs = $f.find(Thymus.FRAG_TO_SELECT);
 		t.len += $fs.length;
 		$fs.each(function() {
 			lfc($(this));
 		});
-		done(t);
+		if (t.cnt > 0 || ($fs.length == 0 && t.cnt == 0)) {
+			done(t, f);
+		}
 	};
 	// make initial call
 	lfi($s);
@@ -498,19 +537,32 @@ Thymus.urlAdjust = function(url) {
  *            the parameter value to pass (optional)
  */
 Thymus.fireEvent = function(ft, pn, pv) {
-	if (ft) {
-		var fa = ft.split('(');
-		var fn = fa.shift();
-		if (typeof window[fn] === 'function') {
-			var f = window[fn];
-			if (fa.length > 0) {
-				var p = fa.join('(');
-				f.apply(undefined, p.split(','));
-			} else {
-				f();
+	try {
+		if (ft) {
+			var fn = /.+?\(/i.exec(ft)[0];
+			var a = null;
+			if (fn) {
+				a = ft.substring(fn.length, ft.lastIndexOf(')'));
+			}
+			fn = ft.split('(')[0];
+			if (typeof window[fn] === 'function') {
+				var f = window[fn];
+				if (a && a.length > 0) {
+					a = a.match(/(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g);
+					for (var i=0; i<a.length; i++) {
+						if (a[i] == pn) {
+							a[i] = pv;
+							break;
+						}
+					}
+					f.apply(undefined, a);
+				} else {
+					f(pv);
+				}
 			}
 		}
-
+	} catch (e) {
+		
 	}
 };
 /**
@@ -567,8 +619,8 @@ Thymus.startUp = function() {
 			return d && !r ? d : r;
 		}
 		var url = getAttr(sh, Thymus.JQUERY_URL_ATTR, Thymus.JQUERY_DEFAULT_URL);
-		Thymus.LOADED = getAttr(sh, Thymus.LOADED_ATTR);
-		Thymus.FRAG_LOADED = getAttr(sh, Thymus.FRAG_LOADED_ATTR);
+		Thymus.FRAGS_COMPLETE = getAttr(sh, Thymus.FRAGS_COMPLETE_ATTR);
+		Thymus.FRAG_COMPLETE = getAttr(sh, Thymus.FRAG_COMPLETE_ATTR);
 		Thymus.ENGINE = getAttr(sh, Thymus.ENGINE_ATTR);
 		Thymus.FRAG = getAttr(sh, Thymus.FRAG_ATTR,
 				Thymus.ENGINE == Thymus.THYMELEAF ? Thymus.THYMELEAF_FRAG_ATTR
@@ -597,15 +649,28 @@ Thymus.startUp = function() {
 			cache : false
 		});
 		var load = function() {
-			Thymus.loadFragments('html', function($s, cnt) {
+			Thymus.loadFragments('html', function($s, cnt, ea) {
 				// now that all of the includes/substitutions have been
 				// loaded we need to execute any inititialization that may
 				// be defined in the script definition of the page
-				var CE = function(c, e) {
-					this.fragsNumLoaded = c;
+				var FragsCompleteEvent = function(c, e) {
+					this.fragCount = c;
 					this.errors = e;
+					this.log = function() {
+						if (typeof window.console !== 'undefined'
+								&& typeof window.console.log !== 'undefined') {
+							window.console.log(Thymus.ieVersion <= 0
+									|| Thymus.ieVersion > 9 ? this : this
+									.toFormattedString());
+						}
+					};
+					this.toFormattedString = function() {
+						return '[Fragments Complete Event, fragCount: ' + this.fragCount
+							+ ', errors: ' + this.e + ']';
+					};
 				};
-				Thymus.fireEvent(Thymus.LOADED, Thymus.EVENT_NAME, new CE(cnt));
+				Thymus.fireEvent(Thymus.FRAGS_COMPLETE, Thymus.EVENT_NAME, 
+						new FragsCompleteEvent(cnt, ea));
 			});
 		};
 		if (document.readyState !== 'complete') {

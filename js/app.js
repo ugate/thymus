@@ -1,4 +1,5 @@
-function init() {
+function init(event) {
+	event.log();
 	// add some flare to the demo by adding a background splash
 	flickr('vine', 'body');
 	// initialize bootstrap components

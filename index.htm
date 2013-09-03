@@ -2,12 +2,18 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:substituteby="frags/head :: header">
 <meta charset="utf-8" />
+<script type="text/javascript">
+	function fragComplete(event) {
+		event.log();
+	}
+</script>
 <!-- Thymus script -->
 <script th:remove="all" src="js/thymus.js" id="thymusScript"
 	data-th-engine="thymeleaf"
 	data-th-context-path="." data-th-frag-extension=".htm"
 	data-th-head-frag="th:substituteby=frags/head :: header"
-	data-th-oncomplete="init(event)"></script>
+	data-th-onfragscomplete="init(event)" 
+	data-th-onfragcomplete="fragComplete(event)"></script>
 </head>
 <body>
 	<div th:substituteby="frags/nav/nav :: topnav"></div>
@@ -28,7 +34,7 @@
 						class="icon-link"></i></a></li>
 				<li><a th:title="#{thymeleaf}"
 					class="app-tooltip-bottom" title="Thymeleaf Integration" href="#thymeleaf"><i
-						class="icon-cogs"></i></a></li>
+						class="icon-cloud"></i></a></li>
 			</ul>
 		</div>
 		<section
@@ -56,10 +62,7 @@
 				</div>
 				<div class="panel-body">
 					<p th:substituteby="README.md">
-						<b>thymus.js</b> is a small (<b>1k minified</b>) JavaScript
-						template library for including/substituting client side fragments
-						using HTML5 resources that reside in different paths on a server
-						and/or file system.
+						<b>thymus.js</b>
 					</p>
 					<p>
 						Internally, it dynamically loads the JQuery API (configurable) and
@@ -181,81 +184,112 @@
 					<p>
 						Script tags will be inserted individually in the order they are
 						defined within a fragment. Script tags found within a fragment
-						will also fire a <a href="#loadevents">fragment load event</a> for
-						each script that is loaded within the fragment destination.
+						will also fire a <a href="#fragcomplete">fragment loaded
+							event</a> for each script that is loaded within the fragment
+						destination.
 					</p>
-					<h3 id="loadevents">Fragment Load Events</h3>
+					<h3 id="fragcomplete">Fragment Complete Events</h3>
 					<p>
-						Each time a fragment is loaded a <b>fragment load event</b> is
-						fired. Also, each script tag within a fragment will also fire its
-						own <b>fragment load event</b>. Event propigation is linear and
-						non-cancellable and therefore, can only be defined on the <b>thymus.js</b>
-						tag itself using the <b>data-th-onfragloaded</b> attribute.
+						After each time an attempt to load a fragment is made a <b>fragment
+							complete event</b> is fired. Also, each script tag within a fragment
+						will also fire its own <b>fragment complete event</b>. Event
+						propigation is linear and non-cancellable and therefore, can only
+						be defined on the <b>thymus.js</b> tag itself using the <b>data-th-onfragcomplete</b>
+						attribute.
 					</p>
 <div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- Thymus script --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymusScript&quot;</span>
 	<span style="color: #FF0000">data-th-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span> <span style="color: #FF0000">data-th-frag-extension=</span><span style="color: #0000FF">&quot;.htm&quot;</span>
-	<span style="color: #FF0000">data-th-onfragloaded=</span><span style="color: #0000FF">&quot;init(event)&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+	<span style="color: #FF0000">data-th-onfragcomplete=</span><span style="color: #0000FF">&quot;fragComplete(event)&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
 </pre></div>
 					<p>
-						In the example above a function called <i>init</i> is defined as
-						the <b>data-th-onfragloaded</b>. Every time a fragment is
-						successfully loaded the an <i>window.init</i> function will be
-						called. If the function contains an <b>event</b> parameter (w/o
-						quotes) the <b>fragment load event</b> will be passed at the
-						specified parameter index. The <b>fragment load event</b> contains
-						the following properties:
+						In the example above a function called <i>fragComplete</i> is
+						defined as the <b>data-th-onfragcomplete</b>. Every time an
+						attempt is made to load a fragment and a response is returned the
+						<i>window.fragComplete</i> function will be called. If the
+						function contains an <b>event</b> parameter (w/o quotes) the <b>fragment
+							complete event</b> will be passed at the specified parameter index.
+						The <b>fragment complete event</b> contains the following
+						properties:
 					</p>
-					<div id="fragloadevent" class="panel panel-default">
+					<div id="fragcompleteevent" class="panel panel-default">
 						<div class="panel-heading">
-							<h2>Fragment Load Event</h2>
+							<h2>Fragment Complete Event</h2>
 						</div>
 						<div class="panel-body">
 							<div class="row row-thymus">
 								<div class="col-md-2">url</div>
-								<div class="col-md-10">the URL of the fragment that was
-									loaded</div>
+								<div class="col-md-10">the URL of the fragment that an
+									attempt was made to load</div>
 							</div>
 							<div class="row row-thymus">
 								<div class="col-md-2">fragCount</div>
-								<div class="col-md-10">the number of total fragments
-									loaded</div>
+								<div class="col-md-10">the number of total fragments load
+									attempts</div>
 							</div>
 							<div class="row row-thymus">
 								<div class="col-md-2">fragCurrTotal</div>
 								<div class="col-md-10">the current number of total
-									fragments that have or will be loaded (may grow as new script
-									tags or nested fragments are discovered)</div>
+									fragments that will or have had an attempt to load (may grow as
+									new script tags or nested fragments are discovered)</div>
 							</div>
 							<div class="row row-thymus">
 								<div class="col-md-2">element</div>
 								<div class="col-md-10">the DOM element that was included
-									or subituted</div>
+									or substituted</div>
 							</div>
 							<div class="row row-thymus">
 								<div class="col-md-2">error</div>
 								<div class="col-md-10">the Error object (if the fragment
-									loaded successfully, error will be null)</div>
+									loaded successfully error will be null)</div>
 							</div>
 						</div>
 					</div>
-					<div id="loadcompleteevent" class="panel panel-default">
+					<h3 id="fragscomplete">Fragments Complete Events</h3>
+					<p>
+						Similar to <a href="#fragcomplete">fragment complete events</a>, a
+						<b>fragments complete event</b> will be fired once an attempt to
+						load all of the fragments has been made. Event propigation is
+						linear and non-cancellable and therefore, can only be defined on
+						the <b>thymus.js</b> tag itself using the <b>data-th-onfragscomplete</b>
+						attribute.
+					</p>
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- Thymus script --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymusScript&quot;</span>
+	<span style="color: #FF0000">data-th-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span> <span style="color: #FF0000">data-th-frag-extension=</span><span style="color: #0000FF">&quot;.htm&quot;</span>
+	<span style="color: #FF0000">data-th-onfragscomplete=</span><span style="color: #0000FF">&quot;done(event)&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
+</pre></div>
+					<p>
+						In the example above a function called <i>done</i> is defined as
+						the <b>data-th-onfragscomplete</b>. Once attempt is made to load
+						all the defined fragment/scrits/nested fragments and a response is
+						returned for each of them the <i>window.done</i> function will be
+						called. If the function contains an <b>event</b> parameter (w/o
+						quotes) the <b>fragments complete event</b> will be passed at the
+						specified parameter index. The <b>fragments complete event</b>
+						contains the following properties:
+					</p>
+					<div id="fragscompleteevent" class="panel panel-default">
 						<div class="panel-heading">
-							<h2>Load Complete Event</h2>
+							<h2>Fragments Complete Event</h2>
 						</div>
 						<div class="panel-body">
 							<div class="row row-thymus">
-								<div class="col-md-2">fragsNumLoaded</div>
-								<div class="col-md-10">the total number of fragments
-									loaded (including nested fragments and scripts)</div>
+								<div class="col-md-2">fragCount</div>
+								<div class="col-md-10">the total number of fragments that
+									were attempted to load (including nested fragments and scripts)</div>
 							</div>
 							<div class="row row-thymus">
 								<div class="col-md-2">errors</div>
-								<div class="col-md-10">an Array of Error objects (if all
-									fragments loaded successfully, errors will be null)</div>
+								<div class="col-md-10">a comma delimited string of
+									detailed error messages (if all fragments loaded successfully,
+									errors will be empty)</div>
 							</div>
 						</div>
 					</div>
