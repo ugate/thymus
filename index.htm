@@ -2,9 +2,66 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:substituteby="frags/head :: header">
 <meta charset="utf-8" />
+<style type="text/css">
+#loadThymus {
+	position: absolute;
+	margin: 0;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	color: #fff;
+	font-weight: bolder;
+	background-color: #777;
+	z-index: 5000;
+	font: 100% sans-serif, 'Helvetica Neue', Helvetica, Arial;
+}
+#loadThymus>div {
+	position: absolute;
+	width: 300px;
+	height: 50px;
+	margin: -150px 0 0 -150px;
+	left: 50%;
+	top: 50%;
+}
+#loadThymusText {
+	text-align: center;
+	vertical-align: baseline;
+	line-height: 50px;
+	z-index: 5002;
+}
+#loadThymusProg {
+	background-color: #333;
+}
+#loadThymusProgPer {
+	display: inline-block;
+	width: 1%;
+	height: 100%;
+	background-color: #6593B5;
+	z-index: 5001;
+}
+</style>
 <script type="text/javascript">
 	function fragComplete(event) {
 		event.log();
+		// get rid of text not wrapped in an HTML node or anchors 
+		// from the read me mark down
+		if (event.fragUrl.indexOf('README') > 0) {
+			$(event.source).contents().filter(function() {
+				return this.nodeType === 3 || this.tagName == 'a' || 
+					this.tagName == 'A';
+			}).remove();
+		}
+		// loading indicator
+		var $lt = $('#loadThymus');
+		if (event.fragCount == event.fragCurrTotal) {
+			$lt.css('display', 'none');
+		} else {
+			var p = Math.round((event.fragCount / event.fragCurrTotal) * 100) + '%';
+			var $pb = $lt.find('#loadThymusText');
+			$pb.text(p);
+			$('#loadThymusProgPer').css('width', p);
+		}
 	}
 </script>
 <!-- Thymus script -->
@@ -16,6 +73,14 @@
 	data-th-onfragcomplete="fragComplete(event)"></script>
 </head>
 <body>
+	<div id="loadThymus">
+		<div id="loadThymusText">
+			0%
+		</div>
+		<div id="loadThymusProg">
+			<div id="loadThymusProgPer"></div>
+		</div>
+	</div>
 	<div th:substituteby="frags/nav/nav :: topnav"></div>
 	<div class="container app-scroll">
 		<div id="docs" class="app-scroll-nav">
@@ -72,10 +137,14 @@
 							$.load(...) works with page fragments</a> with a few added benefits.
 						<b>thymus.js</b> will automatically insert fragments into a page
 						using HTML5 data attributes within the page and will update any
-						relative <b>src</b>/<b>href</b> URLs within fragments to point to
-						the proper path before insertion. It also supports nested
-						fragments that may reside in other fragments. <a href="#features">Click
-							here</a> for a full list of features.
+						relative
+						<code>src</code>
+						/
+						<code>href</code>
+						URLs within fragments to point to the proper path before
+						insertion. It also supports nested fragments that may reside in
+						other fragments. <a href="#features">Click here</a> for a full
+						list of features.
 					</p>
 					<p>
 						This site actually uses <b>thymus.js</b> templates to resolve
@@ -104,14 +173,14 @@
 					<ul>
 						<li>Automatic fragment inclusion</li>
 						<li>Automatic fragment substitution</li>
-						<li>Automatic fragment <b>src</b>/<b>href</b> resolution for
-							relative paths
+						<li>Automatic fragment <code>src</code>/<code>href</code>
+							resolution for relative paths
 						</li>
 						<li>Multiple fragment definitions in the same fragment
 							resource</li>
 						<li>Relatively infinite nesting of fragments (fragments
 							within fragments)</li>
-						<li><b>Head</b> tag fragments</li>
+						<li><code>head</code> tag fragments</li>
 						<li>Fragment loaded event capture/execution</li>
 						<li>Great for prototyping web sites on the client!</li>
 					</ul>
@@ -135,16 +204,19 @@
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
 </pre></div>
 					<p>
-						There are two required <b>thymus.js</b> attributes. The <b>thymusScript</b>
+						There are two required <b>thymus.js</b> attributes. The
+						<code>thymusScript</code>
 						id is used to identify the <b>thymus.js</b> script in order to
-						capture various attribute options on the script tag while the <b>data-th-context-path</b>
+						capture various attribute options on the script tag while the
+						<code>data-th-context-path</code>
 						is used for <a href="#fragpath">fragment path resolution</a> and <a
 							href="#attrpaths">attribute path resolution</a>. It should point
 						to the root context of the application relative to the page in
 						which <b>thymus.js</b> is loaded.
 					</p>
 					<p>
-						Fragments are simply defined using the <b>data-th-fragment</b>
+						Fragments are simply defined using the
+						<code>data-th-fragment</code>
 						attribute and assigning a fragment unique value to it. Any other
 						content that surrounds the fragment will be ignored. The site you
 						are viewing uses the following fragment for the top navigation
@@ -154,17 +226,34 @@
 	...
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
-					
+					<p>
+						Which is uses a
+						<code>data-th-substitute</code>
+						to define a value that contains two parts that are separated by a
+						"<b>::</b>". The first part is the URL <b>frags/nav/nav</b> (see the
+						<a href="#paths">Path Resolution</a> section for details on how
+						URLs are resolved). While the second <b>topnav</b> defines the
+						fragment name that is defined within the returned result (see
+						fragment above).
+					</p>
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-th-substitute=</span><span style="color: #0000FF">&quot;frags/nav/nav :: topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+</pre></div>
 					<h3 id="headfrags">Head Fragments</h3>
 					<p>
-						Almost every browser removes <b>head</b> attributes when parsing
-						an HTML DOM. So, the <b>thymus.js</b> script definition needs to
-						have an additional attribute to handle <b>head</b> fragment
-						inclusions (subsititutions are treated the same as includes for <b>head</b>
+						Almost every browser removes
+						<code>head</code>
+						attributes when parsing an HTML DOM. So, the <b>thymus.js</b>
+						script definition needs to have an additional attribute to handle
+						<code>head</code>
+						fragment inclusions (subsititutions are treated the same as
+						includes for
+						<code>head</code>
 						tags). If the browser doesn't strip out the <b>data-th-include</b>
-						on the <b>head</b> tag it will be used. Otherwise, an attempt will
-						be made to capture <b>data-th-head-frag</b> as in the following
-						example:
+						on the
+						<code>head</code>
+						tag it will be used. Otherwise, an attempt will be made to capture
+						<code>data-th-head-frag</code>
+						as in the following example:
 					</p>
 <div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head</span> <span style="color: #FF0000">data-th-include=</span><span style="color: #0000FF">&quot;frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
@@ -177,8 +266,13 @@
 					<p>
 						Although this duplicates the inclusion defintion it does provide
 						for cross-browser support. If this redundency disrupts your inner
-						chi you can ommit the <b>data-th-include</b> attribute from the <b>head</b>
-						tag and the <b>data-th-head-frag</b> will still be picked up.
+						chi you can ommit the
+						<code>data-th-include</code>
+						attribute from the
+						<code>head</code>
+						tag and the
+						<code>data-th-head-frag</code>
+						will still be picked up.
 					</p>
 					<h3 id="scriptfrags">Script Fragments</h3>
 					<p>
@@ -194,7 +288,8 @@
 							complete event</b> is fired. Also, each script tag within a fragment
 						will also fire its own <b>fragment complete event</b>. Event
 						propigation is linear and non-cancellable and therefore, can only
-						be defined on the <b>thymus.js</b> tag itself using the <b>data-th-onfragcomplete</b>
+						be defined on the <b>thymus.js</b> tag itself using the
+						<code>data-th-onfragcomplete</code>
 						attribute.
 					</p>
 <div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
@@ -207,13 +302,14 @@
 </pre></div>
 					<p>
 						In the example above a function called <i>fragComplete</i> is
-						defined as the <b>data-th-onfragcomplete</b>. Every time an
-						attempt is made to load a fragment and a response is returned the
-						<i>window.fragComplete</i> function will be called. If the
-						function contains an <b>event</b> parameter (w/o quotes) the <b>fragment
-							complete event</b> will be passed at the specified parameter index.
-						The <b>fragment complete event</b> contains the following
-						properties:
+						defined as the
+						<code>data-th-onfragcomplete</code>
+						. Every time an attempt is made to load a fragment and a response
+						is returned the <i>window.fragComplete</i> function will be
+						called. If the function contains an <b>event</b> parameter (w/o
+						quotes) the <b>fragment complete event</b> will be passed at the
+						specified parameter index. The <b>fragment complete event</b>
+						contains the following properties:
 					</p>
 					<div id="fragcompleteevent" class="panel panel-default">
 						<div class="panel-heading">
@@ -221,40 +317,135 @@
 						</div>
 						<div class="panel-body">
 							<div class="row row-thymus">
-								<div class="col-md-2">url</div>
+								<div class="col-md-2">
+									<code>fragUrl</code>
+								</div>
 								<div class="col-md-10">the URL of the fragment that an
 									attempt was made to load</div>
 							</div>
 							<div class="row row-thymus">
-								<div class="col-md-2">fragCount</div>
+								<div class="col-md-2">
+									<code>fragName</code>
+								</div>
+								<div class="col-md-10">the name of fragment that an
+									attempt was made to load</div>
+							</div>
+							<div class="row row-thymus">
+								<div class="col-md-2">
+									<code>fragCount</code>
+								</div>
 								<div class="col-md-10">the number of total fragments load
 									attempts</div>
 							</div>
 							<div class="row row-thymus">
-								<div class="col-md-2">fragCurrTotal</div>
+								<div class="col-md-2">
+									<code>fragCurrTotal</code>
+								</div>
 								<div class="col-md-10">the current number of total
 									fragments that will or have had an attempt to load (may grow as
 									new script tags or nested fragments are discovered)</div>
 							</div>
 							<div class="row row-thymus">
-								<div class="col-md-2">element</div>
-								<div class="col-md-10">the DOM element that was included
-									or substituted</div>
+								<div class="col-md-2">
+									<code>source</code>
+								</div>
+								<div class="col-md-10">
+									the DOM node that was included/substituted or the parent node
+									when the fragment was not HTML content or outer HTML string
+									when the fragment was a
+									<code>script</code>
+								</div>
 							</div>
 							<div class="row row-thymus">
-								<div class="col-md-2">error</div>
+								<div class="col-md-2">
+									<code>error</code>
+								</div>
 								<div class="col-md-10">the Error object (if the fragment
 									loaded successfully error will be null)</div>
 							</div>
 						</div>
 					</div>
+					<h2 id="otherfrags">Fragments <code>content-type</code></h2>
+					<p>
+						By default <b>thymus.js</b> assumes that content retrieved for
+						fragments have
+						<code>text/html</code>
+						content, but there are also other types of fragments that are
+						supported by <b>thymus.js</b>. Not all of the <a
+							href="http://www.iana.org/assignments/media-types">standard
+							media types</a> are supported and will cause errors if an attempt is
+						made to non-supported content types via <b>thymus.js</b>
+					</p>
+					<h3 id="textfrags">Raw Fragments</h3>
+					<p>
+						Fragments that are retrieved that have one of the
+						<code>content-type</code>
+						definitions below will be treated as raw data
+						inclusions/substitutions:
+					</p>
+					<ul>
+						<li><code>text/plain</code></li>
+						<li><code>application/octet-stream</code></li>
+					</ul>
+					<p>Because there is no fragment name/target assocaited with the
+						returned data it can be ommitted from the inclusion/substitution
+						attribute. So, only a URL will remain. Similar to the following:</p>
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- the the following substitute --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-th-substitute=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>Will be replaced.<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- will result in the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	This is the content from raw-data.txt
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- while the following include --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-th-include=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- will result in the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-th-include=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+		This is the content from raw-data.txt
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
+					<h3 id="xmlfrags">XML Fragments</h3>
+					<p>
+						Fragments that are retrieved that have one of the XML
+						<code>content-type</code>
+						definitions below will be... Comming Soon!
+					</p>
+					<ul>
+						<li><code>text/xml</code></li>
+						<li><code>application/xhtml+xml</code> (where <b>*</b> is one
+							of the <a href="http://www.iana.org/assignments/media-types">standard
+								media types</a> for XML)</li>
+					</ul>
+					<h3 id="jsonfrags">JSON Fragments</h3>
+					<p>
+						Fragments that are retrieved that have one of the JSON
+						<code>content-type</code>
+						definitions below will be... Comming Soon!
+					</p>
+					<ul>
+						<li><code>text/json</code></li>
+						<li><code>application/*json</code> (where <b>*</b> is one of
+							the <a href="http://www.iana.org/assignments/media-types">standard
+								media types</a> for JSON)</li>
+					</ul>
 					<h3 id="fragscomplete">Fragments Complete Events</h3>
 					<p>
 						Similar to <a href="#fragcomplete">fragment complete events</a>, a
 						<b>fragments complete event</b> will be fired once an attempt to
 						load all of the fragments has been made. Event propigation is
 						linear and non-cancellable and therefore, can only be defined on
-						the <b>thymus.js</b> tag itself using the <b>data-th-onfragscomplete</b>
+						the <b>thymus.js</b> tag itself using the
+						<code>data-th-onfragscomplete</code>
 						attribute.
 					</p>
 <div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
@@ -267,13 +458,15 @@
 </pre></div>
 					<p>
 						In the example above a function called <i>done</i> is defined as
-						the <b>data-th-onfragscomplete</b>. Once attempt is made to load
-						all the defined fragment/scrits/nested fragments and a response is
-						returned for each of them the <i>window.done</i> function will be
-						called. If the function contains an <b>event</b> parameter (w/o
-						quotes) the <b>fragments complete event</b> will be passed at the
-						specified parameter index. The <b>fragments complete event</b>
-						contains the following properties:
+						the
+						<code>data-th-onfragscomplete</code>
+						. Once attempt is made to load all the defined
+						fragment/scrits/nested fragments and a response is returned for
+						each of them the <i>window.done</i> function will be called. If
+						the function contains an <b>event</b> parameter (w/o quotes) the <b>fragments
+							complete event</b> will be passed at the specified parameter index.
+						The <b>fragments complete event</b> contains the following
+						properties:
 					</p>
 					<div id="fragscompleteevent" class="panel panel-default">
 						<div class="panel-heading">
@@ -281,12 +474,16 @@
 						</div>
 						<div class="panel-body">
 							<div class="row row-thymus">
-								<div class="col-md-2">fragCount</div>
+								<div class="col-md-2">
+									<code>fragCount</code>
+								</div>
 								<div class="col-md-10">the total number of fragments that
 									were attempted to load (including nested fragments and scripts)</div>
 							</div>
 							<div class="row row-thymus">
-								<div class="col-md-2">errors</div>
+								<div class="col-md-2">
+									<code>errors</code>
+								</div>
 								<div class="col-md-10">a comma delimited string of
 									detailed error messages (if all fragments loaded successfully,
 									errors will be empty)</div>
@@ -306,11 +503,14 @@
 					<p>
 						Because <b>thymus.js</b> runs on the client it's not inheriently
 						application context aware. Therefore, <b>thymus.js</b> uses a
-						configurable <b>data-th-context-path</b> attribute on the <b>thymus.js</b>
-						script tag. It's value establishes the path to the root context of
-						the application that will be resolved along with the fragment's
-						inclusion URL. Fragment definitions can point to resources with
-						different path levels. So, it's imporant that the <b>data-th-context-path</b>
+						configurable
+						<code>data-th-context-path</code>
+						attribute on the <b>thymus.js</b> script tag. It's value
+						establishes the path to the root context of the application that
+						will be resolved along with the fragment's inclusion URL. Fragment
+						definitions can point to resources with different path levels. So,
+						it's imporant that the
+						<code>data-th-context-path</code>
 						synchronizes with the path defined within the fragment. For
 						example, a fragment that resides in <b>example.com/my-app/frags/nav.htm</b>
 						may also be included in <b>example.com/my-app/index.htm</b> as
@@ -348,7 +548,7 @@
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
 </pre></div>
 					<p>
-						Notice that in both resources the <b>data-th-context-path</b>
+						Notice that in both resources the <code>data-th-context-path</code>
 						points to <b>example.com/my-app</b> with <b>my-app</b> being the
 						root context (<b>example.com/my-app/index.htm</b> uses <b>"."</b>
 						which infers the current path; which would be <b>example.com/my-app/</b>
@@ -364,19 +564,31 @@
 						As with <a href="#fragpath">Fragment Path Resolution</a>, relative
 						URLs within fragments are resolved to their absolute URL
 						counterparts relative to the root context of the application as
-						defined by the <b>data-th-context-path</b> on script. Only <b>href</b>
-						and <b>src</b> attributes with relative paths are eligable for
-						updating. Any <b>href</b>/<b>src</b> attributes that contain URLs
-						that begin with an <a
+						defined by the
+						<code>data-th-context-path</code>
+						on script. Only
+						<code>href</code>
+						and
+						<code>src</code>
+						attributes with relative paths are eligable for updating. Any
+						<code>href</code>
+						/
+						<code>src</code>
+						attributes that contain URLs that begin with an <a
 							href="http://en.wikipedia.org/wiki/URI_scheme#Official_IANA-registered_schemes">IANA
 							registered scheme</a> or begin with a <b>/</b> will <i>NOT</i> be
-						updated by <b>thymus.js</b>. When any <b>href</b>/<b>src</b>
+						updated by <b>thymus.js</b>. When any
+						<code>href</code>
+						/
+						<code>src</code>
 						attributes within a fragment begin with a <a
 							href="http://tools.ietf.org/html/rfc3986#section-4.2">protocol-relative
 							URL</a> (i.e. <b>//</b>) and the page is being called using a <a
 							href="http://en.wikipedia.org/wiki/File_URI_scheme">file URI
-							scheme</a> the URL will default to <b>http:</b> in order to preserve
-						external URL integrity. Here are a few examples:
+							scheme</a> the URL will default to
+						<code>http:</code>
+						in order to preserve external URL integrity. Here are a few
+						examples:
 					</p>
 <div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- a page at: http://example.com/my-app/login.htm --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- with a data-th-context-path=&quot;.&quot; that contains a fragment with a --&gt;</span>

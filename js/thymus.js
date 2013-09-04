@@ -205,9 +205,26 @@ Thymus.loadFragments = function(selector, func) {
 		if (this.u && this.u.length > 0) {
 			this.u = Thymus.absolutefragPath(this.u);
 		}
-		this.s = this.t ? Thymus.getFragFromSel(this.t) : null;// + ' > *';
+		this.s = this.t ? Thymus.getFragFromSel(this.t) : null;
 		this.el = $fl;
+		this.rs = null;
 		this.e = null;
+		this.p = function(x) {
+			if (this.r) {
+				try {
+					var $x = $(x);
+					this.el.replaceWith($x);
+					this.rs = $x;
+				} catch (e) {
+					// node may contain top level text nodes
+					var $x = this.el.parent();
+					this.el.replaceWith(x);
+					this.rs = $x;
+				}
+			} else {
+				this.el.append(x);
+			}
+		};
 		this.toString = function() {
 			return '[Fragment, type: ' + (this.r ? 'subsitution"' : 'include"')
 					+ ', URL: ' + this.u + ', target: ' + this.t + ', select: '
@@ -217,16 +234,12 @@ Thymus.loadFragments = function(selector, func) {
 	var FragCompleteEvent = function(t, f) {
 		this.fragCount = t.cnt;
 		this.fragCurrTotal = t.len;
-		this.url = f ? f.u : undefined;
-		this.element = f ? f.el : undefined;
+		this.fragUrl = f ? f.u : undefined;
+		this.fragName = f ? f.t : undefined;
+		this.source = f ? f.rs ? f.rs : f.el : undefined;
 		this.error = f ? f.e : undefined;
 		this.log = function() {
-			if (typeof window.console !== 'undefined'
-					&& typeof window.console.log !== 'undefined') {
-				window.console.log(Thymus.ieVersion <= 0
-						|| Thymus.ieVersion > 9 ? this : this
-						.toFormattedString());
-			}
+			Thymus.log(this);
 		};
 		this.toFormattedString = function() {
 			return '[Fragment Complete Event, fragCount: ' + this.fragCount
@@ -280,16 +293,41 @@ Thymus.loadFragments = function(selector, func) {
 			}).done(function(r, status, xhr) {
 				var mt = xhr.getResponseHeader('Content-Type');
 				if (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0) {
-					if (f.r) {
-						$fl.replaceWith(r);
-					} else {
-						$fl.append(r);
-					}
+					f.p(r);
 					cb(null, f);
 					return;
 				} else if (mt.indexOf('json') >= 0) {
 					// TODO : handle JSON data using name matching
 				}
+				var doScript = function($p, $x) {
+					if (!$p.is($x)) {
+						$x.remove();
+					}
+					var url = $x.prop('src');
+					if (url && url.length > 0) {
+						t.len++;
+						var sf = new Frag($x);
+						sf.u = url;
+						sf.t = $p;
+						if (url.indexOf('data:text/javascript,') >= 0) {
+							$('<script>' + url.substr('data:text/javascript,'.length) + 
+									'</script>').appendTo($p);
+							cb(null, sf);
+							return;
+						}
+						$.getScript(url).done(function(data, textStatus, jqxhr) {
+							if (jqxhr.status != 200) {
+								t.addError(jqxhr.status + ': ' + 
+										textStatus + ' URL="' + url + '"', sf);
+							}
+							cb($p, sf);
+						}).fail(function(xhr, ts, e) {
+							t.addError('Error at ' + sf.toString() + ': ' + 
+									ts + '- ' + e, sf);
+							cb(null, sf);
+						});
+					}
+				};
 				// just about every browser strips out BODY/HEAD when parsing an
 				// HTML DOM, all but Opera strip out HTML, many strip out
 				// TITLE/BASE/META and some strip out KEYGEN/PROGRESS/SOURCE. so, we
@@ -307,11 +345,15 @@ Thymus.loadFragments = function(selector, func) {
 					if (ha && ha == f.t) {
 						hr = hr.replace(/div/g, 'head');
 						hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
-						// TODO : strip out script tags and load them dynamically 
-						// to capture completion/error/etc.
-						// /<script[^>]*>([\\S\\s]*?)<\/script>/img
 						var $h = $('head');
 						hr = Thymus.linksToAbsolute(hr);
+						var scs = hr.match(/<script[^>]*>([\\S\\s]*?)<\/script>/img);
+						if (scs) {
+							$.each(scs, function(i, sc) {
+								doScript($h, $(sc));
+								hr = hr.replace(sc, '');
+							});
+						}
 						$h.append(hr);
 						cb($h, f);
 						return;
@@ -330,47 +372,13 @@ Thymus.loadFragments = function(selector, func) {
 				}
 				fs.each(function() {
 					var $cf = $(this);
-					//Thymus.linksToAbsolute($cf);
-					var doScript = function($x) {
-						if (!$cf.is($x)) {
-							$x.remove();
-						}
-						var url = $x.prop('src');
-						if (url && url.length > 0) {
-							t.len++;
-							var sf = new Frag($x);
-							sf.u = url;
-							sf.t = $cf;
-							if (url.indexOf('data:text/javascript,') >= 0) {
-								$('<script>' + url.substr('data:text/javascript,'.length) + 
-										'</script>').appendTo($cf);
-								cb(null, sf);
-								return;
-							}
-							$.getScript(url).done(function(data, textStatus, jqxhr) {
-								if (jqxhr.status != 200) {
-									t.addError(jqxhr.status + ': ' + 
-											textStatus + ' URL="' + url + '"', sf);
-								}
-								cb($cf, sf);
-							}).fail(function(xhr, ts, e) {
-								t.addError('Error at ' + sf.toString() + ': ' + 
-										ts + '- ' + e, sf);
-								cb(null, sf);
-							});
-						}
-					};
 					$cf.find('script').each(function() {
-						doScript($(this));
+						doScript($cf, $(this));
 					});
 					if (!$cf.is('script')) {
-						if (f.r) {
-							$fl.replaceWith($cf);
-						} else {
-							$fl.append($cf);
-						}
+						f.p($cf);
 					} else {
-						doScript($cf);
+						doScript($cf, $cf);
 					}
 					cb($cf, f);
 				});
@@ -562,7 +570,21 @@ Thymus.fireEvent = function(ft, pn, pv) {
 			}
 		}
 	} catch (e) {
-		
+		Thymus.log('Error in ' + ft + ' ' + (pv ? pv : '') + ': ' + e);
+	}
+};
+/**
+ * When available, logs a message to the console
+ * 
+ * @param m
+ *            the message to log
+ */
+Thymus.log = function(m) {
+	if (m && typeof window.console !== 'undefined'
+			&& typeof window.console.log !== 'undefined') {
+		window.console.log(Thymus.ieVersion <= 0 || Thymus.ieVersion > 9 ? m
+				: typeof m.toFormattedString === 'function' ? m
+						.toFormattedString() : m);
 	}
 };
 /**
@@ -643,6 +665,17 @@ Thymus.startUp = function() {
 		}
 		return url;
 	}
+	var FragsCompleteEvent = function(c, e) {
+		this.fragCount = c;
+		this.errors = e;
+		this.log = function() {
+			Thymus.log(this);
+		};
+		this.toFormattedString = function() {
+			return '[Fragments Complete Event, fragCount: ' + this.fragCount
+					+ ', errors: ' + this.e + ']';
+		};
+	};
 	Thymus.loadJQuery(initStriptValues(), function() {
 		//caching should be disabled for ajax responses
 		$.ajaxSetup({
@@ -653,22 +686,6 @@ Thymus.startUp = function() {
 				// now that all of the includes/substitutions have been
 				// loaded we need to execute any inititialization that may
 				// be defined in the script definition of the page
-				var FragsCompleteEvent = function(c, e) {
-					this.fragCount = c;
-					this.errors = e;
-					this.log = function() {
-						if (typeof window.console !== 'undefined'
-								&& typeof window.console.log !== 'undefined') {
-							window.console.log(Thymus.ieVersion <= 0
-									|| Thymus.ieVersion > 9 ? this : this
-									.toFormattedString());
-						}
-					};
-					this.toFormattedString = function() {
-						return '[Fragments Complete Event, fragCount: ' + this.fragCount
-							+ ', errors: ' + this.e + ']';
-					};
-				};
 				Thymus.fireEvent(Thymus.FRAGS_COMPLETE, Thymus.EVENT_NAME, 
 						new FragsCompleteEvent(cnt, ea));
 			});
