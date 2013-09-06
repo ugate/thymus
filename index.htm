@@ -176,13 +176,16 @@
 						<li>Automatic fragment <code>src</code>/<code>href</code>
 							resolution for relative paths
 						</li>
-						<li>Multiple fragment definitions in the same fragment
-							resource</li>
+						<li>Multiple fragment definitions at the same fragment URL</li>
+						<li>Prevents repetitive calls to the same URL (typical case
+							when multiple fragments reside at the same URL)</li>
 						<li>Relatively infinite nesting of fragments (fragments
 							within fragments)</li>
 						<li><code>head</code> tag fragments</li>
-						<li>Fragment loaded event capture/execution</li>
-						<li>Great for prototyping web sites on the client!</li>
+						<li>Fragment events broadcast for each resource has been
+							loaded or failed to load (including scripts and nested fragments)</li>
+						<li>Fragment event broadcast when all fragments have been
+							loaded or failed to load (including scripts and nested fragments)</li>
 					</ul>
 				</div>
 			</div>

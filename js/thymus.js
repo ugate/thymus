@@ -251,6 +251,19 @@ Thymus.loadFragments = function(selector, func) {
 	var Track = function() {
 		this.cnt = 0;
 		this.len = 0;
+		var c = [];
+		this.addFrag = function(f) {
+			if (c[f.u]) {
+				c[f.u][c[f.u].length] = f;
+				return false;
+			} else {
+				c[f.u] = [f];
+			}
+			return true;
+		};
+		this.getFrags = function(url) {
+			return c[url];
+		};
 		var e = [];
 		this.addError = function(em, f) {
 			e[e.length] = em;
@@ -276,6 +289,99 @@ Thymus.loadFragments = function(selector, func) {
 			}
 		}
 	};
+	var lcont = function(f, cb, r, status, xhr) {
+		var mt = xhr.getResponseHeader('Content-Type');
+		if (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0) {
+			f.p(r);
+			cb(null, f);
+			return;
+		} else if (mt.indexOf('json') >= 0) {
+			// TODO : handle JSON data using name matching
+		}
+		var doScript = function($p, $x) {
+			if (!$p.is($x)) {
+				$x.remove();
+			}
+			var url = $x.prop('src');
+			if (url && url.length > 0) {
+				t.len++;
+				var sf = new Frag($x);
+				sf.u = url;
+				sf.t = $p;
+				if (url.indexOf('data:text/javascript,') >= 0) {
+					$('<script>' + url.substr('data:text/javascript,'.length) + 
+							'</script>').appendTo($p);
+					cb(null, sf);
+					return;
+				}
+				$.getScript(url).done(function(data, textStatus, jqxhr) {
+					if (jqxhr.status != 200) {
+						t.addError(jqxhr.status + ': ' + 
+								textStatus + ' URL="' + url + '"', sf);
+					}
+					cb($p, sf);
+				}).fail(function(xhr, ts, e) {
+					t.addError('Error at ' + sf.toString() + ': ' + 
+							ts + '- ' + e, sf);
+					cb(null, sf);
+				});
+			}
+		};
+		// just about every browser strips out BODY/HEAD when parsing an
+		// HTML DOM, all but Opera strip out HTML, many strip out
+		// TITLE/BASE/META and some strip out KEYGEN/PROGRESS/SOURCE. so, we
+		// can't use the typical JQuery/browser parsing on the result for
+		// those tags.
+		var hs = '<head ';
+		var he = '</head>';
+		var his = r.indexOf(hs);
+		if (his > -1) {
+			var hie = r.indexOf(he);
+			var hr = '<div ' + r.substring(his + hs.length, hie) + '</div>';
+			hr = hr.substring(0, hr.indexOf('>') + 1);
+			var $hr = $(hr + '</div>');
+			var ha = $hr.attr(Thymus.FRAG.replace('\\', ''));
+			if (ha && ha == f.t) {
+				hr = hr.replace(/div/g, 'head');
+				hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
+				var $h = $('head');
+				hr = Thymus.linksToAbsolute(hr);
+				var scs = hr.match(/<script[^>]*>([\\S\\s]*?)<\/script>/img);
+				if (scs) {
+					$.each(scs, function(i, sc) {
+						doScript($h, $(sc));
+						hr = hr.replace(sc, '');
+					});
+				}
+				$h.append(hr);
+				cb($h, f);
+				return;
+			}
+		}
+		// process non-head tags the normal JQuery way
+		// (links need to be converted via raw results to
+		// prevent warnings)
+		var $c = $(Thymus.linksToAbsolute(r));
+		var fs = $c.filter(f.s);
+		if (fs.length <= 0) {
+			t.addError('No matching results for ' + f.toString()
+					+ ' in\n' + r, f);
+			cb(null, f);
+			return;
+		}
+		fs.each(function() {
+			var $cf = $(this);
+			$cf.find('script').each(function() {
+				doScript($cf, $(this));
+			});
+			if (!$cf.is('script')) {
+				f.p($cf);
+			} else {
+				doScript($cf, $cf);
+			}
+			cb($cf, f);
+		});
+	};
 	var lfi = null;
 	var lfg = function($fl, cb) {
 		var f = null;
@@ -287,105 +393,23 @@ Thymus.loadFragments = function(selector, func) {
 				cb(null, f);
 				return;
 			}
-			// use get vs load w/content target for more granular control
-			$.ajax({
-				url: f.u
-			}).done(function(r, status, xhr) {
-				var mt = xhr.getResponseHeader('Content-Type');
-				if (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0) {
-					f.p(r);
-					cb(null, f);
-					return;
-				} else if (mt.indexOf('json') >= 0) {
-					// TODO : handle JSON data using name matching
-				}
-				var doScript = function($p, $x) {
-					if (!$p.is($x)) {
-						$x.remove();
+			if (t.addFrag(f)) {
+				// use get vs load w/content target for more granular control
+				$.ajax({
+					url: f.u
+				}).done(function(r, status, xhr) {
+					var frgs = t.getFrags(f.u);
+					for (var i=0; i<frgs.length; i++) {
+						lcont(frgs[i], cb, r, status, xhr);
 					}
-					var url = $x.prop('src');
-					if (url && url.length > 0) {
-						t.len++;
-						var sf = new Frag($x);
-						sf.u = url;
-						sf.t = $p;
-						if (url.indexOf('data:text/javascript,') >= 0) {
-							$('<script>' + url.substr('data:text/javascript,'.length) + 
-									'</script>').appendTo($p);
-							cb(null, sf);
-							return;
-						}
-						$.getScript(url).done(function(data, textStatus, jqxhr) {
-							if (jqxhr.status != 200) {
-								t.addError(jqxhr.status + ': ' + 
-										textStatus + ' URL="' + url + '"', sf);
-							}
-							cb($p, sf);
-						}).fail(function(xhr, ts, e) {
-							t.addError('Error at ' + sf.toString() + ': ' + 
-									ts + '- ' + e, sf);
-							cb(null, sf);
-						});
+				}).fail(function(xhr, ts, e) {
+					var frgs = t.getFrags(f.u);
+					for (var i=0; i<frgs.length; i++) {
+						t.addError('Error at ' + f.toString() + ': ' + ts + '- ' + e, f);
+						cb(null, f);
 					}
-				};
-				// just about every browser strips out BODY/HEAD when parsing an
-				// HTML DOM, all but Opera strip out HTML, many strip out
-				// TITLE/BASE/META and some strip out KEYGEN/PROGRESS/SOURCE. so, we
-				// can't use the typical JQuery/browser parsing on the result for
-				// those tags.
-				var hs = '<head ';
-				var he = '</head>';
-				var his = r.indexOf(hs);
-				if (his > -1) {
-					var hie = r.indexOf(he);
-					var hr = '<div ' + r.substring(his + hs.length, hie) + '</div>';
-					hr = hr.substring(0, hr.indexOf('>') + 1);
-					var $hr = $(hr + '</div>');
-					var ha = $hr.attr(Thymus.FRAG.replace('\\', ''));
-					if (ha && ha == f.t) {
-						hr = hr.replace(/div/g, 'head');
-						hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
-						var $h = $('head');
-						hr = Thymus.linksToAbsolute(hr);
-						var scs = hr.match(/<script[^>]*>([\\S\\s]*?)<\/script>/img);
-						if (scs) {
-							$.each(scs, function(i, sc) {
-								doScript($h, $(sc));
-								hr = hr.replace(sc, '');
-							});
-						}
-						$h.append(hr);
-						cb($h, f);
-						return;
-					}
-				}
-				// process non-head tags the normal JQuery way
-				// (links need to be converted via raw results to
-				// prevent warnings)
-				var $c = $(Thymus.linksToAbsolute(r));
-				var fs = $c.filter(f.s);
-				if (fs.length <= 0) {
-					t.addError('No matching results for ' + f.toString()
-							+ ' in\n' + r, f);
-					cb(null, f);
-					return;
-				}
-				fs.each(function() {
-					var $cf = $(this);
-					$cf.find('script').each(function() {
-						doScript($cf, $(this));
-					});
-					if (!$cf.is('script')) {
-						f.p($cf);
-					} else {
-						doScript($cf, $cf);
-					}
-					cb($cf, f);
 				});
-			}).fail(function(xhr, ts, e) {
-				t.addError('Error at ' + f.toString() + ': ' + ts + '- ' + e, f);
-				cb(null, f);
-			});
+			}
 		} catch (e) {
 			t.addError('Error at ' + f.toString() + ': ' + e, f);
 			cb(null, f);
