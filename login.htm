@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:substituteby="frags/head :: header">
+<head th:replace="frags/head :: header">
 <meta charset="utf-8" />
 <!-- Thymus script -->
 <script th:remove="all" src="js/thymus.js" id="thymusScript"
-	data-th-engine="thymeleaf"
-	data-th-context-path="." data-th-frag-extension=".htm"
-	data-th-head-frag="th:substituteby=frags/head :: header"
-	data-th-onfragscomplete="init(event)"></script>
+	data-thx-engine="thymeleaf"
+	data-thx-context-path="." data-thx-frag-extension=".htm"
+	data-thx-head-frag="th:replace=frags/head :: header"
+	data-thx-onfragscomplete="init(event)"></script>
 </head>
 <body>
-	<div th:substituteby="frags/nav/nav :: topnav"></div>
+	<div th:replace="frags/nav/nav :: topnav"></div>
 	<form th:action="@{/authenticate.htm}" method="post" class="form-signin">
 		<div class="container">
 			<div class="panel panel-default">
@@ -53,7 +53,7 @@
 			</div>
 		</div>
 	</form>
-	<div th:substituteby="frags/nav/nav :: bottomnav"></div>
-	<div th:substituteby="frags/script :: scripts"></div>
+	<div th:replace="frags/nav/nav :: bottomnav"></div>
+	<div th:replace="frags/script :: scripts"></div>
 </body>
 </html>

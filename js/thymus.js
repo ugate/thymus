@@ -15,30 +15,31 @@
  */// ============================================
 var Thymus = {};
 Thymus.JQUERY_DEFAULT_URL = '//code.jquery.com/jquery.min.js';
-Thymus.DEFAULT_FRAG_ATTR = 'data-th-fragment';
-Thymus.DEFAULT_INC_ATTR = 'data-th-include';
-Thymus.DEFAULT_SUB_ATTR = 'data-th-substitute';
+Thymus.DEFAULT_FRAG_ATTR = 'data-thx-fragment';
+Thymus.DEFAULT_INC_ATTR = 'data-thx-include';
+Thymus.DEFAULT_REP_ATTR = 'data-thx-substitute';
 Thymus.DEFAULT_SEP = '::';
 Thymus.ID = 'thymusScript';
-Thymus.CONTEXT_PATH_ATTR = 'data-th-context-path';
-Thymus.JQUERY_URL_ATTR = 'data-th-jquery-url';
-Thymus.FRAG_COMPLETE_ATTR = 'data-th-onfragcomplete';
-Thymus.FRAGS_COMPLETE_ATTR = 'data-th-onfragscomplete';
-Thymus.FRAG_HEAD_ATTR = 'data-th-head-frag';
-Thymus.FRAG_ATTR = 'data-th-fragment-attr';
-Thymus.FRAG_INC_ATTR = 'data-th-include-attr';
-Thymus.FRAG_SUB_ATTR = 'data-th-substitute-attr';
-Thymus.FRAG_SEP_ATTR = 'data-th-separator';
-Thymus.FRAG_EXT_ATTR = 'data-th-frag-extension';
-Thymus.ENGINE_ATTR = 'data-th-engine';
+Thymus.SELF = 'this';
+Thymus.CONTEXT_PATH_ATTR = 'data-thx-context-path';
+Thymus.JQUERY_URL_ATTR = 'data-thx-jquery-url';
+Thymus.FRAG_COMPLETE_ATTR = 'data-thx-onfragcomplete';
+Thymus.FRAGS_COMPLETE_ATTR = 'data-thx-onfragscomplete';
+Thymus.FRAG_HEAD_ATTR = 'data-thx-head-frag';
+Thymus.FRAG_ATTR = 'data-thx-fragment-attr';
+Thymus.FRAG_INC_ATTR = 'data-thx-include-attr';
+Thymus.FRAG_REP_ATTR = 'data-thx-replace-attr';
+Thymus.FRAG_SEP_ATTR = 'data-thx-separator';
+Thymus.FRAG_EXT_ATTR = 'data-thx-frag-extension';
+Thymus.ENGINE_ATTR = 'data-thx-engine';
 Thymus.THYMELEAF = 'thymeleaf';
 Thymus.THYMELEAF_FRAG_ATTR = 'th\\:fragment';
 Thymus.THYMELEAF_INC_ATTR = 'th\\:include';
-Thymus.THYMELEAF_SUB_ATTR = 'th\\:substituteby';
+Thymus.THYMELEAF_REP_ATTR = 'th\\:replace';
 Thymus.ENGINE = null;
 Thymus.FRAG = null;
 Thymus.FRAG_INC = null;
-Thymus.FRAG_SUB = null;
+Thymus.FRAG_REP = null;
 Thymus.FRAG_TO_SELECT = null;
 Thymus.FRAG_SEP = null;
 Thymus.FRAG_EXT = null;
@@ -91,7 +92,10 @@ Thymus.getScriptContextPath = function() {
  * Retrieves the JQuery selector for capturing a fragments content
  */
 Thymus.getFragFromSel = function(v) {
-	return '[' + Thymus.FRAG + '="' + $.trim(v) + '"]';
+	var s = $.trim(v);
+	return s.length > 0 && s.indexOf('[') == 0
+			&& s.lastIndexOf(']') == s.length - 1 ? s : '[' + Thymus.FRAG
+			+ '="' + s + '"]';
 };
 /**
  * Gets a file extension from a URL
@@ -193,17 +197,20 @@ Thymus.loadFragments = function(selector, func) {
 		this.r = false;
 		this.a = Thymus.getFragAttr($fl, Thymus.FRAG_INC);
 		if (!this.a) {
-			this.a = Thymus.getFragAttr($fl, Thymus.FRAG_SUB);
+			this.a = Thymus.getFragAttr($fl, Thymus.FRAG_REP);
 			this.r = true;
 		}
 		this.a = this.a ? this.a.split(Thymus.FRAG_SEP) : null;
 		this.u = this.a && this.a.length > 0 ? $.trim(this.a[0]) : null;
 		this.t = this.a && this.a.length > 1 ? $.trim(this.a[1]) : null;
-		if (ext && this.u && this.u.indexOf('.') < 0) {
-			this.u += ext;
-		}
-		if (this.u && this.u.length > 0) {
+		if (this.u && this.u.length > 0
+				&& this.u.toLowerCase() != Thymus.SELF.toLowerCase()) {
+			if (ext && this.u.indexOf('.') < 0) {
+				this.u += ext;
+			}
 			this.u = Thymus.absolutefragPath(this.u);
+		} else if (this.t && this.t.length > 0) {
+			this.u = Thymus.SELF;
 		}
 		this.s = this.t ? Thymus.getFragFromSel(this.t) : null;
 		this.el = $fl;
@@ -290,13 +297,15 @@ Thymus.loadFragments = function(selector, func) {
 		}
 	};
 	var lcont = function(f, cb, r, status, xhr) {
-		var mt = xhr.getResponseHeader('Content-Type');
-		if (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0) {
-			f.p(r);
-			cb(null, f);
-			return;
-		} else if (mt.indexOf('json') >= 0) {
-			// TODO : handle JSON data using name matching
+		if (xhr) {
+			var mt = xhr.getResponseHeader('Content-Type');
+			if (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0) {
+				f.p(r);
+				cb(null, f);
+				return;
+			} else if (mt.indexOf('json') >= 0) {
+				// TODO : handle JSON data using name matching
+			}
 		}
 		var doScript = function($p, $x) {
 			if (!$p.is($x)) {
@@ -394,15 +403,20 @@ Thymus.loadFragments = function(selector, func) {
 				return;
 			}
 			if (t.addFrag(f)) {
-				// use get vs load w/content target for more granular control
-				$.ajax({
-					url: f.u
-				}).done(function(r, status, xhr) {
+				var done = function(r, status, xhr) {
 					var frgs = t.getFrags(f.u);
 					for (var i=0; i<frgs.length; i++) {
 						lcont(frgs[i], cb, r, status, xhr);
 					}
-				}).fail(function(xhr, ts, e) {
+				};
+				if (f.u == Thymus.SELF) {
+					done($('html').html(), 'same-template');
+					return;
+				}
+				// use get vs load w/content target for more granular control
+				$.ajax({
+					url: f.u
+				}).done(done).fail(function(xhr, ts, e) {
 					var frgs = t.getFrags(f.u);
 					for (var i=0; i<frgs.length; i++) {
 						t.addError('Error at ' + f.toString() + ': ' + ts + '- ' + e, f);
@@ -434,7 +448,7 @@ Thymus.loadFragments = function(selector, func) {
 	if ($head && $head.length > 0) {
 		var pf = $head.attr(Thymus.FRAG_INC.replace('\\', ''));
 		if (!pf) {
-			pf = $head.attr(Thymus.FRAG_SUB.replace('\\', ''));
+			pf = $head.attr(Thymus.FRAG_REP.replace('\\', ''));
 		}
 		if (!pf) {
 			t.len++;
@@ -589,7 +603,7 @@ Thymus.fireEvent = function(ft, pn, pv) {
 					}
 					f.apply(undefined, a);
 				} else {
-					f(pv);
+					f.call(undefined, pv);
 				}
 			}
 		}
@@ -674,13 +688,13 @@ Thymus.startUp = function() {
 		Thymus.FRAG_INC = getAttr(sh, Thymus.FRAG_INC_ATTR,
 				Thymus.ENGINE == Thymus.THYMELEAF ? Thymus.THYMELEAF_INC_ATTR
 						: Thymus.DEFAULT_INC_ATTR);
-		Thymus.FRAG_SUB = getAttr(sh, Thymus.FRAG_SUB_ATTR,
-				Thymus.ENGINE == Thymus.THYMELEAF ? Thymus.THYMELEAF_SUB_ATTR
-						: Thymus.DEFAULT_SUB_ATTR);
+		Thymus.FRAG_REP = getAttr(sh, Thymus.FRAG_REP_ATTR,
+				Thymus.ENGINE == Thymus.THYMELEAF ? Thymus.THYMELEAF_REP_ATTR
+						: Thymus.DEFAULT_REP_ATTR);
 		Thymus.FRAG_SEP = getAttr(sh, Thymus.FRAG_SEP_ATTR, Thymus.DEFAULT_SEP);
 		Thymus.FRAG_EXT = getAttr(sh, Thymus.FRAG_EXT_ATTR);
 		Thymus.FRAG_TO_SELECT = '[' + Thymus.FRAG_INC + '],[' + 
-			Thymus.FRAG_SUB + ']';
+			Thymus.FRAG_REP + ']';
 		Thymus.PROTOCOL_FOR_FILE = /^(file:?)/i.test(location.protocol) ? 'http:' : null;
 		with (document.createElement('b')) {
 			id = 4;
