@@ -1,7 +1,7 @@
-function init(event) {
-	event.log();
+function init() {
+	this.event.log();
 	// add some flare to the demo by adding a background splash
-	flickr('vine', 'body');
+	flickr('thymus vulgaris', 'body');
 	// initialize bootstrap components
 	initScrollSpy('[data-spy="scroll"]');
 	initToolTips('[class*="app-tooltip"]');
@@ -44,4 +44,4 @@ function flickr(key, sel) {
 			$(sel).css('background-image', 'url(' + url + ')');
 		});
 }
-//@ sourceURL=app.js
+//# sourceURL=app.js
