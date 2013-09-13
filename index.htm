@@ -61,13 +61,15 @@
 		var h = this.handle;
 		// get rid of text not wrapped in an HTML node or anchors 
 		// from the read me mark down
-		if (h.fragUrl.indexOf('README') > 0) {
-			$(this.event.source).contents().filter(
-					function() {
-						return this.nodeType === 3 || this.tagName == 'a'
-								|| this.tagName == 'A';
-					}).remove();
+		var d = '';
+		var ps = h.data.match(/<p[^>]*>(.+)<\/p>/img);
+		if (ps) {
+			$.each(ps, function(i, p) {
+				d += p;
+			});
 		}
+		var $d = $(d);
+		h.process($d);
 	}
 </script>
 <!-- Thymus script -->
@@ -195,6 +197,9 @@
 							via function</li>
 						<li>Automatic fragment loading or <a href="#deferred">deferred
 								fragment loading</a></li>
+						<li>Maintains vertical scrolling positions associated with
+							named anchors that point to a location within a fragment (e.g.
+							example.com/path#someNamedAnchorInAFrag)</li>
 						<li>Fragment events dispatched for each resource has been
 							loaded or failed to load (including scripts and nested fragments)</li>
 						<li>Fragment event dispatched when all fragments have been
