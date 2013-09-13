@@ -129,7 +129,7 @@ Thymus.getFragFromSel = function(v) {
 		+ Thymus.getThxSel(Thymus.FRAG_ATTRS, s) : '');
 	return {
 		s : s,
-		hasFrag : hf
+		hasFragAttr : hf
 	};
 };
 /**
@@ -285,7 +285,7 @@ Thymus.loadFragments = function(selector, func) {
 		}
 		var fso = this.t ? Thymus.getFragFromSel(this.t) : null;
 		this.s = fso ? fso.s : null;
-		this.hf = fso ? fso.hasFrag : true;
+		this.hf = fso ? fso.hasFragAttr : true;
 		this.el = $fl;
 		this.rs = null;
 		this.e = null;
