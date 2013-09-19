@@ -59,8 +59,6 @@
 	}
 	function handleReadme() {
 		var h = this.handle;
-		// get rid of text not wrapped in an HTML node or anchors 
-		// from the read me mark down
 		var d = '';
 		var ps = h.data.match(/<p[^>]*>(.+)<\/p>/img);
 		if (ps) {
@@ -177,13 +175,17 @@
 				</div>
 				<div class="panel-body app-code">
 					<ul>
-						<li>Automatic fragment <i>inclusion</i> while a page loads
+						<li>Automatic fragment <i>inclusion</i> while a page loads (<a
+							href="#deferred">configurable</a>)
 						</li>
 						<li>Automatic fragment <i>replacement</i> while a page loads
+							(<a href="#deferred">configurable</a>)
 						</li>
 						<li>Automatic fragment <a href="#attrpaths"><code>src</code>/<code>href</code>
 								resolution for relative paths</a>
 						</li>
+						<li><a href="#deferred">Load fragments via script using
+								JQuery selectors</a></li>
 						<li>Multiple fragment definitions at the same fragment URL</li>
 						<li>Prevents repetitive calls to the same URL associated with
 							raw JQuery.load content (typical case when multiple fragments
@@ -198,8 +200,8 @@
 						<li>Automatic fragment loading or <a href="#deferred">deferred
 								fragment loading</a></li>
 						<li>Maintains vertical scrolling positions associated with
-							named anchors that point to a location within a fragment (e.g.
-							example.com/path#someNamedAnchorInAFrag)</li>
+							named anchors that point to a location within a fragment (e.g. <i>example.com/path#someNamedAnchorInAFrag</i>)
+						</li>
 						<li>Fragment events dispatched for each resource has been
 							loaded or failed to load (including scripts and nested fragments)</li>
 						<li>Fragment event dispatched when all fragments have been
@@ -348,15 +350,11 @@
 						to the <b>thymus.js</b>
 						<code>script</code>
 						declaration. Loading <b>thymus.js</b> after defferment can be
-						accomplished by executing <strong><code>Thymus.load();</code></strong>
-						(should only be called once per page). Loading <b>thymus.js</b>
-						fragments manually using a <a
+						accomplished by executing <strong><code>$(selector).thymus('load.fragments');</code></strong>
+						where <i>selector</i> is a valid <a
 							href="http://api.jquery.com/category/selectors/">JQuery
-							selector</a> can be done at any time by calling
-						<code>Thymus.loadFragments(jqSelector);</code>
-						(where <i>jqSelector</i> is the JQuery selector for the DOM
-						elements that will contain possible <b>thymus.js</b> template
-						definitions).
+							selector</a> that will contain the DOM element(s) where fragments
+						will be loaded.
 					</p>
 					<h3 id="nestedfrags">Multi-Level Nested Fragments</h3>
 					<p>

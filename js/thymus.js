@@ -13,922 +13,966 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */// ============================================
-var Thymus = {};
-Thymus.JQUERY_DEFAULT_URL = '//code.jquery.com/jquery.min.js';
-Thymus.DEFAULT_FRAG_ATTR = 'data-thx-fragment';
-Thymus.DEFAULT_INC_ATTR = 'data-thx-include';
-Thymus.DEFAULT_REP_ATTR = 'data-thx-replace';
-Thymus.DEFAULT_SEP = '::';
-Thymus.ID = 'thymusScript';
-Thymus.SELF = 'this';
-Thymus.CONTEXT_PATH_ATTR = 'data-thx-context-path';
-Thymus.JQUERY_URL_ATTR = 'data-thx-jquery-url';
-Thymus.FRAG_COMPLETE_ATTR = 'data-thx-onfragcomplete';
-Thymus.FRAGS_COMPLETE_ATTR = 'data-thx-onfragscomplete';
-Thymus.FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
-Thymus.FRAG_HEAD_ATTR = 'data-thx-head-frag';
-Thymus.FRAG_ATTR = 'data-thx-fragment-attr';
-Thymus.FRAG_INC_ATTR = 'data-thx-include-attr';
-Thymus.FRAG_REP_ATTR = 'data-thx-replace-attr';
-Thymus.FRAG_SEP_ATTR = 'data-thx-separator';
-Thymus.FRAG_EXT_ATTR = 'data-thx-frag-extension';
-Thymus.THYMELEAF_FRAG_ATTR = 'th\\:fragment';
-Thymus.THYMELEAF_INC_ATTR = 'th\\:include';
-Thymus.THYMELEAF_REP_ATTR = 'th\\:replace';
-Thymus.THYMELEAF_FRAG_ATTR_ALT = 'data-th-fragment';
-Thymus.THYMELEAF_INC_ATTR_ALT = 'data-th-include';
-Thymus.THYMELEAF_REP_ATTR_ALT = 'data-th-replace';
-Thymus.jqueryLoaded = false;
-Thymus.pageLoaded = false;
-Thymus.fragmentsLoaded = false;
-Thymus.FILE_EXT_INHERIT = 'inherit';
-Thymus.ieVersion = 0;
-Thymus.ieNoHeadStripVer = 9;
-Thymus.REGEX_UNI = /^[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*$/;
-Thymus.REGEX_FUNC = /.+?\(/i;
-Thymus.REGEX_EXTENSION = /[^\/?#]+(?=$|[?#])/;
-Thymus.REGEX_SCRIPTS = /<script[^>]*>([\\S\\s]*?)<\/script>/img;
-Thymus.REGEX_HREF = /\shref=[\"|'](.*?)[\"|']/ig;
-Thymus.REGEX_SRC = /\ssrc=[\"|'](.*?)[\"|']/ig;
-Thymus.REGEX_PROTOCOL = /^(([a-z]+)?:|\/\/|#)/i;
-Thymus.REGEX_PROTOCOL_FILE = /^(file:?)/i;
-Thymus.REGEX_ROOT_PATH = /^\/|(\/[^\/]*|[^\/]+)$/g;
-Thymus.REGEX_ARGS = /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g;
-/**
- * Gets a JQuery handle to the current script
- */
-Thymus.getScript = function() {
-	return $('#' + Thymus.ID);
-};
-/**
- * Gets an attribute of the current script
- * 
- * @param attr
- *            the attribute to extract
- */
-Thymus.getScriptAttr = function(attr) {
-	if (!attr) {
-		return null;
-	}
-	var $s = Thymus.getScript();
-	if ($s && $s.length > 0) {
-		return $s.attr(attr);
-	}
-};
-/**
- * Gets the context path used to resolve paths to fragments and URLs within
- * href/src/etc. attributes contained in fragments
- */
-Thymus.getScriptContextPath = function() {
-	var c = Thymus.getScriptAttr(Thymus.CONTEXT_PATH_ATTR);
-	if (!c) {
-		c = '/';
-	}
-	// capture the absolute URL relative to the defined context path attribute
-	// value
-	c = Thymus.absolutePath(c, window.location.href);
-	c += c.lastIndexOf('/') != c.length - 1 ? '/' : '';
-	return c;
-};
-/**
- * Gets a template JQuery selector
- * 
- * @param a
- *            the of array of template attributes (matches any)
- * @param v
- *            the optional attribute value to match in the array
- * @returns JQuery selector
- */
-Thymus.getThxSel = function(a, v) {
-	var r = '';
-	var as = $.isArray(a) ? a : [ a ];
-	for ( var i = 0; i < as.length; i++) {
-		r += (i > 0 ? ',' : '') + '[' + as[i] + (v ? '="' + v + '"' : '') + ']';
-	}
-	return r;
-};
-/**
- * Gets an include/replace JQuery selector
- * 
- * @returns JQuery selector
- */
-Thymus.getIncRepSel = function() {
-	return Thymus.getThxSel(Thymus.INC_REP_ATTRS);
-};
-/**
- * Retrieves the JQuery selector for capturing a fragments content
- * 
- * @param v
- *            the value to get the selector for
- * @returns JQuery selector
- */
-Thymus.getFragFromSel = function(v) {
-	var s = $.trim(v);
-	var hf = s && Thymus.REGEX_UNI.test(s);
-	s = s + (hf ? ','
-		+ Thymus.getThxSel(Thymus.FRAG_ATTRS, s) : '');
-	return {
-		s : s,
-		hasFragAttr : hf
-	};
-};
-/**
- * Gets a file name
- * 
- * @param url
- *            the URL to get the file file name from
- * @returns the file name for the supplied URL (or empty when not present)
- */
-Thymus.getFile = function(url) {
-	var f = '';
-	if (url) {
-		var fs = url.match(Thymus.REGEX_EXTENSION);
-		if (fs && fs.length > 0) {
-			f = fs[0];
+(function() {
+	var scriptSourceId = 'thymusScript';
+	var JQUERY_URL_ATTR = 'data-thx-jquery-url';
+	var JQUERY_DEFAULT_URL = '//code.jquery.com/jquery.min.js';
+	var FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
+	var ieVersion = 0;
+
+	/**
+	 * When available, logs a message to the console
+	 * 
+	 * @param m
+	 *            the message to log
+	 */
+	function log(m) {
+		if (m && typeof window.console !== 'undefined'
+				&& typeof window.console.log !== 'undefined') {
+			window.console.log(ieVersion <= 0 || ieVersion > 9 ? m
+					: typeof m.toFormattedString === 'function' ? m
+							.toFormattedString() : m);
 		}
 	}
-	return f;
-};
-/**
- * Gets a file extension from a URL
- * 
- * @param url
- *            the URL to get the file extension from
- * @returns the file extension for the supplied URL (or empty when not present)
- */
-Thymus.getFileExtension = function(url) {
-	var x = Thymus.getFile(url);
-	if (x) {
-		x = x.split('.');
-		if (x.length > 1) {
-			x = '.' + x[x.length - 1];
-		}
-	}
-	return x;
-};
-/**
- * Extracts a fragment/include/replacement attribute from a given element. When
- * the element is the thymus script then an attempt will be made to pull
- * the <code>Thymus.FRAG_HEAD_ATTR</code> attribute off the script and
- * extract the specified attribute from that value.
- * 
- * @param $f
- *            the element to extract the attribute from
- * @param attr
- *            the attribute to extract
- */
-Thymus.getFragAttr = function($f, attrs) {
-	function ga(a) {
-		var fa = undefined;
-		var a2 = undefined;
-		for ( var i = 0; i < attrs.length; i++) {
-			a2 = attrs[i].replace('\\', '');
-			if (a) {
-				if (a == a2) {
-					return a2;
-				}
-			} else {
-				fa = $f.attr(a2);
-				if (typeof fa !== 'undefined') {
-					return fa;
-				}
-			}
-		}
-		return null;
-	}
-	if ($f.prop('id') == Thymus.ID) {
-		// when the attribute is used on the current script tag then pull the
-		// attribute off the script and extract the
-		// fragment/include/replacement
-		var fa = $f.attr(Thymus.FRAG_HEAD_ATTR);
-		if (fa) {
-			var fas = fa.split('=');
-			if (fas.length == 2) {
-				return ga(fas[0]) ? fas[1] : null;
-			} else {
-				throw new Error(Thymus.ID + ' has invalid atrtribute ' + 
-						Thymus.FRAG_HEAD_ATTR + '="' + 
-						fa + '" for ' + attr);
-			}
-		}
-	} else {
-		return ga();
-	}
-};
-/**
- * Loads fragments (nested supported) into the page using a predefined HTML
- * attribute for fragment discovery. The attribute value should contain a URL
- * followed by a replacement/include value that will match a fragment result
- * attribute. For example:
- * 
- * <pre>
- * &lt;!-- source element --&gt;
- * &lt;div id="parent"&gt;
- * 	&lt;div th:fragments="path/to/frags :: fragContents"&gt;&lt;/div&gt;
- * &lt;/div&gt;
- * &lt;!-- fragment element --&gt;
- * &lt;div th:fragment="fragContents"&gt;Contents&lt;/div&gt;
- * </pre>
- * 
- * Will result in:
- * 
- * <pre>
- * &lt;!-- when including --&gt;
- * &lt;div id="parent"&gt;
- * 	&lt;div th:fragments="path/to/frags :: fragContents"&gt;Contents&lt;/div&gt;
- * &lt;/div&gt;
- * &lt;!-- when replacing --&gt;
- * &lt;div id="parent"&gt;
- * 	&lt;div th:fragment="fragContents"&gt;Contents&lt;/div&gt;
- * &lt;/div&gt;
- * </pre>
- * 
- * @param selector
- *            the selector to the root element where fragments will be looked for
- * @param func
- *            the callback function that will be called when all fragments have
- *            been loaded (parameters: the original root element, the number of
- *            fragments processed)
- */
-Thymus.loadFragments = function(selector, func) {
-	var $s = $(selector);
-	var ext = Thymus.FRAG_EXT ? Thymus.FRAG_EXT.toLowerCase() == Thymus.FILE_EXT_INHERIT ? Thymus
-			.getFileExtension(location.href)
-			: Thymus.FRAG_EXT
-			: '';
-	var Frag = function($fl) {
-		// use the fragment value as the attribute key to use as the replacement/include
-		this.r = false;
-		this.a = Thymus.getFragAttr($fl, Thymus.INC_ATTRS);
-		if (!this.a) {
-			this.a = Thymus.getFragAttr($fl, Thymus.REP_ATTRS);
-			this.r = true;
-		}
-		this.a = this.a ? this.a.split(Thymus.FRAG_SEP) : null;
-		this.u = this.a && this.a.length > 0 ? $.trim(this.a[0]) : null;
-		this.t = this.a && this.a.length > 1 ? $.trim(this.a[1]) : null;
-		if (this.u && this.u.length > 0
-				&& this.u.toLowerCase() != Thymus.SELF.toLowerCase()) {
-			if (ext && this.u.indexOf('.') < 0) {
-				this.u += ext;
-			}
-			this.u = Thymus.absolutefragPath(this.u);
-		} else if (this.t && this.t.length > 0) {
-			this.u = Thymus.SELF;
-		}
-		this.func = this.t ? new Thymus.Func(this.t, null, true) : null;
-		if (this.t) {
-			var fpts = Thymus.REGEX_FUNC.exec(this.t);
-			if (fpts) {
-				this.t = fpts[0];
-			}
-		}
-		var fso = this.t ? Thymus.getFragFromSel(this.t) : null;
-		this.s = fso ? fso.s : null;
-		this.hf = fso ? fso.hasFragAttr : true;
-		this.el = $fl;
-		this.rs = null;
-		this.e = null;
-		this.p = function(x) {
-			if (this.r) {
-				try {
-					var $x = $(x);
-					this.el.replaceWith($x);
-					this.rs = $x;
-				} catch (e) {
-					// node may contain top level text nodes
-					var $x = this.el.parent();
-					this.el.replaceWith(x);
-					this.rs = $x;
-				}
-			} else {
-				this.el.append(x);
-			}
-		};
-		this.toString = function() {
-			return 'Fragment -> type: ' + (this.r ? 'subsitution"' : 'include"')
-					+ ', URL: ' + this.u + ', target: ' + this.t + ', select: '
-					+ this.s;
-		};
-	};
-	var FragCompleteEvent = function(t, f) {
-		this.fragCount = t.cnt;
-		this.fragCurrTotal = t.len;
-		this.fragUrl = f ? f.u : undefined;
-		this.fragTarget = f ? f.func && f.func.isValid ? f.func.run : f.t
-				: undefined;
-		this.source = f ? f.rs ? f.rs : f.el : undefined;
-		this.error = f ? f.e : undefined;
-		this.scope = $s;
-		this.log = function() {
-			Thymus.log(this);
-		};
-		this.toFormattedString = function() {
-			return '[Fragment Complete Event, fragCount: ' + this.fragCount
-					+ ', fragCurrTotal: ' + this.fragCurrTotal + ', URL: '
-					+ this.url + ', element: ' + this.element + ', error: '
-					+ this.error + ']';
-		};
-	};
-	var FragsCompleteEvent = function($s, c, e) {
-		this.fragCount = c;
-		this.scope = $s;
-		this.errors = e;
-		this.log = function() {
-			Thymus.log(this);
-		};
-		this.toFormattedString = function() {
-			return '[Fragments Complete Event, fragCount: ' + this.fragCount
-					+ ', errors: ' + this.e + ']';
-		};
-	};
-	var Track = function() {
-		this.cnt = 0;
-		this.len = 0;
-		var c = [];
-		this.addFrag = function(f) {
-			if (c[f.u]) {
-				c[f.u][c[f.u].length] = f;
-				return false;
-			} else {
-				c[f.u] = [f];
-			}
-			return true;
-		};
-		this.getFrags = function(url) {
-			return c[url];
-		};
-		var e = [];
-		this.addError = function(em, f) {
-			e[e.length] = em;
-			if (f) {
-				f.e = em;
-			}
-			return e;
-		};
-		this.getErrors = function() {
-			return e;
-		};
-	};
-	var t = new Track();
-	var done = function(t, f) {
-		if (t.cnt > t.len) {
-			t.addError('Expected ' + t.len + ' fragments, but recieved ' + t.cnt, f);
-		}
-		Thymus.fireEvent(Thymus.FRAG_COMPLETE, new FragCompleteEvent(t, f));
-		if (t.cnt >= t.len) {
-			if (typeof func === 'function') {
-				func($s, t.cnt, t.getErrors());
-			}
-			Thymus.fireEvent(Thymus.FRAGS_COMPLETE, new FragsCompleteEvent($s,
-					t.cnt, t.getErrors()));
-		}
-	};
-	function hndlFunc(f, cb, r, status, xhr, e) {
-		if (f.func && f.func.isValid) {
-			f.func.run({
-				handle : {
-					source : f.el,
-					type : f.r ? 'replace' : 'include',
-					data : r,
-					status : status,
-					xhr : xhr,
-					error : e,
-					process : function(x) {
-						f.p(x ? x : r);
-					}
-				}
-			});
-			cb(null, f);
-			return true;
-		}
-		return false;
-	}
-	var lcont = function(f, cb, r, status, xhr) {
-		if (hndlFunc(f, cb, r, status, xhr)) {
-			return;
-		}
-		if (xhr) {
-			var mt = xhr.getResponseHeader('Content-Type');
-			if (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0) {
-				f.p(r);
-				cb(null, f);
-				return;
-			} else if (mt.indexOf('json') >= 0) {
-				// TODO : handle JSON data using name matching
-			}
-		}
-		var doScript = function($p, $x) {
-			if (!$p.is($x)) {
-				$x.remove();
-			}
-			var url = $x.prop('src');
-			if (url && url.length > 0) {
-				t.len++;
-				var sf = new Frag($x);
-				sf.u = url;
-				sf.t = $p;
-				if (url.indexOf('data:text/javascript,') >= 0) {
-					$('<script>' + url.substr('data:text/javascript,'.length) + 
-							'</script>').appendTo($p);
-					cb(null, sf);
-					return;
-				}
-				$.getScript(url).done(function(data, textStatus, jqxhr) {
-					if (jqxhr.status != 200) {
-						t.addError(jqxhr.status + ': ' + 
-								textStatus + ' URL="' + url + '"', sf);
-					}
-					cb($p, sf);
-				}).fail(function(xhr, ts, e) {
-					t.addError('Error at ' + sf.toString() + ': ' + 
-							ts + '- ' + e, sf);
-					cb(null, sf);
+
+	/**
+	 * thymus.js context constructor
+	 * 
+	 * @constructor
+	 * @param jqUrl
+	 *            the URL used to load JQuery
+	 * @param opts the JQuery options used 
+	 */
+	function FragCtx(jqUrl, opts) {
+		var script = $('#' + scriptSourceId);
+		var scriptFragsComplete = script ? script
+				.attr(opts.fragsCompleteAttr) : null;
+		var scriptFragComplete = script ? script
+				.attr(opts.fragCompleteAttr) : null;
+		var fragAttrs = [ opts.fragAttr, opts.thymeleafFragAttr,
+				opts.thymeleafFragAltAttr ];
+		var includeAttrs = [ opts.includeAttr, opts.thymeleafIncludeAttr,
+				opts.thymeleafIncludeAltAttr ];
+		var replaceAttrs = [ opts.replaceAttr, opts.thymeleafReplaceAttr,
+				opts.thymeleafReplaceAltAttr ];
+		var includeReplaceAttrs = includeAttrs.concat(replaceAttrs);
+		var protocolForFile = opts.regexFileTransForProtocolRelative
+				.test(location.protocol) ? 'http:' : null;
+		var fragSelector = getThxSel(includeReplaceAttrs, null);
+
+		/**
+		 * Updates href/src/etc. URLs to reflect the fragment location based upon
+		 * the defined script context path
+		 * 
+		 * @param s
+		 *            the source element or HTML to update
+		 * @returns when the source is a string the result will return the source
+		 *          with formatted URL references otherwise, a JQuery source object
+		 *          will be returned
+		 */
+		function linksToAbsolute(s) {
+			var c = getScriptCxtPath();
+			var rel = function(p) {
+				return p.indexOf('.') != 0 && p.indexOf('/') != 0 ? c + 'fake.htm' : c;
+			};
+			if (typeof s === 'string') {
+				s = s.replace(opts.regexHrefAttrs, function(m, url) {
+					return ' href="' + absolutePath(url, c) + '"';
 				});
-			}
-		};
-		// just about every browser strips out BODY/HEAD when parsing an
-		// HTML DOM, all but Opera strip out HTML, many strip out
-		// TITLE/BASE/META and some strip out KEYGEN/PROGRESS/SOURCE. so, we
-		// can't use the typical JQuery/browser parsing on the result for
-		// those tags.
-		var hs = '<head ';
-		var he = '</head>';
-		var his = r.indexOf(hs);
-		if (his > -1) {
-			var hie = r.indexOf(he);
-			var hr = '<div ' + r.substring(his + hs.length, hie) + '</div>';
-			hr = hr.substring(0, hr.indexOf('>') + 1);
-			var $hr = $(hr + '</div>');
-			var ha = Thymus.getFragAttr($hr, Thymus.FRAG_ATTRS);
-			if (ha && ha == f.t) {
-				hr = hr.replace(/div/g, 'head');
-				hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
-				var $h = $('head');
-				hr = Thymus.linksToAbsolute(hr);
-				var scs = hr.match(Thymus.REGEX_SCRIPTS);
-				if (scs) {
-					$.each(scs, function(i, sc) {
-						doScript($h, $(sc));
-						hr = hr.replace(sc, '');
-					});
-				}
-				$h.append(hr);
-				cb($h, f);
-				return;
-			}
-		}
-		// process non-head tags the normal JQuery way
-		// (links need to be converted via raw results to
-		// prevent warnings)
-		var $c = $('<results>' + Thymus.linksToAbsolute(r) + '</results>');
-		var fs = $c.find(f.s);
-		if (fs.length <= 0) {
-			t.addError('No matching results for ' + f.toString()
-					+ ' in\n' + r, f);
-			cb(null, f);
-			return;
-		}
-		fs.each(function() {
-			var $cf = $(this);
-			$cf.find('script').each(function() {
-				doScript($cf, $(this));
-			});
-			if (!$cf.is('script')) {
-				f.p($cf);
+				s = s.replace(opts.regexSrcAttrs, function(m, url) {
+					return ' src="' + absolutePath(url, c) + '"';
+				});
+				return s;
 			} else {
-				doScript($cf, $cf);
+				var $s = $(s);
+				$s.find(':not([href*="://"],[href^="//"],[href^="mailto:"],[href^="#"],[href^="javascript:"],' + 
+						'[src*="://"],[src^="//"],[src^="data:"])').each(function() {
+					var $e = $(this);
+					var a = $e.attr('href') ? 'href' : 'src';
+					$e.attr(a, function(i, path) {
+						if (!path) {
+							return path;
+						}
+						return absolutePath(path, rel(path));
+					});
+				});
+				return $s;
 			}
-			cb($cf, f);
-		});
-	};
-	var lfi = null;
-	var lfg = function($fl, cb) {
-		var f = null;
-		try {
-			f = new Frag($fl);
-			cb = typeof cb === 'function' ? cb : function(){};
-			if (!f.u) {
-				t.addError('Invalid URL for ' + f.toString(), f);
-				cb(null, f);
-				return;
+		}
+
+		/**
+		 * Converts a relative path to an absolute path
+		 * 
+		 * @param relPath
+		 *            the relative path to convert
+		 * @param absPath
+		 *            the absolute path to do the conversion from
+		 * @returns the absolute path version of the relative path in relation to
+		 *          the provided absolute path (or just the supplied relative path
+		 *          when it's really an absolute path)
+		 */
+		function absolutePath(relPath, absPath) {
+			var absStack, relStack, i, d;
+			relPath = relPath || '';
+			if (opts.regexIanaProtocol.test(relPath)) {
+				return urlAdjust(relPath, protocolForFile);
 			}
-			if (t.addFrag(f)) {
-				var done = function(r, status, xhr) {
-					var frgs = t.getFrags(f.u);
-					for (var i=0; i<frgs.length; i++) {
-						lcont(frgs[i], cb, r, status, xhr);
+			absPath = absPath ? absPath.replace(opts.regexAbsPath, '') : '';
+			absStack = absPath ? absPath.split('/') : [];
+			relStack = relPath.split('/');
+			for (i = 0; i < relStack.length; i++) {
+				d = relStack[i];
+				if (d == '.') {
+					continue;
+				}
+				if (d == '..') {
+					if (absStack.length) {
+						absStack.pop();
+					}
+				} else {
+					absStack.push(d);
+				}
+			}
+			return absStack.join('/');
+		}
+
+		/**
+		 * Generates an absolute fragment path based upon the script context path attribute
+		 * 
+		 * @param fragPath
+		 *            the fragment path
+		 */
+		function absolutefragPath(fragPath) {
+			var c = getScriptCxtPath();
+			return absolutePath(fragPath, c);
+		};
+
+		/**
+		 * Extracts a fragment/include/replacement attribute from a given element. When
+		 * the element is the thymus script then an attempt will be made to pull
+		 * the <code>opts.fragHeadAttr</code> attribute off the script and
+		 * extract the specified attribute from that value.
+		 * 
+		 * @param $f
+		 *            the element to extract the attribute from
+		 * @param attrs
+		 *            the attributes to extract
+		 */
+		function getFragAttr($f, attrs) {
+			function ga(a) {
+				var fa = undefined;
+				var a2 = undefined;
+				for ( var i = 0; i < attrs.length; i++) {
+					a2 = attrs[i].replace('\\', '');
+					if (a) {
+						if (a == a2) {
+							return a2;
+						}
+					} else {
+						fa = $f.attr(a2);
+						if (typeof fa !== 'undefined') {
+							return fa;
+						}
+					}
+				}
+				return null;
+			}
+			if ($f.prop('id') == scriptSourceId) {
+				// when the attribute is used on the current script tag then pull the
+				// attribute off the script and extract the
+				// fragment/include/replacement
+				var fa = $f.attr(opts.fragHeadAttr);
+				if (fa) {
+					var fas = fa.split('=');
+					if (fas.length == 2) {
+						return ga(fas[0]) ? fas[1] : null;
+					} else {
+						throw new Error(scriptSourceId + ' has invalid atrtribute ' + 
+								opts.fragHeadAttr + '="' + 
+								fa + '" for ' + attr);
+					}
+				}
+			} else {
+				return ga(null);
+			}
+		}
+
+		/**
+		 * Gets a file extension from a URL
+		 * 
+		 * @param url
+		 *            the URL to get the file extension from
+		 * @returns the file extension for the supplied URL (or empty when not present)
+		 */
+		function getFileExt(url) {
+			var x = getFile(url);
+			if (x) {
+				x = x.split('.');
+				if (x.length > 1) {
+					x = '.' + x[x.length - 1];
+				}
+			}
+			return x;
+		}
+
+		/**
+		 * Gets a file name
+		 * 
+		 * @param url
+		 *            the URL to get the file file name from
+		 * @returns the file name for the supplied URL (or empty when not present)
+		 */
+		function getFile(url) {
+			var f = '';
+			if (url) {
+				var fs = url.match(opts.regexFileExtension);
+				if (fs && fs.length > 0) {
+					f = fs[0];
+				}
+			}
+			return f;
+		}
+
+		/**
+		 * Retrieves the JQuery selector for capturing a fragments content
+		 * 
+		 * @param v
+		 *            the value to get the selector for
+		 * @returns JQuery selector
+		 */
+		function getFragFromSel(v) {
+			var s = $.trim(v);
+			var hf = s && opts.regexFragName.test(s);
+			s = s + (hf ? ',' + getThxSel(fragAttrs, s) : '');
+			return {
+				s : s,
+				hasFragAttr : hf
+			};
+		}
+
+		/**
+		 * Gets a template JQuery selector
+		 * 
+		 * @param a
+		 *            the of array of template attributes (matches any)
+		 * @param v
+		 *            the optional attribute value to match in the array
+		 * @returns JQuery selector
+		 */
+		function getThxSel(a, v) {
+			var r = '';
+			var as = $.isArray(a) ? a : [ a ];
+			for ( var i = 0; i < as.length; i++) {
+				r += (i > 0 ? ',' : '') + '[' + as[i] + (v ? '="' + v + '"' : '') + ']';
+			}
+			return r;
+		}
+
+		/**
+		 * Gets the context path used to resolve paths to fragments and URLs within
+		 * href/src/etc. attributes contained in fragments
+		 */
+		function getScriptCxtPath() {
+			var c = getScriptAttr(opts.contextPathAttr);
+			if (!c) {
+				c = '/';
+			}
+			// capture the absolute URL relative to the defined context path attribute
+			// value
+			c = absolutePath(c, window.location.href);
+			c += c.lastIndexOf('/') != c.length - 1 ? '/' : '';
+			return c;
+		}
+
+		/**
+		 * Gets an attribute of the current script
+		 * 
+		 * @param attr
+		 *            the attribute to extract
+		 */
+		function getScriptAttr(attr) {
+			if (!attr) {
+				return null;
+			}
+			var $s = script;
+			if ($s && $s.length > 0) {
+				return $s.attr(attr);
+			}
+		}
+
+		/**
+		 * Fires an event
+		 * 
+		 * @param ft
+		 *            the function string to call
+		 * @param evt
+		 *            the event to fire
+		 */
+		function fireEvent(ft, evt) {
+			try {
+//				$(t).trigger({
+//					type : 'load.thx.' + type,
+//					thx : evt
+//				});
+				if (ft) {
+					var f = new Func(ft);
+					if (f.isValid) {
+						f.run({
+							event: evt
+						});
+					}
+				}
+			} catch (e) {
+				log('Error in ' + ft + ' ' + (evt ? evt : '') + ': ' + e);
+			}
+		}
+
+		/**
+		 * Function constructor
+		 * 
+		 * @constructor
+		 * @param fs
+		 *            function string (can contain arguments)
+		 * @param am
+		 *            an associative array with the key/index relative to an
+		 *            argument name and the value as the argument value
+		 * @param nn
+		 *            true to exclude running of functions where the supplied
+		 *            function string is not surrounded in parenthesis
+		 * @returns {Func}
+		 */
+		function Func(fs, am, nn) {
+			try {
+				var f = !nn && typeof window[fs] === 'function' ? window[fn] : undefined;
+				var a = null;
+				this.isValid = typeof f === 'function';
+				this.setArgs = function(nam) {
+					if (this.isValid) {
+						if (a && a.length > 0) {
+							for (var i=0; i<a.length; i++) {
+								if (nam && nam[a[i]]) {
+									a[i] = nam[a[i]];
+								}
+							}
+						}
 					}
 				};
-				if (f.u == Thymus.SELF) {
-					done($('html').html(), 'same-template');
+				if (!f) {
+					var fn = opts.regexFunc.exec(fs);
+					if (fn) {
+						fn = fn[0];
+						if (fn) {
+							a = fs.substring(fn.length, fs.lastIndexOf(')'));
+						}
+						fn = fs.split('(')[0];
+						if (typeof window[fn] === 'function') {
+							f = window[fn];
+							this.isValid = true;
+							if (a && a.length > 0) {
+								a = a.match(opts.regexFuncArgs);
+								this.setArgs(am);
+							}
+						}
+					}
+				}
+				function amts(am) {
+					var x = '';
+					if (am) {
+						for ( var k in am) {
+							x += k + '=' + am[k] + ',';
+						}
+					}
+					return x.length > 1 ? '[' + x.substring(0, x.length - 2) + ']' : '';
+				}
+				this.run = function(thisArg, nam) {
+					if (this.isValid) {
+						try {
+							if (a && a.length > 0) {
+								if (nam) {
+									this.setArgs(nam);
+								}
+								f.apply(thisArg, a);
+							} else {
+								f.call(thisArg);
+							}
+							return true;
+						} catch (e) {
+							log('Error while calling ' + fs + ' ' + amts(am)
+									+ ': ' + e);
+						}
+					}
+					return false;
+				};
+			} catch (e) {
+				log('Error in ' + fs + ' ' + amts(am) + ': ' + e);
+			}
+		}
+
+		/**
+		 * {Frag} tracking mechanism to handle multiple {Frag}s
+		 * 
+		 * @constructor
+		 */
+		function FragsTrack() {
+			this.cnt = 0;
+			this.len = 0;
+			var c = [];
+			this.addFrag = function(f) {
+				if (c[f.u]) {
+					c[f.u][c[f.u].length] = f;
+					return false;
+				} else {
+					c[f.u] = [ f ];
+				}
+				return true;
+			};
+			this.getFrags = function(url) {
+				return c[url];
+			};
+			var e = [];
+			this.addError = function(em, f) {
+				e[e.length] = em;
+				if (f) {
+					f.e = em;
+				}
+				return e;
+			};
+			this.getErrors = function() {
+				return e;
+			};
+		}
+
+		/**
+		 * Fragment constructor
+		 * 
+		 * @constructor
+		 * @param $fl
+		 *            the fragment loaded from source DOM element
+		 */
+		function Frag($fl) {
+			// use the fragment value as the attribute key to use as the
+			// replacement/include
+			this.r = false;
+			this.a = getFragAttr($fl, includeAttrs);
+			if (!this.a) {
+				this.a = getFragAttr($fl, replaceAttrs);
+				this.r = true;
+			}
+			this.a = this.a ? this.a.split(opts.fragSep) : null;
+			this.u = this.a && this.a.length > 0 ? $.trim(this.a[0]) : null;
+			this.t = this.a && this.a.length > 1 ? $.trim(this.a[1]) : null;
+			if (this.u && this.u.length > 0
+					&& this.u.toLowerCase() != opts.selfRef.toLowerCase()) {
+				var fileExt = script ? script.attr(opts.fragExtensionAttr) : '';
+				var fragFileExt = fileExt ? fileExt.toLowerCase() == opts.inheritRef ? getFileExt(location.href)
+						: fileExt
+						: '';
+				if (fragFileExt && this.u.indexOf('.') < 0) {
+					this.u += fragFileExt;
+				}
+				this.u = absolutefragPath(this.u);
+			} else if (this.t && this.t.length > 0) {
+				this.u = opts.selfRef;
+			}
+			this.func = this.t ? new Func(this.t, null, true) : null;
+			if (this.t) {
+				var fpts = opts.regexFunc.exec(this.t);
+				if (fpts) {
+					this.t = fpts[0];
+				}
+			}
+			var fso = this.t ? getFragFromSel(this.t) : null;
+			this.s = fso ? fso.s : null;
+			this.hf = fso ? fso.hasFragAttr : true;
+			this.el = $fl;
+			this.rs = null;
+			this.e = null;
+			this.p = function(x) {
+				if (this.r) {
+					try {
+						var $x = $(x);
+						this.el.replaceWith($x);
+						this.rs = $x;
+					} catch (e) {
+						// node may contain top level text nodes
+						var $x = this.el.parent();
+						this.el.replaceWith(x);
+						this.rs = $x;
+					}
+				} else {
+					this.el.append(x);
+				}
+			};
+			this.toString = function() {
+				return 'Fragment -> type: '
+						+ (this.r ? 'subsitution"' : 'include"') + ', URL: '
+						+ this.u + ', target: ' + this.t + ', select: ' + this.s;
+			};
+		}
+
+		/**
+		 * {Frag} complete event issued when an individual {Frag} has completed an
+		 * attempt to load
+		 * 
+		 * @constructor
+		 * @param $s
+		 *            the scope of the event
+		 * @param t
+		 *            the {FragsTrack} used
+		 * @param f
+		 *            the {Frag} the event is being issued for
+		 */
+		function FragCompleteEvent($s, t, f) {
+			this.fragCount = t.cnt;
+			this.fragCurrTotal = t.len;
+			this.fragUrl = f ? f.u : undefined;
+			this.fragTarget = f ? f.func && f.func.isValid ? f.func.run : f.t
+					: undefined;
+			this.source = f ? f.rs ? f.rs : f.el : undefined;
+			this.error = f ? f.e : undefined;
+			this.scope = $s;
+			this.log = function() {
+				log(this);
+			};
+			this.toFormattedString = function() {
+				return '[Fragment Complete Event, fragCount: ' + this.fragCount
+						+ ', fragCurrTotal: ' + this.fragCurrTotal + ', URL: '
+						+ this.url + ', element: ' + this.element + ', error: '
+						+ this.error + ']';
+			};
+		}
+
+		/**
+		 * {Frag}s complete event broadcast when an all {Frag}s in an issued batch
+		 * have completed an attempt to load
+		 * 
+		 * @constructor
+		 * @param $s
+		 *            the scope of the event
+		 * @param c
+		 *            the number of {Frag}s where an atempt was made to load
+		 * @param e
+		 *            an array of errors (if any)
+		 */
+		function FragsCompleteEvent($s, c, e) {
+			this.fragCount = c;
+			this.scope = $s;
+			this.errors = e;
+			this.log = function() {
+				log(this);
+			};
+			this.toFormattedString = function() {
+				return '[Fragments Complete Event, fragCount: ' + this.fragCount
+						+ ', errors: ' + this.e + ']';
+			};
+		}
+
+		/**
+		 * Loads fragments (nested supported) into the page using a predefined HTML
+		 * attribute for fragment discovery. The attribute value should contain a URL
+		 * followed by a replacement/include value that will match a fragment result
+		 * attribute. For example:
+		 * 
+		 * <pre>
+		 * &lt;!-- source element --&gt;
+		 * &lt;div id="parent"&gt;
+		 * 	&lt;div th:fragments="path/to/frags :: fragContents"&gt;&lt;/div&gt;
+		 * &lt;/div&gt;
+		 * &lt;!-- fragment element --&gt;
+		 * &lt;div th:fragment="fragContents"&gt;Contents&lt;/div&gt;
+		 * </pre>
+		 * 
+		 * Will result in:
+		 * 
+		 * <pre>
+		 * &lt;!-- when including --&gt;
+		 * &lt;div id="parent"&gt;
+		 * 	&lt;div th:fragments="path/to/frags :: fragContents"&gt;Contents&lt;/div&gt;
+		 * &lt;/div&gt;
+		 * &lt;!-- when replacing --&gt;
+		 * &lt;div id="parent"&gt;
+		 * 	&lt;div th:fragment="fragContents"&gt;Contents&lt;/div&gt;
+		 * &lt;/div&gt;
+		 * </pre>
+		 * 
+		 * @param selector
+		 *            the selector to the root element where fragments will be looked for
+		 * @param func
+		 *            the callback function that will be called when all fragments have
+		 *            been loaded (parameters: the original root element, the number of
+		 *            fragments processed)
+		 */
+		this.loadFragments = function(selector, func) {
+			var $s = $(selector);
+			var t = new FragsTrack();
+			function done(t, f) {
+				if (t.cnt > t.len) {
+					t.addError('Expected ' + t.len + ' fragments, but recieved ' + t.cnt, f);
+				}
+				fireEvent(scriptFragComplete, new FragCompleteEvent($s, t, f));
+				if (t.cnt >= t.len) {
+					if (typeof func === 'function') {
+						func($s, t.cnt, t.getErrors());
+					}
+					fireEvent(scriptFragsComplete, new FragsCompleteEvent($s,
+							t.cnt, t.getErrors()));
+				}
+			}
+			function hndlFunc(f, cb, r, status, xhr, e) {
+				if (f.func && f.func.isValid) {
+					f.func.run({
+						handle : {
+							source : f.el,
+							type : f.r ? 'replace' : 'include',
+							data : r,
+							status : status,
+							xhr : xhr,
+							error : e,
+							process : function(x) {
+								f.p(x ? x : r);
+							}
+						}
+					});
+					cb(null, f);
+					return true;
+				}
+				return false;
+			}
+			var lcont = function(f, cb, r, status, xhr) {
+				if (hndlFunc(f, cb, r, status, xhr)) {
 					return;
 				}
-				// use get vs load w/content target for more granular control
-				$.ajax({
-					url: f.u
-				}).done(done).fail(function(xhr, ts, e) {
-					var frgs = t.getFrags(f.u);
-					for (var i=0; i<frgs.length; i++) {
-						t.addError('Error at ' + f.toString() + ': ' + ts + '- ' + e, f);
-						if (!hndlFunc(f, cb, null, ts, xhr, e)) {
-							cb(null, f);
-						}
-					}
-				});
-			}
-		} catch (e) {
-			t.addError('Error at ' + f.toString() + ': ' + e, f);
-			cb(null, f);
-		}
-		return f;
-	};
-	var lfc = null;
-	lfc = function($fl) {
-		lfg($fl, function($cf, f) {
-			t.cnt++;
-			// process any nested fragments
-			if ($cf) {
-				lfi($cf, f);
-			} else {
-				done(t, f);
-			}
-		});
-	};
-	// IE strips any attributes in the HEAD tag so we use the thymus script
-	// attribute to capture HEAD includes/replacements (if defined)
-	var $head = $('head');
-	if ($head && $head.length > 0) {
-		var pf = Thymus.getFragAttr($head, Thymus.INC_ATTRS);
-		if (!pf) {
-			pf = Thymus.getFragAttr($head, Thymus.REP_ATTRS);
-		}
-		if (!pf) {
-			t.len++;
-			lfc(Thymus.getScript());
-		}
-	}
-	// recursivly process all the includes/replacements
-	lfi = function($f, f) {
-		var $fs = $f.find(Thymus.FRAG_TO_SELECT);
-		t.len += $fs.length;
-		$fs.each(function() {
-			lfc($(this));
-		});
-		if (t.cnt > 0 || ($fs.length == 0 && t.cnt == 0)) {
-			done(t, f);
-		}
-	};
-	// make initial call
-	lfi($s);
-};
-/**
- * Generates an absolute fragment path based upon the script context path attribute
- * 
- * @param fragPath
- *            the fragment path
- */
-Thymus.absolutefragPath = function(fragPath) {
-	var c = Thymus.getScriptContextPath();
-	return Thymus.absolutePath(fragPath, c);
-};
-/**
- * Updates href/src/etc. URLs to reflect the fragment location based upon the
- * defined script context path
- * 
- * @param s
- *            the source element or HTML to update
- * @returns when the source is a string the result will return the source with
- *          formatted URL references otherwise, a JQuery source object will be
- *          returned
- */
-Thymus.linksToAbsolute = function(s) {
-	var c = Thymus.getScriptContextPath();
-	var rel = function(p) {
-		return p.indexOf('.') != 0 && p.indexOf('/') != 0 ? c + 'fake.htm' : c;
-	};
-	if (typeof s === 'string') {
-		s = s.replace(Thymus.REGEX_HREF, function(m, url) {
-			return ' href="' + Thymus.absolutePath(url, c) + '"';
-		});
-		s = s.replace(Thymus.REGEX_SRC, function(m, url) {
-			return ' src="' + Thymus.absolutePath(url, c) + '"';
-		});
-		return s;
-	} else {
-		var $s = $(s);
-		$s.find(':not([href*="://"],[href^="//"],[href^="mailto:"],[href^="#"],[href^="javascript:"],' + 
-				'[src*="://"],[src^="//"],[src^="data:"])').each(function() {
-			var $e = $(this);
-			var a = $e.attr('href') ? 'href' : 'src';
-			$e.attr(a, function(i, path) {
-				if (!path) {
-					return path;
-				}
-				return Thymus.absolutePath(path, rel(path));
-			});
-		});
-		return $s;
-	}
-};
-/**
- * Converts a relative path to an absolute path
- * 
- * @param relPath
- *            the relative path to convert
- * @param absPath
- *            the absolute path to do the conversion from
- * @returns the absolute path version of the relative path in relation to the
- *          provided absolute path (or just the supplied relative path when it's
- *          really an absolute path)
- */
-Thymus.absolutePath = function(relPath, absPath) {
-	var absStack, relStack, i, d;
-	relPath = relPath || '';
-	if (Thymus.REGEX_PROTOCOL.test(relPath)) {
-		return Thymus.urlAdjust(relPath);
-	}
-	absPath = absPath ? absPath.replace(Thymus.REGEX_ROOT_PATH, '') : '';
-	absStack = absPath ? absPath.split('/') : [];
-	relStack = relPath.split('/');
-	for (i = 0; i < relStack.length; i++) {
-		d = relStack[i];
-		if (d == '.') {
-			continue;
-		}
-		if (d == '..') {
-			if (absStack.length) {
-				absStack.pop();
-			}
-		} else {
-			absStack.push(d);
-		}
-	}
-	return absStack.join('/');
-};
-/**
- * Navigates to the specified URL (converting it to it's absolute counterpart
- * when needed)
- * 
- * @param relPath
- *            the relative path to convert
- */
-Thymus.nav = function(relPath) {
-	var url = Thymus.absolutefragPath(relPath);
-	document.location.href = url;
-};
-/**
- * Performs any URL adjustments that may be needed for proper resolution
- */
-Thymus.urlAdjust = function(url) {
-	return Thymus.PROTOCOL_FOR_FILE && url.indexOf('//') == 0 ? Thymus.PROTOCOL_FOR_FILE
-			+ url
-			: url;
-};
-/**
- * Function constructor
- * 
- * @param fs
- *            function string (can contain arguments)
- * @param am
- *            an associative array with the key/index relative to an argument
- *            name and the value as the argument value
- * @param nn
- *            true to exclude running of functions where the supplied function
- *            string is not surrounded in parenthesis
- * @returns {Thymus.Func}
- */
-Thymus.Func = function(fs, am, nn) {
-	try {
-		var f = !nn && typeof window[fs] === 'function' ? window[fn] : undefined;
-		var a = null;
-		this.isValid = typeof f === 'function';
-		this.setArgs = function(nam) {
-			if (this.isValid) {
-				if (a && a.length > 0) {
-					for (var i=0; i<a.length; i++) {
-						if (nam && nam[a[i]]) {
-							a[i] = nam[a[i]];
-						}
+				if (xhr) {
+					var mt = xhr.getResponseHeader('Content-Type');
+					if (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0) {
+						f.p(r);
+						cb(null, f);
+						return;
+					} else if (mt.indexOf('json') >= 0) {
+						// TODO : handle JSON data using name matching
 					}
 				}
-			}
-		};
-		if (!f) {
-			var fn = Thymus.REGEX_FUNC.exec(fs);
-			if (fn) {
-				fn = fn[0];
-				if (fn) {
-					a = fs.substring(fn.length, fs.lastIndexOf(')'));
-				}
-				fn = fs.split('(')[0];
-				if (typeof window[fn] === 'function') {
-					f = window[fn];
-					this.isValid = true;
-					if (a && a.length > 0) {
-						a = a.match(Thymus.REGEX_ARGS);
-						this.setArgs(am);
+				var doScript = function($p, $x) {
+					if (!$p.is($x)) {
+						$x.remove();
+					}
+					var url = $x.prop('src');
+					if (url && url.length > 0) {
+						t.len++;
+						var sf = new Frag($x);
+						sf.u = url;
+						sf.t = $p;
+						if (url.indexOf('data:text/javascript,') >= 0) {
+							$('<script>' + url.substr('data:text/javascript,'.length) + 
+									'</script>').appendTo($p);
+							cb(null, sf);
+							return;
+						}
+						$.getScript(url).done(function(data, textStatus, jqxhr) {
+							if (jqxhr.status != 200) {
+								t.addError(jqxhr.status + ': ' + 
+										textStatus + ' URL="' + url + '"', sf);
+							}
+							cb($p, sf);
+						}).fail(function(xhr, ts, e) {
+							t.addError('Error at ' + sf.toString() + ': ' + 
+									ts + '- ' + e, sf);
+							cb(null, sf);
+						});
+					}
+				};
+				// just about every browser strips out BODY/HEAD when parsing an
+				// HTML DOM, all but Opera strip out HTML, many strip out
+				// TITLE/BASE/META and some strip out KEYGEN/PROGRESS/SOURCE. so, we
+				// can't use the typical JQuery/browser parsing on the result for
+				// those tags.
+				var hs = '<head ';
+				var he = '</head>';
+				var his = r.indexOf(hs);
+				if (his > -1) {
+					var hie = r.indexOf(he);
+					var hr = '<div ' + r.substring(his + hs.length, hie) + '</div>';
+					hr = hr.substring(0, hr.indexOf('>') + 1);
+					var $hr = $(hr + '</div>');
+					var ha = getFragAttr($hr, fragAttrs);
+					if (ha && ha == f.t) {
+						hr = hr.replace(/div/g, 'head');
+						hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
+						var $h = $('head');
+						hr = linksToAbsolute(hr);
+						var scs = hr.match(opts.regexScriptTags);
+						if (scs) {
+							$.each(scs, function(i, sc) {
+								doScript($h, $(sc));
+								hr = hr.replace(sc, '');
+							});
+						}
+						$h.append(hr);
+						cb($h, f);
+						return;
 					}
 				}
-			}
-		}
-		function amts(am) {
-			var x = '';
-			if (am) {
-				for ( var k in am) {
-					x += k + '=' + am[k] + ',';
+				// process non-head tags the normal JQuery way
+				// (links need to be converted via raw results to
+				// prevent warnings)
+				var $c = $('<results>' + linksToAbsolute(r) + '</results>');
+				var fs = $c.find(f.s);
+				if (fs.length <= 0) {
+					t.addError('No matching results for ' + f.toString()
+							+ ' in\n' + r, f);
+					cb(null, f);
+					return;
 				}
-			}
-			return x.length > 1 ? '[' + x.substring(0, x.length - 2) + ']' : '';
-		}
-		this.run = function(thisArg, nam) {
-			if (this.isValid) {
-				try {
-					if (a && a.length > 0) {
-						if (nam) {
-							this.setArgs(nam);
-						}
-						f.apply(thisArg, a);
+				fs.each(function() {
+					var $cf = $(this);
+					$cf.find('script').each(function() {
+						doScript($cf, $(this));
+					});
+					if (!$cf.is('script')) {
+						f.p($cf);
 					} else {
-						f.call(thisArg);
+						doScript($cf, $cf);
 					}
-					return true;
-				} catch (e) {
-					Thymus.log('Error while calling ' + fs + ' ' + amts(am)
-							+ ': ' + e);
-				}
-			}
-			return false;
-		};
-	} catch (e) {
-		Thymus.log('Error in ' + fs + ' ' + amts(am) + ': ' + e);
-	}
-};
-/**
- * Fires an event
- * 
- * @param ft
- *            the function string to call
- * @param evt
- *            the event to fire
- */
-Thymus.fireEvent = function(ft, evt) {
-	try {
-		if (ft) {
-			var f = new Thymus.Func(ft);
-			if (f.isValid) {
-				f.run({
-					event: evt
+					cb($cf, f);
 				});
-			}
-		}
-	} catch (e) {
-		Thymus.log('Error in ' + ft + ' ' + (evt ? evt : '') + ': ' + e);
-	}
-};
-/**
- * When available, logs a message to the console
- * 
- * @param m
- *            the message to log
- */
-Thymus.log = function(m) {
-	if (m && typeof window.console !== 'undefined'
-			&& typeof window.console.log !== 'undefined') {
-		window.console.log(Thymus.ieVersion <= 0 || Thymus.ieVersion > 9 ? m
-				: typeof m.toFormattedString === 'function' ? m
-						.toFormattedString() : m);
-	}
-};
-/**
- * Loads JQuery if it hasn't been loaded yet
- * 
- * @param url
- *            the URL to the JQuery script
- * @param cb
- *            an optional callback function that will called when JQuery has
- *            been loaded
- */
-Thymus.loadJQuery = function(url, cb) {
-	if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
-		var s = document.createElement('script');
-		s.src = Thymus.urlAdjust(url);
-		var head = document.getElementsByTagName('head')[0];
-		s.onload = s.onreadystatechange = function() {
-			if (!Thymus.jqueryLoaded
-					&& (!this.readyState || this.readyState == 'loaded' || 
-							this.readyState == 'complete')) {
+			};
+			var lfi = null;
+			var lfg = function($fl, cb) {
+				var f = null;
 				try {
-					Thymus.jqueryLoaded = true;
-					if (typeof cb === 'function') {
-						cb();
+					f = new Frag($fl);
+					cb = typeof cb === 'function' ? cb : function(){};
+					if (!f.u) {
+						t.addError('Invalid URL for ' + f.toString(), f);
+						cb(null, f);
+						return;
 					}
-				} finally {
-					// script tag disposal
-					s.onload = s.onreadystatechange = null;
-					head.removeChild(s);
+					if (t.addFrag(f)) {
+						var done = function(r, status, xhr) {
+							var frgs = t.getFrags(f.u);
+							for (var i=0; i<frgs.length; i++) {
+								lcont(frgs[i], cb, r, status, xhr);
+							}
+						};
+						if (f.u == opts.selfRef) {
+							done($('html').html(), 'same-template');
+							return;
+						}
+						// use get vs load w/content target for more granular control
+						$.ajax({
+							url: f.u
+						}).done(done).fail(function(xhr, ts, e) {
+							var frgs = t.getFrags(f.u);
+							for (var i=0; i<frgs.length; i++) {
+								t.addError('Error at ' + f.toString() + ': ' + ts + '- ' + e, f);
+								if (!hndlFunc(f, cb, null, ts, xhr, e)) {
+									cb(null, f);
+								}
+							}
+						});
+					}
+				} catch (e) {
+					t.addError('Error at ' + (f ? f.toString() : Frag) + ': ' + e, f);
+					cb(null, f);
+				}
+				return f;
+			};
+			var lfc = null;
+			lfc = function($fl) {
+				lfg($fl, function($cf, f) {
+					t.cnt++;
+					// process any nested fragments
+					if ($cf) {
+						lfi($cf, f);
+					} else {
+						done(t, f);
+					}
+				});
+			};
+			// IE strips any attributes in the HEAD tag so we use the thymus script
+			// attribute to capture HEAD includes/replacements (if defined)
+			var $head = $('head');
+			if ($head && $head.length > 0) {
+				var pf = getFragAttr($head, includeAttrs);
+				if (!pf) {
+					pf = getFragAttr($head, replaceAttrs);
+				}
+				if (!pf) {
+					t.len++;
+					lfc(script);
 				}
 			}
+			// recursivly process all the includes/replacements
+			lfi = function($f, f) {
+				var $fs = $f.find(fragSelector);
+				t.len += $fs.length;
+				$fs.each(function() {
+					lfc($(this));
+				});
+				if (t.cnt > 0 || ($fs.length == 0 && t.cnt == 0)) {
+					done(t, f);
+				}
+			};
+			// make initial call
+			lfi($s);
 		};
-		head.appendChild(s);
-	} else {
-		Thymus.jqueryLoaded = true;
-		if (typeof cb === 'function') {
-			cb();
-		}
 	}
-};
-/**
- * Gets an elements attribute before loading has begun
- * 
- * @param a
- *            the attribute to retrieve
- * @param d
- *            the optional default value to return when the attribute cannot be
- *            found
- * @param e
- *            the optional element to retrieve the attribute value from
- *            (null/undefined will use script element)
- */
-Thymus.getPreLoadAttr = function(a, d, e) {
-	if (!e) {
-		e = document.getElementById(Thymus.ID);
-		if (!e) {
-			throw new Error('Missing script ID: ' + Thymus.ID);
-		}
-	}
-	var r = e ? e.getAttribute ? e.getAttribute(a) : e.attributes[a].nodeValue : null;
-	return d && !r ? d : r;
-};
-/**
- * Initializes the global parameters and verfifies/loads JQuery using the URL
- * from the <code>Thymus.JQUERY_URL_ATTR</code> attribute that should
- * reside on the <code>Thymus.ID</code> script.
- */
-Thymus.load = function() {
-	function initStriptValues() {
-		var url = Thymus.getPreLoadAttr(Thymus.JQUERY_URL_ATTR,
-				Thymus.JQUERY_DEFAULT_URL);
-		Thymus.FRAGS_COMPLETE = Thymus.getPreLoadAttr(
-				Thymus.FRAGS_COMPLETE_ATTR);
-		Thymus.FRAG_COMPLETE = Thymus.getPreLoadAttr(
-				Thymus.FRAG_COMPLETE_ATTR);
-		Thymus.FRAG = Thymus.getPreLoadAttr(Thymus.FRAG_ATTR,
-				Thymus.DEFAULT_FRAG_ATTR);
-		Thymus.FRAG_INC = Thymus.getPreLoadAttr(Thymus.FRAG_INC_ATTR,
-				Thymus.DEFAULT_INC_ATTR);
-		Thymus.FRAG_REP = Thymus.getPreLoadAttr(Thymus.FRAG_REP_ATTR,
-				Thymus.DEFAULT_REP_ATTR);
-		Thymus.FRAG_ATTRS = [ Thymus.FRAG, Thymus.THYMELEAF_FRAG_ATTR,
-				Thymus.THYMELEAF_FRAG_ATTR_ALT ];
-		Thymus.INC_ATTRS = [ Thymus.FRAG_INC, Thymus.THYMELEAF_INC_ATTR,
-				Thymus.THYMELEAF_INC_ATTR_ALT ];
-		Thymus.REP_ATTRS = [ Thymus.FRAG_REP, Thymus.THYMELEAF_REP_ATTR,
-				Thymus.THYMELEAF_REP_ATTR_ALT ];
-		Thymus.INC_REP_ATTRS = Thymus.INC_ATTRS.concat(Thymus.REP_ATTRS);
-		Thymus.FRAG_SEP = Thymus.getPreLoadAttr(Thymus.FRAG_SEP_ATTR,
-				Thymus.DEFAULT_SEP);
-		Thymus.FRAG_EXT = Thymus.getPreLoadAttr(Thymus.FRAG_EXT_ATTR);
-		Thymus.PROTOCOL_FOR_FILE = Thymus.REGEX_PROTOCOL_FILE
-				.test(location.protocol) ? 'http:' : null;
-		with (document.createElement('b')) {
-			id = 4;
-			while (innerHTML = '<!--[if gt IE ' + ++id + ']>1<![endif]-->', innerHTML > 0);
-			Thymus.ieVersion = id > 5 ? +id : 0;
-		}
-		return url;
-	}
-	Thymus.loadJQuery(initStriptValues(), function() {
-		//caching should be disabled for ajax responses
-		$.ajaxSetup({
-			cache : false
-		});
-		var load = function() {
-			Thymus.FRAG_TO_SELECT = Thymus.getIncRepSel();
-			Thymus.loadFragments('html', function($s, fc, es) {
-				// respect any named anchors
-				var i = location.href.lastIndexOf('#');
-				if (i >= 0) {
-					location.href = location.href.substring(i);
+
+	/**
+	 * Initializes thymus.js plug-in and loads any fragments within the page
+	 * 
+	 * @param jqUrl
+	 *            the URL used to load JQuery
+	 */
+	function init(jqUrl) {
+		$.fn.thymus = function(a, options) {
+			var o = $.extend({}, $.fn.thymus.defaults, options);
+			thx = new FragCtx(jqUrl, o);
+			return this.each(function() {
+				if (a === 'load.fragments') {
+					thx.loadFragments(this, function($s, fc, es) {
+						// respect any named anchors
+						var i = location.href.lastIndexOf('#');
+						if (i >= 0) {
+							location.href = location.href.substring(i);
+						}
+					});
+				} else if (a === 'nav.href') {
+					// Navigates to the specified URL (converting it to it's
+					// absolute counterpart when needed)
+					if (o.path) {
+						var url = absolutefragPath(o.path);
+						document.location.href = url;
+					} else {
+						log('No path supplied for: thymus(' + a + ', {path: ???})');
+					}
 				}
 			});
 		};
-		if (document.readyState !== 'complete') {
-			$(document).ready(function() {
-				load();
-			});
-		} else {
-			load();
+		$.fn.thymus.defaults = {
+			selfRef : 'this',
+			inheritRef : 'inherit',
+			fragSep : '::',
+			fragExtensionAttr : 'data-thx-frag-extension',
+			fragAttr : 'data-thx-fragment',
+			includeAttr : 'data-thx-include',
+			replaceAttr : 'data-thx-replace',
+			contextPathAttr : 'data-thx-context-path',
+			fragCompleteAttr : 'data-thx-onfragcomplete',
+			fragsCompleteAttr : 'data-thx-onfragscomplete',
+			fragHeadAttr : 'data-thx-head-frag',
+			thymeleafFragAttr : 'th\\:fragment',
+			thymeleafFragAltAttr : 'data-th-fragment',
+			thymeleafIncludeAttr : 'th\\:include',
+			thymeleafIncludeAltAttr : 'data-th-include',
+			thymeleafReplaceAttr : 'th\\:replace',
+			thymeleafReplaceAltAttr : 'data-th-replace',
+			regexFragName : /^[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*$/,
+			regexFunc : /.+?\(/i,
+			regexFileExtension : /[^\/?#]+(?=$|[?#])/,
+			regexScriptTags : /<script[^>]*>([\\S\\s]*?)<\/script>/img,
+			regexHrefAttrs : /\shref=[\"|'](.*?)[\"|']/ig,
+			regexSrcAttrs : /\ssrc=[\"|'](.*?)[\"|']/ig,
+			regexIanaProtocol : /^(([a-z]+)?:|\/\/|#)/i,
+			regexFileTransForProtocolRelative : /^(file:?)/i,
+			regexAbsPath : /^\/|(\/[^\/]*|[^\/]+)$/g,
+			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g
+		};
+		try {
+			var t = document.createElement('b');
+			t.id = 4;
+			while (t.innerHTML = '<!--[if gt IE ' + ++t.id + ']>1<![endif]-->',
+					t.innerHTML > 0) {
+			}
+			ieVersion = t.id > 5 ? +t.id : 0;
+		} catch (e) {
+			log('Unable to detect IE version: ' + e.message);
 		}
-	});
-};
-/**
- * Start up
- */
-Thymus.startUp = function() {
-	var d = Thymus.getPreLoadAttr(Thymus.FRAGS_LOAD_DEFERRED_LOAD_ATTR);
-	if (!d) {
-		Thymus.load();
+		var d = getPreLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR);
+		if (!d) {
+			$('html').thymus('load.fragments');
+		}
 	}
-};
-Thymus.startUp();
+
+	/**
+	 * Performs any URL adjustments that may be needed for proper resolution
+	 * 
+	 * @param url
+	 *            the URL to adjust
+	 * @param fp
+	 *            the optional file protocol to use
+	 */
+	function urlAdjust(url, fp) {
+		return fp && url.indexOf('//') == 0 ? protocolForFile + url : url;
+	}
+
+	/**
+	 * Gets an elements attribute before loading has begun
+	 * 
+	 * @param a
+	 *            the attribute to retrieve
+	 * @param d
+	 *            the optional default value to return when the attribute cannot
+	 *            be found
+	 * @param e
+	 *            the optional element to retrieve the attribute value from
+	 *            (null/undefined will use script element)
+	 */
+	function getPreLoadAttr(a, d, e) {
+		if (!e) {
+			e = document.getElementById(scriptSourceId);
+			if (!e) {
+				throw new Error('Missing script ID: ' + scriptSourceId);
+			}
+		}
+		var r = e ? e.getAttribute ? e.getAttribute(a) : e.attributes[a].nodeValue : null;
+		return d && !r ? d : r;
+	}
+
+	// verfifies/loads JQuery using the URL (if needed)
+	var jqueryLoaded = typeof $ === 'function';
+	if (!jqueryLoaded) {
+		(function(jqUrl, cb) {
+			if (typeof $ === 'undefined') {
+				var s = document.createElement('script');
+				s.src = urlAdjust(jqUrl);
+				var head = document.getElementsByTagName('head')[0];
+				s.onload = s.onreadystatechange = function() {
+					if (!jqueryLoaded
+							&& (!this.readyState || this.readyState == 'loaded' || 
+									this.readyState == 'complete')) {
+						try {
+							jqueryLoaded = true;
+							if (typeof cb === 'function') {
+								cb(jqUrl);
+							}
+						} finally {
+							// script tag disposal
+							s.onload = s.onreadystatechange = null;
+							head.removeChild(s);
+						}
+					}
+				};
+				head.appendChild(s);
+			} else {
+				jqueryLoaded = true;
+				if (typeof cb === 'function') {
+					cb(jqUrl);
+				}
+			}
+		})(getPreLoadAttr(JQUERY_URL_ATTR,
+				JQUERY_DEFAULT_URL), function(jqUrl) {
+			// caching should be disabled for ajax responses
+			$.ajaxSetup({
+				cache : false
+			});
+			if (document.readyState !== 'complete') {
+				$(document).ready(function() {
+					init(jqUrl);
+				});
+			} else {
+				init(jqUrl);
+			}
+		});
+	}
+})();
