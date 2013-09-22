@@ -182,7 +182,7 @@
 							(<a href="#deferred">configurable</a>)
 						</li>
 						<li>Automatic fragment <a href="#attrpaths"><code>src</code>/<code>href</code>
-								resolution for relative paths</a>
+								resolution for relative paths</a> (<a href="#deferred">configurable</a>)
 						</li>
 						<li><a href="#deferred">Load fragments via script using
 								JQuery selectors</a></li>
@@ -202,10 +202,15 @@
 						<li>Maintains vertical scrolling positions associated with
 							named anchors that point to a location within a fragment (e.g. <i>example.com/path#someNamedAnchorInAFrag</i>)
 						</li>
-						<li>Fragment events dispatched for each resource has been
-							loaded or failed to load (including scripts and nested fragments)</li>
-						<li>Fragment event dispatched when all fragments have been
-							loaded or failed to load (including scripts and nested fragments)</li>
+						<li><a href="#fragcomplete">Fragment events</a> dispatched
+							for each resource has been loaded or failed to load (including
+							scripts and nested fragments)</li>
+						<li><a href="#fragscomplete">Fragment event</a> dispatched
+							when all fragments have been loaded or failed to load (including
+							scripts and nested fragments)</li>
+						<li>Complete <a href="http://learn.jquery.com/plugins/">JQuery
+								plug-in</a> extensibility
+						</li>
 					</ul>
 				</div>
 			</div>
@@ -475,9 +480,6 @@
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
 </pre></div>
-					<p>
-						Due to the nature of dynamically loaded scripts they may be difficult to debug 
-					</p>
 					<div class="alert alert-info">
 						<strong>Note:</strong> You may have noticed that the
 						<code>script</code>

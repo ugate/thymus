@@ -36,68 +36,113 @@
 	}
 
 	/**
+	 * Generates an array of regular expressions that match the entire attribute
+	 * (with any value) for each of the specified attributes
+	 * 
+	 * @param a
+	 *            the array (or comma separated string) of attributes to
+	 *            generate regular expressions for
+	 * @returns an array of objects that contain a name that matches the
+	 *          attribute name and a regExp that matches the entire attribute
+	 */
+	function genAttrRegExps(a) {
+		var ra = [];
+		x = $.isArray(a) ? a : a && typeof a === 'string' ? a.split(',') : [];
+		for ( var i = 0; i < x.length; i++) {
+			ra.push({
+				name : x[i],
+				regExp : new RegExp('\\s' + x[i] + '=[\\"|\'](.*?)[\\"|\']',
+						'ig')
+			});
+		}
+		return ra;
+	}
+
+	/**
 	 * thymus.js context constructor
 	 * 
 	 * @constructor
 	 * @param jqUrl
 	 *            the URL used to load JQuery
-	 * @param opts the JQuery options used 
+	 * @param opts
+	 *            the JQuery options used
 	 */
 	function FragCtx(jqUrl, opts) {
+		this.opts = opts;
 		var script = $('#' + scriptSourceId);
 		var scriptFragsComplete = script ? script
 				.attr(opts.fragsCompleteAttr) : null;
 		var scriptFragComplete = script ? script
 				.attr(opts.fragCompleteAttr) : null;
-		var fragAttrs = [ opts.fragAttr, opts.thymeleafFragAttr,
-				opts.thymeleafFragAltAttr ];
-		var includeAttrs = [ opts.includeAttr, opts.thymeleafIncludeAttr,
-				opts.thymeleafIncludeAltAttr ];
-		var replaceAttrs = [ opts.replaceAttr, opts.thymeleafReplaceAttr,
-				opts.thymeleafReplaceAltAttr ];
-		var includeReplaceAttrs = includeAttrs.concat(replaceAttrs);
+		var includeReplaceAttrs = opts.includeAttrs.concat(opts.replaceAttrs);
 		var protocolForFile = opts.regexFileTransForProtocolRelative
 				.test(location.protocol) ? 'http:' : null;
 		var fragSelector = getThxSel(includeReplaceAttrs, null);
+		var fragUrlAttrs = genAttrRegExps(opts.fragUrlAttrs);
+		var fragGetAttrs = genAttrRegExps(opts.fragGetAttrs);
+		var fragSubmitAttrs = genAttrRegExps(opts.fragSubmitAttrs);
+
+		function optsEquals(o) {
+			if (!o) {
+				return false;
+			}
+			for (var n in opts) {
+				var v = o[n];
+				if (!v) {
+					return false;
+				}
+				var iva = $.isArray(v);
+				var ina = $.isArray(opts[n]);
+				if ((iva && !ina) || (!iva && ina) || (iva && ina && v.length != opts[n].length)) {
+					return false;
+				}
+				for (var i=0;i<opts[n].length;i++) {
+					if (opts[n][i] != v[i]) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+
+		function updateNavAttrs(a, s, c, t) {
+			for ( var i = 0; i < a.length; i++) {
+				s = s.replace(a[i].regExp, function(m, p) {
+					if (t == 0) {
+						return ' ' + a[i].name + '="' + absolutePath(p, c)
+								+ '"';
+					}
+					p = p.split(opts.fragSep);
+					if (p.length > 1) {
+						return ' ' + $.trim(p[1]) + '="' + '$(this).thymus(\''
+								+ opts.actionNavTo + '\', {path:\\"'
+								+ absolutePath($.trim(p[1]), c)
+								+ '\\",type:\\"' + a[i].type + '\\"})"';
+					} else {
+						return '';
+					}
+				});
+			}
+			return s;
+		}
 
 		/**
-		 * Updates href/src/etc. URLs to reflect the fragment location based upon
-		 * the defined script context path
+		 * Replaces any path-relative <code>opts.fragUrlAttrs</code> values
+		 * with an absolute counterpart relative to the fragments location and
+		 * the context path defined on for the thumus.js script. Also handles
+		 * any <code>opts.fragGetAttrs</code>/<code>opts.fragSubmitAttrs</code>
+		 * to respond to user actions related to fragments.
 		 * 
 		 * @param s
-		 *            the source element or HTML to update
-		 * @returns when the source is a string the result will return the source
-		 *          with formatted URL references otherwise, a JQuery source object
-		 *          will be returned
+		 *            the raw data content string
+		 * @returns content adjusted data content string
 		 */
-		function linksToAbsolute(s) {
+		function htmlDataAdjust(s) {
 			var c = getScriptCxtPath();
-			var rel = function(p) {
-				return p.indexOf('.') != 0 && p.indexOf('/') != 0 ? c + 'fake.htm' : c;
-			};
-			if (typeof s === 'string') {
-				s = s.replace(opts.regexHrefAttrs, function(m, url) {
-					return ' href="' + absolutePath(url, c) + '"';
-				});
-				s = s.replace(opts.regexSrcAttrs, function(m, url) {
-					return ' src="' + absolutePath(url, c) + '"';
-				});
-				return s;
-			} else {
-				var $s = $(s);
-				$s.find(':not([href*="://"],[href^="//"],[href^="mailto:"],[href^="#"],[href^="javascript:"],' + 
-						'[src*="://"],[src^="//"],[src^="data:"])').each(function() {
-					var $e = $(this);
-					var a = $e.attr('href') ? 'href' : 'src';
-					$e.attr(a, function(i, path) {
-						if (!path) {
-							return path;
-						}
-						return absolutePath(path, rel(path));
-					});
-				});
-				return $s;
-			}
+			s = updateNavAttrs(fragUrlAttrs, s, c, 0);
+			s = updateNavAttrs(fragGetAttrs, s, c, 1);
+			s = updateNavAttrs(fragSubmitAttrs, s, c, 2);
+			return s;
 		}
 
 		/**
@@ -243,7 +288,7 @@
 		function getFragFromSel(v) {
 			var s = $.trim(v);
 			var hf = s && opts.regexFragName.test(s);
-			s = s + (hf ? ',' + getThxSel(fragAttrs, s) : '');
+			s = s + (hf ? ',' + getThxSel(opts.fragAttrs, s) : '');
 			return {
 				s : s,
 				hasFragAttr : hf
@@ -453,9 +498,9 @@
 			// use the fragment value as the attribute key to use as the
 			// replacement/include
 			this.r = false;
-			this.a = getFragAttr($fl, includeAttrs);
+			this.a = getFragAttr($fl, opts.includeAttrs);
 			if (!this.a) {
-				this.a = getFragAttr($fl, replaceAttrs);
+				this.a = getFragAttr($fl, opts.replaceAttrs);
 				this.r = true;
 			}
 			this.a = this.a ? this.a.split(opts.fragSep) : null;
@@ -694,12 +739,12 @@
 					var hr = '<div ' + r.substring(his + hs.length, hie) + '</div>';
 					hr = hr.substring(0, hr.indexOf('>') + 1);
 					var $hr = $(hr + '</div>');
-					var ha = getFragAttr($hr, fragAttrs);
+					var ha = getFragAttr($hr, opts.fragAttrs);
 					if (ha && ha == f.t) {
 						hr = hr.replace(/div/g, 'head');
 						hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
 						var $h = $('head');
-						hr = linksToAbsolute(hr);
+						hr = htmlDataAdjust(hr);
 						var scs = hr.match(opts.regexScriptTags);
 						if (scs) {
 							$.each(scs, function(i, sc) {
@@ -715,7 +760,7 @@
 				// process non-head tags the normal JQuery way
 				// (links need to be converted via raw results to
 				// prevent warnings)
-				var $c = $('<results>' + linksToAbsolute(r) + '</results>');
+				var $c = $('<results>' + htmlDataAdjust(r) + '</results>');
 				var fs = $c.find(f.s);
 				if (fs.length <= 0) {
 					t.addError('No matching results for ' + f.toString()
@@ -793,9 +838,9 @@
 			// attribute to capture HEAD includes/replacements (if defined)
 			var $head = $('head');
 			if ($head && $head.length > 0) {
-				var pf = getFragAttr($head, includeAttrs);
+				var pf = getFragAttr($head, opts.includeAttrs);
 				if (!pf) {
-					pf = getFragAttr($head, replaceAttrs);
+					pf = getFragAttr($head, opts.replaceAttrs);
 				}
 				if (!pf) {
 					t.len++;
@@ -825,11 +870,15 @@
 	 *            the URL used to load JQuery
 	 */
 	function init(jqUrl) {
-		$.fn.thymus = function(a, options) {
-			var o = $.extend({}, $.fn.thymus.defaults, options);
-			thx = new FragCtx(jqUrl, o);
+		$.fn.thymus = function(a, aopts, opts) {
+			var o = $.extend({}, $.fn.thymus.defaults, opts);;
+			if (thx && (!opts || (thx.optsEquals(o)))) {
+				o = thx.opts;
+			} else {
+				thx = new FragCtx(jqUrl, o);
+			}
 			return this.each(function() {
-				if (a === 'load.fragments') {
+				if (a === o.actionLoadFrags) {
 					thx.loadFragments(this, function($s, fc, es) {
 						// respect any named anchors
 						var i = location.href.lastIndexOf('#');
@@ -837,14 +886,17 @@
 							location.href = location.href.substring(i);
 						}
 					});
-				} else if (a === 'nav.href') {
-					// Navigates to the specified URL (converting it to it's
-					// absolute counterpart when needed)
-					if (o.path) {
-						var url = absolutefragPath(o.path);
-						document.location.href = url;
-					} else {
-						log('No path supplied for: thymus(' + a + ', {path: ???})');
+				} else if (typeof a === 'object') {
+					if (a.id === o.actionNavTo) {
+						// Navigates to the specified URL (converting it to it's
+						// absolute counterpart when needed)
+						if (a.path) {
+							var url = absolutefragPath(o.path);
+							document.location.href = url;
+						} else {
+							log('No path supplied for: thymus(' + a.id
+									+ ', {path: ???})');
+						}
 					}
 				}
 			});
@@ -854,29 +906,26 @@
 			inheritRef : 'inherit',
 			fragSep : '::',
 			fragExtensionAttr : 'data-thx-frag-extension',
-			fragAttr : 'data-thx-fragment',
-			includeAttr : 'data-thx-include',
-			replaceAttr : 'data-thx-replace',
+			fragAttrs : ['data-thx-fragment', 'th\\:fragment', 'data-th-fragment'],
+			includeAttrs : ['data-thx-include', 'th\\:include', 'data-th-include'],
+			replaceAttrs : ['data-thx-replace', 'th\\:replace', 'data-th-replace'],
+			fragUrlAttrs : ['href', 'src'],
+			fragGetAttrs : ['data-thx-get'],
+			fragSubmit : ['data-thx-submit'],
 			contextPathAttr : 'data-thx-context-path',
 			fragCompleteAttr : 'data-thx-onfragcomplete',
 			fragsCompleteAttr : 'data-thx-onfragscomplete',
 			fragHeadAttr : 'data-thx-head-frag',
-			thymeleafFragAttr : 'th\\:fragment',
-			thymeleafFragAltAttr : 'data-th-fragment',
-			thymeleafIncludeAttr : 'th\\:include',
-			thymeleafIncludeAltAttr : 'data-th-include',
-			thymeleafReplaceAttr : 'th\\:replace',
-			thymeleafReplaceAltAttr : 'data-th-replace',
 			regexFragName : /^[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*$/,
 			regexFunc : /.+?\(/i,
 			regexFileExtension : /[^\/?#]+(?=$|[?#])/,
 			regexScriptTags : /<script[^>]*>([\\S\\s]*?)<\/script>/img,
-			regexHrefAttrs : /\shref=[\"|'](.*?)[\"|']/ig,
-			regexSrcAttrs : /\ssrc=[\"|'](.*?)[\"|']/ig,
 			regexIanaProtocol : /^(([a-z]+)?:|\/\/|#)/i,
 			regexFileTransForProtocolRelative : /^(file:?)/i,
 			regexAbsPath : /^\/|(\/[^\/]*|[^\/]+)$/g,
-			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g
+			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g,
+			actionLoadFrags : 'load.fragments',
+			actionNavTo : 'nav.href'
 		};
 		try {
 			var t = document.createElement('b');
