@@ -14,7 +14,7 @@
    limitations under the License.
  */// ============================================
 (function() {
-	var scriptSourceId = 'thymusScript';
+	var NS = 'thymus';
 	var JQUERY_URL_ATTR = 'data-thx-jquery-url';
 	var JQUERY_DEFAULT_URL = '//code.jquery.com/jquery.min.js';
 	var FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
@@ -62,14 +62,13 @@
 	 * thymus.js context constructor
 	 * 
 	 * @constructor
-	 * @param jqUrl
-	 *            the URL used to load JQuery
+	 * @param script
+	 *            the thymus.js script handle
 	 * @param opts
 	 *            the JQuery options used
 	 */
-	function FragCtx(jqUrl, opts) {
+	function FragCtx(script, opts) {
 		this.opts = opts;
-		var script = $('#' + scriptSourceId);
 		var scriptFragsComplete = script ? script
 				.attr(opts.fragsCompleteAttr) : null;
 		var scriptFragComplete = script ? script
@@ -78,46 +77,48 @@
 		var protocolForFile = opts.regexFileTransForProtocolRelative
 				.test(location.protocol) ? 'http:' : null;
 		var fragSelector = getThxSel(includeReplaceAttrs, null);
-		var fragUrlAttrs = genAttrRegExps(opts.fragUrlAttrs);
-		var fragGetAttrs = genAttrRegExps(opts.fragGetAttrs);
+		var urlAttrs = genAttrRegExps(opts.urlAttrs);
+		var inculdeGetAttrs = genAttrRegExps(opts.inculdeGetAttrs);
+		var replaceGetAttrs = genAttrRegExps(opts.replaceGetAttrs);
 		var fragSubmitAttrs = genAttrRegExps(opts.fragSubmitAttrs);
 
-		function optsEquals(o) {
-			if (!o) {
-				return false;
+		/**
+		 * Converts HTTP driven attributes to corresponding DOM events that will
+		 * make thymus.js handles
+		 * 
+		 * @param a
+		 *            the array of objects that contain an attribute name and a
+		 *            regular expression that will be used to replace the
+		 *            existing attribute with
+		 * @param s
+		 *            the string which will contain the HTTP driven attributes
+		 * @param c
+		 *            the context path that will be used in conjunction with the
+		 *            path defined on the HTTP driven attribute
+		 * @param h
+		 *            the HTTP method name
+		 * @param t
+		 *            the template type
+		 * @returns the string with the converted HTTP driven attributes
+		 */
+		function updateNavAttrs(a, s, c, h, t) {
+			function av(p, i) {
+				return i >= p.length ? '' : $.trim(p[i]);
 			}
-			for (var n in opts) {
-				var v = o[n];
-				if (!v) {
-					return false;
-				}
-				var iva = $.isArray(v);
-				var ina = $.isArray(opts[n]);
-				if ((iva && !ina) || (!iva && ina) || (iva && ina && v.length != opts[n].length)) {
-					return false;
-				}
-				for (var i=0;i<opts[n].length;i++) {
-					if (opts[n][i] != v[i]) {
-						return false;
-					}
-				}
-			}
-			return true;
-		}
-
-		function updateNavAttrs(a, s, c, t) {
 			for ( var i = 0; i < a.length; i++) {
 				s = s.replace(a[i].regExp, function(m, p) {
-					if (t == 0) {
+					if (!h) {
 						return ' ' + a[i].name + '="' + absolutePath(p, c)
 								+ '"';
 					}
 					p = p.split(opts.fragSep);
 					if (p.length > 1) {
-						return ' ' + $.trim(p[1]) + '="' + '$(this).thymus(\''
-								+ opts.actionNavTo + '\', {path:\\"'
-								+ absolutePath($.trim(p[1]), c)
-								+ '\\",type:\\"' + a[i].type + '\\"})"';
+						return ' ' + av(p, 0) + '="' + '$(this).' + NS + '(\''
+								+ opts.actionHttp + '\', {url:&quot;'
+								+ absolutePath(av(p, 1), c) + '\\",method:\\"'
+								+ h + '&quot;,type:&quot;' + t + '&quot;,fragTarget:&quot;'
+								+ av(p, 2) + '&quot;,fragDest:&quot;' + av(p, 3)
+								+ '&quot;})"';
 					} else {
 						return '';
 					}
@@ -127,10 +128,10 @@
 		}
 
 		/**
-		 * Replaces any path-relative <code>opts.fragUrlAttrs</code> values
+		 * Replaces any path-relative <code>opts.urlAttrs</code> values
 		 * with an absolute counterpart relative to the fragments location and
 		 * the context path defined on for the thumus.js script. Also handles
-		 * any <code>opts.fragGetAttrs</code>/<code>opts.fragSubmitAttrs</code>
+		 * any <code>opts.inculdeGetAttrs</code>/<code>opts.fragSubmitAttrs</code>
 		 * to respond to user actions related to fragments.
 		 * 
 		 * @param s
@@ -139,9 +140,10 @@
 		 */
 		function htmlDataAdjust(s) {
 			var c = getScriptCxtPath();
-			s = updateNavAttrs(fragUrlAttrs, s, c, 0);
-			s = updateNavAttrs(fragGetAttrs, s, c, 1);
-			s = updateNavAttrs(fragSubmitAttrs, s, c, 2);
+			s = updateNavAttrs(urlAttrs, s, c, null, null);
+			s = updateNavAttrs(inculdeGetAttrs, s, c, 'GET', 'include');
+			s = updateNavAttrs(replaceGetAttrs, s, c, 'GET', 'replace');
+			s = updateNavAttrs(fragSubmitAttrs, s, c, 'POST', 'include');
 			return s;
 		}
 
@@ -222,7 +224,7 @@
 				}
 				return null;
 			}
-			if ($f.prop('id') == scriptSourceId) {
+			if ($f.prop('id') == NS) {
 				// when the attribute is used on the current script tag then pull the
 				// attribute off the script and extract the
 				// fragment/include/replacement
@@ -232,7 +234,7 @@
 					if (fas.length == 2) {
 						return ga(fas[0]) ? fas[1] : null;
 					} else {
-						throw new Error(scriptSourceId + ' has invalid atrtribute ' + 
+						throw new Error(NS + ' has invalid atrtribute ' + 
 								opts.fragHeadAttr + '="' + 
 								fa + '" for ' + attr);
 					}
@@ -870,38 +872,38 @@
 	 *            the URL used to load JQuery
 	 */
 	function init(jqUrl) {
-		$.fn.thymus = function(a, aopts, opts) {
-			var o = $.extend({}, $.fn.thymus.defaults, opts);;
-			if (thx && (!opts || (thx.optsEquals(o)))) {
-				o = thx.opts;
-			} else {
-				thx = new FragCtx(jqUrl, o);
-			}
+		var script = $('#' + NS);
+		$.fn[NS] = function(a, ao, opts) {
+			var o = $.extend({}, $.fn.thymus.defaults, opts);
+			var x = null, xl = null;
 			return this.each(function() {
+				xl = $.data(this, NS);
+				if (opts || !xl) {
+					xl = x ? x : (x = new FragCtx(script, o));
+					$.data(this, NS, xl);
+				}
 				if (a === o.actionLoadFrags) {
-					thx.loadFragments(this, function($s, fc, es) {
+					xl.loadFragments(this, function($s, fc, es) {
 						// respect any named anchors
 						var i = location.href.lastIndexOf('#');
 						if (i >= 0) {
 							location.href = location.href.substring(i);
 						}
 					});
-				} else if (typeof a === 'object') {
-					if (a.id === o.actionNavTo) {
-						// Navigates to the specified URL (converting it to it's
-						// absolute counterpart when needed)
-						if (a.path) {
-							var url = absolutefragPath(o.path);
-							document.location.href = url;
-						} else {
-							log('No path supplied for: thymus(' + a.id
-									+ ', {path: ???})');
-						}
+				} else if (a === o.actionHttp) {
+					// Navigates to the specified URL (converting it to it's
+					// absolute counterpart when needed)
+					if (ao && ao.path) {
+						var url = absolutefragPath(ao.path);
+						document.location.href = url;
+					} else {
+						log('No path supplied for: thymus(' + a
+								+ ', {path: ???})');
 					}
 				}
 			});
 		};
-		$.fn.thymus.defaults = {
+		$.fn[NS].defaults = {
 			selfRef : 'this',
 			inheritRef : 'inherit',
 			fragSep : '::',
@@ -909,8 +911,9 @@
 			fragAttrs : ['data-thx-fragment', 'th\\:fragment', 'data-th-fragment'],
 			includeAttrs : ['data-thx-include', 'th\\:include', 'data-th-include'],
 			replaceAttrs : ['data-thx-replace', 'th\\:replace', 'data-th-replace'],
-			fragUrlAttrs : ['href', 'src'],
-			fragGetAttrs : ['data-thx-get'],
+			urlAttrs : ['href', 'src'],
+			inculdeGetAttrs : ['data-thx-include-get'],
+			replaceGetAttrs : ['data-thx-replace-get'],
 			fragSubmit : ['data-thx-submit'],
 			contextPathAttr : 'data-thx-context-path',
 			fragCompleteAttr : 'data-thx-onfragcomplete',
@@ -925,7 +928,7 @@
 			regexAbsPath : /^\/|(\/[^\/]*|[^\/]+)$/g,
 			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g,
 			actionLoadFrags : 'load.fragments',
-			actionNavTo : 'nav.href'
+			actionHttp : 'http'
 		};
 		try {
 			var t = document.createElement('b');
@@ -937,8 +940,7 @@
 		} catch (e) {
 			log('Unable to detect IE version: ' + e.message);
 		}
-		var d = getPreLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR);
-		if (!d) {
+		if (!getPreLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR)) {
 			$('html').thymus('load.fragments');
 		}
 	}
@@ -969,9 +971,9 @@
 	 */
 	function getPreLoadAttr(a, d, e) {
 		if (!e) {
-			e = document.getElementById(scriptSourceId);
+			e = document.getElementById(NS);
 			if (!e) {
-				throw new Error('Missing script ID: ' + scriptSourceId);
+				throw new Error('Missing script ID: ' + NS);
 			}
 		}
 		var r = e ? e.getAttribute ? e.getAttribute(a) : e.attributes[a].nodeValue : null;
