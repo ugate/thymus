@@ -62,13 +62,17 @@
 	 * thymus.js context constructor
 	 * 
 	 * @constructor
+	 * @param selector
+	 *            the JQuery selector responsible for the fragment context
 	 * @param script
 	 *            the thymus.js script handle
 	 * @param opts
 	 *            the JQuery options used
 	 */
-	function FragCtx(script, opts) {
+	function FragCtx(selector, script, opts) {
 		this.opts = opts;
+		var httpFuncs = {};
+		var httpFuncCnt = 0;
 		var scriptFragsComplete = script ? script
 				.attr(opts.fragsCompleteAttr) : null;
 		var scriptFragComplete = script ? script
@@ -80,12 +84,47 @@
 		var urlAttrs = genAttrRegExps(opts.urlAttrs);
 		var inculdeGetAttrs = genAttrRegExps(opts.inculdeGetAttrs);
 		var replaceGetAttrs = genAttrRegExps(opts.replaceGetAttrs);
-		var fragSubmitAttrs = genAttrRegExps(opts.fragSubmitAttrs);
+		var inculdePostAttrs = genAttrRegExps(opts.inculdePostAttrs);
+		var replacePostAttrs = genAttrRegExps(opts.replacePostAttrs);
+		var inculdePutAttrs = genAttrRegExps(opts.inculdePutAttrs);
+		var replacePutAttrs = genAttrRegExps(opts.replacePutAttrs);
+		var inculdeDeleteAttrs = genAttrRegExps(opts.inculdeDeleteAttrs);
+		var replaceDeleteAttrs = genAttrRegExps(opts.replaceDeleteAttrs);
+
+		this.exec = function(a, el) {
+			a = typeof a === 'object' ? a : {
+				action : a
+			};
+			var f = httpFuncs[a.action];
+			if (typeof f === 'function') {
+				f();
+			} else if (a.action === opts.actionLoadFrags) {
+				loadFragments(el, function($s, fc, es) {
+					// respect any named anchors
+					var i = location.href.lastIndexOf('#');
+					if (i >= 0) {
+						location.href = location.href.substring(i);
+					}
+				});
+			} else if (a.action === opts.actionHttp) {
+				// Navigates to the specified URL (converting it to it's
+				// absolute counterpart when needed)
+				if (a.path) {
+					var url = absolutefragPath(a.path);
+					document.location.href = url;
+				} else {
+					log('No path supplied for: thymus(' + a.action
+							+ ', {path: ???})');
+				}
+			}
+		};
 
 		/**
 		 * Converts HTTP driven attributes to corresponding DOM events that will
 		 * make thymus.js handles
 		 * 
+		 * @param el
+		 *            the HTML element that is responsible for the the update
 		 * @param a
 		 *            the array of objects that contain an attribute name and a
 		 *            regular expression that will be used to replace the
@@ -101,7 +140,7 @@
 		 *            the template type
 		 * @returns the string with the converted HTTP driven attributes
 		 */
-		function updateNavAttrs(a, s, c, h, t) {
+		function updateNavAttrs(el, a, s, c, h, t) {
 			function av(p, i) {
 				return i >= p.length ? '' : $.trim(p[i]);
 			}
@@ -113,12 +152,19 @@
 					}
 					p = p.split(opts.fragSep);
 					if (p.length > 1) {
-						return ' ' + av(p, 0) + '="' + '$(this).' + NS + '(\''
-								+ opts.actionHttp + '\', {url:&quot;'
-								+ absolutePath(av(p, 1), c) + '\\",method:\\"'
-								+ h + '&quot;,type:&quot;' + t + '&quot;,fragTarget:&quot;'
-								+ av(p, 2) + '&quot;,fragDest:&quot;' + av(p, 3)
-								+ '&quot;})"';
+						var fn = opts.actionHttp + ++httpFuncCnt;
+						httpFuncs[fn] = function () {
+							alert(h);
+							//loadFragments('', arg1);
+							/*$(this)[NS]({
+								action : opts.actionHttp,
+								method : h,
+								fragTarget : av(p, 2),
+								fragDest : av(p, 3)
+							});*/
+						};
+						return ' ' + av(p, 0) + '="' + '$(\'' + selector + '\').'
+								+ NS + '(\'' + fn + '\')"';
 					} else {
 						return '';
 					}
@@ -128,22 +174,30 @@
 		}
 
 		/**
-		 * Replaces any path-relative <code>opts.urlAttrs</code> values
-		 * with an absolute counterpart relative to the fragments location and
-		 * the context path defined on for the thumus.js script. Also handles
-		 * any <code>opts.inculdeGetAttrs</code>/<code>opts.fragSubmitAttrs</code>
-		 * to respond to user actions related to fragments.
+		 * Replaces any path-relative <code>opts.urlAttrs</code> values with
+		 * an absolute counterpart relative to the fragments location and the
+		 * context path defined on for the thumus.js script. Also handles any
+		 * DOM event driven HTTP method attributes that respond to user actions
+		 * related to fragments.
 		 * 
+		 * @param el
+		 *            the HTML element that is responsible for the the
+		 *            adjustment
 		 * @param s
 		 *            the raw data content string
 		 * @returns content adjusted data content string
 		 */
-		function htmlDataAdjust(s) {
+		function htmlDataAdjust(el, s) {
 			var c = getScriptCxtPath();
-			s = updateNavAttrs(urlAttrs, s, c, null, null);
-			s = updateNavAttrs(inculdeGetAttrs, s, c, 'GET', 'include');
-			s = updateNavAttrs(replaceGetAttrs, s, c, 'GET', 'replace');
-			s = updateNavAttrs(fragSubmitAttrs, s, c, 'POST', 'include');
+			s = updateNavAttrs(el, urlAttrs, s, c, null, null);
+			s = updateNavAttrs(el, inculdeGetAttrs, s, c, 'GET', 'include');
+			s = updateNavAttrs(el, replaceGetAttrs, s, c, 'GET', 'replace');
+			s = updateNavAttrs(el, inculdePostAttrs, s, c, 'POST', 'include');
+			s = updateNavAttrs(el, replacePostAttrs, s, c, 'POST', 'replace');
+			s = updateNavAttrs(el, inculdePutAttrs, s, c, 'PUT', 'include');
+			s = updateNavAttrs(el, replacePutAttrs, s, c, 'PUT', 'replace');
+			s = updateNavAttrs(el, inculdeDeleteAttrs, s, c, 'DELETE', 'include');
+			s = updateNavAttrs(el, replaceDeleteAttrs, s, c, 'DELETE', 'replace');
 			return s;
 		}
 
@@ -649,7 +703,7 @@
 		 *            been loaded (parameters: the original root element, the number of
 		 *            fragments processed)
 		 */
-		this.loadFragments = function(selector, func) {
+		function loadFragments(selector, func) {
 			var $s = $(selector);
 			var t = new FragsTrack();
 			function done(t, f) {
@@ -728,6 +782,9 @@
 						});
 					}
 				};
+				// TODO : htmlDataAdjust processes the entire fragment response-
+				// should only adjust the desired fragment
+
 				// just about every browser strips out BODY/HEAD when parsing an
 				// HTML DOM, all but Opera strip out HTML, many strip out
 				// TITLE/BASE/META and some strip out KEYGEN/PROGRESS/SOURCE. so, we
@@ -746,7 +803,7 @@
 						hr = hr.replace(/div/g, 'head');
 						hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
 						var $h = $('head');
-						hr = htmlDataAdjust(hr);
+						hr = htmlDataAdjust($s, hr);
 						var scs = hr.match(opts.regexScriptTags);
 						if (scs) {
 							$.each(scs, function(i, sc) {
@@ -762,7 +819,7 @@
 				// process non-head tags the normal JQuery way
 				// (links need to be converted via raw results to
 				// prevent warnings)
-				var $c = $('<results>' + htmlDataAdjust(r) + '</results>');
+				var $c = $('<results>' + htmlDataAdjust($s, r) + '</results>');
 				var fs = $c.find(f.s);
 				if (fs.length <= 0) {
 					t.addError('No matching results for ' + f.toString()
@@ -862,7 +919,7 @@
 			};
 			// make initial call
 			lfi($s);
-		};
+		}
 	}
 
 	/**
@@ -873,34 +930,17 @@
 	 */
 	function init(jqUrl) {
 		var script = $('#' + NS);
-		$.fn[NS] = function(a, ao, opts) {
+		$.fn[NS] = function(a, opts) {
 			var o = $.extend({}, $.fn.thymus.defaults, opts);
 			var x = null, xl = null;
+			var s = this.selector;
 			return this.each(function() {
 				xl = $.data(this, NS);
 				if (opts || !xl) {
-					xl = x ? x : (x = new FragCtx(script, o));
+					xl = x ? x : (x = new FragCtx(s, script, o));
 					$.data(this, NS, xl);
 				}
-				if (a === o.actionLoadFrags) {
-					xl.loadFragments(this, function($s, fc, es) {
-						// respect any named anchors
-						var i = location.href.lastIndexOf('#');
-						if (i >= 0) {
-							location.href = location.href.substring(i);
-						}
-					});
-				} else if (a === o.actionHttp) {
-					// Navigates to the specified URL (converting it to it's
-					// absolute counterpart when needed)
-					if (ao && ao.path) {
-						var url = absolutefragPath(ao.path);
-						document.location.href = url;
-					} else {
-						log('No path supplied for: thymus(' + a
-								+ ', {path: ???})');
-					}
-				}
+				xl.exec(a, this);
 			});
 		};
 		$.fn[NS].defaults = {
@@ -914,6 +954,12 @@
 			urlAttrs : ['href', 'src'],
 			inculdeGetAttrs : ['data-thx-include-get'],
 			replaceGetAttrs : ['data-thx-replace-get'],
+			inculdePostAttrs : ['data-thx-include-post'],
+			replacePostAttrs : ['data-thx-replace-post'],
+			inculdePutAttrs : ['data-thx-include-put'],
+			replacePutAttrs : ['data-thx-replace-put'],
+			inculdeDeleteAttrs : ['data-thx-include-delete'],
+			replaceDeleteAttrs : ['data-thx-replace-delete'],
 			fragSubmit : ['data-thx-submit'],
 			contextPathAttr : 'data-thx-context-path',
 			fragCompleteAttr : 'data-thx-onfragcomplete',
