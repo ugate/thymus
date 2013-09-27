@@ -1,5 +1,8 @@
 function init() {
 	this.event.log();
+	if (this.event.scope.prop('tagName').toLowerCase() !== 'html') {
+		return;
+	}
 	// add some flare to the demo by adding a background splash
 	flickr('thymus vulgaris', 'body');
 	// initialize bootstrap components

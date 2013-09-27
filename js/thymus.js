@@ -36,26 +36,56 @@
 	}
 
 	/**
-	 * Generates an array of regular expressions that match the entire attribute
+	 * Generates an object that has a <code>items</code> property that
+	 * contains an array of regular expressions that match the entire attribute
 	 * (with any value) for each of the specified attributes
 	 * 
 	 * @param a
 	 *            the array (or comma separated string) of attributes to
-	 *            generate regular expressions for
-	 * @returns an array of objects that contain a name that matches the
-	 *          attribute name and a regExp that matches the entire attribute
+	 *            generate JQuery selectors/regular expressions for
+	 * @param h
+	 *            the HTTP method name
+	 * @param t
+	 *            the template type
+	 * @returns a attributes query object
 	 */
-	function genAttrRegExps(a) {
-		var ra = [];
-		x = $.isArray(a) ? a : a && typeof a === 'string' ? a.split(',') : [];
+	function genAttrQueries(a, h, t) {
+		var ra = {
+			items : [],
+			sel : '',
+			method : h,
+			type : t
+		};
+		var y = '';
+		var x = $.isArray(a) ? a : a && typeof a === 'string' ? a.split(',')
+				: [];
 		for ( var i = 0; i < x.length; i++) {
-			ra.push({
+			y = '[' + x[i] + ']';
+			ra.items.push({
 				name : x[i],
+				sel : y,
 				regExp : new RegExp('\\s' + x[i] + '=[\\"|\'](.*?)[\\"|\']',
 						'ig')
 			});
+			ra.sel += ra.sel.length > 0 ? ',' + y : y;
 		}
 		return ra;
+	}
+
+	/**
+	 * Determines if a specified element is a top level DOM element
+	 * 
+	 * @param el
+	 *            the element to check
+	 * @returns true when the element is a top level element
+	 */
+	function isTopLevelEl(el) {
+		if (!el) {
+			return false;
+		}
+		var tn = el.prop('tagName');
+		tn = tn ? tn.toLowerCase() : null;
+		return tn === 'html' || tn === 'head';
 	}
 
 	/**
@@ -70,6 +100,11 @@
 	 *            the JQuery options used
 	 */
 	function FragCtx(selector, script, opts) {
+		var TATTR = 'attribute';
+		var TINC = 'include';
+		var TREP = 'replace';
+		var TUPD = 'update';
+		var ctx = this;
 		this.opts = opts;
 		var httpFuncs = {};
 		var httpFuncCnt = 0;
@@ -81,92 +116,175 @@
 		var protocolForFile = opts.regexFileTransForProtocolRelative
 				.test(location.protocol) ? 'http:' : null;
 		var fragSelector = getThxSel(includeReplaceAttrs, null);
-		var urlAttrs = genAttrRegExps(opts.urlAttrs);
-		var inculdeGetAttrs = genAttrRegExps(opts.inculdeGetAttrs);
-		var replaceGetAttrs = genAttrRegExps(opts.replaceGetAttrs);
-		var inculdePostAttrs = genAttrRegExps(opts.inculdePostAttrs);
-		var replacePostAttrs = genAttrRegExps(opts.replacePostAttrs);
-		var inculdePutAttrs = genAttrRegExps(opts.inculdePutAttrs);
-		var replacePutAttrs = genAttrRegExps(opts.replacePutAttrs);
-		var inculdeDeleteAttrs = genAttrRegExps(opts.inculdeDeleteAttrs);
-		var replaceDeleteAttrs = genAttrRegExps(opts.replaceDeleteAttrs);
+		var urlAttrs = genAttrQueries(opts.urlAttrs, 'GET', TATTR);
+		var inculdeGetAttrs = genAttrQueries(opts.inculdeGetAttrs, 'GET', TINC);
+		var replaceGetAttrs = genAttrQueries(opts.replaceGetAttrs, 'GET', TREP);
+		var updateGetAttrs = genAttrQueries(opts.updateGetAttrs, 'GET', TUPD);
+		var inculdePostAttrs = genAttrQueries(opts.inculdePostAttrs, 'POST', TINC);
+		var replacePostAttrs = genAttrQueries(opts.replacePostAttrs, 'POST', TREP);
+		var updatePostAttrs = genAttrQueries(opts.updatePostAttrs, 'POST', TUPD);
+		var inculdePutAttrs = genAttrQueries(opts.inculdePutAttrs, 'PUT', TINC);
+		var replacePutAttrs = genAttrQueries(opts.replacePutAttrs, 'PUT', TREP);
+		var updatePutAttrs = genAttrQueries(opts.updatePutAttrs, 'PUT', TUPD);
+		var inculdeDeleteAttrs = genAttrQueries(opts.inculdeDeleteAttrs, 'DELETE', TINC);
+		var replaceDeleteAttrs = genAttrQueries(opts.replaceDeleteAttrs, 'DELETE', TREP);
+		var updateDeleteAttrs = genAttrQueries(opts.updateDeleteAttrs, 'DELETE', TUPD);
 
-		this.exec = function(a, el) {
+		/**
+		 * Executes a {FragCtx} action
+		 * 
+		 * @param a
+		 *            the action object (or string defining the action name)
+		 *            that will be executed
+		 * @param p
+		 *            the parent element that initiated the execution
+		 * @param c
+		 *            the c element that initiated the the execution (when not
+		 *            present the parent element will be used)
+		 */
+		this.exec = function(a, p, c) {
 			a = typeof a === 'object' ? a : {
 				action : a
 			};
-			var f = httpFuncs[a.action];
+			var hf = httpFuncs[a.action];
 			if (typeof f === 'function') {
-				f();
+				hf(p, c);
 			} else if (a.action === opts.actionLoadFrags) {
-				loadFragments(el, function($s, fc, es) {
-					// respect any named anchors
-					var i = location.href.lastIndexOf('#');
-					if (i >= 0) {
-						location.href = location.href.substring(i);
+				loadFragments(p, fragSelector, false, null);
+			} else if (a.action === opts.actionNavLoad) {
+				a.method = a.method ? a.method : 'GET';
+				if (a.fragTarget) {
+					if (!a.fragDest) {
+						var url = absolutePath(a.fragTarget, getScriptCtxPath());
+						document.location.href = url;
+					} else {
+						loadFragments(c ? c : p, a, true, null);
 					}
-				});
-			} else if (a.action === opts.actionHttp) {
-				// Navigates to the specified URL (converting it to it's
-				// absolute counterpart when needed)
-				if (a.path) {
-					var url = absolutefragPath(a.path);
-					document.location.href = url;
 				} else {
-					log('No path supplied for: thymus(' + a.action
-							+ ', {path: ???})');
+					log('No fragment target specified for ' + a.action);
 				}
+			} else if (a.action === opts.actionNavUpdate) {
+				var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), {});
+				var f = new Frag(t.scope, t.scope, t);
+				htmlDomAdjust(t, f, t.scope, true);
+			} else {
+				throw new Error('Invalid action: ' + a.action);
 			}
 		};
+
+		/**
+		 * Updates a navigation source for an array object
+		 * 
+		 * @param t
+		 *            the {FragsTrack}
+		 * @param f
+		 *            the {Frag}
+		 * @param a
+		 *            an array object returned from <code>genAttrQueries</code>
+		 * @param ai
+		 *            the index of the array object
+		 * @param v
+		 *            the navigation attribute value to use in the update
+		 * @param el
+		 *            the optional element that will be altered
+		 * @returns a navigation object or string when a simple attribute update
+		 *          has been made or needs to be made
+		 */
+		function updateNav(t, f, a, ai, v, el) {
+			if (a.type === TATTR) {
+				if (el) {
+					if (!script.is(el)) {
+						el.attr(a.items[ai].name, absolutePath(el
+								.attr(a.items[ai].name), t.ctxPath));
+					}
+					return '';
+				} else {
+					return ' ' + a.items[ai].name + '="'
+							+ absolutePath(v, t.ctxPath) + '"';
+				}
+			}
+			function av(p, i) {
+				return i >= p.length ? '' : $.trim(p[i]);
+			}
+			v = v.split(opts.fragSep);
+			var r = {
+				selector : '',
+				action : opts.actionNavLoad,
+				method : t.method,
+				type : a.type,
+				event : av(v, 0),
+				onEvent : '',
+				fragUrl : av(v, 1),
+				fragTarget : av(v, 2),
+				fragDest : av(v, 3),
+				funcName : '',
+				isValid : v.length > 1
+			};
+			if (r.isValid) {
+				var hasOn = r.event.toLowerCase().indexOf('on') == 0;
+				r.funcName = opts.actionNavLoad + ++httpFuncCnt;
+				httpFuncs[r.funcName] = function(pel, ib) {
+					r.selector = ib;
+					ctx.exec(r, pel, ib);
+				};
+				if (el) {
+					var $el = $(el);
+					$el.on(hasOn ? r.event.substr(2) : r.event, function() {
+						httpFuncs[r.funcName](f.pel, $(this));
+					});
+					$el.on('remove', function () {
+						httpFuncs[r.funcName] = null;
+					});
+				} else {
+					// possible memory leaks may occur on the HTTP functions
+					// when dealing with raw data replacements that are removed
+					// from the DOM at a later time- currently not being used
+					r.onEvent = ' ' + (hasOn ? '' : 'on') + r.event
+							+ '="' + '$(\'' + selector + '\').' + NS
+							+ '(\'' + r.funcName + '\',this)"';
+				}
+			} else {
+				t.addError('Expected at least two parameters for '
+						+ m, f);
+			}
+			return r;
+		}
 
 		/**
 		 * Converts HTTP driven attributes to corresponding DOM events that will
 		 * make thymus.js handles
 		 * 
-		 * @param el
-		 *            the HTML element that is responsible for the the update
-		 * @param a
-		 *            the array of objects that contain an attribute name and a
-		 *            regular expression that will be used to replace the
-		 *            existing attribute with
-		 * @param s
-		 *            the string which will contain the HTTP driven attributes
-		 * @param c
-		 *            the context path that will be used in conjunction with the
-		 *            path defined on the HTTP driven attribute
-		 * @param h
-		 *            the HTTP method name
 		 * @param t
-		 *            the template type
+		 *            the {FragsTrack}
+		 * @param f
+		 *            the {Frag}
+		 * @param a
+		 *            an object returned from <code>genAttrQueries</code>
+		 * @param s
+		 *            the string or element which will contain the attributes to
+		 *            update
 		 * @returns the string with the converted HTTP driven attributes
 		 */
-		function updateNavAttrs(el, a, s, c, h, t) {
-			function av(p, i) {
-				return i >= p.length ? '' : $.trim(p[i]);
-			}
-			for ( var i = 0; i < a.length; i++) {
-				s = s.replace(a[i].regExp, function(m, p) {
-					if (!h) {
-						return ' ' + a[i].name + '="' + absolutePath(p, c)
-								+ '"';
-					}
-					p = p.split(opts.fragSep);
-					if (p.length > 1) {
-						var fn = opts.actionHttp + ++httpFuncCnt;
-						httpFuncs[fn] = function () {
-							alert(h);
-							//loadFragments('', arg1);
-							/*$(this)[NS]({
-								action : opts.actionHttp,
-								method : h,
-								fragTarget : av(p, 2),
-								fragDest : av(p, 3)
-							});*/
-						};
-						return ' ' + av(p, 0) + '="' + '$(\'' + selector + '\').'
-								+ NS + '(\'' + fn + '\')"';
-					} else {
-						return '';
+		function updateNavAttrs(t, f, a, s) {
+			var r = '';
+			s = typeof s === 'string' ? s : $(s);
+			if (typeof s === 'string') {
+				for ( var i = 0; i < a.items.length; i++) {
+					s = s.replace(a.items[i].regExp, function(m, v) {
+						r = updateNav(t, f, a, i, v, null);
+						return typeof r === 'string' ? r
+								: r.isValid ? r.onEvent : v;
+					});
+				}
+			} else {
+				var v = '';
+				s.find(a.sel).each(function() {
+					var $c = $(this);
+					for ( var i = 0; i < a.items.length; i++) {
+						v = $c.attr(a.items[i].name);
+						if (v) {
+							r = updateNav(t, f, a, i, v, $c);
+						}
 					}
 				});
 			}
@@ -176,29 +294,51 @@
 		/**
 		 * Replaces any path-relative <code>opts.urlAttrs</code> values with
 		 * an absolute counterpart relative to the fragments location and the
-		 * context path defined on for the thumus.js script. Also handles any
-		 * DOM event driven HTTP method attributes that respond to user actions
-		 * related to fragments.
+		 * context path defined on for the thumus.js script
 		 * 
-		 * @param el
-		 *            the HTML element that is responsible for the the
-		 *            adjustment
+		 * @param t
+		 *            the {FragsTrack}
+		 * @param f
+		 *            the {Frag}
 		 * @param s
 		 *            the raw data content string
 		 * @returns content adjusted data content string
 		 */
-		function htmlDataAdjust(el, s) {
-			var c = getScriptCxtPath();
-			s = updateNavAttrs(el, urlAttrs, s, c, null, null);
-			s = updateNavAttrs(el, inculdeGetAttrs, s, c, 'GET', 'include');
-			s = updateNavAttrs(el, replaceGetAttrs, s, c, 'GET', 'replace');
-			s = updateNavAttrs(el, inculdePostAttrs, s, c, 'POST', 'include');
-			s = updateNavAttrs(el, replacePostAttrs, s, c, 'POST', 'replace');
-			s = updateNavAttrs(el, inculdePutAttrs, s, c, 'PUT', 'include');
-			s = updateNavAttrs(el, replacePutAttrs, s, c, 'PUT', 'replace');
-			s = updateNavAttrs(el, inculdeDeleteAttrs, s, c, 'DELETE', 'include');
-			s = updateNavAttrs(el, replaceDeleteAttrs, s, c, 'DELETE', 'replace');
+		function htmlDataAdjust(t, f, s) {
+			s = updateNavAttrs(t, f, urlAttrs, s);
 			return s;
+		}
+
+		/**
+		 * Applies any DOM adjustments that need to be made after a template has
+		 * been placed in the DOM
+		 * 
+		 * @param t
+		 *            the {FragsTrack}
+		 * @param f
+		 *            the {Frag}
+		 * @param s
+		 *            the DOM element source to be adjusted
+		 * @param uu
+		 *            true to update any relative URLs to their absolute
+		 *            counterparts
+		 */
+		function htmlDomAdjust(t, f, s, uu) {
+			if (uu) {
+				updateNavAttrs(t, f, urlAttrs, s);
+			}
+			updateNavAttrs(t, f, inculdeGetAttrs, s);
+			updateNavAttrs(t, f, replaceGetAttrs, s);
+			updateNavAttrs(t, f, updateGetAttrs, s);
+			updateNavAttrs(t, f, inculdePostAttrs, s);
+			updateNavAttrs(t, f, replacePostAttrs, s);
+			updateNavAttrs(t, f, updatePostAttrs, s);
+			updateNavAttrs(t, f, inculdePutAttrs, s);
+			updateNavAttrs(t, f, replacePutAttrs, s);
+			updateNavAttrs(t, f, updatePutAttrs, s);
+			updateNavAttrs(t, f, inculdeDeleteAttrs, s);
+			updateNavAttrs(t, f, replaceDeleteAttrs, s);
+			updateNavAttrs(t, f, updateDeleteAttrs, s);
 		}
 
 		/**
@@ -236,17 +376,6 @@
 			}
 			return absStack.join('/');
 		}
-
-		/**
-		 * Generates an absolute fragment path based upon the script context path attribute
-		 * 
-		 * @param fragPath
-		 *            the fragment path
-		 */
-		function absolutefragPath(fragPath) {
-			var c = getScriptCxtPath();
-			return absolutePath(fragPath, c);
-		};
 
 		/**
 		 * Extracts a fragment/include/replacement attribute from a given element. When
@@ -373,7 +502,7 @@
 		 * Gets the context path used to resolve paths to fragments and URLs within
 		 * href/src/etc. attributes contained in fragments
 		 */
-		function getScriptCxtPath() {
+		function getScriptCtxPath() {
 			var c = getScriptAttr(opts.contextPathAttr);
 			if (!c) {
 				c = '/';
@@ -513,8 +642,21 @@
 		 * {Frag} tracking mechanism to handle multiple {Frag}s
 		 * 
 		 * @constructor
+		 * 
+		 * @param s
+		 *            the scope element(s) of the tracking
+		 * @param tsel
+		 *            the template selection used for tracking
+		 * @param isRoot
+		 *            true when the root frament selection is the actual
+		 *            template element
 		 */
-		function FragsTrack() {
+		function FragsTrack(s, tsel) {
+			this.isTopLevel = isTopLevelEl(s);
+			this.ctxPath = getScriptCtxPath();
+			this.isScopeSelect = tsel && s.is(tsel.selector);
+			this.scope = s;
+			this.tsel = tsel;
 			this.cnt = 0;
 			this.len = 0;
 			var c = [];
@@ -547,21 +689,37 @@
 		 * Fragment constructor
 		 * 
 		 * @constructor
+		 * @param $pel
+		 *            the parent element that initiated the creatio of the
+		 *            fragment
 		 * @param $fl
 		 *            the fragment loaded from source DOM element
+		 * @param t
+		 *            the optional template selector
 		 */
-		function Frag($fl) {
-			// use the fragment value as the attribute key to use as the
-			// replacement/include
-			this.r = false;
-			this.a = getFragAttr($fl, opts.includeAttrs);
-			if (!this.a) {
-				this.a = getFragAttr($fl, opts.replaceAttrs);
-				this.r = true;
+		function Frag($pel, $fl, t) {
+			var ctx = this;
+			var forcett = t.tsel && t.tsel.type;
+			this.pel = $pel;
+			this.tt = forcett ? t.tsel.type : TATTR;
+			var a = !t.isScopeSelect ? getFragAttr($fl, opts.includeAttrs) : null;
+			if (!a && !t.isScopeSelect) {
+				a = getFragAttr($fl, opts.replaceAttrs);
+				if (!forcett) {
+					this.tt = TREP;
+				}
+			} else {
+				if (!forcett) {
+					this.tt = TINC;
+				}
 			}
-			this.a = this.a ? this.a.split(opts.fragSep) : null;
-			this.u = this.a && this.a.length > 0 ? $.trim(this.a[0]) : null;
-			this.t = this.a && this.a.length > 1 ? $.trim(this.a[1]) : null;
+			a = a ? a.split(opts.fragSep) : null;
+			this.u = !a ? t.tsel.fragUrl : a && a.length > 0 ? $.trim(a[0])
+					: null;
+			this.t = !a ? t.tsel.fragTarget : a && a.length > 1 ? $.trim(a[1])
+					: null;
+			this.d = !a ? t.tsel.fragDest : null;
+			this.m = t.tsel ? t.tsel.method : 'GET';
 			if (this.u && this.u.length > 0
 					&& this.u.toLowerCase() != opts.selfRef.toLowerCase()) {
 				var fileExt = script ? script.attr(opts.fragExtensionAttr) : '';
@@ -571,7 +729,7 @@
 				if (fragFileExt && this.u.indexOf('.') < 0) {
 					this.u += fragFileExt;
 				}
-				this.u = absolutefragPath(this.u);
+				this.u = absolutePath(this.u, t.ctxPath);
 			} else if (this.t && this.t.length > 0) {
 				this.u = opts.selfRef;
 			}
@@ -589,7 +747,7 @@
 			this.rs = null;
 			this.e = null;
 			this.p = function(x) {
-				if (this.r) {
+				if (this.tt === TREP) {
 					try {
 						var $x = $(x);
 						this.el.replaceWith($x);
@@ -600,14 +758,23 @@
 						this.el.replaceWith(x);
 						this.rs = $x;
 					}
-				} else {
+				} else if (this.tt === TINC || this.tt === TUPD) {
+					if (this.tt === TUPD) {
+						// remove any existing fragments that may exist under
+						// the element
+						this.el.find(this.s).remove();
+					}
 					this.el.append(x);
+					this.rs = x;
 				}
+				// make post template DOM adjustments- no need for URL updates-
+				// they needed to be completed prior to placement in the DOM or
+				// URLs in some cases will be missed (like within the head)
+				htmlDomAdjust(t, ctx, this.rs, false);
 			};
 			this.toString = function() {
-				return 'Fragment -> type: '
-						+ (this.r ? 'subsitution"' : 'include"') + ', URL: '
-						+ this.u + ', target: ' + this.t + ', select: ' + this.s;
+				return 'Fragment -> type: ' + this.tt + ', URL: ' + this.u
+						+ ', target: ' + this.t + ', select: ' + this.s;
 			};
 		}
 
@@ -616,22 +783,20 @@
 		 * attempt to load
 		 * 
 		 * @constructor
-		 * @param $s
-		 *            the scope of the event
 		 * @param t
 		 *            the {FragsTrack} used
 		 * @param f
 		 *            the {Frag} the event is being issued for
 		 */
-		function FragCompleteEvent($s, t, f) {
+		function FragCompleteEvent(t, f) {
 			this.fragCount = t.cnt;
 			this.fragCurrTotal = t.len;
 			this.fragUrl = f ? f.u : undefined;
 			this.fragTarget = f ? f.func && f.func.isValid ? f.func.run : f.t
 					: undefined;
-			this.source = f ? f.rs ? f.rs : f.el : undefined;
+			this.source = f ? f.rs : undefined;
 			this.error = f ? f.e : undefined;
-			this.scope = $s;
+			this.scope = t.scope;
 			this.log = function() {
 				log(this);
 			};
@@ -648,17 +813,13 @@
 		 * have completed an attempt to load
 		 * 
 		 * @constructor
-		 * @param $s
-		 *            the scope of the event
-		 * @param c
-		 *            the number of {Frag}s where an atempt was made to load
-		 * @param e
-		 *            an array of errors (if any)
+		 * @param t
+		 *            the {FragsTrack} used
 		 */
-		function FragsCompleteEvent($s, c, e) {
-			this.fragCount = c;
-			this.scope = $s;
-			this.errors = e;
+		function FragsCompleteEvent(t) {
+			this.fragCount = t.cnt;
+			this.scope = t.scope;
+			this.errors = t.getErrors();
 			this.log = function() {
 				log(this);
 			};
@@ -666,6 +827,16 @@
 				return '[Fragments Complete Event, fragCount: ' + this.fragCount
 						+ ', errors: ' + this.e + ']';
 			};
+		}
+
+		/**
+		 * Refreshes the named anchor for the page (if any)
+		 */
+		function refreshNamedAnchor() {
+			var i = location.href.lastIndexOf('#');
+			if (i >= 0) {
+				location.href = location.href.substring(i);
+			}
 		}
 
 		/**
@@ -698,25 +869,36 @@
 		 * 
 		 * @param selector
 		 *            the selector to the root element where fragments will be looked for
+		 * @param tselector 
+		 *            the selector to the templates that will be included/replaced
+		 * @param altDest 
+		 *            true to attempt to extract an alternate destination from the template 
+		 *            attribute value (falls back on on self destination when not present)
 		 * @param func
 		 *            the callback function that will be called when all fragments have
 		 *            been loaded (parameters: the original root element, the number of
-		 *            fragments processed)
+		 *            fragments processed and an array of error objects- if any)
 		 */
-		function loadFragments(selector, func) {
+		function loadFragments(selector, tselector, altDest, func) {
 			var $s = $(selector);
-			var t = new FragsTrack();
+			tsel = typeof tselector === 'object' ? tselector : {
+				selector : tselector
+			};
+			var t = new FragsTrack($s, tsel);
 			function done(t, f) {
 				if (t.cnt > t.len) {
-					t.addError('Expected ' + t.len + ' fragments, but recieved ' + t.cnt, f);
+					t.addError('Expected ' + t.len
+							+ ' fragments, but recieved ' + t.cnt, f);
 				}
-				fireEvent(scriptFragComplete, new FragCompleteEvent($s, t, f));
+				if (t.cnt > 0) {
+					fireEvent(scriptFragComplete, new FragCompleteEvent(t, f));
+				}
 				if (t.cnt >= t.len) {
 					if (typeof func === 'function') {
-						func($s, t.cnt, t.getErrors());
+						func(t.scope, t.cnt, t.getErrors());
 					}
-					fireEvent(scriptFragsComplete, new FragsCompleteEvent($s,
-							t.cnt, t.getErrors()));
+					refreshNamedAnchor();
+					fireEvent(scriptFragsComplete, new FragsCompleteEvent(t));
 				}
 			}
 			function hndlFunc(f, cb, r, status, xhr, e) {
@@ -724,7 +906,7 @@
 					f.func.run({
 						handle : {
 							source : f.el,
-							type : f.r ? 'replace' : 'include',
+							type : f.tt,
 							data : r,
 							status : status,
 							xhr : xhr,
@@ -760,7 +942,7 @@
 					var url = $x.prop('src');
 					if (url && url.length > 0) {
 						t.len++;
-						var sf = new Frag($x);
+						var sf = new Frag($s, $x, t);
 						sf.u = url;
 						sf.t = $p;
 						if (url.indexOf('data:text/javascript,') >= 0) {
@@ -803,7 +985,7 @@
 						hr = hr.replace(/div/g, 'head');
 						hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
 						var $h = $('head');
-						hr = htmlDataAdjust($s, hr);
+						hr = htmlDataAdjust(t, f, hr);
 						var scs = hr.match(opts.regexScriptTags);
 						if (scs) {
 							$.each(scs, function(i, sc) {
@@ -819,7 +1001,7 @@
 				// process non-head tags the normal JQuery way
 				// (links need to be converted via raw results to
 				// prevent warnings)
-				var $c = $('<results>' + htmlDataAdjust($s, r) + '</results>');
+				var $c = $('<results>' + htmlDataAdjust(t, f, r) + '</results>');
 				var fs = $c.find(f.s);
 				if (fs.length <= 0) {
 					t.addError('No matching results for ' + f.toString()
@@ -844,7 +1026,7 @@
 			var lfg = function($fl, cb) {
 				var f = null;
 				try {
-					f = new Frag($fl);
+					f = new Frag($s, $fl, t);
 					cb = typeof cb === 'function' ? cb : function(){};
 					if (!f.u) {
 						t.addError('Invalid URL for ' + f.toString(), f);
@@ -862,9 +1044,11 @@
 							done($('html').html(), 'same-template');
 							return;
 						}
-						// use get vs load w/content target for more granular control
+						// use ajax vs load w/content target for more granular control
 						$.ajax({
-							url: f.u
+							url: f.u,
+							type: f.m,
+							cache: opts.ajaxCache
 						}).done(done).fail(function(xhr, ts, e) {
 							var frgs = t.getFrags(f.u);
 							for (var i=0; i<frgs.length; i++) {
@@ -895,20 +1079,22 @@
 			};
 			// IE strips any attributes in the HEAD tag so we use the thymus script
 			// attribute to capture HEAD includes/replacements (if defined)
-			var $head = $('head');
-			if ($head && $head.length > 0) {
-				var pf = getFragAttr($head, opts.includeAttrs);
-				if (!pf) {
-					pf = getFragAttr($head, opts.replaceAttrs);
-				}
-				if (!pf) {
-					t.len++;
-					lfc(script);
+			if (t.isTopLevel) {
+				var $head = $('head');
+				if ($head && $head.length > 0) {
+					var pf = getFragAttr($head, opts.includeAttrs);
+					if (!pf) {
+						pf = getFragAttr($head, opts.replaceAttrs);
+					}
+					if (!pf) {
+						t.len++;
+						lfc(script);
+					}
 				}
 			}
 			// recursivly process all the includes/replacements
 			lfi = function($f, f) {
-				var $fs = $f.find(fragSelector);
+				var $fs = t.isScopeSelect && $f.is(t.scope) ? $f : $f.find(tsel.selector);
 				t.len += $fs.length;
 				$fs.each(function() {
 					lfc($(this));
@@ -918,7 +1104,7 @@
 				}
 			};
 			// make initial call
-			lfi($s);
+			lfi(t.scope, null);
 		}
 	}
 
@@ -930,21 +1116,43 @@
 	 */
 	function init(jqUrl) {
 		var script = $('#' + NS);
-		$.fn[NS] = function(a, opts) {
+		var isInit = false;
+
+		/**
+		 * thymus.js plug-in action execution
+		 * 
+		 * @param a
+		 *            the action object (or action string)
+		 * @param altEl
+		 *            the alternative initiating element
+		 * @parma the options (relative to the context of the element(s) for
+		 *        which the plug-in is being called from)
+		 */
+		$.fn[NS] = function(a, altEl, opts) {
 			var o = $.extend({}, $.fn.thymus.defaults, opts);
 			var x = null, xl = null;
 			var s = this.selector;
 			return this.each(function() {
 				xl = $.data(this, NS);
 				if (opts || !xl) {
-					xl = x ? x : (x = new FragCtx(s, script, o));
+					if (x) {
+						xl = x;
+					} else {
+						if (!isInit) {
+							isInit = true;
+							
+						}
+						x = new FragCtx(s, script, o);
+						xl = x;
+					}
 					$.data(this, NS, xl);
 				}
-				xl.exec(a, this);
+				xl.exec(a, this, altEl);
 			});
 		};
 		$.fn[NS].defaults = {
 			selfRef : 'this',
+			ajaxCache : false,
 			inheritRef : 'inherit',
 			fragSep : '::',
 			fragExtensionAttr : 'data-thx-frag-extension',
@@ -954,13 +1162,16 @@
 			urlAttrs : ['href', 'src'],
 			inculdeGetAttrs : ['data-thx-include-get'],
 			replaceGetAttrs : ['data-thx-replace-get'],
+			updateGetAttrs : ['data-thx-update-get'],
 			inculdePostAttrs : ['data-thx-include-post'],
 			replacePostAttrs : ['data-thx-replace-post'],
+			updatePostAttrs : ['data-thx-update-post'],
 			inculdePutAttrs : ['data-thx-include-put'],
 			replacePutAttrs : ['data-thx-replace-put'],
+			updatePutAttrs : ['data-thx-update-put'],
 			inculdeDeleteAttrs : ['data-thx-include-delete'],
 			replaceDeleteAttrs : ['data-thx-replace-delete'],
-			fragSubmit : ['data-thx-submit'],
+			updateDeleteAttrs : ['data-thx-update-delete'],
 			contextPathAttr : 'data-thx-context-path',
 			fragCompleteAttr : 'data-thx-onfragcomplete',
 			fragsCompleteAttr : 'data-thx-onfragscomplete',
@@ -973,8 +1184,9 @@
 			regexFileTransForProtocolRelative : /^(file:?)/i,
 			regexAbsPath : /^\/|(\/[^\/]*|[^\/]+)$/g,
 			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g,
-			actionLoadFrags : 'load.fragments',
-			actionHttp : 'http'
+			actionLoadFrags : 'frags.load',
+			actionNavLoad : 'nav.load',
+			actionNavUpdate : 'nav.update'
 		};
 		try {
 			var t = document.createElement('b');
@@ -987,7 +1199,11 @@
 			log('Unable to detect IE version: ' + e.message);
 		}
 		if (!getPreLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR)) {
-			$('html').thymus('load.fragments');
+			var $p = $('html');
+			// make sure the root document has navigation capabilities
+			$p.thymus('nav.update');
+			// auto-process the fragments
+			$p.thymus('frags.load');
 		}
 	}
 
@@ -1060,9 +1276,6 @@
 		})(getPreLoadAttr(JQUERY_URL_ATTR,
 				JQUERY_DEFAULT_URL), function(jqUrl) {
 			// caching should be disabled for ajax responses
-			$.ajaxSetup({
-				cache : false
-			});
 			if (document.readyState !== 'complete') {
 				$(document).ready(function() {
 					init(jqUrl);

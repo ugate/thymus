@@ -136,8 +136,8 @@
 					</p>
 					<p>
 						Internally, it dynamically loads the JQuery API (configurable) and
-						uses <a href="http://api.jquery.com/jQuery.get/">JQuery
-							$.get(...) calls</a> to retrieve and insert fragments into pages. The
+						uses <a href="http://api.jquery.com/jQuery.ajax/">JQuery
+							$.ajax(...) calls</a> to retrieve and insert fragments into pages. The
 						process is similar to how <a href="http://api.jquery.com/load/">JQuery
 							$.load(...) works with page fragments</a> with a few added benefits.
 						<b>thymus.js</b> will automatically insert fragments into a page
@@ -401,7 +401,7 @@
 						to the <b>thymus.js</b>
 						<code>script</code>
 						declaration. Loading <b>thymus.js</b> after defferment can be
-						accomplished by executing <strong><code>$(selector).thymus('load.fragments');</code></strong>
+						accomplished by executing <strong><code>$(selector).thymus('frags.load');</code></strong>
 						where <i>selector</i> is a valid <a
 							href="http://api.jquery.com/category/selectors/">JQuery
 							selector</a> that will contain the DOM element(s) where fragments
@@ -1023,6 +1023,7 @@
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- and so on... --&gt;</span>
 </pre></div>
+
 				</div>
 			</div>
 			<div id="paths" class="panel panel-default">
