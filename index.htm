@@ -42,15 +42,16 @@
 }
 </style>
 <script type="text/javascript">
-	function fragComplete() {
-		this.event.log();
+	function fragComplete(event) {
+		var $source = $(this);
+		event.log();
 		// loading indicator
 		var $lt = $('#loadThymus');
-		if (this.event.fragCount == this.event.fragCurrTotal) {
+		if (event.fragCount == event.fragCurrTotal) {
 			$lt.css('display', 'none');
 		} else {
 			var p = Math
-					.round((this.event.fragCount / this.event.fragCurrTotal) * 100)
+					.round((event.fragCount / event.fragCurrTotal) * 100)
 					+ '%';
 			var $pb = $lt.find('#loadThymusText');
 			$pb.text(p);

@@ -119,10 +119,6 @@
 		this.opts = opts;
 		var httpFuncs = {};
 		var httpFuncCnt = 0;
-		var scriptFragsComplete = script ? script
-				.attr(opts.fragsCompleteAttr) : null;
-		var scriptFragComplete = script ? script
-				.attr(opts.fragCompleteAttr) : null;
 		var includeReplaceAttrs = opts.includeAttrs.concat(opts.replaceAttrs);
 		var protocolForFile = opts.regexFileTransForProtocolRelative
 				.test(location.protocol) ? 'http:' : null;
@@ -162,19 +158,14 @@
 				hf(p, c);
 			} else if (a.action === opts.actionLoadFrags) {
 				loadFragments(p, fragSelector, false, null);
-			} else if (a.action === opts.actionNavLoad) {
+			} else if (a.action === opts.actionNavRegister) {
 				a.method = a.method ? a.method : 'GET';
 				if (a.fragTarget) {
-					if (!a.fragDest) {
-						var url = absolutePath(a.fragTarget, getScriptCtxPath());
-						document.location.href = url;
-					} else {
-						loadFragments(c ? c : p, a, true, null);
-					}
+					loadFragments(c ? c : p, a, true, null);
 				} else {
 					log('No fragment target specified for ' + a.action);
 				}
-			} else if (a.action === opts.actionNavUpdate) {
+			} else if (a.action === opts.actionNavResolve) {
 				var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), {});
 				var f = new Frag(t.scope, t.scope, t);
 				htmlDomAdjust(t, f, t.scope, true);
@@ -220,7 +211,7 @@
 			v = v.split(opts.fragSep);
 			var r = {
 				selector : '',
-				action : opts.actionNavLoad,
+				action : opts.actionNavRegister,
 				method : t.method,
 				type : a.type,
 				event : av(v, 0),
@@ -233,7 +224,7 @@
 			};
 			if (r.isValid) {
 				var hasOn = r.event.toLowerCase().indexOf('on') == 0;
-				r.funcName = opts.actionNavLoad + ++httpFuncCnt;
+				r.funcName = opts.actionNavResolve + ++httpFuncCnt;
 				httpFuncs[r.funcName] = function(pel, ib) {
 					r.selector = ib;
 					ctx.exec(r, pel, ib);
@@ -544,27 +535,43 @@
 		/**
 		 * Fires an event
 		 * 
-		 * @param ft
-		 *            the function string to call
 		 * @param evt
-		 *            the event to fire
+		 *            the event to fire (should contain a <code>source</code>
+		 *            or <code>scope</code> property that will contain the
+		 *            element to trigger the event)
 		 */
-		function fireEvent(ft, evt) {
+		function fireEvent(evt) {
 			try {
-//				$(t).trigger({
-//					type : 'load.thx.' + type,
-//					thx : evt
-//				});
-				if (ft) {
-					var f = new Func(ft);
-					if (f.isValid) {
-						f.run({
-							event: evt
-						});
+				var el = evt.source ? evt.source : evt.scope;
+				var sfc = script && evt.type === opts.eventFragCompleteNs ? script
+						.attr(opts.fragCompleteAttr)
+						: null;
+				var sfsc = script && evt.type === opts.eventFragsCompleteNs ? script
+						.attr(opts.fragsCompleteAttr)
+						: null;
+				if (sfc || sfsc) {
+					function esf(fs) {
+						try {
+							if (fs) {
+								var f = new Func(fs, evt);
+								if (f.isValid) {
+									f.run(el);
+								}
+							}
+						} catch (e) {
+							log('Error in ' + fs + ' ' + (evt ? evt : '') + ': ' + e);
+						}
+					}
+					if (sfc) {
+						esf(sfc);
+					} else if (sfsc) {
+						esf(sfsc);
 					}
 				}
+				el.trigger(evt);
+
 			} catch (e) {
-				log('Error in ' + ft + ' ' + (evt ? evt : '') + ': ' + e);
+				log('Error in ' + evt.type + ' ' + (evt ? evt : '') + ': ' + e);
 			}
 		}
 
@@ -589,12 +596,19 @@
 				this.isValid = typeof f === 'function';
 				this.setArgs = function(nam) {
 					if (this.isValid) {
-						if (a && a.length > 0) {
+						if ($.isArray(a) && a.length > 0) {
+							var ia = nam && $.isArray(nam);
 							for (var i=0; i<a.length; i++) {
-								if (nam && nam[a[i]]) {
+								a[i] = a[i].replace(opts.regexFuncArgReplace,
+										'');
+								if (a[i] == 'event' && !ia) {
+									a[i] = nam;
+								} else if (ia && nam[a[i]]) {
 									a[i] = nam[a[i]];
 								}
 							}
+						} else if (typeof nam === 'object') {
+							a = nam;
 						}
 					}
 				};
@@ -612,6 +626,8 @@
 							if (a && a.length > 0) {
 								a = a.match(opts.regexFuncArgs);
 								this.setArgs(am);
+							} else if (am) {
+								this.setArgs(am);
 							}
 						}
 					}
@@ -628,11 +644,13 @@
 				this.run = function(thisArg, nam) {
 					if (this.isValid) {
 						try {
-							if (a && a.length > 0) {
-								if (nam) {
-									this.setArgs(nam);
-								}
+							if (nam && a) {
+								this.setArgs(nam);
+							}
+							if ($.isArray(a) && a.length > 0) {
 								f.apply(thisArg, a);
+							} else if (a) {
+								f.call(thisArg, a);
 							} else {
 								f.call(thisArg);
 							}
@@ -805,6 +823,7 @@
 		 *            the {Frag} the event is being issued for
 		 */
 		function FragCompleteEvent(t, f) {
+			this.type = opts.eventFragCompleteNs;
 			this.fragCount = t.cnt;
 			this.fragCurrTotal = t.len;
 			this.fragUrl = f ? f.u : undefined;
@@ -833,6 +852,7 @@
 		 *            the {FragsTrack} used
 		 */
 		function FragsCompleteEvent(t) {
+			this.type = opts.eventFragsCompleteNs;
 			this.fragCount = t.cnt;
 			this.scope = t.scope;
 			this.errors = t.getErrors();
@@ -897,7 +917,7 @@
 							+ ' fragments, but recieved ' + t.cnt, f);
 				}
 				if (t.cnt > 0) {
-					fireEvent(scriptFragComplete, new FragCompleteEvent(t, f));
+					fireEvent(new FragCompleteEvent(t, f));
 				}
 				if (t.cnt >= t.len) {
 					if (typeof func === 'function') {
@@ -907,7 +927,7 @@
 						firstRun = false;
 						refreshNamedAnchor();
 					}
-					fireEvent(scriptFragsComplete, new FragsCompleteEvent(t));
+					fireEvent(new FragsCompleteEvent(t));
 				}
 			}
 			function hndlFunc(f, cb, r, status, xhr, e) {
@@ -1138,6 +1158,16 @@
 		 */
 		$.fn[NS] = function(a, altEl, opts) {
 			var o = $.extend({}, $.fn.thymus.defaults, opts);
+			if (typeof o.fragCompleteEvent === 'function') {
+				this.on(o.eventFragCompleteNs, function(e, d) {
+		             o.fragCompleteEvent.call(e, d);
+		        });
+			}
+			if (typeof o.fragsCompleteEvent === 'function') {
+				this.on(o.eventFragsCompleteNs, function(e, d) {
+		             o.fragsCompleteEvent.call(e, d);
+		        });
+			}
 			var x = null, xl = null;
 			var s = this.selector;
 			return this.each(function() {
@@ -1183,9 +1213,14 @@
 			regexFileTransForProtocolRelative : /^(file:?)/i,
 			regexAbsPath : /^\/|(\/[^\/]*|[^\/]+)$/g,
 			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g,
+			regexFuncArgReplace : /['"]/g,
+			eventFragCompleteNs : 'load.thx.frag.complete',
+			eventFragsCompleteNs : 'load.thx.frags.complete',
+			fragCompleteEvent : null,
+			fragsCompleteEvent : null,
 			actionLoadFrags : 'frags.load',
-			actionNavLoad : 'nav.load',
-			actionNavUpdate : 'nav.update'
+			actionNavRegister : 'nav.register',
+			actionNavResolve : 'nav.resolve'
 		};
 		try {
 			var t = document.createElement('b');
@@ -1200,7 +1235,7 @@
 		if (!getPreLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR)) {
 			var $p = $('html');
 			// make sure the root document has navigation capabilities
-			$p.thymus('nav.update');
+			$p.thymus('nav.resolve');
 			// auto-process the fragments
 			$p.thymus('frags.load');
 		}

@@ -1,9 +1,9 @@
-function init() {
-	this.event.log();
-	if (this.event.scope.prop('tagName').toLowerCase() !== 'html') {
+function init(event, param) {
+	event.log();
+	if (event.scope.prop('tagName').toLowerCase() !== 'html') {
 		return;
 	}
-	$('#fragTotal').text(this.event.fragCount);
+	$('#fragTotal').text(event.fragCount);
 	// add some flare to the demo by adding a background splash
 	flickr('thymus vulgaris', 'body');
 	// initialize bootstrap components
@@ -15,6 +15,9 @@ function init() {
 	setTimeout(function() {
 		$l.html(' ');
 	}, 5000);
+	$('#fragTotal').on('click', function() {
+		console.log(this);
+	});
 }
 function initScrollSpy(cssSelector) {
 	$(cssSelector).each(function() {

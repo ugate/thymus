@@ -384,89 +384,94 @@
 <span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
 </pre>
 					</div>
-			<div class="alert alert-info">
-				<strong>Note:</strong> You may have noticed that the
-				<code>script</code>
-				tags that are defined in the <b>scripts</b> fragment that have a
-				normal URL
-				<code>src</code>
-				are not present in the resulting <i>replacement</i>. This is
-				because there is nothing to <i>include</i>/<i>replace</i> in the
-				DOM. However, any
-				<code>script</code>
-				that is inlined or contains a
-				<code>src</code>
-				with a
-				<code>data:text/javascript,</code>
-				will appear in the resulting DOM.
-			</div>
-			<div class="alert alert-success">
-				<strong>Tip:</strong> To make it easier to debug
-				<code>script</code>
-				that is dynamically loaded by <b>thymus.js</b> include a
-				<code>//# sourceURL=path/to/app.js</code>
-				at the end of its source file. Some browsers like <a
-					href="https://developers.google.com/chrome-developer-tools/docs/javascript-debugging?#source-maps">Google
-					Chrome</a> will interperate the comment as a source mapping that will
-				identify the
-				<code>script</code>
-				in the debugger.
-			</div>
-			<h3 id="fragcomplete">Fragment Complete Events</h3>
+		<div class="alert alert-info">
+			<strong>Note:</strong> You may have noticed that the
+			<code>script</code>
+			tags that are defined in the <b>scripts</b> fragment that have a
+			normal URL
+			<code>src</code>
+			are not present in the resulting <i>replacement</i>. This is
+			because there is nothing to <i>include</i>/<i>replace</i> in the
+			DOM. However, any
+			<code>script</code>
+			that is inlined or contains a
+			<code>src</code>
+			with a
+			<code>data:text/javascript,</code>
+			will appear in the resulting DOM.
+		</div>
+		<div class="alert alert-success">
+			<strong>Tip:</strong> To make it easier to debug
+			<code>script</code>
+			that is dynamically loaded by <b>thymus.js</b> include a
+			<code>//# sourceURL=path/to/app.js</code>
+			at the end of its source file. Some browsers like <a
+				href="https://developers.google.com/chrome-developer-tools/docs/javascript-debugging?#source-maps">Google
+				Chrome</a> will interperate the comment as a source mapping that will
+			identify the
+			<code>script</code>
+			in the debugger.
+		</div>
+		<h3 id="fragcomplete">Fragment Complete Events</h3>
 			<p>
 				After each time an attempt to load a fragment is made a <b>fragment
 					complete event</b> is fired. Also, each
 				<code>script</code>
 				tag within a fragment will also fire its own <b>fragment
-					complete event</b>. Event propagation is linear and non-cancellable
-				and therefore, can only be defined on the <b>thymus.js</b> tag
-				itself using the
+					complete event</b>. Event propagation utilizes the <a
+					href="http://api.jquery.com/trigger/">JQuery event trigger</a>
+				mechanism. Fragment complete events have full DOM capabilities (e.g.
+				<a href="http://api.jquery.com/event.stopPropagation/">event.stopPropagation</a>,
+				etc.) One way to listen to all incoming fragment complete events is
+				supply a
+				<code>function</code>
+				to the
 				<code>data-thx-onfragcomplete</code>
-				attribute.
+				attribute on the <b>thymus.js</b> tag itself:
 			</p>
-					<div style="overflow: auto; width: auto; padding: .2em .6em;">
-						<pre style="margin: 0; line-height: 125%">
-							<span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;meta</span> <span
-								style="color: #FF0000">charset=</span><span
-								style="color: #0000FF">&quot;utf-8&quot;</span> <span
-								style="color: #000080; font-weight: bold">/&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;script </span><span
-								style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text/javascript&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">function</span> fragComplete() {
-			<span style="color: #000080; font-weight: bold">var</span> event = <span
-								style="color: #000080; font-weight: bold">this</span>.event;
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text/javascript&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">function</span> fragComplete(event) {
+			<span style="color: #008800; font-style: italic">// "this" will reference the element that loaded the fragment</span>
+			<span style="color: #000080; font-weight: bold">var</span> template = <span style="color: #000080; font-weight: bold">this</span>;
 			<span style="color: #008800; font-style: italic">// handle event</span>
 		}
 	<span style="color: #000080; font-weight: bold">&lt;/script&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;script </span><span
-								style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span
-								style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> <span
-								style="color: #FF0000">data-thx-context-path=</span><span
-								style="color: #0000FF">&quot;.&quot;</span>
-		<span style="color: #FF0000">data-thx-onfragcomplete=</span><span
-								style="color: #0000FF">&quot;fragComplete()&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> <span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span>
+		<span style="color: #FF0000">data-thx-onfragcomplete=</span><span style="color: #0000FF">&quot;fragComplete()&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
-</pre>
-					</div>
+</pre></div>
 			<p>
 				In the example above a
 				<code>function</code>
 				called <i>fragComplete</i> is defined as the
 				<code>data-thx-onfragcomplete</code>
-				. Every time an attempt is made to load a fragment and a response
-				is returned the <i>window.fragComplete</i> function will be
-				called. Within the
+				. Every time an attempt is made to load a fragment and a response is
+				returned the <i>window.fragComplete</i> function will be called.
+				Within the
 				<code>function</code>
 				,
-				<code>this.event</code>
-				will reference a <a href="#fragcompleteevent">fragment
-					complete event</a>. Supplied functions can contain additional
-				argument values by adding them to the function signature (e.g.
-				<code>data-thx-onfragcomplete="fragComplete('myValue')"</code>
-				). The <a href="#fragcompleteevent">fragment complete event</a>
+				<code>this</code>
+				will reference the element that initiated the fragment load while
+				the passed
+				<code>event</code>
+				will reference a <a href="#fragcompleteevent">fragment complete
+					event</a>. Supplied functions can also contain additional argument
+				values by adding them to the function signature (e.g.
+				<code>data-thx-onfragcomplete="fragComplete(event,
+					'myValue')"</code>
+				). The function will always pass
+				<code>event</code>
+				as its first argument.
+			</p>
+			<p>
+				Similarly, we could have listened for the event using the element
+				where the <i>include</i> or <i>replace</i> attributes are defined by
+				doing
+				<code>$(myIncludeElement).on('load.thx.frag.complete',
+					function(event){...})</code>
+				. The <a href="#fragcompleteevent">fragment complete event</a>
 				contains the following properties:
 			</p>
 			<div id="fragcompleteevent" class="panel panel-default">
@@ -556,37 +561,31 @@
 			</div>
 			<h3 id="fragscomplete">Fragments Complete Events</h3>
 			<p>
-				Similar to <a href="#fragcomplete">fragment complete events</a>, a
-				<a href="#fragscompleteevent">fragments complete event</a> will be
+				Similar to <a href="#fragcomplete">fragment complete events</a>, a <a
+					href="#fragscompleteevent">fragments complete event</a> will be
 				fired once an attempt to load all of the fragments/
 				<code>script</code>
-				/etc. has been made. Event propagation is linear and
-				non-cancellable and therefore, can only be defined on the <b>thymus.js</b>
-				tag itself using the
+				/etc. has been made. One way to capture fragments complete events is
+				to supply a
+				<code>function</code>
+				to the
 				<code>data-thx-onfragscomplete</code>
-				attribute.
+				on thelinear and <b>thymus.js</b> tag itself:
 			</p>
-					<div style="overflow: auto; width: auto; padding: .2em .6em;">
-						<pre style="margin: 0; line-height: 125%">
-							<span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;meta</span> <span
-								style="color: #FF0000">charset=</span><span
-								style="color: #0000FF">&quot;utf-8&quot;</span> <span
-								style="color: #000080; font-weight: bold">/&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- Thymus script --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;script </span><span
-								style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span
-								style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
-	<span style="color: #FF0000">data-thx-context-path=</span><span
-								style="color: #0000FF">&quot;.&quot;</span> <span
-								style="color: #FF0000">data-thx-frag-extension=</span><span
-								style="color: #0000FF">&quot;.htm&quot;</span>
-	<span style="color: #FF0000">data-thx-onfragscomplete=</span><span
-								style="color: #0000FF">&quot;done()&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text/javascript&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">function</span> done(event) {
+			<span style="color: #008800; font-style: italic">// &quot;this&quot; will reference the element that loaded the fragments</span>
+			<span style="color: #008800; font-style: italic">// (the HTML element when auto-loaded)</span>
+			<span style="color: #000080; font-weight: bold">var</span> template = <span style="color: #000080; font-weight: bold">this</span>;
+			<span style="color: #008800; font-style: italic">// handle event</span>
+		}
+	<span style="color: #000080; font-weight: bold">&lt;/script&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> <span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span>
+		<span style="color: #FF0000">data-thx-onfragscomplete=</span><span style="color: #0000FF">&quot;done()&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
-</pre>
-			</div>
+</pre></div>
 			<p>
 				In the example above a
 				<code>function</code>
@@ -597,12 +596,23 @@
 				each of them the example <i>window.done</i>
 				<code>function</code>
 				will be called with
-				<code>this.event</code>
+				<code>this</code>
+				referencing the element that initiated the loading of the fragments
+				(the HTML element when <a href="#deferred">auto-loaded</a>) and
+				<code>event</code>
 				referencing a <a href="#fragscompleteevent">fragments complete
-					event</a>. Supplied functions can contain additional argument values
-				by adding them to the function signature (e.g.
-				<code>data-thx-onfragscomplete="done('myValue')"</code>
-				). The <a href="#fragscompleteevent">fragments complete event</a>
+					event</a>. Supplied functions can also contain additional argument
+				values by adding them to the function signature (e.g.
+				<code>data-thx-onfragscomplete="done(event, 'myValue')"</code>
+				).
+			</p>
+			<p>
+				Similarly, we could have listened for the event using the element(s)
+				that initiated the loading of the <i>include</i> or <i>replace</i>
+				attributes by doing
+				<code>$('html').on('load.thx.frags.complete',
+					function(event){...})</code>
+				. The <a href="#fragscompleteevent">fragments complete event</a>
 				contains the following properties:
 			</p>
 			<div id="fragscompleteevent" class="panel panel-default">
