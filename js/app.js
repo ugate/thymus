@@ -1,4 +1,4 @@
-function init(event, param) {
+function init(event) {
 	event.log();
 	if (event.scope.prop('tagName').toLowerCase() !== 'html') {
 		return;
