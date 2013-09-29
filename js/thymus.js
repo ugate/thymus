@@ -18,7 +18,8 @@
 	var JQUERY_URL_ATTR = 'data-thx-jquery-url';
 	var JQUERY_DEFAULT_URL = '//code.jquery.com/jquery.min.js';
 	var FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
-	var ieVersion = 0;
+	this.ieVersion = 0;
+	this.firstRun = true;
 
 	/**
 	 * When available, logs a message to the console
@@ -86,6 +87,16 @@
 		var tn = el.prop('tagName');
 		tn = tn ? tn.toLowerCase() : null;
 		return tn === 'html' || tn === 'head';
+	}
+
+	/**
+	 * Refreshes the named anchor for the page (if any)
+	 */
+	function refreshNamedAnchor() {
+		var i = location.href.lastIndexOf('#');
+		if (i >= 0) {
+			location.href = location.href.substring(i);
+		}
 	}
 
 	/**
@@ -759,12 +770,17 @@
 						this.rs = $x;
 					}
 				} else if (this.tt === TINC || this.tt === TUPD) {
-					if (this.tt === TUPD) {
-						// remove any existing fragments that may exist under
-						// the element
-						this.el.find(this.s).remove();
+					if (this.d) {
+						var $d = $(this.d);
+						if (this.tt === TUPD) {
+							// remove any existing fragments that may exist
+							// under the element
+							$d.find(this.s).remove();
+						}
+						$d.append(x);
+					} else {
+						this.el.append(x);
 					}
-					this.el.append(x);
 					this.rs = x;
 				}
 				// make post template DOM adjustments- no need for URL updates-
@@ -830,16 +846,6 @@
 		}
 
 		/**
-		 * Refreshes the named anchor for the page (if any)
-		 */
-		function refreshNamedAnchor() {
-			var i = location.href.lastIndexOf('#');
-			if (i >= 0) {
-				location.href = location.href.substring(i);
-			}
-		}
-
-		/**
 		 * Loads fragments (nested supported) into the page using a predefined HTML
 		 * attribute for fragment discovery. The attribute value should contain a URL
 		 * followed by a replacement/include value that will match a fragment result
@@ -897,7 +903,10 @@
 					if (typeof func === 'function') {
 						func(t.scope, t.cnt, t.getErrors());
 					}
-					refreshNamedAnchor();
+					if (firstRun) {
+						firstRun = false;
+						refreshNamedAnchor();
+					}
 					fireEvent(scriptFragsComplete, new FragsCompleteEvent(t));
 				}
 			}
@@ -1116,7 +1125,6 @@
 	 */
 	function init(jqUrl) {
 		var script = $('#' + NS);
-		var isInit = false;
 
 		/**
 		 * thymus.js plug-in action execution
@@ -1135,16 +1143,7 @@
 			return this.each(function() {
 				xl = $.data(this, NS);
 				if (opts || !xl) {
-					if (x) {
-						xl = x;
-					} else {
-						if (!isInit) {
-							isInit = true;
-							
-						}
-						x = new FragCtx(s, script, o);
-						xl = x;
-					}
+					xl = x ? x : (x = new FragCtx(s, script, o));
 					$.data(this, NS, xl);
 				}
 				xl.exec(a, this, altEl);

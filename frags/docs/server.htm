@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!-- All relative href/src URLs should be relative to the application's context defined on the Thymus script  -->
+<body>
+	<div id="thymeleaf" class="panel panel-default">
+		<div class="panel-heading">
+			<h2>
+				Thymeleaf Integration
+			</h2>
+		</div>
+		<div class="panel-body app-code">
+			<p>
+				<a href="http://www.thymeleaf.org/">Thymeleaf</a> is a great
+				server-side template engine for Java and is the inspiration behind
+				Thymus. In fact, <b>thymus.js</b> can seamlessly be used in
+				conjunction with Thymeleaf. A Thymeleaf page can still use the
+				default
+				<code>data-thx-*</code>
+				attributes to process templates via the client that will retreive
+				fragments from pre-processed Thymeleaf resources that reside on
+				the server. It can also use any of the Thymeleaf template
+				attributes (ideal for prototyping Thymeleaf). It will simply pick
+				up any of the following attributes that may exist by the time <b>thymus.js</b>
+				loads.
+			</p>
+			<ul>
+				<li><code>data-thx-include</code>&dagger;</li>
+				<li><code>th:include</code>&Dagger;</li>
+				<li><code>data-th-include</code>&Dagger;&bull;</li>
+				<li><code>data-thx-replace</code>&dagger;</li>
+				<li><code>th:replace</code>&Dagger;</li>
+				<li><code>data-th-replace</code>&Dagger;&bull;</li>
+				<li><code>data-thx-fragment</code>&dagger;</li>
+				<li><code>th:fragment</code>&Dagger;</li>
+				<li><code>data-th-fragment</code>&Dagger;&bull;</li>
+			</ul>
+			<div class="alert alert-info">
+				<small>&dagger; denotes <b>thymus.js</b> default
+					attributes that will only processed by <b>thymus.js</b> (i.e.
+					client side template processing only)
+				</small><br /> <small>&Dagger; denotes attributes that will by
+					processed by <b>thymus.js</b> if present (i.e. Thymeleaf
+					prototyping)
+				</small><br /> <small>&bull; requires Thymeleaf 2.1 or higher,
+					but can be used with any version of <b>thymus.js</b>
+				</small>
+			</div>
+			<p>
+				It's perfectly acceptable to use any combination of the preceeding
+				attributes. Any of the Thymeleaf attribues will only be processed
+				by <b>thymus.js</b> when Thymeleaf hasn't already processed them.
+				To illustrate this concept consider the following:
+			</p>
+<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/head&quot; --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;head</span> <span style="color: #FF0000">th:fragment=</span><span style="color: #0000FF">&quot;header&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;link</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&#39;http://fonts.googleapis.com/css?family=Open+Sans&#39;</span>
+		<span style="color: #FF0000">rel=</span><span style="color: #0000FF">&#39;stylesheet&#39;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&#39;text/css&#39;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
+	...
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-fragment=</span><span style="color: #0000FF">&quot;topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- and the current page contains --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;head</span> <span style="color: #FF0000">th:include=</span><span style="color: #0000FF">&quot;frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> 
+		<span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span> <span style="color: #FF0000">data-thx-frag-extension=</span><span style="color: #0000FF">&quot;.htm&quot;</span>
+		<span style="color: #FF0000">data-thx-head-frag=</span><span style="color: #0000FF">&quot;th:replace=frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
+	...
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-replace=</span><span style="color: #0000FF">&quot;frags/nav/nav :: topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;head</span> <span style="color: #FF0000">th:include=</span><span style="color: #0000FF">&quot;frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> 
+		<span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span> <span style="color: #FF0000">data-thx-frag-extension=</span><span style="color: #0000FF">&quot;.htm&quot;</span>
+		<span style="color: #FF0000">data-thx-head-frag=</span><span style="color: #0000FF">&quot;th:include=frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;link</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&#39;http://fonts.googleapis.com/css?family=Open+Sans&#39;</span>
+		<span style="color: #FF0000">rel=</span><span style="color: #0000FF">&#39;stylesheet&#39;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&#39;text/css&#39;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
+	...
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-fragment=</span><span style="color: #0000FF">&quot;topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
+</pre></div>
+			<p>
+				The example uses
+				<code>th:include</code>
+				syntax for the
+				<code>head</code>
+				that will only be proccessed by Thymeleaf when the page is ran
+				through the Thymeleaf engine. If it's not ran though the Thymeleaf
+				engine it will be picked up by <b>thymus.js</b> and processed
+				accordingly. On the other hand, the
+				<code>div</code>
+				that contains the
+				<code>data-thx-replace</code>
+				will always be processed by <b>thymus.js</b> regardless of prior
+				Thymeleaf processing.
+			</p>
+			<div class="alert alert-success">
+				<strong>Tip:</strong> To ensure that <b>thymus.js</b> is ran in a
+				strickly prototyping mode (i.e. never ran on a client where
+				Thymeleaf is running on the server), simply add a
+				<code>th:remove</code>
+				attribute to the <b>thymus.js</b>
+				<code>script</code>
+				tag or wrap the <b>thymus.js</b>
+				<code>script</code>
+				tag in
+				<code>head</code>
+				tag that has a
+				<code>th:replace</code>
+				attribute.
+			</div>
+		</div>
+	</div>
+</body>
+</html>

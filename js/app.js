@@ -3,6 +3,7 @@ function init() {
 	if (this.event.scope.prop('tagName').toLowerCase() !== 'html') {
 		return;
 	}
+	$('#fragTotal').text(this.event.fragCount);
 	// add some flare to the demo by adding a background splash
 	flickr('thymus vulgaris', 'body');
 	// initialize bootstrap components

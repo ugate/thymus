@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!-- All relative href/src URLs should be relative to the application's context defined on the Thymus script  -->
+<body>
+	<div id="navcontrol" class="panel panel-default">
+		<div class="panel-heading">
+			<h2>
+				Navigation Control
+			</h2>
+		</div>
+		<div class="panel-body app-code">
+			<h3 id="httpmethods">DOM Event Driven Fragments</h3>
+			<p>
+				There are times where it's desriable to load framents after some
+				action has taken place. In this case, one of the <a
+					href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html">HTTP
+					Methods</a> can be used whenever one or more <a
+					href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM events</a> are
+				recieved. Wiring <b>thymus.js</b> templates to accomplish this can
+				be achieved by using the one of the supported HTTP method names on
+				one of the corresponding
+				<code>data-thx-*DTYPE*-*HTTP*</code>
+				attributes; where <i>*DTYPE*</i> would be replaced with either an <i>include</i>,
+				<i>replace</i> or <i>update</i> destination type and <i>*HTTP*</i>
+				would be replaced with one of the following HTTP method names (e.g.
+				<code>data-thx-include-get</code>
+				).
+			</p>
+			<ul>
+				<li class="badge">get</li>
+				<li class="badge">post</li>
+				<li class="badge">put</li>
+				<li class="badge">delete</li>
+			</ul>
+			<p>
+				From this point on we will refer to
+				<code>data-thx-*DTYPE*-*HTTP*</code>
+				to reference the entire suite of supported <b>thymus.js</b> HTTP
+				method attributes. The <b>thymus.js</b> HTTP attribute should
+				reside on the node where the DOM event will be triggered. The
+				symantics are similar to the
+				<code>data-thx-include</code>
+				/
+				<code>data-thx-replace</code>
+				attributes with the addition of some extra parameters.
+			</p>
+			<h4 id="httpasyncself">Self-targeting Asynchronous Transfers</h4>
+			<p>
+				A self-targeting asynchronous transfer is an
+				<code>data-thx-*DTYPE*-*HTTP*</code>
+				attribute that has a value that defines a fragment target, but
+				does not define a destination target. Consider the following:
+			</p>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- assume a page contains the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">data-thx-replace-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		Load User
+	<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- when the div is clicked and the fragment is loaded and will result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					Working self-targeting
+					<code>data-thx-replace-get</code>
+					example:
+				</div>
+				<div class="panel-body">
+					<button type="button" class="btn btn-primary"
+						data-thx-replace-get="click :: frags/user/user :: user">Replace
+						With User</button>
+				</div>
+			</div>
+			<p>
+				In a similar fashion a self-targeting asynchronous transfer can be
+				<i>included</i> rather than <i>replaced</i>:
+			</p>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- assume a page contains the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Click to load next user...<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- when the div is clicked and the fragment is loaded and will result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Click to load next user...<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- another click on the div would result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Click to load next user...<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- and so on... --&gt;</span>
+</pre></div>
+			<h4 id="httpasyncdest">Explicit Destination Asynchronous Transfers</h4>
+			<p>
+				The most granular of the DOM event driven behaviors is one that
+				defines a destination target. The destination target tells <b>thymus.js</b>
+				where the returned fragment should be <i>include</i> or <i>replaced</i>.
+				Following the previous trend of examples...
+			</p>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- assume a page contains the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span>
+		<span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail :: #userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Load User<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Users:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- when the button is clicked and the fragment is loaded and will result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span>
+		<span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail :: #userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Load User<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Users:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- another click on the button would result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> 
+		<span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail :: #userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Load User<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Users:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- and so on... --&gt;</span>
+</pre></div>
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					Working
+					<code>data-thx-include-get</code>
+					with an explicit destination example:
+				</div>
+				<div class="panel-body">
+					<button type="button" class="btn btn-primary"
+						data-thx-include-get="click :: frags/user/user :: user :: #userDest2">Load
+						User</button>
+					<div id="userDest2" class="well"></div>
+				</div>
+			</div>
+			<p>
+				A
+				<code>data-thx-update-*HTTP*</code>
+				works similar to a
+				<code>data-thx-include-*HTTP*</code>
+				except it will remove any prior fragment insertions made (in the
+				example above that would mean any
+				<code>.user-detail</code>
+				under
+				<code>userDest</code>
+				would get replaced with the last
+				<code>.user-detail</code>
+				result).
+			</p>
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					Working
+					<code>data-thx-update-get</code>
+					with an explicit destination example:
+				</div>
+				<div class="panel-body">
+					<button type="button" class="btn btn-primary"
+						data-thx-update-get="click :: frags/user/user :: user :: #userDest3">Load
+						User</button>
+					<div id="userDest3" class="well"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
