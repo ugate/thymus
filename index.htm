@@ -61,7 +61,7 @@
 	function handleReadme() {
 		var h = this.handle;
 		var d = '';
-		var ps = h.data.match(/<p[^>]*>(.+)<\/p>/img);
+		var ps = h.data.match(/<p[^>]*>((.|[\r\n])+)<\/p>/img);
 		if (ps) {
 			$.each(ps, function(i, p) {
 				d += p;
@@ -97,8 +97,8 @@
 				<li><a th:title="#{usage}"
 					class="app-tooltip-bottom" title="Usage" href="#usage"><i
 						class="icon-code"></i></a></li>
-				<li><a th:title="#{features}"
-					class="app-tooltip-bottom" title="Navigation Control" href="#navcontrol"><i
+				<li><a th:title="#{features}" class="app-tooltip-bottom"
+					title="Navigation/Model Transition Control" href="#navcontrol"><i
 						class="icon-compass"></i></a></li>
 				<li><a th:title="#{paths}"
 					class="app-tooltip-bottom" title="Path Resolution" href="#paths"><i
@@ -136,25 +136,50 @@
 						<b>thymus.js</b>
 					</p>
 					<p>
-						Internally, it dynamically loads the JQuery API (configurable) and
-						uses <a href="http://api.jquery.com/jQuery.ajax/">JQuery
-							$.ajax(...) calls</a> to retrieve and insert fragments into pages. The
-						process is similar to how <a href="http://api.jquery.com/load/">JQuery
-							$.load(...) works with page fragments</a> with a few added benefits.
-						<b>thymus.js</b> will automatically insert fragments into a page
-						using HTML5 data attributes and will update any relative
-						<code>src</code>
-						/
-						<code>href</code>
-						URLs within returned fragments to point to the proper path before
-						insertion. It also supports nested fragments that may reside in
-						other fragments. <a href="#features">Click here</a> for a full
-						list of features.
+						This site actually uses <span id="fragTotal" class="badge">0</span>
+						<b>thymus.js</b> fragment views to initialize this page. So, feel
+						free to explore :)
 					</p>
 					<p>
-						This site actually uses <span id="fragTotal" class="badge">0</span>
-						<b>thymus.js</b> fragments to while initializing this page. So,
-						feel free to explore :)
+						Internally, when <b>thymus.js</b> loads it checks for the presence
+						of the JQuery API. If it's not found it will automatically load
+						the most current version found at <a
+							href="http://code.jquery.com/jquery.min.js">http://code.jquery.com/jquery.min.js</a>.
+						To provide your own version, simply add the JQuery
+						<code>script</code>
+						tag prior to the <b>thymus.js</b> one or provide a
+						<code>data-thx-jquery-url</code>
+						attribute on the <b>thymus.js</b>
+						<code>script</code>
+						tag that points to the JQuery API of choice.
+					</p>
+					<p>
+						Once JQuery has successfully loaded <b>thymus.js</b> will attempt
+						to load any fragments by looking for DOM elements that have a
+						<code>data-thx-include</code>
+						or
+						<code>data-thx-replace</code>
+						attribute (see <a href="#usage">usage section</a> for more
+						details). To <i id="deferred">defer</i> <b>thymus.js</b> from
+						loading any fragments until a later time, just add a
+						<code>data-thx-deferred-load="true"</code>
+						to the <b>thymus.js</b>
+						<code>script</code>
+						declaration. Loading <b>thymus.js</b> fragments anytime after
+						defferment can be accomplished by executing <strong><code>$(selector).thymus('frags.load');</code></strong>
+						where <i>selector</i> is a valid <a
+							href="http://api.jquery.com/category/selectors/">JQuery
+							selector</a> that will contain the DOM element(s) where fragments
+						will be loaded (automatic fragment loading uses
+						<code>$('html').thymus('frags.load');</code>
+						by default).
+					</p>
+					<p>
+						<b>thymus.js</b> loads fragments using <a
+							href="http://api.jquery.com/jQuery.ajax/">JQuery $.ajax(...)
+							calls</a> to retrieve and insert fragments into pages. The process is
+						similar to how <a href="http://api.jquery.com/load/">JQuery
+							$.load(...) works with page fragments</a> with some added benefits:
 					</p>
 					<div id="features" class="panel panel-default">
 						<div class="panel-heading">Features</div>
@@ -167,15 +192,16 @@
 									(<a href="#deferred">configurable</a>)
 								</li>
 								<li>Automatic fragment <a href="#attrpaths"><code>src</code>/<code>href</code>
-										resolution for relative paths</a> (<a href="#deferred">configurable</a>)
+										resolution for relative paths</a> (<a href="#attrpaths">configurable</a>)
 								</li>
 								<li><a href="#deferred">Load fragments via script using
 										JQuery selectors</a></li>
 								<li>Multiple fragment definitions at the same fragment URL</li>
-								<li>Prevents repetitive calls to the same URL associated with
-									raw JQuery.load content (typical case when multiple fragments
-									reside at the same URL)</li>
-								<li><a href="#selfref">Self-Referencing templates</a></li>
+								<li>Prevents repetitive calls to the same URL associated
+									with raw $.load(...) content (typical case when multiple
+									fragments reside at the same URL)</li>
+								<li><a href="#selfref">Self-Referencing templates</a>
+									(processing of fragments that reside in the base page)</li>
 								<li>Relatively infinite <a href="#nestedfrags">nesting of
 										fragments</a> (fragments within fragments)
 								</li>
@@ -185,14 +211,20 @@
 								<li>Automatic fragment loading or <a href="#deferred">deferred
 										fragment loading</a></li>
 								<li>Maintains vertical scrolling positions associated with
-									named anchors that point to a location within a fragment (e.g. <i>example.com/path#someNamedAnchorInAFrag</i>)
+									named anchors that point to a location within a fragment (e.g.
+									<i>example.com/path#someNamedAnchorInAFrag</i>)
 								</li>
-								<li><a href="#fragcomplete">Fragment events</a> dispatched
-									for each resource has been loaded or failed to load (including
-									scripts and nested fragments)</li>
-								<li><a href="#fragscomplete">Fragment event</a> dispatched
-									when all fragments have been loaded or failed to load (including
-									scripts and nested fragments)</li>
+								<li>DOM/JQuery compliant <a href="#fragcomplete">fragment
+										events</a> dispatched for each resource has been loaded or failed
+									to load (including scripts and nested fragments)
+								</li>
+								<li>DOM/JQuery compliant <a href="#fragscomplete">fragment
+										event</a> dispatched when all fragments have been loaded or failed
+									to load (including scripts and nested fragments)
+								</li>
+								<li><a href="#navcontrol">Navigation/Transition Control</a></li>
+								<li><a href="#modeltoview">Model-To-View Transition
+										Control</a></li>
 								<li>Complete <a href="http://learn.jquery.com/plugins/">JQuery
 										plug-in</a> extensibility
 								</li>

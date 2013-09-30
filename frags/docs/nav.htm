@@ -5,20 +5,24 @@
 	<div id="navcontrol" class="panel panel-default">
 		<div class="panel-heading">
 			<h2>
-				Navigation Control
+				Navigation and Model/View Transition Control
 			</h2>
 		</div>
 		<div class="panel-body app-code">
 			<h3 id="httpmethods">DOM Event Driven Fragments</h3>
 			<p>
-				There are times where it's desriable to load framents after some
-				action has taken place. In this case, one of the <a
+				There are times where it's desirable to load fragment views and/or
+				models after some action has taken place. In this case, one of the <a
 					href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html">HTTP
 					Methods</a> can be used whenever one or more <a
 					href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM events</a> are
-				recieved. Wiring <b>thymus.js</b> templates to accomplish this can
-				be achieved by using the one of the supported HTTP method names on
-				one of the corresponding
+				received. <b>thymus.js</b> tries to conform to <a
+					href="http://en.wikipedia.org/wiki/Representational_state_transfer">RESTful</a>
+				conceptual design patterns. So naturally, wiring fragmented views
+				into <b>thymus.js</b> requires the use of guidelines set forth by
+				the established HTTP methods. Determining how <i>model</i> data
+				and/or <i>views</i> are transfered to a page is determined by the
+				type of HTTP method name used on one of the corresponding
 				<code>data-thx-*DTYPE*-*HTTP*</code>
 				attributes; where <i>*DTYPE*</i> would be replaced with either an <i>include</i>,
 				<i>replace</i> or <i>update</i> destination type and <i>*HTTP*</i>
@@ -209,6 +213,89 @@
 					<div id="userDest3" class="well"></div>
 				</div>
 			</div>
+			<h2 id="modeltoview">Model-To-View Transitions</h2>
+			<p>
+				<b>thymus.js</b> interprets fragment results that have an
+				<code>text/html</code>
+				<code>content-type</code>
+				as <i>view</i> content. Similarly, fragments with <a
+					href="#textfrags">raw <code>content-type</code></a> will also be
+				interpreted as view content, but will have limited model interaction
+				capabilities. Most other
+				<code>content-type</code>
+				returned from fragment results will be interpreted as <i>model</i>
+				content. Not all of the <a
+					href="http://www.iana.org/assignments/media-types">standard
+					media types</a> are supported, but where they make sense <b>thymus.js</b>
+				attempts to make a smooth transition of <i>model</i> data into
+				corresponding views.
+			</p>
+			<h3 id="textfrags">Raw Fragments</h3>
+			<p>
+				Fragments that are retrieved that have one of the
+				<code>content-type</code>
+				definitions below will be treated as raw read-only <i>view</i>
+				inclusions/replacements:
+			</p>
+			<ul>
+				<li><code>text/plain</code></li>
+				<li><code>application/octet-stream</code></li>
+			</ul>
+			<p>Because there is no fragment name/target assocaited with the
+				returned data it can be ommitted from the inclusion/replcement
+				attribute. So, only a URL will remain. Similar to the following:</p>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- the the following replacement --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-replace=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>Will be replaced.<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- will result in the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	This is the content from raw-data.txt
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- while the following include --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- will result in the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+		This is the content from raw-data.txt
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
+			<h3 id="xmlfrags">XML Fragments</h3>
+			<p>
+				Fragments that are retrieved that have one of the XML
+				<code>content-type</code>
+				definitions below will be interpreted as <i>model</i> data. How <i>model</i>
+				data is transferred to a corresponding <i>view(s)</i> is determined
+				by... Comming Soon!
+			</p>
+			<ul>
+				<li><code>text/xml</code></li>
+				<li><code>application/*+xml</code> (where <b>*</b> is one of
+					the <a href="http://www.iana.org/assignments/media-types">standard
+						media types</a> for XML)</li>
+			</ul>
+			<h3 id="jsonfrags">JSON Fragments</h3>
+			<p>
+				Fragments that are retrieved that have one of the JSON
+				<code>content-type</code>
+				definitions below will be interpreted as <i>model</i> data. How <i>model</i>
+				data is transferred to a corresponding <i>view(s)</i> is determined
+				by... Comming Soon!
+			</p>
+			<ul>
+				<li><code>text/json</code></li>
+				<li><code>application/*json</code> (where <b>*</b> is one of
+					the <a href="http://www.iana.org/assignments/media-types">standard
+						media types</a> for JSON)</li>
+			</ul>
 		</div>
 	</div>
 </body>

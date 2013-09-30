@@ -16,7 +16,7 @@
 (function() {
 	var NS = 'thymus';
 	var JQUERY_URL_ATTR = 'data-thx-jquery-url';
-	var JQUERY_DEFAULT_URL = '//code.jquery.com/jquery.min.js';
+	var JQUERY_DEFAULT_URL = 'http://code.jquery.com/jquery.min.js';
 	var FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
 	this.ieVersion = 0;
 	this.firstRun = true;

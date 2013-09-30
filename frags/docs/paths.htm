@@ -383,70 +383,12 @@
 				supported by <b>thymus.js</b>. Not all of the <a
 					href="http://www.iana.org/assignments/media-types">standard
 					media types</a> are supported and will cause errors if an attempt is
-				made to non-supported content types via <b>thymus.js</b>
-			</p>
-			<h3 id="textfrags">Raw Fragments</h3>
-			<p>
-				Fragments that are retrieved that have one of the
+				made to non-supported content types via <b>thymus.js</b>. See the <a
+					href="#modeltoview">model-to-view transitions</a> section for more
+				details on using other supported
 				<code>content-type</code>
-				definitions below will be treated as raw data
-				inclusions/replacements:
+				.
 			</p>
-			<ul>
-				<li><code>text/plain</code></li>
-				<li><code>application/octet-stream</code></li>
-			</ul>
-			<p>Because there is no fragment name/target assocaited with the
-				returned data it can be ommitted from the inclusion/replcement
-				attribute. So, only a URL will remain. Similar to the following:</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- the the following replacement --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-replace=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>Will be replaced.<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- will result in the following --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
-	This is the content from raw-data.txt
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- while the following include --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- will result in the following --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
-		This is the content from raw-data.txt
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-</pre></div>
-			<h3 id="xmlfrags">XML Fragments</h3>
-			<p>
-				Fragments that are retrieved that have one of the XML
-				<code>content-type</code>
-				definitions below will be... Comming Soon!
-			</p>
-			<ul>
-				<li><code>text/xml</code></li>
-				<li><code>application/*+xml</code> (where <b>*</b> is one of
-					the <a href="http://www.iana.org/assignments/media-types">standard
-						media types</a> for XML)</li>
-			</ul>
-			<h3 id="jsonfrags">JSON Fragments</h3>
-			<p>
-				Fragments that are retrieved that have one of the JSON
-				<code>content-type</code>
-				definitions below will be... Comming Soon!
-			</p>
-			<ul>
-				<li><code>text/json</code></li>
-				<li><code>application/*json</code> (where <b>*</b> is one of
-					the <a href="http://www.iana.org/assignments/media-types">standard
-						media types</a> for JSON)</li>
-			</ul>
 		</div>
 	</div>
 </body>
