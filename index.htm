@@ -42,20 +42,30 @@
 }
 </style>
 <script type="text/javascript">
-	function fragComplete(event) {
-		var $source = $(this);
+	var $lt = null, $pt = null, $pi = null;
+	function fragListener(event) {
+		//var $source = $(this);
+		if (event.type != 'load') {
+			if (event.type == 'beforeload' && 
+					event.fragUrl.indexOf('frags/cancel') >= 0) {
+				event.preventDefault();
+			}
+			return;
+		}
 		event.log();
+		//alert(event.fragUrl + '\n\n' + event.type + ' :: ' + event.namespace)
 		// loading indicator
-		var $lt = $('#loadThymus');
+		$lt = $lt ? $lt : $('#loadThymus');
 		if (event.fragCount == event.fragCurrTotal) {
 			$lt.css('display', 'none');
 		} else {
 			var p = Math
 					.round((event.fragCount / event.fragCurrTotal) * 100)
 					+ '%';
-			var $pb = $lt.find('#loadThymusText');
-			$pb.text(p);
-			$('#loadThymusProgPer').css('width', p);
+			$pt = $pt ? $pt : $lt.find('#loadThymusText');
+			$pt.text(p);
+			$pi = $pi ? $pi : $('#loadThymusProgPer');
+			$pi.css('width', p);
 		}
 	}
 	function handleReadme() {
@@ -71,12 +81,12 @@
 		h.process($d);
 	}
 </script>
+<!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> -->
 <!-- Thymus script -->
 <script th:remove="all" src="js/thymus.js" id="thymus"
 	data-thx-context-path="." data-thx-frag-extension=".htm"
 	data-thx-head-frag="th:replace=frags/head :: header"
-	data-thx-onfragscomplete="init()" 
-	data-thx-onfragcomplete="fragComplete()"></script>
+	data-thx-onfrags="init()" data-thx-onfrag="fragListener()"></script>
 </head>
 <body>
 	<div id="loadThymus">
@@ -118,15 +128,27 @@
 						class="icon-leaf icon-thymus-stacked"></i> <i
 						class="icon-thymus-text-dark">Thymus</i>
 					</span>
-					<div class="pull-right">
-						<a href="https://github.com/ugate/thymus/tarball/master"><span
+					<div class="pull-right" style="text-align: center;">
+						<a href="https://github.com/ugate/thymus/archive/v1.0.0-beta.1.tar.gz"><span
 							class="icon-stack icon-3x"> <i
 								class="icon-folder-close icon-stack-base"></i><i
 								class="icon-light icon-text">tar.gz</i>
-						</span></a>
-						<a href="https://github.com/ugate/thymus/zipball/master"><span
+						</span></a> <a
+							href="https://github.com/ugate/thymus/archive/v1.0.0-beta.1.zip"><span
 							class="icon-stack icon-3x"> <i
 								class="icon-folder-close icon-stack-base"></i> <i
+								class="icon-light icon-text">.zip</i>
+						</span></a> <br /> <a
+							href="https://github.com/ugate/thymus/tarball/master"><span
+							class="icon-stack icon-2x"> <i
+								class="icon-folder-close icon-stack-base"></i><i
+								class="icon-wrench" style="color: #2D608C"></i><i
+								class="icon-light icon-text">tar.gz</i>
+						</span></a> <a
+							href="https://github.com/ugate/thymus/zipball/master"><span
+							class="icon-stack icon-2x"> <i
+								class="icon-folder-close icon-stack-base"></i><i
+								class="icon-wrench" style="color: #2D608C"></i><i
 								class="icon-light icon-text">.zip</i>
 						</span></a>
 					</div>
@@ -135,13 +157,13 @@
 					<p th:replace="README.md :: handleReadme()">
 						<b>thymus.js</b>
 					</p>
-					<p>
+					<p th:replace="frags/cancel :: #noshow">
 						This site actually uses <span id="fragTotal" class="badge">0</span>
 						<b>thymus.js</b> fragment views to initialize this page. So, feel
-						free to explore :)
+						free to explore and check out your browsers console :)
 					</p>
 					<p>
-						Internally, when <b>thymus.js</b> loads it checks for the presence
+						Internally, when <b>thymus.js</b> loads, it checks for the presence
 						of the JQuery API. If it's not found it will automatically load
 						the most current version found at <a
 							href="http://code.jquery.com/jquery.min.js">http://code.jquery.com/jquery.min.js</a>.

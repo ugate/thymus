@@ -277,13 +277,13 @@
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/user/user :: [class*=&amp;quot;icon-&amp;quot;]&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 </pre></div>
 			</div>
-			<h4 id="funcfrags">Fragment Target as Function</h4>
+			<h4 id="funcfrags">Customizing Fragment Results</h4>
 			<p>
 				Not only can fragment targets contain corresponding
 				<code>data-thx-fragment</code>
 				names or JQuery <i>selectors</i>, they can also contain a
 				<code>function</code>
-				references.
+				that will handle raw fragment results.
 			</p>
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text/javascript&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">function</span> handleFrag() {
@@ -297,7 +297,7 @@
 </pre></div>
 			<div id="fragscompleteevent" class="panel panel-default">
 				<div class="panel-heading">
-					<h2>Function Result Handle</h2>
+					<h2>Fragment Result Handler</h2>
 				</div>
 				<div class="panel-body">
 					<div class="row row-thymus">
@@ -352,9 +352,8 @@
 							that will process the <i>inclusion</i> or <i>replacement</i>.
 							Arguments:
 							<ol>
-								<li>the result date (raw or node) that will be <i>included</i>
-									or <i>replaced</i> (defaults to the <b>data</b> when <code>null</code>
-									or <code>undefined</code>)
+								<li>the result <b>data</b> (raw or node) that will be <i>included</i>
+									or <i>replaced</i>
 								</li>
 							</ol>
 						</div>
