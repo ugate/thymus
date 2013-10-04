@@ -74,6 +74,16 @@
 					th:text="${#calendars.year(#calendars.createNow())}"></span> <span
 					class="app-loading-label">(Loading...)</span></a>
 			</div>
+			<ul class="nav navbar-nav navbar-right">
+				<li>
+					<div id="fragProgress" class="progress" style="width: 200px;margin-top: 1em;">
+						<div class="progress-bar" role="progressbar" aria-valuenow="0"
+							aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+							<span class="sr-only">60%</span>
+						</div>
+					</div>
+				</li>
+			</ul>
 		</div>
 	</div>
 </body>

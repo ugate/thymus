@@ -42,31 +42,36 @@
 }
 </style>
 <script type="text/javascript">
-	var $lt = null, $pt = null, $pi = null;
+	var $lt = null, $pt = null, $pi = null, loaded = false;
 	function fragListener(event) {
 		//var $source = $(this);
 		if (event.type != 'load') {
 			if (event.type == 'beforeload' && 
 					event.fragUrl.indexOf('frags/cancel') >= 0) {
+				// example that shows how to prevent a fragment from showing
 				event.preventDefault();
 			}
-			return;
+		} else {
+			event.log();
 		}
-		event.log();
-		//alert(event.fragUrl + '\n\n' + event.type + ' :: ' + event.namespace)
 		// loading indicator
 		$lt = $lt ? $lt : $('#loadThymus');
-		if (event.fragCount == event.fragCurrTotal) {
+		if (!loaded && event.fragCount == event.fragCurrTotal) {
+			loaded = true;
 			$lt.css('display', 'none');
-		} else {
-			var p = Math
-					.round((event.fragCount / event.fragCurrTotal) * 100)
-					+ '%';
-			$pt = $pt ? $pt : $lt.find('#loadThymusText');
-			$pt.text(p);
-			$pi = $pi ? $pi : $('#loadThymusProgPer');
-			$pi.css('width', p);
+			$lt = $('#fragProgress');
+			$pt = $lt.find('.sr-only');
+			$pi = $lt.find('.progress-bar');
 		}
+		var p = Math
+				.round((event.fragCount / event.fragCurrTotal) * 100) + '%';
+		$pt = $pt ? $pt : $lt.find('#loadThymusText');
+		$pt.text(p);
+		if (loaded) {
+			$lt.attr('aria-valuenow', p);
+		}
+		$pi = $pi ? $pi : $('#loadThymusProgPer');
+		$pi.css('width', p);
 	}
 	function handleReadme() {
 		var h = this.handle;

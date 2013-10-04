@@ -461,16 +461,12 @@
 				Similarly, we could have listened for the event using the element
 				where the <i>include</i> or <i>replace</i> attributes are defined by
 				doing
-				<code>$(myTemplateElement).on(type + '.thx.frag',
-					function(event){...})</code>
-				(where
+				<code>$(myTemplateElement).on(type, function(event){...})</code>
+				- where
 				<code>type</code>
-				is
-				<code>beforeload</code>
-				,
-				<code>beforedom</code>
-				, or
-				<code>load</code>
+				is one of the <a href="#fragevent">fragment event</a> type prefixes
+				(e.g.
+				<code>load.thx.frag</code>
 				). A <a href="#fragevent">fragment event</a> contains the following
 				properties:
 			</p>
@@ -492,12 +488,12 @@
 								<li><code>beforeload.thx.frag</code> - before the fragment
 									has been retrieved (when the <a
 									href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
-									returnes <code>true</code> the fragment will not be retrieved)</li>
+									returnes <b>true</b> the fragment will not be retrieved)</li>
 								<li><code>beforedom.thx.frag</code> - after the fragment
 									has been retrieved, but not updated in the DOM (when the <a
 									href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
-									returnes <code>true</code> the fragment will not be updated in
-									the DOM)</li>
+									returnes <b>true</b> the fragment will not be updated in the
+									DOM)</li>
 								<li><code>afterdom.thx.frag</code> - after the fragment has
 									been retrieved and updated in the DOM (any child/nested
 									fragments may not be loaded yet)</li>
