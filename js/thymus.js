@@ -820,8 +820,17 @@
 			this.rs = null;
 			this.e = null;
 			this.cancelled = false;
-			this.pcnt = function () {
+			this.pcnt = function() {
 				t.cnt++;
+			};
+			var cc = 0;
+			this.ccnt = function(add) {
+				if (add) {
+					cc++;
+				} else if (add == false && --cc <= 0) {
+					
+				}
+				return cc;
 			};
 			this.p = function(x, jqxhr, ts, e) {
 				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, this);
@@ -915,6 +924,7 @@
 		 */
 		function genFragEvent(type, t, f) {
 			var e = $.Event(type);
+			e.acnt = f ? f.ccnt() : -1;
 			e.type = type;
 			e.fragCount = t.cnt;
 			e.fragCurrTotal = t.len;
@@ -1051,12 +1061,18 @@
 				return false;
 			}
 			function doScript(f, $t, $x, cb) {
+				if (f) {
+					f.ccnt(true);
+				}
 				if (!$t.is($x)) {
 					$x.remove();
 				}
 				var url = $x.prop('src');
 				function sdone(sf, jqxhr, ts, e) {
 					sf.p($t, jqxhr);
+					if (f) {
+						f.ccnt(false);
+					}
 					cb(jqxhr && (!ts || !e) ? $t : null, sf);
 				}
 				if (url && url.length > 0) {
@@ -1154,10 +1170,10 @@
 					cb($cf, f);
 				});
 			}
-			function lfg($fl, cb) {
+			function lfg(pf, $fl, cb) {
 				var f = null;
 				try {
-					f = new Frag(f, $s, $fl, t);
+					f = new Frag(pf, $s, $fl, t);
 					cb = typeof cb === 'function' ? cb : function(){};
 					broadcast(opts.eventFragChain, opts.eventFragBeforeLoad, t,
 							f);
@@ -1196,8 +1212,8 @@
 					cb(null, f);
 				}
 			}
-			function lfc($fl) {
-				lfg($fl, function($cf, f) {
+			function lfc(pf, $fl) {
+				lfg(pf, $fl, function($cf, f) {
 					f.pcnt();
 					// process any nested fragments
 					if ($cf) {
@@ -1218,7 +1234,7 @@
 					}
 					if (!pf) {
 						t.len++;
-						lfc(script);
+						lfc(null, script);
 					}
 				}
 			}
@@ -1227,7 +1243,7 @@
 				var $fs = t.isScopeSelect && $f.is(t.scope) ? $f : $f.find(tsel.selector);
 				t.len += $fs.length;
 				$fs.each(function() {
-					lfc($(this));
+					lfc(f, $(this));
 				});
 				if (t.cnt > 0 || ($fs.length == 0 && t.cnt == 0)) {
 					done(t, f);

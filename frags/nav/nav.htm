@@ -69,21 +69,24 @@
 				<a class="navbar-brand" style="font-size: 12px; font-weight: bold;"
 					href="http://ugate.org" target="_blank"><img
 					src="https://secure.gravatar.com/avatar/e46c1c9ed5fbfebc5277b2661a2350cd?s=140&d=https://github.com/images/gravatars/gravatar-140.png"
-					width="32" height="32" /> maintained by <span
-					th:text="#{company}">ugate.org</span> <span
-					th:text="${#calendars.year(#calendars.createNow())}"></span> <span
-					class="app-loading-label">(Loading...)</span></a>
+					width="32" height="32" /> maintained by <span th:text="#{company}">ugate.org</span>
+					<span th:text="${#calendars.year(#calendars.createNow())}"></span></a>
 			</div>
-			<ul class="nav navbar-nav navbar-right">
-				<li>
-					<div id="fragProgress" class="progress" style="width: 200px;margin-top: 1em;">
-						<div class="progress-bar" role="progressbar" aria-valuenow="0"
-							aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-							<span class="sr-only">60%</span>
+			<div class="collapse navbar-collapse bottomnav-collapse">
+				<ul class="nav navbar-nav navbar-right">
+					<li>
+						<div class="frag-prog">0%</div>
+					</li>
+					<li>
+						<div id="fragProgress" class="progress nav-prog">
+							<div class="progress-bar" role="progressbar" aria-valuenow="0"
+								aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+								<span class="sr-only frag-prog">0%</span>
+							</div>
 						</div>
-					</div>
-				</li>
-			</ul>
+					</li>
+				</ul>
+			</div>
 		</div>
 	</div>
 </body>

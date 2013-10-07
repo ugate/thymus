@@ -9,12 +9,6 @@ function init(event) {
 	// initialize bootstrap components
 	initScrollSpy('[data-spy="scroll"]');
 	initToolTips('[class*="app-tooltip"]');
-	// update load indicator
-	var $l = $('.app-loading-label');
-	$l.html('(Loaded)');
-	setTimeout(function() {
-		$l.html(' ');
-	}, 5000);
 	$('#fragTotal').on('click', function() {
 		console.log(this);
 	});

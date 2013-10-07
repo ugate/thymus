@@ -185,6 +185,18 @@ div.app-scroll .scroll-spy {
 	color: #444;
 }
 
+.nav-prog {
+	width: 100px;
+	margin-top: 1em;
+}
+
+.frag-prog {
+	color: white;
+	font-size: .75em;
+	margin-top: 1.50em;
+	width: auto;
+	margin-right: 10px;
+}
 /* .navbar-inverse { */
 /*   text-shadow: 0 -1px 0 rgba(0,0,0,.15); */
 /*   background-color: #563d7c; */
