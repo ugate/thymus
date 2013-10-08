@@ -772,13 +772,13 @@
 		function Frag(pf, $pel, $fl, t) {
 			var ctx = this;
 			var forcett = t.tsel && t.tsel.type;
-			var isHead = $fl instanceof jQuery ? $fl.is('head') : false;
+			//var isHead = $fl instanceof jQuery ? $fl.is('head') : false;
 			this.pf = pf;
 			this.pel = $pel;
 			this.el = $fl;
 			this.tt = forcett ? t.tsel.type : TATTR;
-			var a = !isHead && !t.isScopeSelect ? getFragAttr($fl,
-					opts.includeAttrs) : null;
+			var a = !t.isScopeSelect ? getFragAttr($fl, opts.includeAttrs)
+					: null;
 			if (!a && !t.isScopeSelect) {
 				a = getFragAttr($fl, opts.replaceAttrs);
 				if (!forcett) {
@@ -820,26 +820,49 @@
 			this.rs = null;
 			this.e = null;
 			this.cancelled = false;
-			this.pcnt = function() {
-				t.cnt++;
-			};
-			var cc = 0;
-			this.ccnt = function(add) {
-				if (add) {
-					cc++;
-				} else if (add == false && --cc <= 0) {
-					
+			var wcnt = 1;
+			this.ccnt = function(a) {
+				if (a) {
+					wcnt++;
+				} else if (a == false && --wcnt == 0) {
+					// no longer waiting for any more child fragments to complete
+					t.cnt++;
+					broadcast(opts.eventFragChain, opts.eventFragLoad, t, this);
 				}
-				return cc;
+				return wcnt;
+			};
+			if (this.pf) {
+				// increment child fragment count on parent fragment
+				this.pf.ccnt(true);
+			}
+			this.done = function() {
+				if (!this.cancelled) {
+					this.ccnt(false);
+				} else {
+					t.cnt++;
+				}
+				// decrement parent fragments child count
+				var x = this;
+				while (x = x.pf) {
+					x.ccnt(false);
+				}
+			};
+			this.domDone = function(hasErrors) {
+				// DOM done, but child fragments may exist
+				if (!this.cancelled && !hasErrors) {
+					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t, this);
+				}
 			};
 			this.p = function(x, jqxhr, ts, e) {
 				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, this);
 				if (this.cancelled) {
+					this.domDone(false);
 					return;
 				}
 				if (ts || e) {
 					t.addError('Error at ' + this.toString() + ': ' + ts + '- '
 							+ e, this);
+					this.domDone(true);
 					return;
 				}
 				var xIsJ = x instanceof jQuery;
@@ -847,7 +870,7 @@
 					if (jqxhr && jqxhr.status != 200) {
 						t.addError(jqxhr.status + ': ' + ts
 								+ ' URL="' + this.u + '"', this);
-						this.pcnt();
+						this.domDone(true);
 						return;
 					} else if (!jqxhr) {
 						$('<script>' + this.u.substr('data:text/javascript,'.length) + 
@@ -883,8 +906,8 @@
 					// they needed to be completed prior to placement in the DOM or
 					// URLs in some cases will be missed (like within the head)
 					htmlDomAdjust(t, ctx, this.rs, false);
-					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t, this);
 				}
+				this.domDone(false);
 			};
 			this.getTarget = function() {
 				return this.func && this.func.isValid ? this.func.run : this.t;
@@ -924,10 +947,10 @@
 		 */
 		function genFragEvent(type, t, f) {
 			var e = $.Event(type);
-			e.acnt = f ? f.ccnt() : -1;
 			e.type = type;
 			e.fragCount = t.cnt;
 			e.fragCurrTotal = t.len;
+			e.fragPendingPeerCount = f && f.pf ? f.pf.ccnt(null) : 0;
 			e.fragUrl = f ? f.u : undefined;
 			e.fragStack = f ? f.getStack() : undefined;
 			e.fragTarget = f ? f.getTarget() : undefined;
@@ -1021,13 +1044,13 @@
 				selector : tselector
 			};
 			var t = new FragsTrack($s, tsel);
-			function done(t, f) {
+			function done(pf, t, f) {
 				if (t.cnt > t.len) {
 					t.addError('Expected ' + t.len
 							+ ' fragments, but recieved ' + t.cnt, f);
 				}
-				if (f && !f.cancelled && t.cnt > 0) {
-					broadcast(opts.eventFragChain, opts.eventFragLoad, t, f);
+				if (f) {
+					f.done();
 				}
 				if (t.cnt >= t.len) {
 					if (typeof func === 'function') {
@@ -1061,18 +1084,12 @@
 				return false;
 			}
 			function doScript(f, $t, $x, cb) {
-				if (f) {
-					f.ccnt(true);
-				}
 				if (!$t.is($x)) {
 					$x.remove();
 				}
 				var url = $x.prop('src');
 				function sdone(sf, jqxhr, ts, e) {
 					sf.p($t, jqxhr);
-					if (f) {
-						f.ccnt(false);
-					}
 					cb(jqxhr && (!ts || !e) ? $t : null, sf);
 				}
 				if (url && url.length > 0) {
@@ -1133,14 +1150,14 @@
 						hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
 						var $h = $('head');
 						hr = htmlDataAdjust(t, f, hr);
+						var hf = new Frag(null, $s, $h, t);
 						var scs = hr.match(opts.regexScriptTags);
 						if (scs) {
 							$.each(scs, function(i, sc) {
-								doScript(f, $h, $(sc), cb);
+								doScript(hf, $h, $(sc), cb);
 								hr = hr.replace(sc, '');
 							});
 						}
-						var hf = new Frag(f, $s, $h, t);
 						hf.p(hr);
 						cb($h, f);
 						return;
@@ -1214,12 +1231,11 @@
 			}
 			function lfc(pf, $fl) {
 				lfg(pf, $fl, function($cf, f) {
-					f.pcnt();
 					// process any nested fragments
 					if ($cf) {
 						lfi($cf, f);
 					} else {
-						done(t, f);
+						done(pf, t, f);
 					}
 				});
 			}
@@ -1246,7 +1262,7 @@
 					lfc(f, $(this));
 				});
 				if (t.cnt > 0 || ($fs.length == 0 && t.cnt == 0)) {
-					done(t, f);
+					done(null, t, f);
 				}
 			}
 			// make initial call

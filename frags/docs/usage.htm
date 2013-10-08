@@ -488,18 +488,18 @@
 								<li><code>beforeload.thx.frag</code> - before the fragment
 									has been retrieved (when the <a
 									href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
-									returnes <b>true</b> the fragment will not be retrieved)</li>
+									returns <b>true</b> the fragment will not be retrieved)</li>
 								<li><code>beforedom.thx.frag</code> - after the fragment
 									has been retrieved, but not updated in the DOM (when the <a
 									href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
-									returnes <b>true</b> the fragment will not be updated in the
+									returns <b>true</b> the fragment will not be updated in the
 									DOM)</li>
 								<li><code>afterdom.thx.frag</code> - after the fragment has
 									been retrieved and updated in the DOM (any child/nested
 									fragments may not be loaded yet)</li>
 								<li><code>load.thx.frag</code> - after the fragment has
 									been retrieved, updated in the DOM and all child/nested
-									fragments have loaded</li>
+									fragments have been loaded/cancelled/etc.</li>
 							</ul>
 							Any of the above event types can be used when <a href="#fraginjs">programatically
 								registering a listener for the event</a>). See <a
@@ -531,6 +531,13 @@
 								<li><code>source</code> - the fragment destination</li>
 							</ul>
 						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>fragPendingPeerCount</code>
+						</div>
+						<div class="col-md-10">the number of child fragments that
+							are pending for the current fragment's parent fragment (if any)</div>
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">

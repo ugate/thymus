@@ -1,97 +1,15 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="frags/head :: header">
+<head th:include="frags/head :: header">
 <meta charset="utf-8" />
-<style type="text/css">
-#loadThymus {
-	position: absolute;
-	margin: 0;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	color: #fff;
-	font-weight: bolder;
-	background-color: #777;
-	z-index: 5000;
-	font: 100% sans-serif, 'Helvetica Neue', Helvetica, Arial;
-}
-#loadThymus>div {
-	position: absolute;
-	width: 300px;
-	height: 50px;
-	margin: -150px 0 0 -150px;
-	left: 50%;
-	top: 50%;
-}
-#loadThymusText {
-	text-align: center;
-	vertical-align: baseline;
-	line-height: 50px;
-	z-index: 5002;
-}
-#loadThymusProg {
-	background-color: #333;
-}
-#loadThymusProgPer {
-	display: inline-block;
-	width: 1%;
-	height: 100%;
-	background-color: #6593B5;
-	z-index: 5001;
-}
-</style>
-<script type="text/javascript">
-	var $lt = null, $pt = null, $pi = null, loaded = false;
-	function fragListener(event) {
-		//var $source = $(this);
-		if (event.type != 'load') {
-			if (event.type == 'beforeload' && 
-					event.fragUrl.indexOf('frags/cancel') >= 0) {
-				// example that shows how to prevent a fragment from showing
-				event.preventDefault();
-			}
-		} else {
-			event.log();
-		}
-		// loading indicator
-		$lt = $lt ? $lt : $('#loadThymus');
-		if (!loaded && event.fragCount == event.fragCurrTotal) {
-			loaded = true;
-			$lt.css('display', 'none');
-			$lt = $('#fragProgress');
-			$pt = $('.frag-prog');
-			$pi = $lt.find('.progress-bar');
-		}
-		var p = Math
-				.round((event.fragCount / event.fragCurrTotal) * 100) + '%';
-		$pt = $pt ? $pt : $lt.find('#loadThymusText');
-		$pt.text(p);
-		if (loaded) {
-			$lt.attr('aria-valuenow', p);
-		}
-		$pi = $pi ? $pi : $('#loadThymusProgPer');
-		$pi.css('width', p);
-	}
-	function handleReadme() {
-		var h = this.handle;
-		var d = '';
-		var ps = h.data.match(/<p[^>]*>((.|[\r\n])+)<\/p>/img);
-		if (ps) {
-			$.each(ps, function(i, p) {
-				d += p;
-			});
-		}
-		var $d = $(d);
-		h.process($d);
-	}
-</script>
-<!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> -->
-<!-- Thymus script -->
+<!-- pre-loader and listeners -->
+<link href="frags/docs/css/loader.css" rel="stylesheet" media="screen" />
+<script src="frags/docs/js/loader.js"></script>
+<!-- thymus.js script -->
 <script th:remove="all" src="js/thymus.js" id="thymus"
 	data-thx-context-path="." data-thx-frag-extension=".htm"
-	data-thx-head-frag="th:replace=frags/head :: header"
-	data-thx-onfrags="init()" data-thx-onfrag="fragListener()"></script>
+	data-thx-head-frag="th:include=frags/head :: header"
+	data-thx-onfrags="fragsListener()" data-thx-onfrag="fragListener()"></script>
 </head>
 <body>
 	<div id="loadThymus">

@@ -1,17 +1,9 @@
-function init(event) {
-	event.log();
-	if (event.scope.prop('tagName').toLowerCase() !== 'html') {
-		return;
-	}
-	$('#fragTotal').text(event.fragCount);
+function init() {
 	// add some flare to the demo by adding a background splash
 	flickr('thymus vulgaris', 'body');
 	// initialize bootstrap components
 	initScrollSpy('[data-spy="scroll"]');
 	initToolTips('[class*="app-tooltip"]');
-	$('#fragTotal').on('click', function() {
-		console.log(this);
-	});
 }
 function initScrollSpy(cssSelector) {
 	$(cssSelector).each(function() {
