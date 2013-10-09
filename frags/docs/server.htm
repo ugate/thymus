@@ -125,6 +125,25 @@
 				<code>th:replace</code>
 				attribute.
 			</div>
+			<h4 id="thnav">Thymeleaf Prototype Navigation</h4>
+			<p>
+				Prototyping Thymeleaf applications for navigation can be achieved by
+				simply using the normal
+				<code>href</code>
+				attributes on links (using <a href="#attrpaths">attibute path
+					resolution techniques</a>) or by invoking a <a href="#httpsimple">DOM
+					event</a>. Because there are no Thymeleaf attribute counterparts to the
+				<a href="#navcontrol">thymus.js navigation attributes</a> some extra
+				Thymeleaf attributes need to be added if the desired behavior is to
+				prevent <b>thymus.js</b> navigation during production use. For
+				example, the following will remove the
+				<code>data-thx-replace-get</code>
+				attribute when ran through the Thymeleaf engine, but will operate as
+				expected otherwise:
+			</p>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">th:text=</span><span style="color: #0000FF">&quot;#{signin}&quot;</span> <span style="color: #FF0000">th:attr=</span><span style="color: #0000FF">&quot;data-thx-replace-get=&#39;&#39;&quot;</span>
+	<span style="color: #FF0000">data-thx-replace-get=</span><span style="color: #0000FF">&quot;click :: index&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Sign in<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+</pre></div>
 		</div>
 	</div>
 </body>

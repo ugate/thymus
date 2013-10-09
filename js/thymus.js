@@ -18,6 +18,8 @@
 	var JQUERY_URL_ATTR = 'data-thx-jquery-url';
 	var JQUERY_DEFAULT_URL = 'http://code.jquery.com/jquery-1.10.2.min.js';
 	var FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
+	var FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
+	var FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
 	this.ieVersion = 0;
 	this.firstRun = true;
 
@@ -255,6 +257,9 @@
 				a.method = a.method ? a.method : 'GET';
 				if (a.fragTarget) {
 					loadFragments(c ? c : p, a, true, null);
+				} else if (a.fragUrl) {
+					location.href = adjustPath(getScriptCtxPath(), a.fragUrl,
+							script ? script.attr(opts.fragExtensionAttr) : '');
 				} else {
 					log('No fragment target specified for ' + a.action);
 				}
@@ -594,6 +599,29 @@
 		}
 
 		/**
+		 * Adjusts a path to conform to the specified context (if needed) and
+		 * applies the provided file extension (or inherits the current pages
+		 * file extension)
+		 * 
+		 * @param c
+		 *            the context path
+		 * @param p
+		 *            the path to adjust
+		 * @param x
+		 *            the file extension to apply
+		 */
+		function adjustPath(c, p, x) {
+			x = x ? x.toLowerCase() == opts.inheritRef ? getFileExt(location.href)
+					: x
+					: '';
+			if (x && p.indexOf('.') < 0) {
+				p += x;
+			}
+			p = absolutePath(p, c);
+			return p;
+		}
+
+		/**
 		 * Gets the context path used to resolve paths to fragments and URLs within
 		 * href/src/etc. attributes contained in fragments
 		 */
@@ -796,14 +824,8 @@
 			this.m = t.tsel && t.tsel.method ? t.tsel.method : 'GET';
 			if (this.u && this.u.length > 0
 					&& this.u.toLowerCase() != opts.selfRef.toLowerCase()) {
-				var fileExt = script ? script.attr(opts.fragExtensionAttr) : '';
-				var fragFileExt = fileExt ? fileExt.toLowerCase() == opts.inheritRef ? getFileExt(location.href)
-						: fileExt
-						: '';
-				if (fragFileExt && this.u.indexOf('.') < 0) {
-					this.u += fragFileExt;
-				}
-				this.u = absolutePath(this.u, t.ctxPath);
+				this.u = adjustPath(t.ctxPath, this.u, script ? script
+						.attr(opts.fragExtensionAttr) : '');
 			} else if (this.t && this.t.length > 0) {
 				this.u = opts.selfRef;
 			}
@@ -1359,13 +1381,47 @@
 		} catch (e) {
 			log('Unable to detect IE version: ' + e.message);
 		}
-		if (!getPreLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR)) {
-			var $p = $('html');
-			// make sure the root document has navigation capabilities
-			$p.thymus('nav.resolve');
-			// auto-process the fragments
-			$p.thymus('frags.load');
+
+		/**
+		 * Pre-loads any resources that may need to be present before fragments
+		 * are processed
+		 * 
+		 * @param l
+		 *            an optional link URL
+		 * @param s
+		 *            an optional script URL
+		 * @param cb
+		 *            the call back function
+		 */
+		function preloadResources(l, s, cb) {
+			if (l) {
+				$('<link type="text/css" href="' + l + '" rel="stylesheet" />')
+						.appendTo('head');
+			}
+			if (s) {
+				$.getScript(s).done(function(data, ts, jqxhr) {
+					cb(data, ts, jqxhr, null);
+				}).fail(function(jqxhr, ts, e) {
+					cb(data, ts, jqxhr, e);
+				});
+			} else {
+				cb(null, null, null, null);
+			}
 		}
+		preloadResources(script.attr(FRAGS_PRE_LOAD_CSS_ATTR), script
+				.attr(FRAGS_PRE_LOAD_JS_ATTR), function(d, ts, jqxhr, e) {
+			if (e) {
+				throw e;
+			} else {
+				var $p = $('html');
+				// make sure the root document has navigation capabilities
+				$p.thymus('nav.resolve');
+				if (!getPreLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR)) {
+					// auto-process the fragments
+					$p.thymus('frags.load');
+				}
+			}
+		});
 	}
 
 	/**

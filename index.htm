@@ -2,13 +2,12 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:include="frags/head :: header">
 <meta charset="utf-8" />
-<!-- pre-loader and listeners -->
-<link href="frags/docs/css/loader.css" rel="stylesheet" media="screen" />
-<script src="frags/docs/js/loader.js"></script>
 <!-- thymus.js script -->
 <script th:remove="all" src="js/thymus.js" id="thymus"
 	data-thx-context-path="." data-thx-frag-extension=".htm"
 	data-thx-head-frag="th:include=frags/head :: header"
+	data-thx-preload-css="frags/docs/css/loader.css"
+	data-thx-preload-js="frags/docs/js/loader.js"
 	data-thx-onfrags="fragsListener()" data-thx-onfrag="fragListener()"></script>
 </head>
 <body>

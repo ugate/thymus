@@ -48,6 +48,26 @@
 				<code>data-thx-replace</code>
 				attributes with the addition of some extra parameters.
 			</p>
+			<h4 id="httpsimple">Simple Navigation</h4>
+			<p>
+				Navigating to other pages can be as simple as providing a normal
+				link that contains an
+				<code>href</code>
+				(see <a href="#attrpaths">attibute path resolution techniques</a>
+				for more details). A DOM event can also be used by just providing a
+				<code>data-thx-*DTYPE*-*HTTP*</code>
+				with just an event name and a corresponding target path:
+			</p>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-replace-get=</span><span style="color: #0000FF">&quot;click :: path/to/other/page&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Sign in<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+</pre></div>
+			<div class="panel panel-default">
+				<div class="panel-heading">Working example that will navigate
+					to an example sign in page</div>
+				<div class="panel-body">
+					<button type="button" class="btn btn-primary"
+						data-thx-replace-get="click :: login">Goto Sign In Page</button>
+				</div>
+			</div>
 			<h4 id="httpasyncself">Self-targeting Asynchronous Transfers</h4>
 			<p>
 				A self-targeting asynchronous transfer is an
