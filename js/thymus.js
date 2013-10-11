@@ -16,7 +16,7 @@
 (function() {
 	var NS = this.displayName = 'thymus';
 	var JQUERY_URL_ATTR = 'data-thx-jquery-url';
-	var JQUERY_DEFAULT_URL = 'http://code.jquery.com/jquery-1.10.2.min.js';
+	var JQUERY_DEFAULT_URL = 'http://code.jquery.com/jquery.min.js';
 	var FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
 	var FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
 	var FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
@@ -405,6 +405,7 @@
 		 * @returns content adjusted data content string
 		 */
 		function htmlDataAdjust(t, f, s) {
+			s = s.replace(/\<(\?xml|(\!DOCTYPE[^\>\[]+(\[[^\]]+)?))+[^>]+\>/g, '');
 			s = updateNavAttrs(t, f, urlAttrs, s);
 			return s;
 		}
@@ -1191,10 +1192,13 @@
 				var $c = $('<results>' + htmlDataAdjust(t, f, r) + '</results>');
 				var fs = $c.find(f.s);
 				if (fs.length <= 0) {
-					t.addError('No matching results for ' + f.toString()
-							+ ' in\n' + r, f);
-					cb(null, f);
-					return;
+					fs = $c.filter(f.s);
+					if (fs.length <= 0) {
+						t.addError('No matching results for ' + f.toString()
+								+ ' in\n' + r, f);
+						cb(null, f);
+						return;
+					}
 				}
 				fs.each(function() {
 					var $cf = $(this);
@@ -1299,53 +1303,35 @@
 	 *            the URL used to load JQuery
 	 */
 	function init(jqUrl) {
+		if ($.fn[NS] !== undefined) {
+			return;
+		}
 		var script = $('#' + NS);
-
-		/**
-		 * thymus.js plug-in action execution
-		 * 
-		 * @param a
-		 *            the action object (or action string)
-		 * @param altEl
-		 *            the alternative initiating element
-		 * @parma the options (relative to the context of the element(s) for
-		 *        which the plug-in is being called from)
-		 */
-		$.fn[NS] = function(a, altEl, opts) {
-			var o = $.extend({}, $.fn.thymus.defaults, opts);
-			var x = null, xl = null;
-			var s = this.selector;
-			return this.each(function() {
-				xl = $.data(this, NS);
-				if (opts || !xl) {
-					xl = x ? x : (x = new FragCtx(s, script, o));
-					$.data(this, NS, xl);
-				}
-				xl.exec(a, this, altEl);
-			});
-		};
-		$.fn[NS].defaults = {
+		if (!script) {
+			throw new Error('No script found with ID: ' + NS);
+		}
+		var defs = {
 			selfRef : 'this',
 			ajaxCache : false,
 			inheritRef : 'inherit',
 			fragSep : '::',
 			fragExtensionAttr : 'data-thx-frag-extension',
-			fragAttrs : ['data-thx-fragment', 'th\\:fragment', 'data-th-fragment'],
-			includeAttrs : ['data-thx-include', 'th\\:include', 'data-th-include'],
-			replaceAttrs : ['data-thx-replace', 'th\\:replace', 'data-th-replace'],
-			urlAttrs : ['href', 'src'],
-			inculdeGetAttrs : ['data-thx-include-get'],
-			replaceGetAttrs : ['data-thx-replace-get'],
-			updateGetAttrs : ['data-thx-update-get'],
-			inculdePostAttrs : ['data-thx-include-post'],
-			replacePostAttrs : ['data-thx-replace-post'],
-			updatePostAttrs : ['data-thx-update-post'],
-			inculdePutAttrs : ['data-thx-include-put'],
-			replacePutAttrs : ['data-thx-replace-put'],
-			updatePutAttrs : ['data-thx-update-put'],
-			inculdeDeleteAttrs : ['data-thx-include-delete'],
-			replaceDeleteAttrs : ['data-thx-replace-delete'],
-			updateDeleteAttrs : ['data-thx-update-delete'],
+			fragAttrs : [ 'data-thx-fragment', 'th\\:fragment', 'data-th-fragment' ],
+			includeAttrs : [ 'data-thx-include', 'th\\:include', 'data-th-include' ],
+			replaceAttrs : [ 'data-thx-replace', 'th\\:replace', 'data-th-replace' ],
+			urlAttrs : [ 'href', 'src' ],
+			inculdeGetAttrs : [ 'data-thx-include-get' ],
+			replaceGetAttrs : [ 'data-thx-replace-get' ],
+			updateGetAttrs : [ 'data-thx-update-get' ],
+			inculdePostAttrs : [ 'data-thx-include-post' ],
+			replacePostAttrs : [ 'data-thx-replace-post' ],
+			updatePostAttrs : [ 'data-thx-update-post' ],
+			inculdePutAttrs : [ 'data-thx-include-put' ],
+			replacePutAttrs : [ 'data-thx-replace-put' ],
+			updatePutAttrs : [ 'data-thx-update-put' ],
+			inculdeDeleteAttrs : [ 'data-thx-include-delete' ],
+			replaceDeleteAttrs : [ 'data-thx-replace-delete' ],
+			updateDeleteAttrs : [ 'data-thx-update-delete' ],
 			contextPathAttr : 'data-thx-context-path',
 			fragListenerAttr : 'data-thx-onfrag',
 			fragsListenerAttr : 'data-thx-onfrags',
@@ -1371,6 +1357,30 @@
 			actionNavRegister : 'nav.register',
 			actionNavResolve : 'nav.resolve'
 		};
+		/**
+		 * thymus.js plug-in action execution
+		 * 
+		 * @param a
+		 *            the action object (or action string)
+		 * @param altEl
+		 *            the alternative initiating element
+		 * @parma the options (relative to the context of the element(s) for
+		 *        which the plug-in is being called from)
+		 */
+		$.fn[NS] = function(a, altEl, opts) {
+			var o = $.extend({}, defs, opts);
+			var x = null, xl = null;
+			var s = this.selector;
+			return this.each(function() {
+				xl = $.data(this, NS);
+				if (opts || !xl) {
+					xl = x ? x : (x = new FragCtx(s, script, o));
+					$.data(this, NS, xl);
+				}
+				xl.exec(a, this, altEl);
+			});
+		};
+		$.fn[NS].defaults = defs;
 		try {
 			var t = document.createElement('b');
 			t.id = 4;
@@ -1409,16 +1419,16 @@
 			}
 		}
 		preloadResources(script.attr(FRAGS_PRE_LOAD_CSS_ATTR), script
-				.attr(FRAGS_PRE_LOAD_JS_ATTR), function(d, ts, jqxhr, e) {
+				.attr(FRAGS_PRE_LOAD_JS_ATTR), function (d, ts, jqxhr, e) {
 			if (e) {
 				throw e;
 			} else {
 				var $p = $('html');
 				// make sure the root document has navigation capabilities
-				$p.thymus('nav.resolve');
+				$p[NS]('nav.resolve');
 				if (!getPreLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR)) {
 					// auto-process the fragments
-					$p.thymus('frags.load');
+					$p[NS]('frags.load');
 				}
 			}
 		});
