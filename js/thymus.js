@@ -1124,7 +1124,10 @@
 				var sf = new Frag(f, $s, $x, t);
 				sf.u = hasu ? url : $x.text();
 				sf.t = $t;
-				if (hasu && !$t.is($x)) {
+				if (!$t.is($x)) {
+					// scripts need to be removed from the fragment's DOM in
+					// order to prevent them from automatically loading when
+					// inserted into the page's DOM
 					$x.remove();
 				}
 				broadcast(opts.eventFragChain,
@@ -1208,7 +1211,8 @@
 				}
 				fs.each(function() {
 					var $cf = $(this);
-					$cf.find('script').each(function() {
+					var $cfs = $cf.find('script');
+					$cfs.each(function() {
 						doScript(f, $cf, $(this), cb);
 					});
 					if ($cf.is('script')) {
