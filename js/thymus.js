@@ -405,7 +405,7 @@
 		 * @returns content adjusted data content string
 		 */
 		function htmlDataAdjust(t, f, s) {
-			s = s.replace(/\<(\?xml|(\!DOCTYPE[^\>\[]+(\[[^\]]+)?))+[^>]+\>/g, '');
+			//s = s.replace(/\<(\?xml|(\!DOCTYPE[^\>\[]+(\[[^\]]+)?))+[^>]+\>/g, '');
 			s = updateNavAttrs(t, f, urlAttrs, s);
 			return s;
 		}
@@ -895,9 +895,13 @@
 								+ ' URL="' + this.u + '"', this);
 						this.domDone(true);
 						return;
-					} else if (!jqxhr) {
-						$('<script>' + this.u.substr('data:text/javascript,'.length) + 
-							'</script>').appendTo(x);
+					} else if (!jqxhr && this.u && this.t) {
+						var sdi = this.u.indexOf('data:text/javascript,');
+						var ss = x.prop('type');
+						$('<script' + (typeof ss === 'string' && ss.length > 0 ? 
+								' type="' + ss + '">' : '>') + (sdi > -1 ? 
+								this.u.substr('data:text/javascript,'.length) : this.u) + 
+							'</script>').appendTo(this.t);
 					}
 				} else {
 					if (this.tt === TREP) {
@@ -1107,35 +1111,37 @@
 				return false;
 			}
 			function doScript(f, $t, $x, cb) {
-				if (!$t.is($x)) {
-					$x.remove();
-				}
-				var url = $x.prop('src');
 				function sdone(sf, jqxhr, ts, e) {
-					sf.p($t, jqxhr);
+					// when there is no xhr, assume inline script that needs to
+					// be processed on the target
+					sf.p(sf.el, jqxhr, ts, e);
 					cb(jqxhr && (!ts || !e) ? $t : null, sf);
 				}
-				if (url && url.length > 0) {
-					t.len++;
-					var sf = new Frag(f, $s, $x, t);
-					sf.u = url;
-					sf.t = $t;
-					broadcast(opts.eventFragChain,
-							opts.eventFragBeforeLoad, t, sf);
-					if (sf.cancelled) {
-						cb(null, sf);
-						return;
-					}
-					if (url.indexOf('data:text/javascript,') >= 0) {
-						sdone(sf);
-						return;
-					}
-					$.getScript(url).done(function(data, textStatus, jqxhr) {
-						sdone(sf, jqxhr);
-					}).fail(function(jqxhr, ts, e) {
-						sdone(sf, jqxhr, ts, e);
-					});
+				var url = $x.prop('src');
+				var hasu = url && url.length > 0;
+				var hasdu = hasu && url.indexOf('data:text/javascript,') >= 0;
+				t.len++;
+				var sf = new Frag(f, $s, $x, t);
+				sf.u = hasu ? url : $x.text();
+				sf.t = $t;
+				if (hasu && !$t.is($x)) {
+					$x.remove();
 				}
+				broadcast(opts.eventFragChain,
+						opts.eventFragBeforeLoad, t, sf);
+				if (sf.cancelled) {
+					cb(null, sf);
+					return;
+				}
+				if (!hasu || hasdu) {
+					sdone(sf);
+					return;
+				}
+				$.getScript(url).done(function(data, textStatus, jqxhr) {
+					sdone(sf, jqxhr);
+				}).fail(function(jqxhr, ts, e) {
+					sdone(sf, jqxhr, ts, e);
+				});
 			}
 			function lcont(f, cb, r, status, xhr) {
 				if (hndlFunc(f, cb, r, status, xhr)) {
