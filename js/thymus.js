@@ -212,7 +212,7 @@
 		var TUPD = 'update';
 		var ctx = this;
 		this.opts = opts;
-		var httpFuncs = {};
+		var funcs = {};
 		var httpFuncCnt = 0;
 		var includeReplaceAttrs = opts.includeAttrs.concat(opts.replaceAttrs);
 		var protocolForFile = opts.regexFileTransForProtocolRelative
@@ -248,12 +248,14 @@
 			a = typeof a === 'object' ? a : {
 				action : a
 			};
-			var hf = httpFuncs[a.action];
-			if (typeof f === 'function') {
-				hf(p, c);
+			var hf = funcs[a.action];
+			if (hf && typeof hf.f === 'function') {
+				// directly invoke action as a function
+				hf.f(p, c);
 			} else if (a.action === opts.actionLoadFrags) {
 				loadFragments(p, fragSelector, false, null);
-			} else if (a.action === opts.actionNavRegister) {
+			} else if (a.action === opts.actionNavInvoke) {
+				// perform navigation action either as a partial or full page
 				a.method = a.method ? a.method : 'GET';
 				if (a.fragTarget) {
 					loadFragments(c ? c : p, a, true, null);
@@ -263,7 +265,8 @@
 				} else {
 					log('No fragment target specified for ' + a.action);
 				}
-			} else if (a.action === opts.actionNavResolve) {
+			} else if (a.action === opts.actionNavRegister) {
+				// convert URLs and register event driven navigation
 				var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), {});
 				var f = new Frag(null, t.scope, t.scope, t);
 				htmlDomAdjust(t, f, t.scope, true);
@@ -309,7 +312,7 @@
 			v = v.split(opts.fragSep);
 			var r = {
 				selector : '',
-				action : opts.actionNavRegister,
+				action : opts.actionNavInvoke,
 				method : t.method,
 				type : a.type,
 				event : av(v, 0),
@@ -321,24 +324,40 @@
 				isValid : v.length > 1
 			};
 			if (r.isValid) {
+				function addNavFunc(el) {
+					// prevent duplicating event listeners
+					if (el) {
+						for (var k in funcs) {
+							if (funcs[k].el.is(el)) {
+								return true;
+							}
+						}
+					}
+					r.funcName = r.action + ++httpFuncCnt;
+					funcs[r.funcName] = {
+						f : function(pel, ib) {
+							r.selector = ib;
+							ctx.exec(r, pel, ib);
+						},
+						el : el
+					};
+				}
 				var hasOn = r.event.toLowerCase().indexOf('on') == 0;
-				r.funcName = opts.actionNavResolve + ++httpFuncCnt;
-				httpFuncs[r.funcName] = function(pel, ib) {
-					r.selector = ib;
-					ctx.exec(r, pel, ib);
-				};
 				if (el) {
 					var $el = $(el);
-					$el.on(hasOn ? r.event.substr(2) : r.event, function() {
-						httpFuncs[r.funcName](f.pel, $(this));
-					});
-					$el.on('remove', function () {
-						httpFuncs[r.funcName] = null;
-					});
+					if (!addNavFunc($el)) {
+						$el.on(hasOn ? r.event.substr(2) : r.event, function() {
+							funcs[r.funcName].f(f.pel, $(this));
+						});
+						$el.on('remove', function () {
+							funcs[r.funcName] = null;
+						});
+					}
 				} else {
 					// possible memory leaks may occur on the HTTP functions
 					// when dealing with raw data replacements that are removed
 					// from the DOM at a later time- currently not being used
+					addNavFunc(null);
 					r.onEvent = ' ' + (hasOn ? '' : 'on') + r.event
 							+ '="' + '$(\'' + selector + '\').' + NS
 							+ '(\'' + r.funcName + '\',this)"';
@@ -1197,7 +1216,7 @@
 				}
 				// process non-head tags the normal JQuery way
 				// (links need to be converted via raw results to
-				// prevent warnings)
+				// prevent warnings and undesired network traffic)
 				var $c = $('<results>' + htmlDataAdjust(t, f, r) + '</results>');
 				var fs = $c.find(f.s);
 				if (fs.length <= 0) {
@@ -1365,7 +1384,7 @@
 			eventFragsLoad : 'load.thx.frags',
 			actionLoadFrags : 'frags.load',
 			actionNavRegister : 'nav.register',
-			actionNavResolve : 'nav.resolve'
+			actionNavInvoke : 'nav.invoke'
 		};
 		/**
 		 * thymus.js plug-in action execution
@@ -1435,10 +1454,10 @@
 			} else {
 				var $p = $('html');
 				// make sure the root document has navigation capabilities
-				$p[NS]('nav.resolve');
+				$p[NS](defs.actionNavRegister);
 				if (!getPreLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR)) {
 					// auto-process the fragments
-					$p[NS]('frags.load');
+					$p[NS](defs.actionLoadFrags);
 				}
 			}
 		});

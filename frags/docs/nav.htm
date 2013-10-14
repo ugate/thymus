@@ -233,24 +233,7 @@
 					<div id="userDest3" class="well"></div>
 				</div>
 			</div>
-			<h2 id="modeltoview">Model-To-View Transitions</h2>
-			<p>
-				<b>thymus.js</b> interprets fragment results that have an
-				<code>text/html</code>
-				<code>content-type</code>
-				as <i>view</i> content. Similarly, fragments with <a
-					href="#textfrags">raw <code>content-type</code></a> will also be
-				interpreted as view content, but will have limited model interaction
-				capabilities. Most other
-				<code>content-type</code>
-				returned from fragment results will be interpreted as <i>model</i>
-				content. Not all of the <a
-					href="http://www.iana.org/assignments/media-types">standard
-					media types</a> are supported, but where they make sense <b>thymus.js</b>
-				attempts to make a smooth transition of <i>model</i> data into
-				corresponding views.
-			</p>
-			<h3 id="textfrags">Raw Fragments</h3>
+			<h3 id="textfrags">Raw Fragment Views</h3>
 			<p>
 				Fragments that are retrieved that have one of the
 				<code>content-type</code>
@@ -288,21 +271,24 @@
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
-			<h3 id="xmlfrags">XML Fragments</h3>
+			<h2 id="modeltoview">Model-To-View Transitions</h2>
 			<p>
-				Fragments that are retrieved that have one of the XML
+				<b>thymus.js</b> interprets fragment results that have an
+				<code>text/html</code>
 				<code>content-type</code>
-				definitions below will be interpreted as <i>model</i> data. How <i>model</i>
-				data is transferred to a corresponding <i>view(s)</i> is determined
-				by... Comming Soon!
+				as <i>view</i> content. Similarly, fragments with <a
+					href="#textfrags">raw <code>content-type</code></a> will also be
+				interpreted as view content, but will have limited model interaction
+				capabilities. Most other
+				<code>content-type</code>
+				returned from fragment results will be interpreted as <i>model</i>
+				content. Not all of the <a
+					href="http://www.iana.org/assignments/media-types">standard
+					media types</a> are supported, but where they make sense <b>thymus.js</b>
+				attempts to make a smooth transition of <i>model</i> data into
+				corresponding views.
 			</p>
-			<ul>
-				<li><code>text/xml</code></li>
-				<li><code>application/*+xml</code> (where <b>*</b> is one of
-					the <a href="http://www.iana.org/assignments/media-types">standard
-						media types</a> for XML)</li>
-			</ul>
-			<h3 id="jsonfrags">JSON Fragments</h3>
+			<h3 id="jsonfrags">JSON Fragment Models</h3>
 			<p>
 				Fragments that are retrieved that have one of the JSON
 				<code>content-type</code>
@@ -315,6 +301,20 @@
 				<li><code>application/*json</code> (where <b>*</b> is one of
 					the <a href="http://www.iana.org/assignments/media-types">standard
 						media types</a> for JSON)</li>
+			</ul>
+			<h3 id="xmlfrags">XML Fragment Models</h3>
+			<p>
+				Fragments that are retrieved that have one of the XML
+				<code>content-type</code>
+				definitions below will be interpreted as <i>model</i> data. How <i>model</i>
+				data is transferred to a corresponding <i>view(s)</i> is determined
+				by... Comming Soon!
+			</p>
+			<ul>
+				<li><code>text/xml</code></li>
+				<li><code>application/*+xml</code> (where <b>*</b> is one of
+					the <a href="http://www.iana.org/assignments/media-types">standard
+						media types</a> for XML)</li>
 			</ul>
 		</div>
 	</div>
