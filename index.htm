@@ -103,20 +103,9 @@
 						<code>data-thx-include</code>
 						or
 						<code>data-thx-replace</code>
-						attribute (see <a href="#usage">usage section</a> for more
-						details). To <i id="deferred">defer</i> <b>thymus.js</b> from
-						loading any fragments until a later time, just add a
-						<code>data-thx-deferred-load="true"</code>
-						to the <b>thymus.js</b>
-						<code>script</code>
-						declaration. Loading <b>thymus.js</b> fragments anytime after
-						defferment can be accomplished by executing <strong><code>$(selector).thymus('frags.load');</code></strong>
-						where <i>selector</i> is a valid <a
-							href="http://api.jquery.com/category/selectors/">JQuery
-							selector</a> that will contain the DOM element(s) where fragments
-						will be loaded (automatic fragment loading uses
-						<code>$('html').thymus('frags.load');</code>
-						by default).
+						attribute (see the <a href="#usage">usage section</a> for more
+						details on using fragments and the <a href="#deferred">deferment
+							section</a> to prevent automatic fragment resolution).
 					</p>
 					<p>
 						<b>thymus.js</b> loads fragments using <a
@@ -129,41 +118,35 @@
 						<div class="panel-heading">Features</div>
 						<div class="panel-body">
 							<ul>
-								<li>Automatic fragment <i>inclusion</i> while a page loads (<a
-									href="#deferred">configurable</a>)
+								<li>Automatic or <a href="#deferred">deferred</a> fragment
+									<i>inclusion</i> or <i>replacement</i> while a page loads
 								</li>
-								<li>Automatic fragment <i>replacement</i> while a page loads
-									(<a href="#deferred">configurable</a>)
-								</li>
-								<li>Automatic fragment <a href="#attrpaths"><code>src</code>/<code>href</code>
-										resolution for relative paths</a> (<a href="#attrpaths">configurable</a>)
+								<li>Automatic fragment resolution for relative paths within
+									<a href="#attrpathsdflt">URI related attributes</a> (<a
+									href="#attrpaths">configurable</a>)
 								</li>
 								<li><a href="#deferred">Load fragments via script using
 										JQuery selectors</a></li>
 								<li>Multiple fragment definitions at the same fragment URL</li>
-								<li>Prevents repetitive calls to the same URL associated
-									with raw $.load(...) content (typical case when multiple
+								<li>Prevents repetitive calls to the same URL within a
+									single fragment load action (typical case when multiple
 									fragments reside at the same URL)</li>
 								<li><a href="#selfref">Self-Referencing templates</a>
 									(processing of fragments that reside in the base page)</li>
 								<li>Relatively infinite <a href="#nestedfrags">nesting of
 										fragments</a> (fragments within fragments)
 								</li>
-								<li><a href="#headfrags"><code>head</code> tag fragments</a></li>
+								<li><a href="#headfrags"><code>head</code> tag
+										fragments</a></li>
 								<li>Ability to override the processing of fargment results
-									via function</li>
-								<li>Automatic fragment loading or <a href="#deferred">deferred
-										fragment loading</a></li>
+									via <a href="#fragshandler">function handler</a>
+								</li>
 								<li>Maintains vertical scrolling positions associated with
 									named anchors that point to a location within a fragment (e.g.
 									<i>example.com/path#someNamedAnchorInAFrag</i>)
 								</li>
 								<li>DOM/JQuery compliant <a href="#fragcomplete">fragment
 										events</a> dispatched for each resource has been loaded or failed
-									to load (including scripts and nested fragments)
-								</li>
-								<li>DOM/JQuery compliant <a href="#fragscomplete">fragment
-										event</a> dispatched when all fragments have been loaded or failed
 									to load (including scripts and nested fragments)
 								</li>
 								<li><a href="#navcontrol">Navigation/Transition Control</a></li>

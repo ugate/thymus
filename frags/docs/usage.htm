@@ -459,16 +459,9 @@
 			</p>
 			<p id="fraginjs">
 				Similarly, we could have listened for the event using the element
-				where the <i>include</i> or <i>replace</i> attributes are defined by
-				doing
-				<code>$(myTemplateElement).on(type, function(event){...})</code>
-				- where
-				<code>type</code>
-				is one of the <a href="#fragevent">fragment event</a> type prefixes
-				(e.g.
-				<code>load.thx.frag</code>
-				). A <a href="#fragevent">fragment event</a> contains the following
-				properties:
+				where the <i>include</i> or <i>replace</i> attributes are defined <a
+					href="#fragseventprog">programmatically</a>. A <a href="#fragevent">fragment
+					event</a> contains the following properties:
 			</p>
 			<div id="fragevent" class="panel panel-default">
 				<div class="panel-heading">
@@ -519,11 +512,10 @@
 							<code>fragStack</code>
 						</div>
 						<div class="col-md-10">
-							an array of fragment objects in the ordered from the current
-							fragment to each of the consecutive nested parent fragments (will
-							have only one entry when the fragment is not nested within any
-							other fragments). Each entry will contain the following
-							properties:
+							an array of fragment objects in order from the current fragment
+							to each of the consecutive nested parent fragments (will have
+							only one entry when the fragment is not nested within any other
+							fragments). Each entry will contain the following properties:
 							<ul>
 								<li><code>url</code> - the fragment URL</li>
 								<li><code>target</code> - the fragment target</li>
@@ -609,8 +601,16 @@
 						<div class="col-md-2">
 							<code>error</code>
 						</div>
-						<div class="col-md-10">the Error object (if the fragment
-							loaded successfully error will be null)</div>
+						<div class="col-md-10">
+							an object representing error details that will contain the
+							following properties (if the fragment loaded successfully error
+							will be null):
+							<ul>
+								<li><code>message</code> - the error message</li>
+								<li><code>cause</code> - the originating error (if any)</li>
+								<li><code>status</code> - the HTTP status (if applicable)</li>
+							</ul>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -679,9 +679,8 @@
 			<p id="fragsinjs">
 				Similarly, we could have listened for the event using the element(s)
 				that initiated the loading of the <i>include</i> or <i>replace</i>
-				attributes by doing
-				<code>$('html').on('load.thx.frags', function(event){...})</code>
-				. A <a href="#fragsevent">fragments event</a> contains the following
+				attributes <a href="#fragseventprog">programmatically</a>. A <a
+					href="#fragsevent">fragments event</a> contains the following
 				properties:
 			</p>
 			<div id="fragsevent" class="panel panel-default">
@@ -730,8 +729,73 @@
 							detailed error messages (if all fragments loaded successfully,
 							errors will be empty)</div>
 					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>errors</code>
+						</div>
+						<div class="col-md-10">
+							an array of objects that represent error details- each object
+							will contain the following properties (if all the fragments
+							loaded successfully the array will be empty):
+							<ul>
+								<li><code>message</code> - the error message</li>
+								<li><code>cause</code> - the originating error (if any)</li>
+								<li><code>status</code> - the HTTP status (if applicable)</li>
+							</ul>
+						</div>
+					</div>
 				</div>
 			</div>
+			<h3 id="fragsprog">Programmatic Usage</h3>
+			<p>
+				By default, <b>thymus.js</b> loads any fragment/navigation/etc.
+				attribute designations that may exist within the
+				<code>html</code>
+				tag, at startup.To <i id="deferred">defer</i> <b>thymus.js</b> from
+				loading any fragments until a later time, just add a
+				<code>data-thx-deferred-load="true"</code>
+				to the <b>thymus.js</b>
+				<code>script</code>
+				declaration. Loading <b>thymus.js</b> fragments anytime after
+				deferment can be accomplished by executing a <a
+					href="#actionfragsload">fragments load action</a>.
+			</p>
+			<p>
+				Any of the following <b>thymus.js</b> actions can be invoked by
+				calling
+				<code>$(theSelector).thymus(theAction)</code>
+				(i.e.
+				<code>$('html').thymus('frags.load');</code>
+				) using one of the following actions:
+			</p>
+			<ul>
+				<li id="actionfragsload"><code>frags.load</code> - looks for
+					template attributes on DOM elements under the element that
+					initiated the plug-in call and loads any fragments/nested
+					fragments, performs any <a href="#actionnavreg">navigation
+						registrations</a> needed within returned fragments and</li>
+				<li id="actionnavreg"><code>nav.register</code> - loads all of
+					the fragments under the DOM element that initiated the plug-in call</li>
+			</ul>
+			<p>
+				Of course, the <a href="http://api.jquery.com/category/selectors/">JQuery
+					selector</a> doesn't have to be
+				<code>html</code>
+				, but keep in mind that each selector designation used to invoke <b>thymus.js</b>
+				actions will reprocess any corresponding <b>thymus.js</b> attributes
+				that reside within the selected elements.
+			</p>
+			<h4 id="fragseventprog">Programmatic Event Registration</h4>
+			<p>
+				Listening for <b>thymus.js</b> events can be done using the standard
+				JQuery syntax:
+				<code>$(myTemplateElement).on(type, function(event){...})</code>
+				- where
+				<code>type</code>
+				is one of the supported <b>thymus.js</b> events (e.g.
+				<code>$('html').on('load.thx.frag', function(event){...})</code>
+				).
+			</p>
 		</div>
 	</div>
 </body>

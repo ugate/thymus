@@ -16,12 +16,11 @@
 				conjunction with Thymeleaf. A Thymeleaf page can still use the
 				default
 				<code>data-thx-*</code>
-				attributes to process templates via the client that will retreive
-				fragments from pre-processed Thymeleaf resources that reside on
-				the server. It can also use any of the Thymeleaf template
-				attributes (ideal for prototyping Thymeleaf). It will simply pick
-				up any of the following attributes that may exist by the time <b>thymus.js</b>
-				loads.
+				attributes to process templates via the client to retreive fragments
+				from pre-processed Thymeleaf resources that reside on the server. It
+				can also use any of the Thymeleaf template attributes (ideal for
+				prototyping Thymeleaf). It will simply pick up any of the following
+				attributes that may exist by the time <b>thymus.js</b> loads.
 			</p>
 			<ul>
 				<li><code>data-thx-include</code>&dagger;</li>
@@ -110,22 +109,7 @@
 				will always be processed by <b>thymus.js</b> regardless of prior
 				Thymeleaf processing.
 			</p>
-			<div class="alert alert-success">
-				<strong>Tip:</strong> To ensure that <b>thymus.js</b> is ran in a
-				strickly prototyping mode (i.e. never ran on a client where
-				Thymeleaf is running on the server), simply add a
-				<code>th:remove</code>
-				attribute to the <b>thymus.js</b>
-				<code>script</code>
-				tag or wrap the <b>thymus.js</b>
-				<code>script</code>
-				tag in
-				<code>head</code>
-				tag that has a
-				<code>th:replace</code>
-				attribute.
-			</div>
-			<h4 id="thnav">Thymeleaf Prototype Navigation</h4>
+			<h4 id="thnav">Using <b>thymus.js</b> as a Thymeleaf prototype</h4>
 			<p>
 				Prototyping Thymeleaf applications for navigation can be achieved by
 				simply using the normal
@@ -144,6 +128,21 @@
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">th:text=</span><span style="color: #0000FF">&quot;#{signin}&quot;</span> <span style="color: #FF0000">th:attr=</span><span style="color: #0000FF">&quot;data-thx-replace-get=&#39;&#39;&quot;</span>
 	<span style="color: #FF0000">data-thx-replace-get=</span><span style="color: #0000FF">&quot;click :: index&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Sign in<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
+			<div class="alert alert-success">
+				<strong>Tip:</strong> To ensure that <b>thymus.js</b> is ran in a
+				strickly prototyping mode (i.e. never ran on a client where
+				Thymeleaf is running on the server), simply add a
+				<code>th:remove</code>
+				attribute to the <b>thymus.js</b>
+				<code>script</code>
+				tag or wrap the <b>thymus.js</b>
+				<code>script</code>
+				tag in
+				<code>head</code>
+				tag that has a
+				<code>th:replace</code>
+				attribute.
+			</div>
 		</div>
 	</div>
 </body>

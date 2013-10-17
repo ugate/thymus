@@ -137,22 +137,35 @@
 				<code>data-thx-context-path</code>
 				on the <b>thymus.js</b>
 				<code>script</code>
-				. Only
-				<code>href</code>
-				and
-				<code>src</code>
-				attributes with relative paths are eligable for updating. Any
-				<code>href</code>
-				/
-				<code>src</code>
-				attributes that contain URLs that begin with an <a
+				. By default, the following attributes are resolved:
+			</p>
+			<ul id="attrpathsdflt">
+				<li class="badge"><code>action</code></li>
+				<li class="badge"><code>archive</code></li>
+				<li class="badge"><code>background</code></li>
+				<li class="badge"><code>cite</code></li>
+				<li class="badge"><code>classid</code></li>
+				<li class="badge"><code>codebase</code></li>
+				<li class="badge"><code>data</code></li>
+				<li class="badge"><code>dynsrc</code></li>
+				<li class="badge"><code>formaction</code></li>
+				<li class="badge"><code>href</code></li>
+				<li class="badge"><code>icon</code></li>
+				<li class="badge"><code>longdesc</code></li>
+				<li class="badge"><code>lowsrc</code></li>
+				<li class="badge"><code>manifest</code></li>
+				<li class="badge"><code>poster</code></li>
+				<li class="badge"><code>profile</code></li>
+				<li class="badge"><code>src</code></li>
+				<li class="badge"><code>usemap</code></li>
+			</ul>
+			<p>
+				Any of the resolved attributes that contain URLs that begin with an
+				<a
 					href="http://en.wikipedia.org/wiki/URI_scheme#Official_IANA-registered_schemes">IANA
 					registered scheme</a> or begin with a <b>/</b> will <i>NOT</i> be
-				updated by <b>thymus.js</b>. When any
-				<code>href</code>
-				/
-				<code>src</code>
-				attributes within a fragment begin with a <a
+				updated by <b>thymus.js</b>. When any of the resolved attributes
+				within a fragment begin with a <a
 					href="http://tools.ietf.org/html/rfc3986#section-4.2">protocol-relative
 					URL</a> (i.e. <b>//</b>) and the page is being called using a <a
 					href="http://en.wikipedia.org/wiki/File_URI_scheme">file URI
@@ -295,7 +308,7 @@
 <span style="color: #000080; font-weight: bold">&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/nav/nav :: handleFrag()&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 </pre></div>
-			<div id="fragscompleteevent" class="panel panel-default">
+			<div id="fragshandler" class="panel panel-default">
 				<div class="panel-heading">
 					<h2>Fragment Result Handler</h2>
 				</div>
@@ -362,8 +375,15 @@
 						<div class="col-md-2">
 							<code>error</code>
 						</div>
-						<div class="col-md-10">when an error has occurred outside
-							the asynchronous request this will contain the error</div>
+						<div class="col-md-10">
+							an object that will contain the following properties (null when
+							an error has not occurred)
+							<ul>
+								<li><code>message</code> - the error message</li>
+								<li><code>cause</code> - the originating error (if any)</li>
+								<li><code>status</code> - the HTTP status (if applicable)</li>
+							</ul>
+						</div>
 					</div>
 				</div>
 			</div>

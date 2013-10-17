@@ -1,5 +1,5 @@
 /* ============================================
-   Thymus version 1.0 http://ugate.org
+   thymus.js version 1.0.0 https://github.com/ugate/thymus
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,8 +20,87 @@
 	var FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
 	var FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
 	var FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
+	var eventFuncs = {};
+	var eventFuncCnt = 0;
 	this.ieVersion = 0;
 	this.firstRun = true;
+	this.rootRun = true;
+
+	/**
+	 * Adds an event function that will execute the supplied function when the
+	 * specified DOM event occurs
+	 * 
+	 * @param ctx
+	 *            the {FragCtx}
+	 * @param a
+	 *            the action
+	 * @param pel
+	 *            the parent element
+	 * @param el
+	 *            the element the event is for
+	 * @param evt
+	 *            the event name
+	 * @param fx
+	 *            the function to execute when the event occurs
+	 */
+	function addEventFunc(ctx, a, pel, el, evt, fx) {
+		var en = getEventName(evt, false);
+		// prevent duplicating event listeners
+		if (el) {
+			for ( var k in eventFuncs) {
+				if (eventFuncs[k].el.is(el) && eventFuncs[k].event == en) {
+					eventFuncs[k].fx = fx;
+					eventFuncs[k].pel = pel;
+					return true;
+				}
+			}
+		}
+		var fn = a + ++eventFuncCnt;
+		var ev = null;
+		eventFuncs[fn] = {
+			fx : fx,
+			pel : pel,
+			el : el,
+			event : en
+		};
+		if (el) {
+			var $el = $(el);
+			$el.on(en, function() {
+				eventFuncs[fn].fx(eventFuncs[fn].pel, $(this));
+			});
+			$el.on('remove', function() {
+				eventFuncs[fn] = null;
+			});
+		} else {
+			throw new Error('Cannot register "' + en
+					+ '" event for function action "' + fn
+					+ '" on element(s) from selector "' + selector
+					+ '" prior to being added to the DOM');
+			// possible memory leaks may occur on the HTTP functions
+			// when dealing with raw data replacements that are removed
+			// from the DOM at a later time- currently not being used
+			// ev = ' ' + getEventName(evt, true) + '="' + '$(\'' + selector
+			// + '\').' + NS + '(\'' + fn + '\',this)"';
+		}
+		return {
+			funcName : fn,
+			eventAttrValue : ev,
+			eventName : en
+		};
+	}
+
+	/**
+	 * Gets a normalized event name
+	 * 
+	 * @param n
+	 *            the raw event name
+	 * @param u
+	 *            true to use the "on" prefix
+	 */
+	function getEventName(n, u) {
+		return n && n.toLowerCase().indexOf('on') == 0 ? u ? n : n.substr(2)
+				: u ? 'on' + n : n;
+	}
 
 	/**
 	 * When available, logs a message to the console
@@ -212,8 +291,6 @@
 		var TUPD = 'update';
 		var ctx = this;
 		this.opts = opts;
-		var funcs = {};
-		var httpFuncCnt = 0;
 		var includeReplaceAttrs = opts.includeAttrs.concat(opts.replaceAttrs);
 		var protocolForFile = opts.regexFileTransForProtocolRelative
 				.test(location.protocol) ? 'http:' : null;
@@ -248,7 +325,7 @@
 			a = typeof a === 'object' ? a : {
 				action : a
 			};
-			var hf = funcs[a.action];
+			var hf = eventFuncs[a.action];
 			if (hf && typeof hf.f === 'function') {
 				// directly invoke action as a function
 				hf.f(p, c);
@@ -324,47 +401,17 @@
 				isValid : v.length > 1
 			};
 			if (r.isValid) {
-				function addNavFunc(el) {
-					// prevent duplicating event listeners
-					if (el) {
-						for (var k in funcs) {
-							if (funcs[k].el.is(el)) {
-								return true;
-							}
-						}
-					}
-					r.funcName = r.action + ++httpFuncCnt;
-					funcs[r.funcName] = {
-						f : function(pel, ib) {
+				var rtn = addEventFunc(ctx, r.action, f.pel, el, r.event,
+						function(pel, ib) {
 							r.selector = ib;
 							ctx.exec(r, pel, ib);
-						},
-						el : el
-					};
-				}
-				var hasOn = r.event.toLowerCase().indexOf('on') == 0;
-				if (el) {
-					var $el = $(el);
-					if (!addNavFunc($el)) {
-						$el.on(hasOn ? r.event.substr(2) : r.event, function() {
-							funcs[r.funcName].f(f.pel, $(this));
 						});
-						$el.on('remove', function () {
-							funcs[r.funcName] = null;
-						});
-					}
-				} else {
-					// possible memory leaks may occur on the HTTP functions
-					// when dealing with raw data replacements that are removed
-					// from the DOM at a later time- currently not being used
-					addNavFunc(null);
-					r.onEvent = ' ' + (hasOn ? '' : 'on') + r.event
-							+ '="' + '$(\'' + selector + '\').' + NS
-							+ '(\'' + r.funcName + '\',this)"';
-				}
+				r.onEvent = rtn.eventAttrValue;
+				r.event = rtn.eventName;
 			} else {
-				t.addError('Expected at least two parameters for '
-						+ m, f);
+				t.addError('Expected at least two parameters for action "'
+						+ opts.actionNavInvoke + '" and method "' + r.method
+						+ '" for ' + v, f, null, null);
 			}
 			return r;
 		}
@@ -743,7 +790,7 @@
 						|| type == opts.eventFragsLoad) {
 					fire();
 				} else if (f && !f.u) {
-					t.addError('Invalid URL for ' + f.toString(), f);
+					t.addError('Invalid URL for ' + f.toString(), f, null, null);
 					t.ccnt++;
 					f.cancelled = true;
 				} else if (f) {
@@ -791,10 +838,15 @@
 				return c[url];
 			};
 			var e = [];
-			this.addError = function(em, f) {
-				e[e.length] = em;
+			this.addError = function(em, f, oc, hs) {
+				var eo = {
+					message : em,
+					cause : oc,
+					status : hs
+				};
+				e[e.length] = eo;
 				if (f) {
-					f.e = em;
+					f.e = eo;
 				}
 				return e;
 			};
@@ -895,7 +947,7 @@
 					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t, this);
 				}
 			};
-			this.p = function(x, jqxhr, ts, e) {
+			this.pv = function(x, jqxhr, ts, e) {
 				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, this);
 				if (this.cancelled) {
 					this.domDone(false);
@@ -903,7 +955,7 @@
 				}
 				if (ts || e) {
 					t.addError('Error at ' + this.toString() + ': ' + ts + '- '
-							+ e, this);
+							+ e, this, e, ts);
 					this.domDone(true);
 					return;
 				}
@@ -911,7 +963,7 @@
 				if (xIsJ && x.is('script')) {
 					if (jqxhr && jqxhr.status != 200) {
 						t.addError(jqxhr.status + ': ' + ts
-								+ ' URL="' + this.u + '"', this);
+								+ ' URL="' + this.u + '"', this, e, ts);
 						this.domDone(true);
 						return;
 					} else if (!jqxhr && this.u && this.t) {
@@ -954,6 +1006,9 @@
 					htmlDomAdjust(t, ctx, this.rs, false);
 				}
 				this.domDone(false);
+			};
+			this.pm = function(x, jqxhr, ts, e) {
+				
 			};
 			this.getTarget = function() {
 				return this.func && this.func.isValid ? this.func.run : this.t;
@@ -1093,7 +1148,7 @@
 			function done(pf, t, f) {
 				if (t.cnt > t.len) {
 					t.addError('Expected ' + t.len
-							+ ' fragments, but recieved ' + t.cnt, f);
+							+ ' fragments, but recieved ' + t.cnt, f, null, null);
 				}
 				if (f) {
 					f.done();
@@ -1109,7 +1164,7 @@
 					broadcast(opts.eventFragsChain, opts.eventFragsLoad, t);
 				}
 			}
-			function hndlFunc(f, cb, r, status, xhr, e) {
+			function hndlFunc(f, cb, r, status, xhr) {
 				if (f.func && f.func.isValid) {
 					f.func.run({
 						handle : {
@@ -1118,9 +1173,9 @@
 							data : r,
 							status : status,
 							xhr : xhr,
-							error : e,
+							error : f.e,
 							process : function(x) {
-								f.p(x);
+								f.pv(x);
 							}
 						}
 					});
@@ -1133,7 +1188,7 @@
 				function sdone(sf, jqxhr, ts, e) {
 					// when there is no xhr, assume inline script that needs to
 					// be processed on the target
-					sf.p(sf.el, jqxhr, ts, e);
+					sf.pv(sf.el, jqxhr, ts, e);
 					cb(jqxhr && (!ts || !e) ? $t : null, sf);
 				}
 				var url = $x.prop('src');
@@ -1172,7 +1227,7 @@
 				if (xhr) {
 					var mt = xhr.getResponseHeader('Content-Type');
 					if (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0) {
-						f.p(r);
+						f.pv(r);
 						cb(null, f);
 						return;
 					} else if (mt.indexOf('json') >= 0) {
@@ -1209,7 +1264,7 @@
 								hr = hr.replace(sc, '');
 							});
 						}
-						hf.p(hr);
+						hf.pv(hr);
 						cb($h, f);
 						return;
 					}
@@ -1223,7 +1278,7 @@
 					fs = $c.filter(f.s);
 					if (fs.length <= 0) {
 						t.addError('No matching results for ' + f.toString()
-								+ ' in\n' + r, f);
+								+ ' in\n' + r, f, null, status);
 						cb(null, f);
 						return;
 					}
@@ -1237,7 +1292,7 @@
 					if ($cf.is('script')) {
 						doScript(f, $cf, $cf, cb);
 					} else {
-						f.p($cf);
+						f.pv($cf);
 					}
 					cb($cf, f);
 				});
@@ -1272,15 +1327,17 @@
 						}).done(adone).fail(function(xhr, ts, e) {
 							var frgs = t.getFrags(f.u);
 							for (var i=0; i<frgs.length; i++) {
-								t.addError('Error at ' + f.toString() + ': ' + ts + '- ' + e, f);
-								if (!hndlFunc(f, cb, null, ts, xhr, e)) {
+								t.addError('Error at ' + f.toString() + ': ' + ts + '- ' + e, 
+										f, e, ts);
+								if (!hndlFunc(f, cb, null, ts, xhr)) {
 									cb(null, f);
 								}
 							}
 						});
 					}
 				} catch (e) {
-					t.addError('Error at ' + (f ? f.toString() : Frag) + ': ' + e, f);
+					t.addError('Error at ' + (f ? f.toString() : Frag) + ': '
+							+ e, f, e, null);
 					cb(null, f);
 				}
 			}
@@ -1348,7 +1405,10 @@
 			fragAttrs : [ 'data-thx-fragment', 'th\\:fragment', 'data-th-fragment' ],
 			includeAttrs : [ 'data-thx-include', 'th\\:include', 'data-th-include' ],
 			replaceAttrs : [ 'data-thx-replace', 'th\\:replace', 'data-th-replace' ],
-			urlAttrs : [ 'href', 'src' ],
+			urlAttrs : [ 'action', 'archive', 'background', 'cite', 'classid',
+					'codebase', 'data', 'dynsrc', 'formaction', 'href', 'icon',
+					'longdesc', 'lowsrc', 'manifest', 'poster', 'profile',
+					'src', 'usemap' ],
 			inculdeGetAttrs : [ 'data-thx-include-get' ],
 			replaceGetAttrs : [ 'data-thx-replace-get' ],
 			updateGetAttrs : [ 'data-thx-update-get' ],
@@ -1366,7 +1426,7 @@
 			fragsListenerAttr : 'data-thx-onfrags',
 			fragHeadAttr : 'data-thx-head-frag',
 			regexFragName : /^[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*$/,
-			regexFunc : /.+?\(/i,
+			regexFunc : /^[_$a-zA-Z\xA0-\uFFFF].+?\(/i,
 			regexFileExtension : /[^\/?#]+(?=$|[?#])/,
 			regexScriptTags : /<script[^>]*>([\\S\\s]*?)<\/script>/img,
 			regexIanaProtocol : /^(([a-z]+)?:|\/\/|#)/i,
@@ -1398,6 +1458,11 @@
 		 */
 		$.fn[NS] = function(a, altEl, opts) {
 			var o = $.extend({}, defs, opts);
+			if (firstRun && rootRun) {
+				// make sure the root document has navigation capabilities
+				rootRun = false;
+				$('html')[NS](o.actionNavRegister);
+			}
 			var x = null, xl = null;
 			var s = this.selector;
 			return this.each(function() {
@@ -1453,8 +1518,6 @@
 				throw e;
 			} else {
 				var $p = $('html');
-				// make sure the root document has navigation capabilities
-				$p[NS](defs.actionNavRegister);
 				if (!getPreLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR)) {
 					// auto-process the fragments
 					$p[NS](defs.actionLoadFrags);
