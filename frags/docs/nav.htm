@@ -5,7 +5,7 @@
 	<div id="navcontrol" class="panel panel-default">
 		<div class="panel-heading">
 			<h2>
-				Navigation and Model/View Transition Control
+				Routing and Model/View Transition Control
 			</h2>
 		</div>
 		<div class="panel-body app-code">
@@ -18,7 +18,7 @@
 					href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM events</a> are
 				received. <b>thymus.js</b> tries to conform to <a
 					href="http://en.wikipedia.org/wiki/Representational_state_transfer">RESTful</a>
-				conceptual design patterns. So naturally, wiring fragmented views
+				conceptual design patterns. So naturally, wiring fragmented model/views
 				into <b>thymus.js</b> requires the use of guidelines set forth by
 				the established HTTP methods. Determining how <i>model</i> data
 				and/or <i>views</i> are transfered to a page is determined by the
@@ -28,7 +28,7 @@
 				<i>replace</i> or <i>update</i> destination type and <i>*HTTP*</i>
 				would be replaced with one of the following HTTP method names (e.g.
 				<code>data-thx-include-get</code>
-				).
+				):
 			</p>
 			<ul>
 				<li class="badge">get</li>
@@ -40,13 +40,14 @@
 				From this point on we will refer to
 				<code>data-thx-*DTYPE*-*HTTP*</code>
 				to reference the entire suite of supported <b>thymus.js</b> HTTP
-				method attributes. The <b>thymus.js</b> HTTP attribute should
-				reside on the node where the DOM event will be triggered. The
-				symantics are similar to the
+				method attributes. The <b>thymus.js</b> HTTP attribute should reside
+				on the node where the DOM event will be triggered. The semantics are
+				similar to the
 				<code>data-thx-include</code>
 				/
 				<code>data-thx-replace</code>
-				attributes with the addition of some extra parameters.
+				attributes used with <a href="#fragusage">model/view fragments</a>
+				with the addition of some extra parameters.
 			</p>
 			<h4 id="httpsimple">Simple Navigation</h4>
 			<p>
@@ -271,22 +272,12 @@
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
-			<h2 id="modeltoview">Model-To-View Transitions</h2>
+			<h2 id="modeltoview">Model Routing</h2>
 			<p>
-				<b>thymus.js</b> interprets fragment results that have an
-				<code>text/html</code>
-				<code>content-type</code>
-				as <i>view</i> content. Similarly, fragments with <a
-					href="#textfrags">raw <code>content-type</code></a> will also be
-				interpreted as view content, but will have limited model interaction
-				capabilities. Most other
-				<code>content-type</code>
-				returned from fragment results will be interpreted as <i>model</i>
-				content. Not all of the <a
-					href="http://www.iana.org/assignments/media-types">standard
-					media types</a> are supported, but where they make sense <b>thymus.js</b>
-				attempts to make a smooth transition of <i>model</i> data into
-				corresponding views.
+				Not all of the <a href="http://www.iana.org/assignments/media-types">standard
+					media types</a> are supported for <i>model</i> fragments, but where
+				they make sense <b>thymus.js</b> attempts to make a smooth
+				transition of <i>model</i> data into corresponding <i>views</i>.
 			</p>
 			<h3 id="jsonfrags">JSON Fragment Models</h3>
 			<p>

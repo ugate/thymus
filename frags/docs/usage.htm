@@ -42,35 +42,68 @@
 				to the root context of the application relative to the page in
 				which <b>thymus.js</b> is loaded.
 			</p>
+			<h2 id="fragusage">Fragments</h2>
+			<p>
+				Fragments are at the core of <b>thymus.js</b> and are used to
+				populate full or partial updates to the browser UI. <b>thymus.js</b>
+				assumes that fragmented portions of the UI are fragile and
+				exceedingly dynamic in nature and therefore does not try to <i>bind</i>
+				data that may reside in various sections of the UI. Doing so is
+				prone to memory leaks- especially when a fragment contains
+				child/nested fragments. Instead, <b>thymus.js</b> utilizes the power
+				of <a href="http://api.jquery.com/category/selectors/">JQuery
+					selectors</a> to define routes for fragmented content. Not only does
+				this provide a friendly and familiar interface, but it also
+				eliminates the need to require <i>model</i> observability/binding
+				extensions via JavaScript and lends itself to stateless/<a
+					href="http://en.wikipedia.org/wiki/Representational_state_transfer">RESTful</a>
+				server APIs.
+			</p>
+			<p>
+				<b>thymus.js</b> recognizes two types of fragments. The first being
+				<i>view</i> fragments. Any fragments retrieved that have a
+				<code>content-type</code>
+				of
+				<code>text/html</code>
+				will be interpreted as a <i>view</i> content. Similarly, fragments
+				with <a href="#textfrags">raw <code>content-type</code>
+					identifiers
+				</a> will also be interpreted as <i>view</i> content, but will have
+				limited <i>model</i> interaction capabilities. Any of the <a
+					href="#modeltoview"><i>model</i> <code>content-type</code>
+					identifiers </a> and are interpreted as <i>model</i> content and
+				updated in corresponding <i>views</i> via <a href="#modeltoview"><i>model</i>
+					routing techniques</a>.
+			</p>
 			<p>
 				Fragments are simply defined using the
 				<code>data-thx-fragment</code>
-				attribute and assigning a unique fragment name/target to its
-				value. The fragment can then be used as either a replacement or
-				inclusion anywhere a
+				attribute and assigning a unique fragment name/target to its value.
+				The fragment can then be used as either a replacement or inclusion
+				anywhere a
 				<code>data-thx-replace</code>
 				or
 				<code>data-thx-include</code>
-				attribute is found that contains matching fragment name/target.
-				Each
+				attribute is found that contains matching fragment name/target. Each
 				<code>data-thx-replace</code>
 				/
 				<code>data-thx-include</code>
 				attribute contains two parts that are separated by a "<b>::</b>"
 				(the separator can be overridden using the
 				<code>data-thx-separator</code>
-				attribute on the <b>thymus.js</b> script definition). The first
-				part is the URL and should point to the fragment content that will
-				be loaded. The second part defines the fragment name/target that
-				should be included or replaced with the returned result of the URL
-				(see the <a href="#paths">Path Resolution</a> section for details
-				on how URLs are resolved and for fragment name options). The site
-				you are viewing uses the following fragment for the top navigation
-				bar that points to a URL <b>frags/nav/nav</b> and fragment called
-				<b>topnav</b>.
+				attribute on the <b>thymus.js</b> script definition or <a
+					href="#fragsoptsprog">programmatically by passing the
+					appropriate option parameter</a>). The first part is the URL and should
+				point to the fragment content that will be loaded. The second part
+				defines the fragment name/target that should be included or replaced
+				with the returned result of the URL (see the <a href="#paths">Path
+					Resolution</a> section for details on how URLs are resolved and for
+				fragment name options). The site you are viewing uses the following
+				fragment for the top navigation bar that points to a URL <b>frags/nav/nav</b>
+				and fragment called <b>topnav</b>.
 			</p>
-					<div style="overflow: auto; width: auto; padding: .2em .6em;">
-						<pre style="margin: 0; line-height: 125%">
+<div style="overflow: auto; width: auto; padding: .2em .6em;">
+<pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- that contains the following --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span
@@ -746,6 +779,109 @@
 					</div>
 				</div>
 			</div>
+			<h3 id="funcfrags">Customizing Fragment Results</h3>
+			<p>
+				Not only can fragment targets contain corresponding
+				<code>data-thx-fragment</code>
+				names or JQuery <i>selectors</i>, they can also contain a
+				<code>function</code>
+				that will handle raw fragment results.
+			</p>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text/javascript&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">function</span> handleFrag() {
+		<span style="color: #000080; font-weight: bold">var</span> handle = <span style="color: #000080; font-weight: bold">this</span>.handle;
+		<span style="color: #000080; font-weight: bold">var</span> newData = handle.data;
+		<span style="color: #008800; font-style: italic">// do something with newData then process it</span>
+		handle.process(newData);
+	}
+<span style="color: #000080; font-weight: bold">&lt;/script&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/nav/nav :: handleFrag()&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+</pre></div>
+			<div id="fragshandler" class="panel panel-default">
+				<div class="panel-heading">
+					<h2>Fragment Result Handler</h2>
+				</div>
+				<div class="panel-body">
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>source</code>
+						</div>
+						<div class="col-md-10">the DOM node that contains the
+							include/replace definition</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>type</code>
+						</div>
+						<div class="col-md-10">
+							either <b>include</b> or <b>replace</b>
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>data</code>
+						</div>
+						<div class="col-md-10">
+							the <a href="http://api.jquery.com/jQuery.ajax/">JQuery
+								AJAX data</a> (result string)
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>status</code>
+						</div>
+						<div class="col-md-10">
+							the <a href="http://api.jquery.com/jQuery.ajax/">JQuery
+								AJAX status</a>
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>xhr</code>
+						</div>
+						<div class="col-md-10">
+							the <a href="http://api.jquery.com/jQuery.ajax/">JQuery
+								AJAX XHR object</a>
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>process</code>
+						</div>
+						<div class="col-md-10">
+							a
+							<code>function</code>
+							that will process the <i>inclusion</i> or <i>replacement</i>.
+							Arguments:
+							<ol>
+								<li>the result <b>data</b> (raw or node) that will be <i>included</i>
+									or <i>replaced</i>
+								</li>
+							</ol>
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>error</code>
+						</div>
+						<div class="col-md-10">
+							an object that will contain the following properties (null when
+							an error has not occurred)
+							<ul>
+								<li><code>message</code> - the error message</li>
+								<li><code>cause</code> - the originating error (if any)</li>
+								<li><code>status</code> - the HTTP status (if applicable)</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="alert alert-warning">
+				<strong>Reminder!</strong> Keep in mind the
+				<code>function</code>
+				defined as the fragment target must be available for execution at
+				the time that the fragment result is returned.
+			</div>
 			<h3 id="fragsprog">Programmatic Usage</h3>
 			<p>
 				By default, <b>thymus.js</b> loads any fragment/navigation/etc.
@@ -796,6 +932,8 @@
 				<code>$('html').on('load.thx.frag', function(event){...})</code>
 				).
 			</p>
+			<h4 id="fragsoptsprog">Programmatic <b>thymus.js</b> Options</h4>
+			
 		</div>
 	</div>
 </body>
