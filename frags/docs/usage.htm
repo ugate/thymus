@@ -55,7 +55,7 @@
 					selectors</a> to define routes for fragmented content. Not only does
 				this provide a friendly and familiar interface, but it also
 				eliminates the need to require <i>model</i> observability/binding
-				extensions via JavaScript and lends itself to stateless/<a
+				extensions via JavaScript. This approach lends itself to stateless/<a
 					href="http://en.wikipedia.org/wiki/Representational_state_transfer">RESTful</a>
 				server APIs.
 			</p>
@@ -75,39 +75,54 @@
 				updated in corresponding <i>views</i> via <a href="#modeltoview"><i>model</i>
 					routing techniques</a>.
 			</p>
+			<p id="routingattrs">
+				Fragments themselves do not have to be explicitly defined. Instead,
+				a <b>routing attribute</b> is supplied to an element that will
+				contain two components shown in the semantics illustration below. 
+			</p>
+			<ul>
+				<li class="label label-default">routing path</li>
+				<li class="label"><b>::</b></li>
+				<li class="label label-default">result siphon</li>
+			</ul>
 			<p>
-				Fragments are simply defined using the
-				<code>data-thx-fragment</code>
-				attribute and assigning a unique fragment name/target to its value.
-				The fragment can then be used as either a replacement or inclusion
-				anywhere a
+				The first component defines a <b>path</b> to
+				the fragment that will be captured using the
+				<code>GET</code>
+				verb. The second uses a <a
+					href="http://api.jquery.com/category/selectors/">JQuery
+					selector</a> to define a <b>result siphon</b>. When a fragment result
+				contains <i>view</i> content the <b>result siphon</b> will be used
+				to select the portion of the fragment result that will be used in
+				the DOM. When the fragment result contains <i>model</i> content the
+				<b>result siphon</b> will be used to select the current document's
+				DOM elements where the <i>model</i> data will be used. See the <a
+					href="#paths">path resolution section</a> for more details on how
+				paths are resolved and the <a href="#navcontrol">routing section</a>
+				for more details on how <b>result siphons</b> use JQuery selectors.
+			</p>
+			<p>
+				A fragment can be used as either a replacement or inclusion anywhere
+				a
 				<code>data-thx-replace</code>
 				or
 				<code>data-thx-include</code>
-				attribute is found that contains matching fragment name/target. Each
-				<code>data-thx-replace</code>
-				/
-				<code>data-thx-include</code>
-				attribute contains two parts that are separated by a "<b>::</b>"
-				(the separator can be overridden using the
+				<b>routing attribute</b> is found throughout the document (including
+				within a fragment itself). Each <b>routing attribute</b>'s <b>path</b>
+				and <b>result siphon</b> are separated by a "<b>::</b>" (the
+				separator can be overridden using the
 				<code>data-thx-separator</code>
 				attribute on the <b>thymus.js</b> script definition or <a
 					href="#fragsoptsprog">programmatically by passing the
-					appropriate option parameter</a>). The first part is the URL and should
-				point to the fragment content that will be loaded. The second part
-				defines the fragment name/target that should be included or replaced
-				with the returned result of the URL (see the <a href="#paths">Path
-					Resolution</a> section for details on how URLs are resolved and for
-				fragment name options). The site you are viewing uses the following
-				fragment for the top navigation bar that points to a URL <b>frags/nav/nav</b>
-				and fragment called <b>topnav</b>.
+					appropriate option parameter</a>). Here is an example <b>routing
+					attribute</b> for a fragment <i>view</i>:
 			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;">
+			<div style="overflow: auto; width: auto; padding: .2em .6em;">
 <pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- that contains the following --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
+								style="color: #FF0000">class=</span><span
 								style="color: #0000FF">&quot;topnav&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 	...
@@ -116,13 +131,13 @@
 <span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
 								style="color: #FF0000">data-thx-replace=</span><span
-								style="color: #0000FF">&quot;frags/nav/nav :: topnav&quot;</span><span
+								style="color: #0000FF">&quot;frags/nav/nav :: .topnav&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
+								style="color: #FF0000">class=</span><span
 								style="color: #0000FF">&quot;topnav&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 		...
@@ -135,15 +150,15 @@
 				<code>data-thx-include</code>
 				instead of
 				<code>data-thx-replace</code>
-				which would have appended the fragment rather than replacing the
-				placeholder:
+				<b>routing attribute</b> which would have appended the fragment
+				rather than replacing the placeholder:
 			</p>
-					<div style="overflow: auto; width: auto; padding: .2em .6em;">
+			<div style="overflow: auto; width: auto; padding: .2em .6em;">
 						<pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- that contains the following --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
+								style="color: #FF0000">class=</span><span
 								style="color: #0000FF">&quot;topnav&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 	...
@@ -152,7 +167,7 @@
 <span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
 								style="color: #FF0000">data-thx-include=</span><span
-								style="color: #0000FF">&quot;frags/nav/nav :: topnav&quot;</span><span
+								style="color: #0000FF">&quot;frags/nav/nav :: .topnav&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;span&gt;</span>Top Nav<span
 								style="color: #000080; font-weight: bold">&lt;/span&gt;</span>
@@ -162,12 +177,12 @@
 <span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
 								style="color: #FF0000">data-thx-include=</span><span
-								style="color: #0000FF">&quot;frags/nav/nav :: topnav&quot;</span><span
+								style="color: #0000FF">&quot;frags/nav/nav :: .topnav&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;span&gt;</span>Top Nav<span
 								style="color: #000080; font-weight: bold">&lt;/span&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
+								style="color: #FF0000">class=</span><span
 								style="color: #0000FF">&quot;topnav&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 			...
@@ -180,23 +195,24 @@
 				Templates can also refer to fragments that exist in the same page
 				they are included/replaced in by using
 				<code>this</code>
-				or omitting the URL altogether (e.g.
-				<code>data-thx-include="::selfTemp"</code>
+				or omitting the <b>routing attribute</b>'s <b>path</b> altogether
+				(e.g.
+				<code>data-thx-include="::.my-inline-frag"</code>
 				).
 			</p>
-					<div style="overflow: auto; width: auto; padding: .2em .6em;">
+			<div style="overflow: auto; width: auto; padding: .2em .6em;">
 						<pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- a page with --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
 								style="color: #FF0000">data-thx-include=</span><span
-								style="color: #0000FF">&quot;this :: selfTemp&quot;</span><span
+								style="color: #0000FF">&quot;this :: .my-inline-frag&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
-								style="color: #0000FF">&quot;selfTemp&quot;</span><span
+								style="color: #FF0000">class=</span><span
+								style="color: #0000FF">&quot;my-inline-frag&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 		...
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
@@ -205,12 +221,12 @@
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
 								style="color: #FF0000">data-thx-include=</span><span
-								style="color: #0000FF">&quot;this :: selfTemp&quot;</span><span
+								style="color: #0000FF">&quot;this :: .my-inline-frag&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 		...
 		<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
-								style="color: #0000FF">&quot;selfTemp&quot;</span><span
+								style="color: #FF0000">class=</span><span
+								style="color: #0000FF">&quot;my-inline-frag&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 			...
 		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
@@ -218,8 +234,8 @@
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
-								style="color: #0000FF">&quot;selfTemp&quot;</span><span
+								style="color: #FF0000">class=</span><span
+								style="color: #0000FF">&quot;my-inline-frag&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 		...
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
@@ -228,35 +244,48 @@
 					</div>
 			<h3 id="nestedfrags">Multi-Level Nested Fragments</h3>
 			<p>
-				Not only can fragments be <i>included</i> or <i>replaced</i>
-				within a page, but the fragments themselves can load other
-				fragments (the number of levels of fragments within fragments can
-				be relatively endless). Just like normal fragments, each neseted
-				fragment will be processed asynchronously from its parent
-				fragment. This ensures that as a new fragment is discovered it
-				will be loaded and its content made available for any subsequent
-				fragments that are encountered that point to the same URL. It also
-				prevents unecessary calls for fragment content that may have more
-				than one fragment definition. The <i>Guest User</i> dropdown menu
-				in the top navigation bar illustrates the use of nested fragments.
-				When the <b>frags/nav/nav</b> fragment was encountered for the <b>topnav</b>
-				fragment it discovered a
+				Not only can fragments be <i>included</i> or <i>replaced</i> within
+				a page, but the fragments themselves can load other fragments (the
+				number of levels of fragments within fragments can be relatively
+				endless). Just like normal fragments, each neseted fragment will be
+				processed asynchronously from its parent fragment. This ensures that
+				as a new fragment is discovered it will be loaded and its content
+				made available for any subsequent fragments that are encountered
+				that point to the same <b>routing attribute</b>'s <b>path</b>. It
+				also prevents unecessary calls to fragment <b>path</b>s that might
+				be used in more than one <b>routing attribute</b> throughout the
+				fragment load action. For instance, when a <b>routing attribute</b>
+				is encountered that contains
+				<code>frags/nav/nav</code>
+				as its <b>path</b> and
+				<code>.topnav</code>
+				as its <b>result siphon</b> it may discover another <b>routing
+					attribute</b> within its own <b>routing siphon</b>. Lets say the <b>routing
+					attribute</b> found within the fragment's <b>path</b>/<b>routing
+					siphon</b> is another
 				<code>data-thx-replace</code>
-				within the results and proceeded to load <b>frags/user/user</b>
-				for the <b>user</b> fragment and loaded it into its parent
-				fragment. To illustrate this concept consider the following:
+				that defines it's own <b>path</b> as
+				<code>frags/user/user</code>
+				and <b>routing siphon</b> as
+				<code>.user</code>
+				. <b>thymus.js</b> will proceeded to load
+				<code>frags/user/user</code>
+				and select
+				<code>.user</code>
+				and replace the defining DOM node with the <b>routing siphon</b>/JQuery
+				selector content. To illustrate this concept consider the following:
 			</p>
-					<div style="overflow: auto; width: auto; padding: .2em .6em;">
+			<div style="overflow: auto; width: auto; padding: .2em .6em;">
 						<pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
+								style="color: #FF0000">class=</span><span
 								style="color: #0000FF">&quot;topnav&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
 								style="color: #FF0000">data-thx-replace=</span><span
-								style="color: #0000FF">&quot;frags/user/user :: user&quot;</span><span
+								style="color: #0000FF">&quot;frags/user/user :: .user&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 		...
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
@@ -264,7 +293,7 @@
 <span style="color: #008800; font-style: italic">&lt;!-- and assume a resource resides at &quot;frags/nav/user&quot; --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
+								style="color: #FF0000">class=</span><span
 								style="color: #0000FF">&quot;user&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 	...
@@ -273,17 +302,17 @@
 <span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
 								style="color: #FF0000">data-thx-replace=</span><span
-								style="color: #0000FF">&quot;frags/nav/nav :: topnav&quot;</span><span
+								style="color: #0000FF">&quot;frags/nav/nav :: .topnav&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
+								style="color: #FF0000">class=</span><span
 								style="color: #0000FF">&quot;topnav&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
+								style="color: #FF0000">class=</span><span
 								style="color: #0000FF">&quot;user&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 			...
@@ -347,11 +376,12 @@
 			<p>
 				<code>script</code>
 				tags will be inserted individually in the order they are defined
-				within a fragment. Just like any other fragments that are loaded
+				within a <b>routing attribute</b>'s <b>result siphon</b>. Just like
+				any other <b>result siphon</b>s for <i>view</i>s,
 				<code>script</code>
-				tags found within a fragment will also fire a <a href="#frag">fragment
-					event</a> for each script that is loaded within the fragment
-				destination. Multiple
+				tags found within a <b>result siphon</b> will also fire a <a
+					href="#frag">fragment event</a> for each script that is loaded
+				within the fragment destination. Multiple
 				<code>script</code>
 				tags can be wrapped in a parent node (like the following), but each
 				of them will still fire their own <a href="#frag">fragment event</a>
@@ -365,7 +395,7 @@
 	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>Never Rendered (outside fragment)<span
 								style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
+								style="color: #FF0000">id=</span><span
 								style="color: #0000FF">&quot;scripts&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;script </span><span
@@ -385,7 +415,7 @@
 								style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
 								style="color: #FF0000">data-thx-replace=</span><span
-								style="color: #0000FF">&quot;frags/script :: scripts&quot;</span><span
+								style="color: #0000FF">&quot;frags/script :: #scripts&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
@@ -393,7 +423,7 @@
 	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>My Page<span
 								style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-fragment=</span><span
+								style="color: #FF0000">id=</span><span
 								style="color: #0000FF">&quot;scripts&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;script&gt;function</span> tst(m){alert(m)}<span
@@ -401,16 +431,17 @@
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
 </pre>
-					</div>
+</div>
 		<div class="alert alert-info">
 			<strong>Note:</strong> You may have noticed that the
 			<code>script</code>
-			tags that are defined in the <b>scripts</b> fragment that have a
-			normal URL
+			tags that are defined in the
+			<code>#scripts</code>
+			<b>result siphon</b> that have a normal URL
 			<code>src</code>
-			are not present in the resulting <i>replacement</i>. This is
-			because there is nothing to <i>include</i>/<i>replace</i> in the
-			DOM. However, any
+			are not present in the resulting
+			<i>replacement</i>. This is because there is nothing to
+			<i>include</i>/<i>replace</i> in the DOM. However, any
 			<code>script</code>
 			that is inlined or contains a
 			<code>src</code>
@@ -432,16 +463,14 @@
 		</div>
 		<h3 id="frag">Fragment Events</h3>
 			<p>
-				After each time an attempt to load a fragment is made a <b>fragment
-					event</b> is fired. Also, each
+				After each time an attempt to process a fragment is made a <a
+					href="#fragevent">fragment event</a> is fired. Also, each
 				<code>script</code>
-				tag within a fragment will also fire its own <b>fragment event</b>.
-				Event propagation utilizes the <a
+				tag within a <b>result siphon</b> will also fire its own <b>fragment
+					event</b>. Event propagation utilizes the <a
 					href="http://api.jquery.com/trigger/">JQuery event trigger</a>
-				mechanism. Fragment events have full DOM capabilities (e.g. <a
-					href="http://api.jquery.com/event.stopPropagation/">event.stopPropagation</a>,
-				etc.) One way to listen to all incoming fragment events is to supply
-				a
+				mechanism. One way to listen to all incoming fragment events is to
+				supply a
 				<code>function</code>
 				to the
 				<code>data-thx-onfrag</code>
@@ -469,32 +498,29 @@
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
 </pre></div>
 			<p>
-				In the example above a
-				<code>function</code>
-				called <i>fragListener</i> is defined as the
+				In the example above a function called <i>fragListener</i> is
+				defined as the
 				<code>data-thx-onfrag</code>
-				. Every time an attempt is made to load a fragment and a response is
-				returned the <i>window.fragListener</i> function will be called.
-				Within the
-				<code>function</code>
-				,
+				. Every time an attempt is made to process a <b>result siphon</b>
+				the <i>window.fragListener</i> function will be called. Within the
+				function ,
 				<code>this</code>
-				will reference the element that initiated the fragment load while
-				the passed
+				will reference the element that contained the <b>routing
+					attribute</b> while the passed
 				<code>event</code>
 				will reference a <a href="#fragevent">fragment event</a>. Supplied
 				functions can also contain additional argument values by adding them
 				to the function signature (e.g.
 				<code>data-thx-onfrag="fragListener(event, 'myValue')"</code>
-				). The function will always pass
+				), but the function will always pass
 				<code>event</code>
 				as its first argument.
 			</p>
 			<p id="fraginjs">
-				Similarly, we could have listened for the event using the element
-				where the <i>include</i> or <i>replace</i> attributes are defined <a
-					href="#fragseventprog">programmatically</a>. A <a href="#fragevent">fragment
-					event</a> contains the following properties:
+				Similarly, we could have <a href="#fragseventprog">programmatically</a>
+				listened for the event using the element where the <b>routing
+					attribute</b> is defined. A <a href="#fragevent">fragment event</a>
+				contains the following properties:
 			</p>
 			<div id="fragevent" class="panel panel-default">
 				<div class="panel-heading">
@@ -512,74 +538,81 @@
 							one of the event types below
 							<ul>
 								<li><code>beforeload.thx.frag</code> - before the fragment
-									has been retrieved (when the <a
+									has been retrieved using the <b>routing attribute</b>'s <b>path</b>
+									(when the <a
 									href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
 									returns <b>true</b> the fragment will not be retrieved)</li>
 								<li><code>beforedom.thx.frag</code> - after the fragment
-									has been retrieved, but not updated in the DOM (when the <a
-									href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
+									has been retrieved using the <b>routing attribute</b>'s <b>path</b>,
+									but not updated in the DOM using the <b>result siphon</b> (when
+									the <a href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
 									returns <b>true</b> the fragment will not be updated in the
 									DOM)</li>
 								<li><code>afterdom.thx.frag</code> - after the fragment has
-									been retrieved and updated in the DOM (any child/nested
-									fragments may not be loaded yet)</li>
+									been retrieved using the <b>routing attribute</b>'s <b>path</b>and
+									updated in the DOM using the <b>result siphon</b> (any
+									child/nested fragments may not be loaded yet)</li>
 								<li><code>load.thx.frag</code> - after the fragment has
-									been retrieved, updated in the DOM and all child/nested
-									fragments have been loaded/cancelled/etc.</li>
+									been retrieved using the <b>routing attribute</b>'s <b>path</b>,
+									updated in the DOM using the <b>result siphon</b> and all
+									child/nested <b>routing attribute</b>'s have been
+									loaded/cancelled/etc.</li>
 							</ul>
-							Any of the above event types can be used when <a href="#fraginjs">programatically
-								registering a listener for the event</a>). See <a
+							Any of the above event types can be used when
+							<a href="#fraginjs">programatically registering a listener
+								for the event</a>). See <a
 								href="http://api.jquery.com/on/#event-names">JQuery event
-								naming</a> for namespace convention details.
+								naming</a> for namespace convention details for defining the
+							appropriate
+							<b>result siphon</b>.
 						</div>
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
-							<code>fragUrl</code>
-						</div>
-						<div class="col-md-10">the URL of the fragment that an
-							attempt was made to load</div>
-					</div>
-					<div class="row row-thymus">
-						<div class="col-md-2">
-							<code>fragStack</code>
+							<code>sourceEvent</code>
 						</div>
 						<div class="col-md-10">
-							an array of fragment objects in order from the current fragment
-							to each of the consecutive nested parent fragments (will have
-							only one entry when the fragment is not nested within any other
-							fragments). Each entry will contain the following properties:
-							<ul>
-								<li><code>url</code> - the fragment URL</li>
-								<li><code>target</code> - the fragment target</li>
-								<li><code>destination</code> - the fragment destination</li>
-								<li><code>source</code> - the fragment destination</li>
-							</ul>
+							the <b>event</b> defined in the <b>routing attribute</b> of the
+							fragment that initiated the fragment event (may be undefined/null
+							when not provided in the <b>routing attribute</b>)
 						</div>
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
-							<code>fragPendingPeerCount</code>
-						</div>
-						<div class="col-md-10">the number of child fragments that
-							are pending for the current fragment's parent fragment (if any)</div>
-					</div>
-					<div class="row row-thymus">
-						<div class="col-md-2">
-							<code>fragTarget</code>
+							<code>parameterSiphon</code>
 						</div>
 						<div class="col-md-10">
-							either the value used in a
-							<code>data-thx-fragment</code>
-							, <a href="http://api.jquery.com/category/selectors/">JQuery
-								selector</a> used to select the fragment or the
-							<code>function</code>
-							called that handled the processing of the fragment
+							the <a href="#paramsiphon"><b>parameter siphon</b></a> defined in
+							the <b>routing attribute</b> of the fragment (<a
+								href="http://api.jquery.com/category/selectors/">JQuery
+								selector</a> that extracted key/value pairs that were sent to the
+							server when retrieving the fragment- may be undefined if not
+							provided in the <b>routing attribute</b>)
 						</div>
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
-							<code>fragDestination</code>
+							<code>routingPath</code>
+						</div>
+						<div class="col-md-10">
+							the <b>routing path</b> defined in the <b>routing attribute</b>
+							of the fragment
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>resultSiphon</code>
+						</div>
+						<div class="col-md-10">
+							the <b>result siphon</b> defined in the <b>routing attribute</b>
+							of the fragment (usually a <a
+								href="http://api.jquery.com/category/selectors/">JQuery
+								selector</a>, but may also be a <a href="#fragshandler"><code>function</code></a>)
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>destinationSiphon</code>
 						</div>
 						<div class="col-md-10">
 							either the DOM element, a <a
@@ -589,7 +622,27 @@
 							<code>undefined</code>
 							when the fragment is a
 							<code>script</code>
-							.
+							or a <b>destination siphon</b> was not defined in the <b>routing
+								attribute</b>.
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>routingStack</code>
+						</div>
+						<div class="col-md-10">
+							an array of fragment objects in order from the current fragment
+							to each of the consecutive nested parent fragments (will have
+							only one entry when the fragment is not nested within any other
+							fragments). Each entry will contain the following properties:
+							<ul>
+								<li><code>routingPath</code> - the <b>routing path</b>
+									defined in the <b>routing attribute</b> of the fragment</li>
+								<li><code>resultSiphon</code> - the <b>result siphon</b>
+									defined in the <b>routing attribute</b> of the fragment</li>
+								<li><code>destination</code> - the fragment destination</li>
+								<li><code>source</code> - the fragment destination</li>
+							</ul>
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -606,6 +659,13 @@
 						<div class="col-md-10">the current number of total
 							fragments that will or have had an attempt to load (may grow as
 							new script tags or nested fragments are discovered)</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>fragPendingPeerCount</code>
+						</div>
+						<div class="col-md-10">the number of child fragments that
+							are pending for the current fragment's parent fragment (if any)</div>
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
@@ -666,7 +726,7 @@
 			<p>
 				Similar to <a href="#frag">fragment events</a>, a <a
 					href="#fragsevent">fragments event</a> will be fired once an
-				attempt to load all of the fragments/
+				attempt to process all <b>routing attribute</b>'s fragments/
 				<code>script</code>
 				/etc. has been made. One way to capture fragments events is to
 				supply a
@@ -694,9 +754,9 @@
 				<code>function</code>
 				called <i>done</i> is defined as the
 				<code>data-thx-onfrags</code>
-				. Once an attempt is made to load all the defined
-				fragment/scripts/nested fragments and a response is returned for
-				each of them the example <i>window.done</i>
+				. Once an attempt is made to load all the defined <b>routing
+					attribute</b>'s fragments/scripts/nested fragments and a response is
+				returned for each of them the example <i>window.done</i>
 				<code>function</code>
 				will be called with
 				<code>this</code>
@@ -710,11 +770,10 @@
 				).
 			</p>
 			<p id="fragsinjs">
-				Similarly, we could have listened for the event using the element(s)
-				that initiated the loading of the <i>include</i> or <i>replace</i>
-				attributes <a href="#fragseventprog">programmatically</a>. A <a
-					href="#fragsevent">fragments event</a> contains the following
-				properties:
+				Similarly, we could have <a href="#fragseventprog">programmatically</a>
+				listened for the event using the element(s) where the <b>routing
+					attribute</b>(s) are defined. A <a href="#fragsevent">fragments
+					event</a> contains the following properties:
 			</p>
 			<div id="fragsevent" class="panel panel-default">
 				<div class="panel-heading">
@@ -734,6 +793,13 @@
 							which is used when <a href="#fragsinjs">programatically
 								registering a listener for the event</a>)
 						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>fragCancelCount</code>
+						</div>
+						<div class="col-md-10">the total number of fragments that
+							were cancelled during the action</div>
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">

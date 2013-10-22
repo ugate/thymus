@@ -336,8 +336,8 @@
 				a.method = a.method ? a.method : 'GET';
 				if (a.fragTarget) {
 					loadFragments(c ? c : p, a, true, null);
-				} else if (a.fragUrl) {
-					location.href = adjustPath(getScriptCtxPath(), a.fragUrl,
+				} else if (a.routingPath) {
+					location.href = adjustPath(getScriptCtxPath(), a.routingPath,
 							script ? script.attr(opts.fragExtensionAttr) : '');
 				} else {
 					log('No fragment target specified for ' + a.action);
@@ -394,7 +394,7 @@
 				type : a.type,
 				event : av(v, 0),
 				onEvent : '',
-				fragUrl : av(v, 1),
+				routingPath : av(v, 1),
 				fragTarget : av(v, 2),
 				fragDest : av(v, 3),
 				funcName : '',
@@ -888,7 +888,7 @@
 				this.tt = TINC;
 			}
 			a = a ? a.split(opts.fragSep) : null;
-			this.u = !a ? t.tsel.fragUrl : a && a.length > 0 ? $.trim(a[0])
+			this.u = !a ? t.tsel.routingPath : a && a.length > 0 ? $.trim(a[0])
 					: null;
 			this.t = !a ? t.tsel.fragTarget : a && a.length > 1 ? $.trim(a[1])
 					: null;
@@ -947,7 +947,7 @@
 					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t, this);
 				}
 			};
-			this.pv = function(x, jqxhr, ts, e) {
+			this.px = function(x, xhr, ts, e) {
 				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, this);
 				if (this.cancelled) {
 					this.domDone(false);
@@ -961,12 +961,12 @@
 				}
 				var xIsJ = x instanceof jQuery;
 				if (xIsJ && x.is('script')) {
-					if (jqxhr && jqxhr.status != 200) {
-						t.addError(jqxhr.status + ': ' + ts
+					if (xhr && xhr.status != 200) {
+						t.addError(xhr.status + ': ' + ts
 								+ ' URL="' + this.u + '"', this, e, ts);
 						this.domDone(true);
 						return;
-					} else if (!jqxhr && this.u && this.t) {
+					} else if (!xhr && this.u && this.t) {
 						var sdi = this.u.indexOf('data:text/javascript,');
 						var ss = x.prop('type');
 						$('<script' + (typeof ss === 'string' && ss.length > 0 ? 
@@ -975,6 +975,7 @@
 							'</script>').appendTo(this.t);
 					}
 				} else {
+					var im = this.isModel(xhr);
 					if (this.tt === TREP) {
 						try {
 							var $x = $(x);
@@ -1007,10 +1008,18 @@
 				}
 				this.domDone(false);
 			};
-			this.pm = function(x, jqxhr, ts, e) {
-				
+			this.isModel = function(xhr) {
+				var mt = xhr ? xhr.getResponseHeader('Content-Type') : null;
+				return mt && (mt.indexOf('json') >= 0 || mt.indexOf('xml') >= 0);
 			};
-			this.getTarget = function() {
+			this.isSimpleView = function(xhr) {
+				var mt = xhr ? xhr.getResponseHeader('Content-Type') : null;
+				return mt && (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0);
+			};
+			this.isFullView = function(xhr) {
+				return !this.isModel(xhr) && !this.isSimpleView(xhr);
+			};
+			this.getResultSiphon = function() {
 				return this.func && this.func.isValid ? this.func.run : this.t;
 			};
 			this.getStack = function() {
@@ -1018,8 +1027,8 @@
 				var cf = this;
 				do {
 					us[us.length] = {
-						url : cf.u,
-						target : cf.getTarget(),
+						routingPath : cf.u,
+						resultSiphon : cf.getResultSiphon(),
 						destination : cf.d,
 						source : cf.rs
 					};
@@ -1052,10 +1061,10 @@
 			e.fragCount = t.cnt;
 			e.fragCurrTotal = t.len;
 			e.fragPendingPeerCount = f && f.pf ? f.pf.ccnt(null) : 0;
-			e.fragUrl = f ? f.u : undefined;
-			e.fragStack = f ? f.getStack() : undefined;
-			e.fragTarget = f ? f.getTarget() : undefined;
-			e.fragDestination = f ? f.d : undefined;
+			e.routingPath = f ? f.u : undefined;
+			e.routingStack = f ? f.getStack() : undefined;
+			e.resultSiphon = f ? f.getResultSiphon() : undefined;
+			e.destinationSiphon = f ? f.d : undefined;
 			e.source = f ? f.rs instanceof jQuery ? f.rs : f.el : undefined;
 			e.error = f ? f.e : undefined;
 			e.scope = t.scope;
@@ -1175,7 +1184,7 @@
 							xhr : xhr,
 							error : f.e,
 							process : function(x) {
-								f.pv(x);
+								f.px(x);
 							}
 						}
 					});
@@ -1188,7 +1197,7 @@
 				function sdone(sf, jqxhr, ts, e) {
 					// when there is no xhr, assume inline script that needs to
 					// be processed on the target
-					sf.pv(sf.el, jqxhr, ts, e);
+					sf.px(sf.el, jqxhr, ts, e);
 					cb(jqxhr && (!ts || !e) ? $t : null, sf);
 				}
 				var url = $x.prop('src');
@@ -1224,15 +1233,10 @@
 				if (hndlFunc(f, cb, r, status, xhr)) {
 					return;
 				}
-				if (xhr) {
-					var mt = xhr.getResponseHeader('Content-Type');
-					if (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0) {
-						f.pv(r);
-						cb(null, f);
-						return;
-					} else if (mt.indexOf('json') >= 0) {
-						// TODO : handle JSON data using name matching
-					}
+				if (f.isModel(xhr) || f.isSimpleView(xhr)) {
+					f.px(r, status, xhr, null);
+					cb(null, f);
+					return;
 				}
 				// TODO : htmlDataAdjust processes the entire fragment response-
 				// should only adjust the desired fragment
@@ -1264,7 +1268,7 @@
 								hr = hr.replace(sc, '');
 							});
 						}
-						hf.pv(hr);
+						hf.px(hr);
 						cb($h, f);
 						return;
 					}
@@ -1292,7 +1296,7 @@
 					if ($cf.is('script')) {
 						doScript(f, $cf, $cf, cb);
 					} else {
-						f.pv($cf);
+						f.px($cf);
 					}
 					cb($cf, f);
 				});

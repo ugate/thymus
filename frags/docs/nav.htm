@@ -9,24 +9,25 @@
 			</h2>
 		</div>
 		<div class="panel-body app-code">
-			<h3 id="httpmethods">DOM Event Driven Fragments</h3>
+			<h3 id="httpmethods">DOM Event Driven Fragments (<b>DOM routing attribute</b>s)</h3>
 			<p>
 				There are times where it's desirable to load fragment views and/or
 				models after some action has taken place. In this case, one of the <a
 					href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html">HTTP
-					Methods</a> can be used whenever one or more <a
+					Methods</a>/<i>verbs</i> can be used whenever one or more <a
 					href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM events</a> are
 				received. <b>thymus.js</b> tries to conform to <a
 					href="http://en.wikipedia.org/wiki/Representational_state_transfer">RESTful</a>
-				conceptual design patterns. So naturally, wiring fragmented model/views
-				into <b>thymus.js</b> requires the use of guidelines set forth by
-				the established HTTP methods. Determining how <i>model</i> data
-				and/or <i>views</i> are transfered to a page is determined by the
-				type of HTTP method name used on one of the corresponding
-				<code>data-thx-*DTYPE*-*HTTP*</code>
-				attributes; where <i>*DTYPE*</i> would be replaced with either an <i>include</i>,
-				<i>replace</i> or <i>update</i> destination type and <i>*HTTP*</i>
-				would be replaced with one of the following HTTP method names (e.g.
+				conceptual design patterns. So naturally, wiring fragmented
+				model/views into <b>thymus.js</b> requires the use of guidelines set
+				forth by the established HTTP methods. Determining how <i>model</i>
+				data and/or <i>views</i> are transfered to a page is determined by
+				the type of HTTP method <i>verb</i> used on one of the corresponding
+				<code>data-thx-*DTYPE*-*VERB*</code>
+				<b>DOM routing attribute</b>s; where <i>*DTYPE*</i> would be
+				replaced with either an <i>include</i>, <i>replace</i> or <i>update</i>
+				destination type and <i>*VERB*</i> would be replaced with one of the
+				following HTTP method <i>verbs</i> (e.g.
 				<code>data-thx-include-get</code>
 				):
 			</p>
@@ -38,41 +39,48 @@
 			</ul>
 			<p>
 				From this point on we will refer to
-				<code>data-thx-*DTYPE*-*HTTP*</code>
-				to reference the entire suite of supported <b>thymus.js</b> HTTP
-				method attributes. The <b>thymus.js</b> HTTP attribute should reside
+				<code>data-thx-*DTYPE*-*VERB*</code> as a <b>DOM routing attribute</b>
+				to reference the entire suite of supported <b>thymus.js</b> destination type/HTTP
+				method verb attributes. <b>DOM routing attribute</b>s should reside
 				on the node where the DOM event will be triggered. The semantics are
-				similar to the
-				<code>data-thx-include</code>
-				/
-				<code>data-thx-replace</code>
-				attributes used with <a href="#fragusage">model/view fragments</a>
-				with the addition of some extra parameters.
+				similar to the typical <a href="#routingattrs">routing attribute</a>
+				with the addition of some extra semantics illustrated below.
 			</p>
+			<ul>
+				<li class="label label-default">event</li>
+				<li class="label"><b>::</b></li>
+				<li class="label label-default">parameter siphon</li>
+				<li class="label"><b>::</b></li>
+				<li class="label label-default">routing path</li>
+				<li class="label"><b>::</b></li>
+				<li class="label label-default">result siphon</li>
+				<li class="label"><b>::</b></li>
+				<li class="label label-default">destination siphon</li>
+			</ul>
 			<h4 id="httpsimple">Simple Navigation</h4>
 			<p>
 				Navigating to other pages can be as simple as providing a normal
 				link that contains an
 				<code>href</code>
-				(see <a href="#attrpaths">attibute path resolution techniques</a>
+				(see <a href="#attrpaths">attribute path resolution techniques</a>
 				for more details). A DOM event can also be used by just providing a
-				<code>data-thx-*DTYPE*-*HTTP*</code>
-				with just an event name and a corresponding target path:
+				<b>DOM routing attribute</b> with just an <b>event</b> name and a
+				corresponding <b>routing path</b>:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-replace-get=</span><span style="color: #0000FF">&quot;click :: path/to/other/page&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Sign in<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-replace-get=</span><span style="color: #0000FF">&quot;click :: :: path/to/other/page&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Sign in<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
 			<div class="panel panel-success">
 				<div class="panel-heading">Working example that will navigate
 					to an example sign in page</div>
 				<div class="panel-body">
 					<button type="button" class="btn btn-primary"
-						data-thx-replace-get="click :: login">Goto Sign In Page</button>
+						data-thx-replace-get="click :: :: login">Goto Sign In Page</button>
 				</div>
 			</div>
 			<h4 id="httpasyncself">Self-targeting Asynchronous Transfers</h4>
 			<p>
 				A self-targeting asynchronous transfer is an
-				<code>data-thx-*DTYPE*-*HTTP*</code>
+				<code>data-thx-*DTYPE*-*VERB*</code>
 				attribute that has a value that defines a fragment target, but
 				does not define a destination target. Consider the following:
 			</p>
@@ -209,9 +217,9 @@
 			</div>
 			<p>
 				A
-				<code>data-thx-update-*HTTP*</code>
+				<code>data-thx-update-*VERB*</code>
 				works similar to a
-				<code>data-thx-include-*HTTP*</code>
+				<code>data-thx-include-*VERB*</code>
 				except it will remove any prior fragment insertions made (in the
 				example above that would mean any
 				<code>.user-detail</code>
