@@ -30,6 +30,10 @@ function fragListener(event) {
 function fragsListener(event) {
 	loaded = true;
 	event.log();
+	if ($pt) {
+		$pt.html($pt.html() + ' of ' + event.fragCount + ' fragment(s) @ ' 
+				+ (event.loadTime / 1000) + ' sec');
+	}
 	if (event.scope.prop('tagName').toLowerCase() !== 'html') {
 		return;
 	}

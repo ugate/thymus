@@ -17,7 +17,7 @@
 						<span class="icon-stack"> <i
 							class="icon-sign-blank icon-muted icon-stack-base"></i> <i
 							class="icon-leaf icon-thymus-stacked"></i> <i
-							class="icon-thymus-text-dark">Thymus</i>
+							class="icon-thymus-text-dark">thymus.js</i>
 					</span>
 					</a>
 				</div>
@@ -66,11 +66,11 @@
 					<span class="icon-bar"></span> <span class="icon-bar"></span> <span
 						class="icon-bar"></span>
 				</button>
-				<a class="navbar-brand" style="font-size: 12px; font-weight: bold;"
-					href="http://ugate.org" target="_blank"><img
+				<a class="navbar-brand" href="http://ugate.org" target="_blank"
+					title="maintained by ugate.org" th:title="#{company.by}"><img
 					src="https://secure.gravatar.com/avatar/e46c1c9ed5fbfebc5277b2661a2350cd?s=140&d=https://github.com/images/gravatars/gravatar-140.png"
-					width="32" height="32" /> maintained by <span th:text="#{company}">ugate.org</span>
-					<span th:text="${#calendars.year(#calendars.createNow())}"></span></a>
+					width="32" height="32" /> <span
+					th:text="${#calendars.year(#calendars.createNow())}"></span></a>
 			</div>
 			<div class="collapse navbar-collapse bottomnav-collapse">
 				<ul class="nav navbar-nav navbar-right">

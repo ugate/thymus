@@ -5,7 +5,7 @@
 	<div id="navcontrol" class="panel panel-default">
 		<div class="panel-heading">
 			<h2>
-				Routing and Model/View Transition Control
+				Fragment Routing and Transition Control
 			</h2>
 		</div>
 		<div class="panel-body app-code">
@@ -46,17 +46,74 @@
 				similar to the typical <a href="#routingattrs">routing attribute</a>
 				with the addition of some extra semantics illustrated below.
 			</p>
-			<ul>
-				<li class="label label-default">event</li>
+			<ul class="well thymus-well">
+				<li class="label label-info">event</li>
 				<li class="label"><b>::</b></li>
-				<li class="label label-default">parameter siphon</li>
+				<li class="label label-info">parameter siphon</li>
 				<li class="label"><b>::</b></li>
-				<li class="label label-default">routing path</li>
+				<li class="label label-info">routing path</li>
 				<li class="label"><b>::</b></li>
-				<li class="label label-default">result siphon</li>
+				<li class="label label-info">result siphon</li>
 				<li class="label"><b>::</b></li>
-				<li class="label label-default">destination siphon</li>
+				<li class="label label-info">destination siphon</li>
 			</ul>
+			<div class="panel panel-info">
+				<div class="panel-body">
+					<h4 id="domevent">
+						<span class="label label-info">event</span>
+					</h4>
+					<p>
+						The <b>DOM routing attribute</b>'s <b>event</b> parameter indicates
+						a <a href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM event</a>
+						that will trigger the fragment transition from/to the client. While
+						most of the DOM events will directly equate to the normal <a
+							href="http://api.jquery.com/on/"><code>$.on(event, ...);</code></a>
+						registrations, there is one special case that <b>thymus.js</b> will
+						pickup regardless of the element that the <b>DOM routing
+							attribute</b> is defined on. A
+						<code>load</code>
+						event will cause <b>thymus.js</b> to automatically process the
+						fragment when the page first loads provided that loading has not
+						been <a href="#fragsprog">deferred</a>. This is very similar to how
+						<a href="#fragusage">simple</a> <b>routing attribute</b>s are
+						processed, but allows for additional siphons to be passed as well as
+						control over the HTTP method used.
+					</p>
+					<h4 id="domparamsiphon">
+						<span class="label label-info">parameter siphon</span>
+					</h4>
+					<p>
+						The <b>DOM routing attribute</b>'s <b>parameter siphon</b> is a <a
+							href="http://api.jquery.com/category/selectors/">JQuery
+							selector</a> that will capture parameters that will be sent along
+						with the <b>routing path</b>. See the <a href="#otherfragtargets">fragment
+							siphons section</a> for more details on how <b>parameter siphon</b>s
+						use JQuery selectors.
+					</p>
+					<h4 id="domroutingpath">
+						<span class="label label-info">routing path</span>
+					</h4>
+					<p
+						data-thx-replace="frags/docs/usage :: [data-demo=&quot;routing-path&quot;]">Loading...</p>
+					<h4 id="domresultsiphon">
+						<span class="label label-info">result siphon</span>
+					</h4>
+					<p
+						data-thx-replace="frags/docs/usage :: [data-demo=&quot;result-siphon&quot;]">Loading...</p>
+					<h4 id="domdestinationsiphon">
+						<span class="label label-info">destination siphon</span>
+					</h4>
+					<p>
+						The <b>DOM routing attribute</b>'s <b>destination siphon</b> is a
+						<a href="http://api.jquery.com/category/selectors/">JQuery
+							selector</a> that will be used to define destination nodes within the
+						DOM where the <b>result siphon</b>ed fragment results will be
+						placed. See the <a href="#otherfragtargets">fragment siphons
+							section</a> for more details on how <b>destination siphon</b>s use
+						JQuery selectors.
+					</p>
+				</div>
+			</div>
 			<h4 id="httpsimple">Simple Navigation</h4>
 			<p>
 				Navigating to other pages can be as simple as providing a normal
@@ -64,8 +121,9 @@
 				<code>href</code>
 				(see <a href="#attrpaths">attribute path resolution techniques</a>
 				for more details). A DOM event can also be used by just providing a
-				<b>DOM routing attribute</b> with just an <b>event</b> name and a
-				corresponding <b>routing path</b>:
+				<b>DOM routing attribute</b> with just an <b>event</b> name, an
+				optional <b>parameter siphon</b> and a corresponding <b>routing
+					path</b>:
 			</p>
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-replace-get=</span><span style="color: #0000FF">&quot;click :: :: path/to/other/page&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Sign in<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
@@ -79,19 +137,21 @@
 			</div>
 			<h4 id="httpasyncself">Self-targeting Asynchronous Transfers</h4>
 			<p>
-				A self-targeting asynchronous transfer is an
-				<code>data-thx-*DTYPE*-*VERB*</code>
-				attribute that has a value that defines a fragment target, but
-				does not define a destination target. Consider the following:
+				A self-targeting asynchronous transfer is a <b>DOM routing
+					attribute</b> that has a value that defines a <b>event</b>, an optional
+				<b>parameter siphon</b>, a <b>routing path</b> and an optional <b>result
+					siphon</b>, but does not define a <b>destination siphon</b>. In this
+				case the <b>destination siphon</b> will default to the node where
+				the <b>DOM routing attribute</b> is defined. Consider the following:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
+			<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	...
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- assume a page contains the following --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">data-thx-replace-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">data-thx-replace-get=</span><span style="color: #0000FF">&quot;click :: :: path/to/user :: .user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 		Load User
 	<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
@@ -105,14 +165,12 @@
 </pre></div>
 			<div class="panel panel-success">
 				<div class="panel-heading">
-					Working self-targeting
-					<code>data-thx-replace-get</code>
-					example:
+					Self-targeting <b>destination siphon</b> demo:
 				</div>
 				<div class="panel-body">
 					<button type="button" class="btn btn-primary"
-						data-thx-replace-get="click :: frags/user/user :: user">Replace
-						With User</button>
+						data-thx-replace-get="click :: :: frags/user/user :: user">Replace
+						With Generic User</button>
 				</div>
 			</div>
 			<p>
@@ -126,14 +184,14 @@
 <span style="color: #008800; font-style: italic">&lt;!-- assume a page contains the following --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: :: path/to/user :: .user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Click to load next user...<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- when the div is clicked and the fragment is loaded and will result in --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: :: path/to/user :: .user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Click to load next user...<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 			...
@@ -143,7 +201,7 @@
 <span style="color: #008800; font-style: italic">&lt;!-- another click on the div would result in --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: :: path/to/user :: .user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Click to load next user...<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 			...
@@ -158,8 +216,8 @@
 			<h4 id="httpasyncdest">Explicit Destination Asynchronous Transfers</h4>
 			<p>
 				The most granular of the DOM event driven behaviors is one that
-				defines a destination target. The destination target tells <b>thymus.js</b>
-				where the returned fragment should be <i>include</i> or <i>replaced</i>.
+				defines a <b>destination siphon</b>. The <b>destination siphon</b>t
+				tells <b>thymus.js</b> where the returned fragment should be placed.
 				Following the previous trend of examples...
 			</p>
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
@@ -169,7 +227,7 @@
 <span style="color: #008800; font-style: italic">&lt;!-- assume a page contains the following --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span>
-		<span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail :: #userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Load User<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+		<span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: :: path/to/user :: .user-detail :: #userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Load User<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Users:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
@@ -177,7 +235,7 @@
 <span style="color: #008800; font-style: italic">&lt;!-- when the button is clicked and the fragment is loaded and will result in --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span>
-		<span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail :: #userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Load User<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+		<span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: :: path/to/user :: .user-detail :: #userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Load User<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Users:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
@@ -189,7 +247,7 @@
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> 
-		<span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: path/to/user :: .user-detail :: #userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Load User<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+		<span style="color: #FF0000">data-thx-include-get=</span><span style="color: #0000FF">&quot;click :: :: path/to/user :: .user-detail :: #userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Load User<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Users:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
@@ -204,82 +262,38 @@
 </pre></div>
 			<div class="panel panel-success">
 				<div class="panel-heading">
-					Working
-					<code>data-thx-include-get</code>
-					with an explicit destination example:
+					Explicit <b>destination siphon</b> <i>include</i> demo:
 				</div>
 				<div class="panel-body">
 					<button type="button" class="btn btn-primary"
-						data-thx-include-get="click :: frags/user/user :: user :: #userDest2">Load
+						data-thx-include-get="click :: :: frags/user/user :: user :: #userDest2">Load
 						User</button>
 					<div id="userDest2" class="well"></div>
 				</div>
 			</div>
 			<p>
-				A
-				<code>data-thx-update-*VERB*</code>
-				works similar to a
-				<code>data-thx-include-*VERB*</code>
-				except it will remove any prior fragment insertions made (in the
-				example above that would mean any
+				An <i>update</i> <b>DOM routing attribute</b> works similar to a <i>include</i>
+				<b>DOM routing attribute</b> except it will remove any prior
+				fragment insertions made before appending the fragment results. In
+				the example above, that would mean any
 				<code>.user-detail</code>
 				under
 				<code>userDest</code>
 				would get replaced with the last
 				<code>.user-detail</code>
-				result).
+				result.
 			</p>
 			<div class="panel panel-success">
 				<div class="panel-heading">
-					Working
-					<code>data-thx-update-get</code>
-					with an explicit destination example:
+					Explicit <b>destination siphon</b> <i>update</i> demo:
 				</div>
 				<div class="panel-body">
 					<button type="button" class="btn btn-primary"
-						data-thx-update-get="click :: frags/user/user :: user :: #userDest3">Load
+						data-thx-update-get="click :: :: frags/user/user :: user :: #userDest3">Load
 						User</button>
 					<div id="userDest3" class="well"></div>
 				</div>
 			</div>
-			<h3 id="textfrags">Raw Fragment Views</h3>
-			<p>
-				Fragments that are retrieved that have one of the
-				<code>content-type</code>
-				definitions below will be treated as raw read-only <i>view</i>
-				inclusions/replacements:
-			</p>
-			<ul>
-				<li><code>text/plain</code></li>
-				<li><code>application/octet-stream</code></li>
-			</ul>
-			<p>Because there is no fragment name/target assocaited with the
-				returned data it can be ommitted from the inclusion/replcement
-				attribute. So, only a URL will remain. Similar to the following:</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- the the following replacement --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-replace=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>Will be replaced.<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- will result in the following --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
-	This is the content from raw-data.txt
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- while the following include --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- will result in the following --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
-		This is the content from raw-data.txt
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-</pre></div>
 			<h2 id="modeltoview">Model Routing</h2>
 			<p>
 				Not all of the <a href="http://www.iana.org/assignments/media-types">standard

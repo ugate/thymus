@@ -94,6 +94,10 @@ div.app-scroll .scroll-spy {
 	overflow-y: auto;
 }
 
+.thymus-well {
+	overflow: auto;
+}
+
 .icon-green {
 	color: #00ff00 !important;
 }
@@ -348,5 +352,9 @@ section,.form-signin {
 	}
 	.rolodex>div {
 		display: inherit;
+	}
+	div.app-scroll>.app-scroll-nav li>a {
+		padding-left: 5px;
+		padding-right: 5px;
 	}
 }

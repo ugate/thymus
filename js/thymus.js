@@ -334,7 +334,7 @@
 			} else if (a.action === opts.actionNavInvoke) {
 				// perform navigation action either as a partial or full page
 				a.method = a.method ? a.method : 'GET';
-				if (a.fragTarget) {
+				if (a.resultSiphon) {
 					loadFragments(c ? c : p, a, true, null);
 				} else if (a.routingPath) {
 					location.href = adjustPath(getScriptCtxPath(), a.routingPath,
@@ -392,11 +392,12 @@
 				action : opts.actionNavInvoke,
 				method : t.method,
 				type : a.type,
-				event : av(v, 0),
 				onEvent : '',
-				routingPath : av(v, 1),
-				fragTarget : av(v, 2),
-				fragDest : av(v, 3),
+				event : av(v, 0),
+				paramSiphon : av(v, 1),
+				routingPath : av(v, 2),
+				resultSiphon : av(v, 3),
+				destSiphon : av(v, 4),
 				funcName : '',
 				isValid : v.length > 1
 			};
@@ -789,7 +790,7 @@
 						|| type == opts.eventFragLoad
 						|| type == opts.eventFragsLoad) {
 					fire();
-				} else if (f && !f.u) {
+				} else if (f && !f.rp) {
 					t.addError('Invalid URL for ' + f.toString(), f, null, null);
 					t.ccnt++;
 					f.cancelled = true;
@@ -809,28 +810,34 @@
 		 * 
 		 * @param s
 		 *            the scope element(s) of the tracking
-		 * @param tsel
+		 * @param siphon
 		 *            the template selection used for tracking
 		 * @param isRoot
 		 *            true when the root frament selection is the actual
 		 *            template element
 		 */
-		function FragsTrack(s, tsel) {
+		function FragsTrack(s, siphon) {
+			var start = new Date();
 			this.isTopLevel = isTopLevelEl(s);
 			this.ctxPath = getScriptCtxPath();
-			this.isScopeSelect = tsel && s.is(tsel.selector);
+			this.isScopeSelect = siphon && s.is(siphon.selector);
 			this.scope = s;
-			this.tsel = tsel;
+			this.siphon = siphon;
 			this.ccnt = 0;
 			this.cnt = 0;
 			this.len = 0;
 			var c = [];
 			this.addFrag = function(f) {
-				if (c[f.u]) {
-					c[f.u][c[f.u].length] = f;
+				if (c[f.rp]) {
+					c[f.rp].frags[c[f.rp].frags.length] = f;
 					return false;
 				} else {
-					c[f.u] = [ f ];
+					c[f.rp] = {
+						result : null,
+						status : null,
+						xhr : null,
+						frags : [ f ]
+					};
 				}
 				return true;
 			};
@@ -853,6 +860,9 @@
 			this.getErrors = function() {
 				return e;
 			};
+			this.elapsedTime = function(t) {
+				return (t ? t : (new Date()).getTime()) - start.getTime();
+			};
 		}
 
 		/**
@@ -871,12 +881,12 @@
 		 */
 		function Frag(pf, $pel, $fl, t) {
 			var ctx = this;
-			var forcett = t.tsel && t.tsel.type;
+			var forcett = t.siphon && t.siphon.type;
 			//var isHead = $fl instanceof jQuery ? $fl.is('head') : false;
 			this.pf = pf;
 			this.pel = $pel;
 			this.el = $fl;
-			this.tt = forcett ? t.tsel.type : TATTR;
+			this.tt = forcett ? t.siphon.type : TATTR;
 			var a = !t.isScopeSelect ? getFragAttr($fl, opts.includeAttrs)
 					: null;
 			if (!a && !t.isScopeSelect) {
@@ -888,30 +898,32 @@
 				this.tt = TINC;
 			}
 			a = a ? a.split(opts.fragSep) : null;
-			this.u = !a ? t.tsel.routingPath : a && a.length > 0 ? $.trim(a[0])
+			this.event = t.siphon ? t.siphon.event : null;
+			this.ps = t.siphon ? t.siphon.paramSiphon : null;
+			this.rp = !a ? t.siphon.routingPath : a && a.length > 0 ? $.trim(a[0])
 					: null;
-			this.t = !a ? t.tsel.fragTarget : a && a.length > 1 ? $.trim(a[1])
+			this.rs = !a ? t.siphon.resultSiphon : a && a.length > 1 ? $.trim(a[1])
 					: null;
-			this.d = !a ? t.tsel.fragDest : this.el;
-			this.m = t.tsel && t.tsel.method ? t.tsel.method : 'GET';
-			if (this.u && this.u.length > 0
-					&& this.u.toLowerCase() != opts.selfRef.toLowerCase()) {
-				this.u = adjustPath(t.ctxPath, this.u, script ? script
+			this.ds = !a ? t.siphon.destSiphon : this.el;
+			this.method = t.siphon && t.siphon.method ? t.siphon.method : 'GET';
+			if (this.rp && this.rp.length > 0
+					&& this.rp.toLowerCase() != opts.selfRef.toLowerCase()) {
+				this.rp = adjustPath(t.ctxPath, this.rp, script ? script
 						.attr(opts.fragExtensionAttr) : '');
-			} else if (this.t && this.t.length > 0) {
-				this.u = opts.selfRef;
+			} else if (this.rs && this.rs.length > 0) {
+				this.rp = opts.selfRef;
 			}
-			this.func = this.t ? new Func(opts, this.t, null, true) : null;
-			if (this.t) {
-				var fpts = opts.regexFunc.exec(this.t);
+			this.func = this.rs ? new Func(opts, this.rs, null, true) : null;
+			if (this.rs) {
+				var fpts = opts.regexFunc.exec(this.rs);
 				if (fpts) {
-					this.t = fpts[0];
+					this.rs = fpts[0];
 				}
 			}
-			var fso = this.t ? getFragFromSel(this.t) : null;
+			var fso = this.rs ? getFragFromSel(this.rs) : null;
 			this.s = fso ? fso.s : null;
 			this.hf = fso ? fso.hasFragAttr : true;
-			this.rs = null;
+			this.src = null;
 			this.e = null;
 			this.cancelled = false;
 			var wcnt = 1;
@@ -929,6 +941,12 @@
 				// increment child fragment count on parent fragment
 				this.pf.ccnt(true);
 			}
+			function params(s, d) {
+				// TODO : implement parameter siphon
+			}
+			this.psx = function() {
+				return params(this.ps);
+			};
 			this.done = function() {
 				if (!this.cancelled) {
 					this.ccnt(false);
@@ -963,16 +981,16 @@
 				if (xIsJ && x.is('script')) {
 					if (xhr && xhr.status != 200) {
 						t.addError(xhr.status + ': ' + ts
-								+ ' URL="' + this.u + '"', this, e, ts);
+								+ ' routing path="' + this.rp + '"', this, e, ts);
 						this.domDone(true);
 						return;
-					} else if (!xhr && this.u && this.t) {
-						var sdi = this.u.indexOf('data:text/javascript,');
+					} else if (!xhr && this.rp && this.rs) {
+						var sdi = this.rp.indexOf('data:text/javascript,');
 						var ss = x.prop('type');
 						$('<script' + (typeof ss === 'string' && ss.length > 0 ? 
 								' type="' + ss + '">' : '>') + (sdi > -1 ? 
-								this.u.substr('data:text/javascript,'.length) : this.u) + 
-							'</script>').appendTo(this.t);
+								this.rp.substr('data:text/javascript,'.length) : this.rp) + 
+							'</script>').appendTo(this.rs);
 					}
 				} else {
 					var im = this.isModel(xhr);
@@ -980,16 +998,16 @@
 						try {
 							var $x = $(x);
 							this.el.replaceWith($x);
-							this.rs = $x;
+							this.src = $x;
 						} catch (e) {
 							// node may contain top level text nodes
 							var $x = this.el.parent();
 							this.el.replaceWith(x);
-							this.rs = $x;
+							this.src = $x;
 						}
 					} else if (this.tt === TINC || this.tt === TUPD) {
-						if (this.d) {
-							var $d = $(this.d);
+						if (this.ds) {
+							var $d = $(this.ds);
 							if (this.tt === TUPD) {
 								// remove any existing fragments that may exist
 								// under the element
@@ -999,12 +1017,12 @@
 						} else {
 							this.el.append(x);
 						}
-						this.rs = x;
+						this.src = x;
 					}
 					// make post template DOM adjustments- no need for URL updates-
 					// they needed to be completed prior to placement in the DOM or
 					// URLs in some cases will be missed (like within the head)
-					htmlDomAdjust(t, ctx, this.rs, false);
+					htmlDomAdjust(t, ctx, this.src, false);
 				}
 				this.domDone(false);
 			};
@@ -1020,27 +1038,27 @@
 				return !this.isModel(xhr) && !this.isSimpleView(xhr);
 			};
 			this.getResultSiphon = function() {
-				return this.func && this.func.isValid ? this.func.run : this.t;
+				return this.func && this.func.isValid ? this.func.run : this.rs;
 			};
 			this.getStack = function() {
 				var us = [];
 				var cf = this;
 				do {
 					us[us.length] = {
-						routingPath : cf.u,
+						routingPath : cf.rp,
 						resultSiphon : cf.getResultSiphon(),
-						destination : cf.d,
-						source : cf.rs
+						destination : cf.ds,
+						source : cf.src
 					};
 				} while ((cf = cf.pf));
 				return us;
 			};
 			this.toString = function() {
 				return this.constructor.name + ' -> type: ' + this.tt
-						+ ', URLs: ' + this.us + ', target: ' + this.t
-						+ ', destination: ' + this.d + ', select: ' + this.s
-						+ ', template type: ' + this.tt + ', HTTP method: '
-						+ this.m + ', error: ' + this.e;
+						+ ', path: ' + this.rp + ', target: ' + this.rs
+						+ ', destination: ' + this.ds + ', result siphon: '
+						+ this.s + ', HTTP method: ' + this.method + ', cancelled: '
+						+ this.cancelled + ', error: ' + this.e;
 			};
 		}
 
@@ -1061,11 +1079,13 @@
 			e.fragCount = t.cnt;
 			e.fragCurrTotal = t.len;
 			e.fragPendingPeerCount = f && f.pf ? f.pf.ccnt(null) : 0;
-			e.routingPath = f ? f.u : undefined;
 			e.routingStack = f ? f.getStack() : undefined;
+			e.sourceEvent = f ? f.event : undefined;
+			e.paramSiphon = f ? f.ps : undefined;
+			e.routingPath = f ? f.rp : undefined;
 			e.resultSiphon = f ? f.getResultSiphon() : undefined;
-			e.destinationSiphon = f ? f.d : undefined;
-			e.source = f ? f.rs instanceof jQuery ? f.rs : f.el : undefined;
+			e.destSiphon = f ? f.ds : undefined;
+			e.source = f ? f.src instanceof jQuery ? f.src : f.el : undefined;
 			e.error = f ? f.e : undefined;
 			e.scope = t.scope;
 			e.chain = opts.eventFragChain;
@@ -1073,11 +1093,13 @@
 				log(this);
 			};
 			e.toFormattedString = function() {
-				return '[' + this.chain + ' event, fragCount: '
-						+ this.fragCount + ', fragCurrTotal: '
-						+ this.fragCurrTotal + ', URL: ' + this.url
-						+ ', element: ' + this.element + ', error: '
-						+ this.error + ']';
+				return '[' + e.chain + ' event, fragCount: ' + e.fragCount
+						+ ', fragCurrTotal: ' + e.fragCurrTotal
+						+ ', sourceEvent: ' + e.sourceEvent + ', paramSiphon: '
+						+ e.paramSiphon + ', routingPath: ' + e.routingPath
+						+ ', resultSiphon: ' + e.resultSiphon
+						+ ', destSiphon: ' + e.destSiphon + ', element: '
+						+ e.element + ', error: ' + e.error + ']';
 			};
 			return e;
 		}
@@ -1093,17 +1115,20 @@
 		 */
 		function genFragsEvent(type, t) {
 			var e = $.Event(type);
+			e.chain = opts.eventFragsChain;
 			e.fragCancelCount = t.ccnt;
 			e.fragCount = t.cnt;
 			e.scope = t.scope;
 			e.errors = t.getErrors();
-			e.chain = opts.eventFragsChain;
+			e.loadTime = t.elapsedTime(e.timeStamp);
 			e.log = function() {
 				log(this);
 			};
 			e.toFormattedString = function() {
-				return '[' + this.chain + ' Event, fragCount: '
-						+ this.fragCount + ', errors: ' + this.e + ']';
+				return '[' + e.chain + ' event, fragCancelCount: '
+						+ e.fragCancelCount + ', fragCount: ' + e.fragCount
+						+ ', scope: ' + e.scope + ', errors: ' + e.errors
+						+ ', loadTime: ' + e.loadTime + ']';
 			};
 			return e;
 		}
@@ -1136,11 +1161,11 @@
 		 * &lt;/div&gt;
 		 * </pre>
 		 * 
-		 * @param selector
+		 * @param scopeSel
 		 *            the selector to the root element where fragments will be looked for
-		 * @param tselector 
-		 *            the selector to the templates that will be included/replaced
-		 * @param altDest 
+		 * @param siphon
+		 *            the siphon/selector to the templates that will be included/replaced
+		 * @param altDest
 		 *            true to attempt to extract an alternate destination from the template 
 		 *            attribute value (falls back on on self destination when not present)
 		 * @param func
@@ -1148,12 +1173,12 @@
 		 *            been loaded (parameters: the original root element, the number of
 		 *            fragments processed and an array of error objects- if any)
 		 */
-		function loadFragments(selector, tselector, altDest, func) {
-			var $s = $(selector);
-			tsel = typeof tselector === 'object' ? tselector : {
-				selector : tselector
+		function loadFragments(scopeSel, siphon, altDest, func) {
+			var $s = $(scopeSel);
+			var so = typeof siphon === 'object' ? siphon : {
+				selector : siphon
 			};
-			var t = new FragsTrack($s, tsel);
+			var t = new FragsTrack($s, so);
 			function done(pf, t, f) {
 				if (t.cnt > t.len) {
 					t.addError('Expected ' + t.len
@@ -1205,8 +1230,8 @@
 				var hasdu = hasu && url.indexOf('data:text/javascript,') >= 0;
 				t.len++;
 				var sf = new Frag(f, $s, $x, t);
-				sf.u = hasu ? url : $x.text();
-				sf.t = $t;
+				sf.rp = hasu ? url : $x.text();
+				sf.rs = $t;
 				if (!$t.is($x)) {
 					// scripts need to be removed from the fragment's DOM in
 					// order to prevent them from automatically loading when
@@ -1239,7 +1264,7 @@
 					return;
 				}
 				// TODO : htmlDataAdjust processes the entire fragment response-
-				// should only adjust the desired fragment
+				// should only adjust the desired fragment siphon
 
 				// just about every browser strips out BODY/HEAD when parsing an
 				// HTML DOM, all but Opera strip out HTML, many strip out
@@ -1255,7 +1280,7 @@
 					hr = hr.substring(0, hr.indexOf('>') + 1);
 					var $hr = $(hr + '</div>');
 					var ha = getFragAttr($hr, opts.fragAttrs);
-					if (ha && ha == f.t) {
+					if (ha && ha == f.rs) {
 						hr = hr.replace(/div/g, 'head');
 						hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
 						var $h = $('head');
@@ -1312,32 +1337,46 @@
 						cb(null, f);
 						return;
 					}
-					if (t.addFrag(f)) {
-						var adone = function(r, status, xhr) {
-							var frgs = t.getFrags(f.u);
-							for (var i=0; i<frgs.length; i++) {
-								lcont(frgs[i], cb, r, status, xhr);
+					if (f.rp == opts.selfRef) {
+						// fragment is within current page
+						lcont(f, cb, $('html').html(), opts.selfRef, null);
+						return;
+					}
+					// when the fragment path is the 1st one in the queue retrieve it
+					// the queue will prevent duplicate calls to the same fragment path
+					if (f.ps || t.addFrag(f)) {
+						function adone(r, status, xhr) {
+							var tf = t.getFrags(f.rp);
+							tf.result = r;
+							tf.status = status;
+							tf.xhr = xhr;
+							for (var i=0; i<tf.frags.length; i++) {
+								lcont(tf.frags[i], cb, r, status, xhr);
 							}
-						};
-						if (f.u == opts.selfRef) {
-							adone($('html').html(), 'same-template');
-							return;
 						}
 						// use ajax vs load w/content target for more granular control
 						$.ajax({
-							url: f.u,
-							type: f.m,
+							url: f.rp,
+							type: f.method,
+							data: f.psx(),
 							cache: opts.ajaxCache
 						}).done(adone).fail(function(xhr, ts, e) {
-							var frgs = t.getFrags(f.u);
-							for (var i=0; i<frgs.length; i++) {
-								t.addError('Error at ' + f.toString() + ': ' + ts + '- ' + e, 
-										f, e, ts);
-								if (!hndlFunc(f, cb, null, ts, xhr)) {
-									cb(null, f);
+							var tf = t.getFrags(f.rp);
+							for (var i = 0; i < tf.frags.length; i++) {
+								t.addError('Error at ' + tf.frags[i].toString() + ': '
+										+ ts + '- ' + e, tf.frags[i], e, ts);
+								if (!hndlFunc(tf.frags[i], cb, null, ts, xhr)) {
+									cb(null, tf.frags[i]);
 								}
 							}
 						});
+					} else {
+						var tf = t.getFrags(f.rp);
+						if (tf.result) {
+							// fragment results already retrieved
+							lcont(f, cb, tf.result, tf.status, tf.xhr);
+							return;
+						}
 					}
 				} catch (e) {
 					t.addError('Error at ' + (f ? f.toString() : Frag) + ': '
@@ -1372,7 +1411,7 @@
 			}
 			// recursivly process all the includes/replacements
 			function lfi($f, f) {
-				var $fs = t.isScopeSelect && $f.is(t.scope) ? $f : $f.find(tsel.selector);
+				var $fs = t.isScopeSelect && $f.is(t.scope) ? $f : $f.find(so.selector);
 				t.len += $fs.length;
 				$fs.each(function() {
 					lfc(f, $(this));
@@ -1403,6 +1442,7 @@
 		var defs = {
 			selfRef : 'this',
 			ajaxCache : false,
+			crossDomain : false,
 			inheritRef : 'inherit',
 			fragSep : '::',
 			fragExtensionAttr : 'data-thx-frag-extension',

@@ -29,12 +29,15 @@
 				<li><a th:title="#{usage}"
 					class="app-tooltip-bottom" title="Usage" href="#usage"><i
 						class="icon-code"></i></a></li>
-				<li><a th:title="#{features}" class="app-tooltip-bottom"
-					title="Navigation/Model Transition Control" href="#navcontrol"><i
+				<li><a th:title="#{navcontrol}" class="app-tooltip-bottom"
+					title="Fragment Routing and Transition Control" href="#navcontrol"><i
 						class="icon-compass"></i></a></li>
 				<li><a th:title="#{paths}"
 					class="app-tooltip-bottom" title="Path Resolution" href="#paths"><i
 						class="icon-link"></i></a></li>
+				<li><a th:title="#{advusage}" class="app-tooltip-bottom"
+					title="Events, Handlers and Programmatic Usage" href="#{advusage}"><i
+						class="icon-eye-open"></i></a></li>
 				<li><a th:title="#{thymeleaf}"
 					class="app-tooltip-bottom" title="Thymeleaf Integration" href="#thymeleaf"><i
 						class="icon-cloud"></i></a></li>
@@ -48,7 +51,7 @@
 					<span class="icon-stack icon-3x"> <i
 						class="icon-sign-blank icon-light icon-stack-base"></i> <i
 						class="icon-leaf icon-thymus-stacked"></i> <i
-						class="icon-thymus-text-dark">Thymus</i>
+						class="icon-thymus-text-dark">thymus.js</i>
 					</span>
 					<div class="pull-right" style="text-align: center;">
 						<a href="https://github.com/ugate/thymus/archive/v1.0.0-beta.1.tar.gz"><span
@@ -99,13 +102,11 @@
 					</p>
 					<p>
 						Once JQuery has successfully loaded <b>thymus.js</b> will attempt
-						to load any fragments by looking for DOM elements that have a
-						<code>data-thx-include</code>
-						or
-						<code>data-thx-replace</code>
-						attribute (see the <a href="#usage">usage section</a> for more
-						details on using fragments and the <a href="#deferred">deferment
-							section</a> to prevent automatic fragment resolution).
+						to load any fragments by looking for DOM elements that have a <a
+							href="#fragusage"><b>routing attribute</b> assigned to it</a>.
+						See the <a href="#usage">usage section</a> for more details on how
+						to load fragments and the <a href="#deferred">deferment
+							section</a> to prevent fragments from loading automatically.
 					</p>
 					<p>
 						<b>thymus.js</b> loads fragments using <a
@@ -127,19 +128,23 @@
 								</li>
 								<li><a href="#deferred">Load fragments via script using
 										JQuery selectors</a></li>
-								<li>Multiple fragment definitions at the same fragment URL</li>
-								<li>Prevents repetitive calls to the same URL within a
-									single fragment load action (typical case when multiple
-									fragments reside at the same URL)</li>
+								<li>Multiple fragment definitions at the same fragment <a
+									href="#fragroutingpath"><b>routing path</b></a></li>
+								<li>Prevents repetitive calls to the same <a
+									href="#fragroutingpath"><b>routing path</b></a> within a single
+									fragment load action (typical case when multiple fragments
+									reside at the same <a href="#fragroutingpath"><b>routing
+											path</b></a>)
+								</li>
 								<li><a href="#selfref">Self-Referencing templates</a>
 									(processing of fragments that reside in the base page)</li>
-								<li>Relatively infinite <a href="#nestedfrags">nesting of
-										fragments</a> (fragments within fragments)
+								<li>Relatively infinite <a href="#nestedfrags">nesting
+										of fragments</a> (fragments within fragments)
 								</li>
 								<li><a href="#headfrags"><code>head</code> tag
 										fragments</a></li>
 								<li>Ability to override the processing of fargment results
-									via <a href="#fragshandler">function handler</a>
+									via <a href="#fragshandler"><b>result siphon</b> handler</a>
 								</li>
 								<li>Maintains vertical scrolling positions associated with
 									named anchors that point to a location within a fragment (e.g.
@@ -163,6 +168,7 @@
 			<div th:replace="frags/docs/usage :: #usage"></div>
 			<div th:replace="frags/docs/nav :: #navcontrol"></div>
 			<div th:replace="frags/docs/paths :: #paths"></div>
+			<div th:replace="frags/docs/adv :: #advusage"></div>
 			<div th:replace="frags/docs/server :: #thymeleaf"></div>
 		</section>
 	</div>
