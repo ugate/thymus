@@ -957,7 +957,7 @@
 				this.pf.ccnt(true);
 			}
 			function params(s, d) {
-				// TODO : add parameter siphon
+				// TODO : add parameter siphon impl
 			}
 			this.psx = function() {
 				return params(this.ps);
