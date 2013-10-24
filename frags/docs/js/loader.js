@@ -3,7 +3,7 @@ var $lt = null, $pt = null, $pi = null, loaded = false;
 function fragListener(event) {
 	// var $source = $(this);
 	if (event.type != 'load') {
-		if (event.type == 'beforeload'
+		if (event.type == 'beforehttp'
 				&& event.routingPath.indexOf('frags/cancel') >= 0) {
 			// example that shows how to prevent a fragment from showing
 			event.preventDefault();
@@ -41,8 +41,18 @@ function fragsListener(event) {
 	$('#fragTotal').text(event.fragCount);
 	init(event);
 }
+/**
+ * Example that shows how to use a <b>result siphon</b> handler. Takes the read
+ * me mark down and captures any paragraph tags via a regular expression and
+ * passes the result on to the handler's process method which will use the
+ * passed content to update the DOM. NOTE: used a regular expression instead of
+ * JQuery selector due non-HTML content type for mark-down
+ */
 function handleReadme() {
 	var h = this.handle;
+	if (h.fragSrc.error) {
+		throw h.fragSrc.error;
+	}
 	var d = '';
 	var ps = h.data.match(/<p[^>]*>((.|[\r\n])+)<\/p>/img);
 	if (ps) {
@@ -51,5 +61,6 @@ function handleReadme() {
 		});
 	}
 	var $d = $(d);
-	h.process($d);
+	h.proceed($d);
 }
+//# sourceURL=loader.js

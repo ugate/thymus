@@ -337,6 +337,11 @@
 				if (a.resultSiphon) {
 					loadFragments(c ? c : p, a, true, null);
 				} else if (a.routingPath) {
+					var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), {});
+					var f = new Frag(null, t.scope, t.scope, {
+						siphon : a
+					});
+					broadcast(opts.eventFragChain, opts.eventFragBeforeHttp, t, f);
 					location.href = adjustPath(getScriptCtxPath(), a.routingPath,
 							script ? script.attr(opts.fragExtensionAttr) : '');
 				} else {
@@ -412,7 +417,7 @@
 			} else {
 				t.addError('Expected at least two parameters for action "'
 						+ opts.actionNavInvoke + '" and method "' + r.method
-						+ '" for ' + v, f, null, null);
+						+ '" for ' + v, f, null, null, null);
 			}
 			return r;
 		}
@@ -791,7 +796,8 @@
 						|| type == opts.eventFragsLoad) {
 					fire();
 				} else if (f && !f.rp) {
-					t.addError('Invalid URL for ' + f.toString(), f, null, null);
+					t.addError('Invalid URL for ' + f.toString(), f, null,
+							null, null);
 					t.ccnt++;
 					f.cancelled = true;
 				} else if (f) {
@@ -845,17 +851,26 @@
 				return c[url];
 			};
 			var e = [];
-			this.addError = function(em, f, oc, hs) {
-				var eo = {
-					message : em,
-					cause : oc,
-					status : hs
-				};
-				e[e.length] = eo;
-				if (f) {
-					f.e = eo;
+			this.addError = function(em, f, oc, hs, xhr) {
+				function newError(f) {
+					var e = new Error(em);
+					var o = {
+							cause : oc,
+							status : hs,
+							statusCode : xhr ? xhr.status : null
+						};
+					if (f) {
+						o.fragSrc = addFragProps({}, this, f);
+					}
+					$.extend(e, o);
+					return e;
 				}
-				return e;
+				if (f) {
+					f.e = newError();
+					e[e.length] = newError(f);
+				} else {
+					e[e.length] = newError();
+				}
 			};
 			this.getErrors = function() {
 				return e;
@@ -942,7 +957,7 @@
 				this.pf.ccnt(true);
 			}
 			function params(s, d) {
-				// TODO : implement parameter siphon
+				// TODO : add parameter siphon
 			}
 			this.psx = function() {
 				return params(this.ps);
@@ -973,7 +988,7 @@
 				}
 				if (ts || e) {
 					t.addError('Error at ' + this.toString() + ': ' + ts + '- '
-							+ e, this, e, ts);
+							+ e, this, e, ts, xhr);
 					this.domDone(true);
 					return;
 				}
@@ -981,7 +996,7 @@
 				if (xIsJ && x.is('script')) {
 					if (xhr && xhr.status != 200) {
 						t.addError(xhr.status + ': ' + ts
-								+ ' routing path="' + this.rp + '"', this, e, ts);
+								+ ' routing path="' + this.rp + '"', this, e, ts, xhr);
 						this.domDone(true);
 						return;
 					} else if (!xhr && this.rp && this.rs) {
@@ -1055,11 +1070,53 @@
 			};
 			this.toString = function() {
 				return this.constructor.name + ' -> type: ' + this.tt
-						+ ', path: ' + this.rp + ', target: ' + this.rs
-						+ ', destination: ' + this.ds + ', result siphon: '
-						+ this.s + ', HTTP method: ' + this.method + ', cancelled: '
+						+ ', HTTP method: ' + this.method
+						+ ', parameter siphon: ' + this.ps + ', routing path: '
+						+ this.rp + ', result siphon: ' + this.rs
+						+ ', destination siphon: ' + this.ds + ', cancelled: '
 						+ this.cancelled + ', error: ' + this.e;
 			};
+		}
+
+		/**
+		 * Adds normalized {Frag} properties, functions, etc. to the supplied
+		 * object
+		 * 
+		 * @param o
+		 *            the object that the proprties will be added to
+		 * @param t
+		 *            the {FragsTrack} used
+		 * @param f
+		 *            the {Frag} the event is being issued for
+		 * @returns the passed object
+		 */
+		function addFragProps(o, t, f) {
+			o.fragCount = t.cnt;
+			o.fragCurrTotal = t.len;
+			o.fragPendingPeerCount = f && f.pf ? f.pf.ccnt(null) : 0;
+			o.routingStack = f ? f.getStack() : undefined;
+			o.sourceEvent = f ? f.event : undefined;
+			o.paramSiphon = f ? f.ps : undefined;
+			o.routingPath = f ? f.rp : undefined;
+			o.resultSiphon = f ? f.getResultSiphon() : undefined;
+			o.destSiphon = f ? f.ds : undefined;
+			o.source = f ? f.src instanceof jQuery ? f.src : f.el : undefined;
+			o.error = f ? f.e : undefined;
+			o.scope = t.scope;
+			o.chain = opts.eventFragChain;
+			o.log = function() {
+				log(o);
+			};
+			o.toFormattedString = function() {
+				return '[' + o.chain + ' event, fragCount: ' + o.fragCount
+						+ ', fragCurrTotal: ' + o.fragCurrTotal
+						+ ', sourceEvent: ' + o.sourceEvent + ', paramSiphon: '
+						+ o.paramSiphon + ', routingPath: ' + o.routingPath
+						+ ', resultSiphon: ' + o.resultSiphon
+						+ ', destSiphon: ' + o.destSiphon + ', element: '
+						+ o.element + ', error: ' + o.error + ']';
+			};
+			return o;
 		}
 
 		/**
@@ -1075,32 +1132,8 @@
 		 */
 		function genFragEvent(type, t, f) {
 			var e = $.Event(type);
+			addFragProps(e, t, f);
 			e.type = type;
-			e.fragCount = t.cnt;
-			e.fragCurrTotal = t.len;
-			e.fragPendingPeerCount = f && f.pf ? f.pf.ccnt(null) : 0;
-			e.routingStack = f ? f.getStack() : undefined;
-			e.sourceEvent = f ? f.event : undefined;
-			e.paramSiphon = f ? f.ps : undefined;
-			e.routingPath = f ? f.rp : undefined;
-			e.resultSiphon = f ? f.getResultSiphon() : undefined;
-			e.destSiphon = f ? f.ds : undefined;
-			e.source = f ? f.src instanceof jQuery ? f.src : f.el : undefined;
-			e.error = f ? f.e : undefined;
-			e.scope = t.scope;
-			e.chain = opts.eventFragChain;
-			e.log = function() {
-				log(this);
-			};
-			e.toFormattedString = function() {
-				return '[' + e.chain + ' event, fragCount: ' + e.fragCount
-						+ ', fragCurrTotal: ' + e.fragCurrTotal
-						+ ', sourceEvent: ' + e.sourceEvent + ', paramSiphon: '
-						+ e.paramSiphon + ', routingPath: ' + e.routingPath
-						+ ', resultSiphon: ' + e.resultSiphon
-						+ ', destSiphon: ' + e.destSiphon + ', element: '
-						+ e.element + ', error: ' + e.error + ']';
-			};
 			return e;
 		}
 
@@ -1182,7 +1215,8 @@
 			function done(pf, t, f) {
 				if (t.cnt > t.len) {
 					t.addError('Expected ' + t.len
-							+ ' fragments, but recieved ' + t.cnt, f, null, null);
+							+ ' fragments, but recieved ' + t.cnt, f, null,
+							null, null);
 				}
 				if (f) {
 					f.done();
@@ -1202,13 +1236,12 @@
 				if (f.func && f.func.isValid) {
 					f.func.run({
 						handle : {
-							source : f.el,
 							type : f.tt,
 							data : r,
 							status : status,
 							xhr : xhr,
-							error : f.e,
-							process : function(x) {
+							fragSrc : addFragProps({}, t, f),
+							proceed : function(x) {
 								f.px(x);
 							}
 						}
@@ -1239,7 +1272,7 @@
 					$x.remove();
 				}
 				broadcast(opts.eventFragChain,
-						opts.eventFragBeforeLoad, t, sf);
+						opts.eventFragBeforeHttp, t, sf);
 				if (sf.cancelled) {
 					cb(null, sf);
 					return;
@@ -1307,7 +1340,7 @@
 					fs = $c.filter(f.s);
 					if (fs.length <= 0) {
 						t.addError('No matching results for ' + f.toString()
-								+ ' in\n' + r, f, null, status);
+								+ ' in\n' + r, f, null, status, xhr);
 						cb(null, f);
 						return;
 					}
@@ -1331,7 +1364,7 @@
 				try {
 					f = new Frag(pf, $s, $fl, t);
 					cb = typeof cb === 'function' ? cb : function(){};
-					broadcast(opts.eventFragChain, opts.eventFragBeforeLoad, t,
+					broadcast(opts.eventFragChain, opts.eventFragBeforeHttp, t,
 							f);
 					if (f.cancelled) {
 						cb(null, f);
@@ -1364,7 +1397,7 @@
 							var tf = t.getFrags(f.rp);
 							for (var i = 0; i < tf.frags.length; i++) {
 								t.addError('Error at ' + tf.frags[i].toString() + ': '
-										+ ts + '- ' + e, tf.frags[i], e, ts);
+										+ ts + '- ' + e, tf.frags[i], e, ts, xhr);
 								if (!hndlFunc(tf.frags[i], cb, null, ts, xhr)) {
 									cb(null, tf.frags[i]);
 								}
@@ -1380,7 +1413,7 @@
 					}
 				} catch (e) {
 					t.addError('Error at ' + (f ? f.toString() : Frag) + ': '
-							+ e, f, e, null);
+							+ e, f, e, null, null);
 					cb(null, f);
 				}
 			}
@@ -1481,7 +1514,7 @@
 			eventIsBroadcast : true,
 			eventFragChain : 'frag',
 			eventFragsChain : 'frags',
-			eventFragBeforeLoad : 'beforeload.thx.frag',
+			eventFragBeforeHttp : 'beforehttp.thx.frag',
 			eventFragBeforeDom : 'beforedom.thx.frag',
 			eventFragAfterDom : 'afterdom.thx.frag',
 			eventFragLoad : 'load.thx.frag',

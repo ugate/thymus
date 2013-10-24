@@ -85,34 +85,36 @@
 						<div class="col-md-10">
 							one of the event types below
 							<ul>
-								<li><code>beforeload.thx.frag</code> - before the fragment
-									has been retrieved using the <b>routing attribute</b>'s <b>path</b>
-									(when the <a
+								<li><code>beforehttp.thx.frag</code> - before any <b>parameter
+										siphon</b> data has been sent for fragment retrieval using the <b>routing
+										attribute</b>'s <b>path</b> (when the <a
 									href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
-									returns <b>true</b> the fragment will not be retrieved)</li>
-								<li><code>beforedom.thx.frag</code> - after the fragment
-									has been retrieved using the <b>routing attribute</b>'s <b>path</b>,
-									but not updated in the DOM using the <b>result siphon</b> (when
-									the <a href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
-									returns <b>true</b> the fragment will not be updated in the
-									DOM)</li>
-								<li><code>afterdom.thx.frag</code> - after the fragment has
-									been retrieved using the <b>routing attribute</b>'s <b>path</b>and
-									updated in the DOM using the <b>result siphon</b> (any
-									child/nested fragments may not be loaded yet)</li>
-								<li><code>load.thx.frag</code> - after the fragment has
-									been retrieved using the <b>routing attribute</b>'s <b>path</b>,
-									updated in the DOM using the <b>result siphon</b> and all
-									child/nested <b>routing attribute</b>'s have been
-									loaded/cancelled/etc.</li>
+									returns <b>true</b> nothing will be sent and therefore no
+									fragment will be retrieved)</li>
+								<li><code>beforedom.thx.frag</code> - after any <b>parameter
+										siphon</b> data has been sent for fragment retrieval using the <b>routing
+										attribute</b>'s <b>path</b>, but not updated in the DOM using the
+									<b>result siphon</b> and <b>destination siphon</b> (when the <a
+									href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
+									returns <b>true</b> any <b>result siphon</b> fragments will not
+									be updated in the DOM)</li>
+								<li><code>afterdom.thx.frag</code> - after any <b>parameter
+										siphon</b> data has been sent for fragment retrieval using the <b>routing
+										attribute</b>'s <b>path</b>and any fragments are updated in the
+									DOM using the <b>result siphon</b> and <b>destination
+										siphon</b> (any child/nested fragments may not be processed/loaded
+									yet)</li>
+								<li><code>load.thx.frag</code> - after any <b>parameter
+										siphon</b> data has been sent for fragment retrieval using the <b>routing
+										attribute</b>'s <b>path</b>, updated in the DOM using the <b>result
+										siphon</b> and <b>destination siphon</b> and all child/nested <b>routing
+										attribute</b>'s have been loaded/cancelled/etc.</li>
 							</ul>
 							Any of the above event types can be used when
 							<a href="#fraginjs">programatically registering a listener
 								for the event</a>). See <a
 								href="http://api.jquery.com/on/#event-names">JQuery event
-								naming</a> for namespace convention details for defining the
-							appropriate
-							<b>result siphon</b>.
+								naming</a> for namespace convention details.
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -243,13 +245,18 @@
 							<code>error</code>
 						</div>
 						<div class="col-md-10">
-							an object representing error details that will contain the
-							following properties (if the fragment loaded successfully error
-							will be null):
+							an object that extends
+							<code>window.Error</code>
+							with a detailed
+							<code>message</code>
+							that will also contain the following properties (if an error did
+							not occur error will be null):
 							<ul>
-								<li><code>message</code> - the error message</li>
-								<li><code>cause</code> - the originating error (if any)</li>
-								<li><code>status</code> - the HTTP status (if applicable)</li>
+								<li><code>cause</code> - the original cause of the <code>Error</code>
+									(if any)</li>
+								<li><code>status</code> - the HTTP status text (if any)</li>
+								<li><code>statusCode</code> - the HTTP status code (e.g.
+									404) returned from XHR (if any)</li>
 							</ul>
 						</div>
 					</div>
@@ -380,22 +387,20 @@
 						<div class="col-md-2">
 							<code>errors</code>
 						</div>
-						<div class="col-md-10">a comma delimited string of
-							detailed error messages (if all fragments loaded successfully,
-							errors will be empty)</div>
-					</div>
-					<div class="row row-thymus">
-						<div class="col-md-2">
-							<code>errors</code>
-						</div>
 						<div class="col-md-10">
-							an array of objects that represent error details- each object
-							will contain the following properties (if all the fragments
-							loaded successfully the array will be empty):
+							an array of
+							<code>window.Error</code>
+							objects; each containing the following properties:
 							<ul>
-								<li><code>message</code> - the error message</li>
-								<li><code>cause</code> - the originating error (if any)</li>
-								<li><code>status</code> - the HTTP status (if applicable)</li>
+								<li><code>cause</code> - the original cause of the <code>Error</code>
+									(if any)</li>
+								<li><code>status</code> - the HTTP status text (if any)</li>
+								<li><code>statusCode</code> - the HTTP status code (e.g.
+									404) returned from XHR (if any)</li>
+								<li><code>fragSrc</code> - when the cause of the error
+									is due to a specific fragment all of the <a href="#fragevent">fragment
+										event</a> properties (except <code>type</code>) will be populated
+									in this object</li>
 							</ul>
 						</div>
 					</div>
@@ -403,9 +408,9 @@
 			</div>
 			<h3 id="funcfrags">Customizing Fragment Results</h3>
 			<p>
-				Not only can fragment targets contain corresponding
-				<code>data-thx-fragment</code>
-				names or JQuery <i>selectors</i>, they can also contain a
+				Not only can <b>result siphon</b>s contain corresponding <a
+					href="http://api.jquery.com/category/selectors/">JQuery
+					selectors</a>, they can also contain a
 				<code>function</code>
 				that will handle raw fragment results.
 			</p>
@@ -413,12 +418,24 @@
 	<span style="color: #000080; font-weight: bold">function</span> handleFrag() {
 		<span style="color: #000080; font-weight: bold">var</span> handle = <span style="color: #000080; font-weight: bold">this</span>.handle;
 		<span style="color: #000080; font-weight: bold">var</span> newData = handle.data;
-		<span style="color: #008800; font-style: italic">// do something with newData then process it</span>
-		handle.process(newData);
+		<span style="color: #000080; font-weight: bold">if</span> (h.fragSrc.error) {
+			<span style="color: #008800; font-style: italic">// handle Error object</span>
+		} <span style="color: #000080; font-weight: bold">else</span> {
+			<span style="color: #008800; font-style: italic">// do something with newData then continue the fragment process for DOM propigation</span>
+			handle.proceed(newData);
+		}
 	}
 <span style="color: #000080; font-weight: bold">&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/nav/nav :: handleFrag()&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 </pre></div>
+			<p>
+				The <b>result siphon</b> handler can also be used in <a
+					href="#httpmethods"><b>DOM routing attribute</b>s</a> as well. A <b>result
+					siphon</b> handler will contain the following object within the
+				function's
+				<code>this.handle</code>
+				:
+			</p>
 			<div id="fragshandler" class="panel panel-default">
 				<div class="panel-heading">
 					<h2>Fragment <b>result siphon</b> Handler</h2>
@@ -426,17 +443,10 @@
 				<div class="panel-body">
 					<div class="row row-thymus">
 						<div class="col-md-2">
-							<code>source</code>
-						</div>
-						<div class="col-md-10">the DOM node that contains the
-							include/replace definition</div>
-					</div>
-					<div class="row row-thymus">
-						<div class="col-md-2">
 							<code>type</code>
 						</div>
 						<div class="col-md-10">
-							either <b>include</b> or <b>replace</b>
+							either <b>include</b>, <b>replace</b> or <b>update</b>
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -468,7 +478,18 @@
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
-							<code>process</code>
+							<code>fragSrc</code>
+						</div>
+						<div class="col-md-10">
+							an object that will include all of the <a href="#fragevent">fragment
+								event</a> properties (except
+							<code>type</code>
+							)
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>proceed</code>
 						</div>
 						<div class="col-md-10">
 							a
@@ -476,24 +497,10 @@
 							that will process the <b>routing attribute</b>'s fragment result.
 							Arguments:
 							<ol>
-								<li>the result <b>data</b> (raw or node) that will be <i>included</i>
-									or <i>replaced</i>
+								<li>the result <b>data</b> (raw or node) that will be <i>included</i>,
+									<i>replaced</i> or <b>updated</b>
 								</li>
 							</ol>
-						</div>
-					</div>
-					<div class="row row-thymus">
-						<div class="col-md-2">
-							<code>error</code>
-						</div>
-						<div class="col-md-10">
-							an object that will contain the following properties (null when
-							an error has not occurred)
-							<ul>
-								<li><code>message</code> - the error message</li>
-								<li><code>cause</code> - the originating error (if any)</li>
-								<li><code>status</code> - the HTTP status (if applicable)</li>
-							</ul>
 						</div>
 					</div>
 				</div>
