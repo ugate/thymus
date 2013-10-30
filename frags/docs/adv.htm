@@ -536,11 +536,13 @@
 			<ul>
 				<li id="actionfragsload"><code>frags.load</code> - looks for
 					template attributes on DOM elements under the element that
-					initiated the plug-in call and loads any fragments/nested
-					fragments, performs any <a href="#actionnavreg">navigation
+					initiated the <b>thymus.js</b> plug-in call and loads any
+					fragments/nested fragments, performs any <a href="#actionnavreg">navigation
 						registrations</a> needed within returned fragments and</li>
-				<li id="actionnavreg"><code>nav.register</code> - loads all of
-					the fragments under the DOM element that initiated the plug-in call</li>
+				<li id="actionnavreg"><code>nav.register</code> - registers (or
+					re-registers) any <a href="#httpmethods">DOM routing attribute</a>s
+					on DOM elements under the element that initiated the <b>thymus.js</b>
+					plug-in call</li>
 			</ul>
 			<p>
 				Of course, the <a href="http://api.jquery.com/category/selectors/">JQuery

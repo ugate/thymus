@@ -4,302 +4,54 @@
 <body>
 	<div id="usage" class="panel panel-default">
 		<div class="panel-heading">
-			<h2>
-				Usage
+			<h2 id="fragusage">
+				Fragment Types
 			</h2>
 		</div>
 		<div class="panel-body app-code">
 			<p>
-				To use <b>thymus.js</b> it obviously needs to be included in the
-				page. Here is the minimal setup:
+				As <a href="#navcontrol">previously discussed</a> fragments are
+				resolved using <b>DOM routing attribute</b>s that provide siphons
+				that move model/view content to and from the DOM. There are a few
+				use cases that are worth mentioning that will provide insight into
+				how fragment resolution is impacted during the process. For
+				simplicity sake we will use short-hand version for the <b>routing
+					attribute</b>s in the examples to follow.
 			</p>
-					<div style="overflow: auto; width: auto; padding: .2em .6em;">
-						<pre style="margin: 0; line-height: 125%">
-<span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;meta</span> <span
-								style="color: #FF0000">charset=</span><span
-								style="color: #0000FF">&quot;utf-8&quot;</span> <span
-								style="color: #000080; font-weight: bold">/&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- Thymus script --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;script </span><span
-								style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span
-								style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> <span
-								style="color: #FF0000">data-thx-context-path=</span><span
-								style="color: #0000FF">&quot;.&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
-</pre>
-					</div>
-			<p>
-				There are two required <b>thymus.js</b> attributes. The
-				<code>thymus</code>
-				id/namespace is used to identify the <b>thymus.js</b> script in
-				order to capture various attribute options on the script tag while
-				the
-				<code>data-thx-context-path</code>
-				is used for <a href="#fragpath">fragment path resolution</a> and <a
-					href="#attrpaths">attribute path resolution</a>. It should point
-				to the root context of the application relative to the page in
-				which <b>thymus.js</b> is loaded.
-			</p>
-			<h2 id="fragusage">Fragments</h2>
-			<p>
-				Fragments are at the core of <b>thymus.js</b> and are used to
-				populate full or partial updates to the browser UI. <b>thymus.js</b>
-				assumes that fragmented portions of the UI are fragile and
-				exceedingly dynamic in nature and therefore does not try to <i>bind</i>
-				data that may reside in various sections of the UI. Doing so is
-				prone to memory leaks- especially when a fragment contains
-				child/nested fragments. Instead, <b>thymus.js</b> utilizes the power
-				of <a href="http://api.jquery.com/category/selectors/">JQuery
-					selectors</a> to define routes for fragmented content. Not only does
-				this provide a friendly and familiar interface, but it also
-				eliminates the need to require <i>model</i> observability/binding
-				extensions via JavaScript. This approach lends itself to stateless/<a
-					href="http://en.wikipedia.org/wiki/Representational_state_transfer">RESTful</a>
-				server APIs.
-			</p>
-			<p>
-				<b>thymus.js</b> recognizes two types of fragments. The first being
-				<i>view</i> fragments. Any fragments retrieved that have a
-				<code>content-type</code>
-				of
-				<code>text/html</code>
-				will be interpreted as a <i>view</i> content. Similarly, fragments
-				with <a href="#textfrags">raw <code>content-type</code>
-					identifiers
-				</a> will also be interpreted as <i>view</i> content, but will have
-				limited <i>model</i> interaction capabilities. Any of the <a
-					href="#modeltoview"><i>model</i> <code>content-type</code>
-					identifiers </a> and are interpreted as <i>model</i> content and
-				updated in corresponding <i>views</i> via <a href="#modeltoview"><i>model</i>
-					routing techniques</a>.
-			</p>
-			<p id="routingattrs">
-				Fragments themselves do not have to be explicitly defined. Instead,
-				a <b>routing attribute</b> is supplied to an element that will
-				contain two components shown in the semantics illustration below (
-				HTTP
-				<code>GET</code>
-				verb is used to retrieve fragments using the semantics below- see <a
-					href="#httpmethods"><b>DOM routing attribute</b>s section</a> for
-				expanded use).
-			</p>
-			<ul class="well thymus-well">
-				<li class="label label-info">routing path</li>
-				<li class="label"><b>::</b></li>
-				<li class="label label-info">result siphon</li>
-			</ul>
-			<div class="panel panel-info">
-				<div class="panel-body">
-					<h4 id="fragroutingpath">
-						<span class="label label-info">routing path</span>
-					</h4>
-					<p data-demo="routing-path">
-						The <b>routing attribute</b>'s <b>path</b> should point to the
-						location where the fragment will be captured (e.g. <i>path/to/my/frag</i>).
-						See the <a href="#paths">path resolution section</a> for more
-						details on how paths are resolved.
-					</p>
-					<h4 id="fragresultsiphon">
-						<span class="label label-info">result siphon</span>
-					</h4>
-					<p data-demo="result-siphon">
-						The <b>routing attribute</b>'s <b>result siphon</b> is typically a <a
-							href="http://api.jquery.com/category/selectors/">JQuery
-							selector</a>, but can also be a <a href="#fragshandler"><code>function</code>
-							that will handle the result</a>. When a fragment result contains <i>view</i>
-						content or is XML <i>model</i> content the <b>result siphon</b> will
-						be used to select the portion of the fragment result that will be
-						used in the DOM. When the fragment result contains <i>model</i>
-						content that is not XML the <b>result siphon</b> can either be
-						omitted to use the entire fragment result or contain a <a
-							href="#fragshandler"><code>function</code></a> that will manually
-						handle selecting the portion of the fragment that will be included
-						in the DOM (e.g. using a 3rd party library to handle the selection-
-						like <a href="http://jsonselect.org/#tryit">json:select()</a>). See
-						the <a href="#otherfragtargets">fragment siphons section</a> for
-						more details on how <b>result siphon</b>s use JQuery selectors.
-					</p>
-				</div>
-			</div>
-			<p>
-				A fragment can be used as either a replacement or inclusion anywhere
-				a
-				<code>data-thx-replace</code>
-				or
-				<code>data-thx-include</code>
-				<b>routing attribute</b> is found throughout the document (including
-				within a fragment itself). Each <b>routing attribute</b>'s <b>path</b>
-				and <b>result siphon</b> are separated by a "<b>::</b>" (the
-				separator can be overridden using the
-				<code>data-thx-separator</code>
-				attribute on the <b>thymus.js</b> script definition or <a
-					href="#fragsoptsprog">programmatically by passing the
-					appropriate option parameter</a>). Here is an example <b>routing
-					attribute</b> for a fragment <i>view</i>:
-			</p>
-			<div style="overflow: auto; width: auto; padding: .2em .6em;">
-<pre style="margin: 0; line-height: 125%">
-<span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- that contains the following --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">class=</span><span
-								style="color: #0000FF">&quot;topnav&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-	...
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- and the current page contains --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-replace=</span><span
-								style="color: #0000FF">&quot;frags/nav/nav :: .topnav&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">class=</span><span
-								style="color: #0000FF">&quot;topnav&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-		...
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-</pre>
-					</div>
-			<p>
-				Of course, we could have also used a
-				<code>data-thx-include</code>
-				instead of
-				<code>data-thx-replace</code>
-				<b>routing attribute</b> which would have appended the fragment
-				rather than replacing the placeholder:
-			</p>
-			<div style="overflow: auto; width: auto; padding: .2em .6em;">
-						<pre style="margin: 0; line-height: 125%">
-<span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- that contains the following --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">class=</span><span
-								style="color: #0000FF">&quot;topnav&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-	...
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- and the current page contains --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-include=</span><span
-								style="color: #0000FF">&quot;frags/nav/nav :: .topnav&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;span&gt;</span>Top Nav<span
-								style="color: #000080; font-weight: bold">&lt;/span&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-include=</span><span
-								style="color: #0000FF">&quot;frags/nav/nav :: .topnav&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;span&gt;</span>Top Nav<span
-								style="color: #000080; font-weight: bold">&lt;/span&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">class=</span><span
-								style="color: #0000FF">&quot;topnav&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-			...
-		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-</pre>
-					</div>
-			<p id="selfref">
-				Templates can also refer to fragments that exist in the same page
-				that the <b>routing attribute</b> resides in by using
-				<code>this</code>
-				or omitting the <b>routing attribute</b>'s <b>path</b> altogether
-				(e.g.
-				<code>data-thx-include="::.my-inline-frag"</code>
-				). Only use this approach when the fragment <b>result siphon</b> is
-				not referencing nodes that reside in other fragments.
-			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;">
-						<pre style="margin: 0; line-height: 125%">
-<span style="color: #008800; font-style: italic">&lt;!-- a page with --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-include=</span><span
-								style="color: #0000FF">&quot;this :: .my-inline-frag&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">class=</span><span
-								style="color: #0000FF">&quot;my-inline-frag&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-		...
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- would produce --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-include=</span><span
-								style="color: #0000FF">&quot;this :: .my-inline-frag&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-		...
-		<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">class=</span><span
-								style="color: #0000FF">&quot;my-inline-frag&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-			...
-		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">class=</span><span
-								style="color: #0000FF">&quot;my-inline-frag&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-		...
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-</pre>
-					</div>
 			<h3 id="nestedfrags">Multi-Level Nested Fragments</h3>
 			<p>
-				Not only can fragments be <i>included</i> or <i>replaced</i> within
-				a page, but the fragments themselves can load other fragments (the
-				number of levels of fragments within fragments can be relatively
-				endless). Just like normal fragments, each neseted fragment will be
-				processed asynchronously from its parent fragment. This ensures that
-				as a new fragment is discovered it will be loaded and its content
-				made available for any subsequent fragments that are encountered
-				that point to the same <b>routing attribute</b>'s <b>path</b>. It
-				also prevents unecessary calls to fragment <b>path</b>s that might
+				Not only can fragments be <i>included</i>, <i>replaced</i>, <i>updated</i>,
+				etc. within the DOM, but the fragments themselves can load other
+				fragments (the number of levels of fragments within fragments can be
+				relatively endless). Just like normal fragments, each nested
+				fragment will be processed asynchronously from its parent fragment.
+				This ensures that as new fragments are discovered they will be
+				loaded and its content made available for any subsequent fragments
+				that are encountered that point to the same <b>routing path</b>. It
+				also prevents uneccessary calls to fragment <b>path</b>s that might
 				be used in more than one <b>routing attribute</b> throughout the
 				fragment load action. For instance, when a <b>routing attribute</b>
 				is encountered that contains
 				<code>frags/nav/nav</code>
-				as its <b>path</b> and
+				as its <b>routing path</b> and
 				<code>.topnav</code>
 				as its <b>result siphon</b> it may discover another <b>routing
 					attribute</b> within its own <b>routing siphon</b>. Lets say the <b>routing
-					attribute</b> found within the fragment's <b>path</b>/<b>routing
+					attribute</b> found within the fragment's <b>routing path</b>/<b>routing
 					siphon</b> is another
 				<code>data-thx-replace</code>
-				that defines it's own <b>path</b> as
+				that defines it's own <b>routing path</b> as
 				<code>frags/user/user</code>
 				and <b>routing siphon</b> as
 				<code>.user</code>
 				. <b>thymus.js</b> will proceeded to load
 				<code>frags/user/user</code>
-				and select
+				, select
 				<code>.user</code>
 				and replace the defining DOM node with the <b>routing siphon</b>/JQuery
 				selector content. To illustrate this concept consider the following:
 			</p>
-			<div style="overflow: auto; width: auto; padding: .2em .6em;">
-						<pre style="margin: 0; line-height: 125%">
+<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span
@@ -342,8 +94,7 @@
 		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-</pre>
-					</div>
+</pre></div>
 			<h3 id="headfrags">Head Fragments</h3>
 			<p>
 				Almost every browser removes
@@ -362,8 +113,7 @@
 				<code>data-thx-head-frag</code>
 				as in the following example:
 			</p>
-					<div style="overflow: auto; width: auto; padding: .2em .6em;">
-						<pre style="margin: 0; line-height: 125%">
+<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
 <span style="color: #000080; font-weight: bold">&lt;head</span> <span
 								style="color: #FF0000">data-thx-include=</span><span
 								style="color: #0000FF">&quot;frags/head :: header&quot;</span><span
@@ -382,8 +132,7 @@
 								style="color: #0000FF">&quot;data-thx-include=frags/head :: header&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
-</pre>
-					</div>
+</pre></div>
 			<p>
 				Although this duplicates the inclusion defintion it does provide
 				for cross-browser support. If this redundency disrupts your inner
@@ -410,8 +159,7 @@
 				of them will still fire their own <a href="#frag">fragment event</a>
 				individually.
 			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;">
-<pre style="margin: 0; line-height: 125%">
+<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/script&quot; --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
@@ -453,8 +201,7 @@
 								style="color: #000080; font-weight: bold">&lt;/script&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-</pre>
-</div>
+</pre></div>
 			<div class="alert alert-info">
 				<strong>Note:</strong> You may have noticed that the
 				<code>script</code>
@@ -523,6 +270,41 @@
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
+			<h2 id="modeltoview">Model Routing</h2>
+			<p>
+				Not all of the <a href="http://www.iana.org/assignments/media-types">standard
+					media types</a> are supported for <i>model</i> fragments, but where
+				they make sense <b>thymus.js</b> attempts to make a smooth
+				transition of <i>model</i> data into corresponding <i>views</i>.
+			</p>
+			<h3 id="jsonfrags">JSON Fragment Models</h3>
+			<p>
+				Fragments that are retrieved that have one of the JSON
+				<code>content-type</code>
+				definitions below will be interpreted as <i>model</i> data. How <i>model</i>
+				data is transferred to a corresponding <i>view(s)</i> is determined
+				by... Comming Soon!
+			</p>
+			<ul>
+				<li><code>text/json</code></li>
+				<li><code>application/*json</code> (where <b>*</b> is one of
+					the <a href="http://www.iana.org/assignments/media-types">standard
+						media types</a> for JSON)</li>
+			</ul>
+			<h3 id="xmlfrags">XML Fragment Models</h3>
+			<p>
+				Fragments that are retrieved that have one of the XML
+				<code>content-type</code>
+				definitions below will be interpreted as <i>model</i> data. How <i>model</i>
+				data is transferred to a corresponding <i>view(s)</i> is determined
+				by... Comming Soon!
+			</p>
+			<ul>
+				<li><code>text/xml</code></li>
+				<li><code>application/*+xml</code> (where <b>*</b> is one of
+					the <a href="http://www.iana.org/assignments/media-types">standard
+						media types</a> for XML)</li>
+			</ul>
 		</div>
 	</div>
 </body>

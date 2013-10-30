@@ -11,21 +11,21 @@
 		<div class="panel-body app-code">
 			<h3 id="fragpath">Fragment Path Resolution</h3>
 			<p>
-				Because <b>thymus.js</b> runs on the client it's not inheriently
+				Because <b>thymus.js</b> runs on the client it's not inherently
 				application context aware. Therefore, <b>thymus.js</b> uses a
 				configurable
 				<code>data-thx-context-path</code>
-				attribute on the <b>thymus.js</b> script tag. It's value
-				establishes the path to the root context of the application that
-				will be resolved along with the fragment's inclusion URL. Fragment
-				definitions can point to resources with different path levels. So,
-				it's imporant that the
+				attribute on the <b>thymus.js</b> script tag. It's value establishes
+				the path to the root context of the application that will be
+				resolved along with the fragment's <b>routing path</b>. <b>routing
+					path</b>s can point to resources with different path levels. So, it's
+				important that the
 				<code>data-thx-context-path</code>
-				synchronizes with the path defined within the fragment. For
-				example, a fragment that resides in <b>example.com/my-app/frags/nav.htm</b>
-				may also be included in <b>example.com/my-app/index.htm</b> as
-				well as <b>example.com/my-app/user/info.htm</b>. If the fragment
-				is defined something like:
+				synchronizes with the resources defined within the <b>routing
+					path</b>. For example, a fragment that resides in <b>example.com/my-app/frags/nav.htm</b>
+				may also be included in <b>example.com/my-app/index.htm</b> as well
+				as <b>example.com/my-app/user/info.htm</b>. If the <b>routing
+					attribute</b> is defined something like:
 			</p>
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-fragment=</span><span style="color: #0000FF">&quot;topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	...
@@ -33,7 +33,7 @@
 </pre></div>
 					<p>
 						And both <b>example.com/my-app/index.htm</b> and <b>example.com/my-app/user/info.htm</b>
-						contain a corresponding include (or replacement):
+						contain a corresponding <b>routing attribute</b>:
 					</p>
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/nav/nav :: topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	...
@@ -63,25 +63,18 @@
 				which infers the current path; which would be <b>example.com/my-app/</b>
 				while <b>example.com/my-app/user/info.htm</b> uses <b>"../"</b>
 				which infers one directory up; which would be <b>example.com/my-app/</b>).
-				This vasly simplifies fragment path resolution (escpecially for
-				nested fragments) and ensures that all fragment
-				inclusion/replacement paths are relative to the root context path
-				of the application. It also permits the use of the same paths to
-				exist in
-				<code>data-thx-include</code>
-				or
-				<code>data-thx-replace</code>
-				attributes; regardless of where the page that defines it resides.
+				This vastly simplifies <b>routing path</b> resolution (especially
+				for nested fragments) and ensures that all <b>routing path</b>s are
+				relative to the root context path of the application. It also
+				permits the use of the same context path to be used within multiple
+				<b>routing path</b>s; regardless of where the page that defines it
+				resides.
 			</p>
 			<h4 id="fileextensions">Fragment File Extensions</h4>
 			<p>
-				File extensions in fragment URLs are optional (and sometimes
-				undesirable). That's why <b>thymus.js</b>, by default, will use
-				the URL defined in
-				<code>data-thx-include</code>
-				or
-				<code>data-thx-replace</code>
-				per verbatim unless a
+				File extensions in <b>routing path</b>s are optional (and sometimes
+				undesirable). That's why <b>thymus.js</b>, by default, will use the
+				URL defined in a <b>routing path</b> per verbatim unless a
 				<code>data-thx-frag-extension</code>
 				is defined. If a
 				<code>data-thx-frag-extension</code>
@@ -89,12 +82,12 @@
 				<code>script</code>
 				it will use the
 				<code>data-thx-frag-extension</code>
-				value as the file extension and will appened it to any fragment
-				URLs that do not already have a file extension (should typically
-				be prefixed with a period). Any fragment URLs that have their own
-				file extension will not get the
+				value as the file extension and will append it to any <b>routing
+					path</b> URL that does not already have a file extension (should
+				typically be prefixed with a period). Any <b>routing path</b> URL
+				that has it's own file extension will not get the
 				<code>data-thx-frag-extension</code>
-				appended their fragment URLs. A special value of <b>inherit</b>
+				appended to it's <b>routing path</b>. A special value of <b>inherit</b>
 				can be used if fragments should inherit the parent page file
 				extension (if any). Here are a few variations:
 			</p>
@@ -131,13 +124,14 @@
 			<h3 id="attrpaths">Attribute Path Resolution</h3>
 			<p>
 				As with <a href="#fragpath">Fragment Path Resolution</a>, relative
-				URLs within fragments are resolved to their absolute URL
-				counterparts relative to the root context of the application as
-				defined by the
+				URLs within some standard URL related attributes are resolved to
+				their absolute URL counterparts relative to the root context of the
+				application as defined by the
 				<code>data-thx-context-path</code>
 				on the <b>thymus.js</b>
 				<code>script</code>
-				. By default, the following attributes are resolved:
+				. Although automatically resolving URL related attributes is
+				configurable, by default, the following attributes are resolved:
 			</p>
 			<ul id="attrpathsdflt">
 				<li class="badge"><code>action</code></li>
@@ -205,24 +199,13 @@
 	<span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;http://code.jquery.com/ui/jquery-ui-git.css&quot;</span>
 	<span style="color: #FF0000">rel=</span><span style="color: #0000FF">&quot;stylesheet&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 </pre></div>
-			<h3 id="otherfragtargets">Fragment Name/Target Resolution</h3>
+			<h3 id="otherfragtargets">Fragment Siphon Resolution</h3>
 			<p>
-				Typically,
-				<code>data-thx-include</code>
-				/
-				<code>data-thx-replace</code>
-				use the name of the fragment as the target. For instance,
-				<code>data-thx-include="frags/nav/nav :: topnav"</code>
-				points to a fragment target with a corresponding
-				<code>data-thx-fragment="topnav"</code>
-				(with <b>topnav</b> being the fragment name/target). The advantage
-				of this is that it abstracts any fragment identification away from
-				CSS/JS definitions. The disadvantage is that it requires the use
-				of separate
-				<code>data-thx-fragment</code>
-				attributes that are specific to <b>thymus.js</b>. For this reason
-				and for selection flexibility <b>thymus.js</b> permits the use of
-				additional types of fragment targets.
+				A <i>siphon</i> in a most practical sense is just a JQuery selector,
+				but can also be a
+				<code>function</code>
+				that will <em>handle</em> the extraction and/or placement of data
+				within the DOM.
 			</p>
 			<h4 id="selfragtargets">JQuery Selector Fragment Targets</h4>
 			<p>

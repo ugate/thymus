@@ -98,6 +98,12 @@ div.app-scroll .scroll-spy {
 	overflow: auto;
 }
 
+.thymus-green {
+	color: #468847;
+	background-color: #dff0d8;
+	border-color: #d6e9c6;
+}
+
 .icon-green {
 	color: #00ff00 !important;
 }

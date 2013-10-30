@@ -20,11 +20,58 @@
 	var FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
 	var FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
 	var FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
+	this.TATTR = 'attribute';
+	this.TINC = 'include';
+	this.TREP = 'replace';
+	this.TUPD = 'update';
 	var eventFuncs = {};
 	var eventFuncCnt = 0;
 	this.ieVersion = 0;
 	this.firstRun = true;
 	this.rootRun = true;
+
+	/**
+	 * DOM event function that allows listener updates and on/off options
+	 * 
+	 * @constructor
+	 * @param pel
+	 *            the parent element that
+	 * @param el
+	 *            the element that will be broadcasting the event
+	 * @param en
+	 *            the event name
+	 * @param fx
+	 *            the function that will be executed when an incoming event is
+	 *            received (parameters: current parent element, reference to the
+	 *            DOM event function)
+	 */
+	function DomEventFunc(pel, el, en, fx) {
+		var $el = $(el);
+		var $pel = $(pel);
+		var func = fx;
+		var event = en;
+		function on() {
+			func($pel, $(this));
+		}
+		this.update = function(pel, en, fx, add) {
+			$pel = pel ? $(pel) : $pel;
+			func = fx || func;
+			if ((en && en != event) || add == false) {
+				$el.off(event, on);
+				event = en || event;
+			}
+			if (add == true) {
+				$el.on(event, on);
+			}
+		};
+		this.getElement = function() {
+			return $el;
+		};
+		this.getEvent = function() {
+			return event;
+		};
+		this.update(null, null, null, true);
+	}
 
 	/**
 	 * Adds an event function that will execute the supplied function when the
@@ -45,35 +92,24 @@
 	 */
 	function addEventFunc(ctx, a, pel, el, evt, fx) {
 		var en = getEventName(evt, false);
-		// prevent duplicating event listeners
 		if (el) {
+			// prevent duplicating event listeners
 			for ( var k in eventFuncs) {
-				if (eventFuncs[k].el.is(el) && eventFuncs[k].event == en) {
-					eventFuncs[k].fx = fx;
-					eventFuncs[k].pel = pel;
+				if (eventFuncs[k].getElement().is(el) && eventFuncs[k].getEvent() == en) {
+					eventFuncs[k].update(pel, null, fx, null);
 					return true;
 				}
 			}
-		}
-		var fn = a + ++eventFuncCnt;
-		var ev = null;
-		eventFuncs[fn] = {
-			fx : fx,
-			pel : pel,
-			el : el,
-			event : en
-		};
-		if (el) {
-			var $el = $(el);
-			$el.on(en, function() {
-				eventFuncs[fn].fx(eventFuncs[fn].pel, $(this));
-			});
-			$el.on('remove', function() {
+			var fn = a + ++eventFuncCnt;
+			var ev = null;
+			eventFuncs[fn] = new DomEventFunc(pel, el, en, fx);
+			eventFuncs[fn].getElement().on('remove', function() {
+				eventFuncs[fn].update(null, null, null, false);
 				eventFuncs[fn] = null;
 			});
 		} else {
 			throw new Error('Cannot register "' + en
-					+ '" event for function action "' + fn
+					+ '" event for function action "' + fx
 					+ '" on element(s) from selector "' + selector
 					+ '" prior to being added to the DOM');
 			// possible memory leaks may occur on the HTTP functions
@@ -285,10 +321,6 @@
 	 *            the JQuery options used
 	 */
 	function FragCtx(selector, script, opts) {
-		var TATTR = 'attribute';
-		var TINC = 'include';
-		var TREP = 'replace';
-		var TUPD = 'update';
 		var ctx = this;
 		this.opts = opts;
 		var includeReplaceAttrs = opts.includeAttrs.concat(opts.replaceAttrs);
@@ -296,18 +328,10 @@
 				.test(location.protocol) ? 'http:' : null;
 		var fragSelector = getThxSel(includeReplaceAttrs, null);
 		var urlAttrs = genAttrQueries(opts.urlAttrs, 'GET', TATTR);
-		var inculdeGetAttrs = genAttrQueries(opts.inculdeGetAttrs, 'GET', TINC);
-		var replaceGetAttrs = genAttrQueries(opts.replaceGetAttrs, 'GET', TREP);
-		var updateGetAttrs = genAttrQueries(opts.updateGetAttrs, 'GET', TUPD);
-		var inculdePostAttrs = genAttrQueries(opts.inculdePostAttrs, 'POST', TINC);
-		var replacePostAttrs = genAttrQueries(opts.replacePostAttrs, 'POST', TREP);
-		var updatePostAttrs = genAttrQueries(opts.updatePostAttrs, 'POST', TUPD);
-		var inculdePutAttrs = genAttrQueries(opts.inculdePutAttrs, 'PUT', TINC);
-		var replacePutAttrs = genAttrQueries(opts.replacePutAttrs, 'PUT', TREP);
-		var updatePutAttrs = genAttrQueries(opts.updatePutAttrs, 'PUT', TUPD);
-		var inculdeDeleteAttrs = genAttrQueries(opts.inculdeDeleteAttrs, 'DELETE', TINC);
-		var replaceDeleteAttrs = genAttrQueries(opts.replaceDeleteAttrs, 'DELETE', TREP);
-		var updateDeleteAttrs = genAttrQueries(opts.updateDeleteAttrs, 'DELETE', TUPD);
+		var getAttrs = genAttrQueries(opts.getAttrs, 'GET', TINC);
+		var postAttrs = genAttrQueries(opts.postAttrs, 'POST', TINC);
+		var putAttrs = genAttrQueries(opts.putAttrs, 'PUT', TINC);
+		var deleteAttrs = genAttrQueries(opts.deleteAttrs, 'DELETE', TINC);
 
 		/**
 		 * Executes a {FragCtx} action
@@ -336,13 +360,13 @@
 				a.method = a.method ? a.method : 'GET';
 				if (a.resultSiphon) {
 					loadFragments(c ? c : p, a, true, null);
-				} else if (a.routingPath) {
+				} else if (a.pathSiphon) {
 					var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), {});
 					var f = new Frag(null, t.scope, t.scope, {
 						siphon : a
 					});
 					broadcast(opts.eventFragChain, opts.eventFragBeforeHttp, t, f);
-					location.href = adjustPath(getScriptCtxPath(), a.routingPath,
+					location.href = adjustPath(getScriptCtxPath(), a.pathSiphon,
 							script ? script.attr(opts.fragExtensionAttr) : '');
 				} else {
 					log('No fragment target specified for ' + a.action);
@@ -358,7 +382,74 @@
 		};
 
 		/**
-		 * Updates a navigation source for an array object
+		 * Gets an attribute value using an plug-in option name
+		 * 
+		 * @param $el
+		 *            the element to get the attribute from
+		 * @param n
+		 *            the name of the plug-in option that will be used in
+		 *            retrieving the attribute value
+		 * @returns the attribute value
+		 */
+		function getOptsAttrVal($el, n) {
+			if (!n || !$el) {
+				return undefined;
+			} else {
+				var o = null;
+				var a = null;
+				if ($.isArray(o = opts[n])) {
+					for (var i = 0; i < o.length; i++) {
+						a = $el.attr(o[i]);
+						if (a !== undefined) {
+							return a;
+						}
+					}
+				} else if (typeof o === 'string') {
+					a = $el.attr(o);
+					return a !== undefined ? $el.attr(o) : null;
+				}
+			}
+			return null;
+		}
+
+		/**
+		 * Adds DOM siphon attributes to an object based upon an array of
+		 * attribute names
+		 * 
+		 * @param $el
+		 *            the element that contains the the siphon attributes
+		 * @param m
+		 *            the HTTP method context
+		 * @param o
+		 *            the object where the siphon attribute values will be added
+		 *            to
+		 * @param ns
+		 *            the array of attribute names to look for
+		 * @returns the object where the attribute values are being added to
+		 */
+		function addSiphonAttrVals($el, m, o, ns) {
+			if ($el && m && o && $.isArray(ns)) {
+				m = m.toLowerCase();
+				var an = null;
+				var on = null;
+				for (var i=0; i<ns.length; i++) {
+					on = ns[i].toLowerCase();
+					an = ns[i].charAt(0).toUpperCase() + ns[i].substr(1).toLowerCase();
+					an = m + (m == on ? '' : an) + 'Attrs';
+					on = (m == on ? 'event' : on) + 'Siphon';
+					if (o[on] !== undefined) {
+						o[on] = getOptsAttrVal($el, an);
+					}
+				}
+			}
+			return o;
+		}
+
+		/**
+		 * Updates a navigation {Frag} for an array object returned from
+		 * <code>genAttrQueries</code>. Updates will be made to paths when
+		 * needed. Also, any DOM driven events will be registered that will
+		 * listen for incoming events that will trigger fragment loading.
 		 * 
 		 * @param t
 		 *            the {FragsTrack}
@@ -388,32 +479,34 @@
 							+ absolutePath(v, t.ctxPath) + '"';
 				}
 			}
-			function av(p, i) {
-				return i >= p.length ? '' : $.trim(p[i]);
-			}
-			v = v.split(opts.fragSep);
 			var r = {
 				selector : '',
 				action : opts.actionNavInvoke,
-				method : t.method,
-				type : a.type,
 				onEvent : '',
-				event : av(v, 0),
-				paramSiphon : av(v, 1),
-				routingPath : av(v, 2),
-				resultSiphon : av(v, 3),
-				destSiphon : av(v, 4),
+				eventAttrs : a.items,
+				method : a.method,
+				typeSiphon : a.type,
+				eventSiphon : v,
+				paramSiphon : '',
+				pathSiphon : '',
+				resultSiphon : '',
+				destSiphon : '',
 				funcName : '',
-				isValid : v.length > 1
+				isValid : true//v.length > 1
 			};
 			if (r.isValid) {
-				var rtn = addEventFunc(ctx, r.action, f.pel, el, r.event,
+				var rtn = addEventFunc(ctx, r.action, f.pel, el, r.eventSiphon,
 						function(pel, ib) {
+							var $ib = $(ib);
+							//getEventName(evt, false);
+							addSiphonAttrVals($ib, r.method, r,
+									[ r.method, 'type', 'params', 'path',
+											'result', 'dest' ]);
 							r.selector = ib;
 							ctx.exec(r, pel, ib);
 						});
 				r.onEvent = rtn.eventAttrValue;
-				r.event = rtn.eventName;
+				r.eventSiphon = rtn.eventName;
 			} else {
 				t.addError('Expected at least two parameters for action "'
 						+ opts.actionNavInvoke + '" and method "' + r.method
@@ -500,18 +593,10 @@
 			if (uu) {
 				updateNavAttrs(t, f, urlAttrs, s);
 			}
-			updateNavAttrs(t, f, inculdeGetAttrs, s);
-			updateNavAttrs(t, f, replaceGetAttrs, s);
-			updateNavAttrs(t, f, updateGetAttrs, s);
-			updateNavAttrs(t, f, inculdePostAttrs, s);
-			updateNavAttrs(t, f, replacePostAttrs, s);
-			updateNavAttrs(t, f, updatePostAttrs, s);
-			updateNavAttrs(t, f, inculdePutAttrs, s);
-			updateNavAttrs(t, f, replacePutAttrs, s);
-			updateNavAttrs(t, f, updatePutAttrs, s);
-			updateNavAttrs(t, f, inculdeDeleteAttrs, s);
-			updateNavAttrs(t, f, replaceDeleteAttrs, s);
-			updateNavAttrs(t, f, updateDeleteAttrs, s);
+			updateNavAttrs(t, f, getAttrs, s);
+			updateNavAttrs(t, f, postAttrs, s);
+			updateNavAttrs(t, f, putAttrs, s);
+			updateNavAttrs(t, f, deleteAttrs, s);
 		}
 
 		/**
@@ -896,26 +981,26 @@
 		 */
 		function Frag(pf, $pel, $fl, t) {
 			var ctx = this;
-			var forcett = t.siphon && t.siphon.type;
+			var forcett = t.siphon && t.siphon.typeSiphon;
 			//var isHead = $fl instanceof jQuery ? $fl.is('head') : false;
 			this.pf = pf;
 			this.pel = $pel;
 			this.el = $fl;
-			this.tt = forcett ? t.siphon.type : TATTR;
+			this.dt = forcett ? t.siphon.typeSiphon : TATTR;
 			var a = !t.isScopeSelect ? getFragAttr($fl, opts.includeAttrs)
 					: null;
 			if (!a && !t.isScopeSelect) {
 				a = getFragAttr($fl, opts.replaceAttrs);
 				if (!forcett) {
-					this.tt = TREP;
+					this.dt = TREP;
 				}
 			} else if (!forcett) {
-				this.tt = TINC;
+				this.dt = TINC;
 			}
 			a = a ? a.split(opts.fragSep) : null;
-			this.event = t.siphon ? t.siphon.event : null;
+			this.event = t.siphon ? t.siphon.eventSiphon : null;
 			this.ps = t.siphon ? t.siphon.paramSiphon : null;
-			this.rp = !a ? t.siphon.routingPath : a && a.length > 0 ? $.trim(a[0])
+			this.rp = !a ? t.siphon.pathSiphon : a && a.length > 0 ? $.trim(a[0])
 					: null;
 			this.rs = !a ? t.siphon.resultSiphon : a && a.length > 1 ? $.trim(a[1])
 					: null;
@@ -957,7 +1042,35 @@
 				this.pf.ccnt(true);
 			}
 			function params(s, d) {
-				// TODO : add parameter siphon impl
+				if (s) {
+					var x = !d ? {} : undefined;
+					var c = 0;
+					$(s).each(function() {
+						var $c = $(this);
+						var p = $c.prop('name');
+						if (d) {
+							if (p && d[p] !== 'undefined') {
+								x[p] = d[p];
+							} else if ((p = $c.prop('id')) && d[p] !== 'undefined') {
+								x[p] = d[p];
+							} else {
+								$c.html(d[p]);
+							}
+						} else {
+							if (p) {
+								var ia = $.isArray(x[p]);
+								if (!ia && x[p] !== 'undefined') {
+									x[p] = [ x[p], v ];
+								} else if (ia) {
+									x[p][x[p].length] = v;
+								} else {
+									x[p] = v;
+								}
+							}
+						}
+					});
+					return c > 0 ? $.param(x) : undefined;
+				}
 			}
 			this.psx = function() {
 				return params(this.ps);
@@ -1009,26 +1122,37 @@
 					}
 				} else {
 					var im = this.isModel(xhr);
-					if (this.tt === TREP) {
+					if (this.dt === TREP) {
+						var $d = this.ds ? $(this.ds) : this.el;
 						try {
 							var $x = $(x);
-							this.el.replaceWith($x);
+							$d.replaceWith($x);
 							this.src = $x;
 						} catch (e) {
 							// node may contain top level text nodes
-							var $x = this.el.parent();
-							this.el.replaceWith(x);
+							var $x = $d.parent();
+							$d.replaceWith(x);
 							this.src = $x;
 						}
-					} else if (this.tt === TINC || this.tt === TUPD) {
-						if (this.ds) {
-							var $d = $(this.ds);
-							if (this.tt === TUPD) {
-								// remove any existing fragments that may exist
-								// under the element
-								$d.find(this.s).remove();
+					} else if (this.dt === TINC || this.dt === TUPD) {
+						if (this.ds || this.dt === TUPD) {
+							var $d = this.ds ? $(this.ds) : null;
+							if ($d) {
+								if (this.dt === TUPD) {
+									// remove any existing fragments that may exist
+									// under the destination that match the fragment
+									// selection
+									$d.find(this.s).remove();
+								}
+								$d.append(x);
+							} else {
+								if (this.dt === TUPD) {
+									// remove any existing content that may exist
+									// under the element
+									this.el.contents().remove();
+								}
+								this.el.append(x);
 							}
-							$d.append(x);
 						} else {
 							this.el.append(x);
 						}
@@ -1060,7 +1184,7 @@
 				var cf = this;
 				do {
 					us[us.length] = {
-						routingPath : cf.rp,
+						pathSiphon : cf.rp,
 						resultSiphon : cf.getResultSiphon(),
 						destination : cf.ds,
 						source : cf.src
@@ -1069,7 +1193,7 @@
 				return us;
 			};
 			this.toString = function() {
-				return this.constructor.name + ' -> type: ' + this.tt
+				return this.constructor.name + ' -> type: ' + this.dt
 						+ ', HTTP method: ' + this.method
 						+ ', parameter siphon: ' + this.ps + ', routing path: '
 						+ this.rp + ', result siphon: ' + this.rs
@@ -1097,7 +1221,7 @@
 			o.routingStack = f ? f.getStack() : undefined;
 			o.sourceEvent = f ? f.event : undefined;
 			o.paramSiphon = f ? f.ps : undefined;
-			o.routingPath = f ? f.rp : undefined;
+			o.pathSiphon = f ? f.rp : undefined;
 			o.resultSiphon = f ? f.getResultSiphon() : undefined;
 			o.destSiphon = f ? f.ds : undefined;
 			o.source = f ? f.src instanceof jQuery ? f.src : f.el : undefined;
@@ -1111,7 +1235,7 @@
 				return '[' + o.chain + ' event, fragCount: ' + o.fragCount
 						+ ', fragCurrTotal: ' + o.fragCurrTotal
 						+ ', sourceEvent: ' + o.sourceEvent + ', paramSiphon: '
-						+ o.paramSiphon + ', routingPath: ' + o.routingPath
+						+ o.paramSiphon + ', pathSiphon: ' + o.pathSiphon
 						+ ', resultSiphon: ' + o.resultSiphon
 						+ ', destSiphon: ' + o.destSiphon + ', element: '
 						+ o.element + ', error: ' + o.error + ']';
@@ -1236,7 +1360,7 @@
 				if (f.func && f.func.isValid) {
 					f.func.run({
 						handle : {
-							type : f.tt,
+							type : f.dt,
 							data : r,
 							status : status,
 							xhr : xhr,
@@ -1486,18 +1610,30 @@
 					'codebase', 'data', 'dynsrc', 'formaction', 'href', 'icon',
 					'longdesc', 'lowsrc', 'manifest', 'poster', 'profile',
 					'src', 'usemap' ],
-			inculdeGetAttrs : [ 'data-thx-include-get' ],
-			replaceGetAttrs : [ 'data-thx-replace-get' ],
-			updateGetAttrs : [ 'data-thx-update-get' ],
-			inculdePostAttrs : [ 'data-thx-include-post' ],
-			replacePostAttrs : [ 'data-thx-replace-post' ],
-			updatePostAttrs : [ 'data-thx-update-post' ],
-			inculdePutAttrs : [ 'data-thx-include-put' ],
-			replacePutAttrs : [ 'data-thx-replace-put' ],
-			updatePutAttrs : [ 'data-thx-update-put' ],
-			inculdeDeleteAttrs : [ 'data-thx-include-delete' ],
-			replaceDeleteAttrs : [ 'data-thx-replace-delete' ],
-			updateDeleteAttrs : [ 'data-thx-update-delete' ],
+			getAttrs : [ 'data-thx-get' ],
+			postAttrs : [ 'data-thx-post' ],
+			putAttrs : [ 'data-thx-put' ],
+			deleteAttrs : [ 'data-thx-delete' ],
+			getPathAttrs : [ 'data-thx-get-path' ],
+			postPathAttrs : [ 'data-thx-post-path' ],
+			putPathAttrs : [ 'data-thx-put-path' ],
+			deletePathAttrs : [ 'data-thx-delete-path' ],
+			getTypeAttrs : [ 'data-thx-get-type' ],
+			postTypeAttrs : [ 'data-thx-post-type' ],
+			putTypeAttrs : [ 'data-thx-put-type' ],
+			deleteTypeAttrs : [ 'data-thx-delete-type' ],
+			getParamsAttrs : [ 'data-thx-get-params' ],
+			postParamsAttrs : [ 'data-thx-post-params' ],
+			putParamsAttrs : [ 'data-thx-put-params' ],
+			deleteParamsAttrs : [ 'data-thx-delete-params' ],
+			getResultAttrs : [ 'data-thx-get-result' ],
+			postResultAttrs : [ 'data-thx-post-result' ],
+			putResultAttrs : [ 'data-thx-put-result' ],
+			deleteResultAttrs : [ 'data-thx-delete-result' ],
+			getDestAttrs : [ 'data-thx-get-dest' ],
+			postDestAttrs : [ 'data-thx-post-dest' ],
+			putDestinationAttrs : [ 'data-thx-put-dest' ],
+			deleteDestinationAttrs : [ 'data-thx-delete-dest' ],
 			contextPathAttr : 'data-thx-context-path',
 			fragListenerAttr : 'data-thx-onfrag',
 			fragsListenerAttr : 'data-thx-onfrags',
