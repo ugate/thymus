@@ -690,15 +690,14 @@
 		 * 
 		 * @param url
 		 *            the URL to get the file extension from
-		 * @returns the file extension for the supplied URL (or empty when not present)
+		 * @returns the file extension for the supplied URL (or empty when not
+		 *          present)
 		 */
 		function getFileExt(url) {
 			var x = getFile(url);
 			if (x) {
 				x = x.split('.');
-				if (x.length > 1) {
-					x = '.' + x[x.length - 1];
-				}
+				x = x.length > 1 ? '.' + x[x.length - 1] : '';
 			}
 			return x;
 		}
@@ -713,7 +712,7 @@
 		function getFile(url) {
 			var f = '';
 			if (url) {
-				var fs = url.match(opts.regexFileExtension);
+				var fs = url.match(opts.regexFileName);
 				if (fs && fs.length > 0) {
 					f = fs[0];
 				}
@@ -769,10 +768,11 @@
 		 *            the file extension to apply
 		 */
 		function adjustPath(c, p, x) {
-			x = x ? x.toLowerCase() == opts.inheritRef ? getFileExt(location.href)
-					: x
+			x = x && p.lastIndexOf('/') != (p.length - 1) ? 
+					x.toLowerCase() == opts.inheritRef ? getFileExt(location.href)
+					: getFileExt(p) ? '' : x
 					: '';
-			if (x && p.indexOf('.') < 0) {
+			if (x) {
 				p += x;
 			}
 			p = absolutePath(p, c);
@@ -1640,7 +1640,7 @@
 			fragHeadAttr : 'data-thx-head-frag',
 			regexFragName : /^[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*$/,
 			regexFunc : /^[_$a-zA-Z\xA0-\uFFFF].+?\(/i,
-			regexFileExtension : /[^\/?#]+(?=$|[?#])/,
+			regexFileName : /[^\/?#]+(?=$|[?#])/,
 			regexScriptTags : /<script[^>]*>([\\S\\s]*?)<\/script>/img,
 			regexIanaProtocol : /^(([a-z]+)?:|\/\/|#)/i,
 			regexFileTransForProtocolRelative : /^(file:?)/i,
