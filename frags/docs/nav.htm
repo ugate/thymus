@@ -357,10 +357,20 @@
 					Explicit <b>destination siphon</b> <i>include</i> demo:
 				</div>
 				<div class="list-group-item">
-					<button type="button" class="btn btn-primary"
-						data-thx-get="click" data-thx-get-path="frags/user/user"
-						data-thx-get-result="user" data-thx-get-dest="#userDest2">Load
-						User</button>
+					<div class="btn-group">
+						<button type="button" class="btn btn-primary" data-thx-get="click"
+							data-thx-get-path="frags/user/user1"
+							data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+							data-thx-get-dest="#userDest2">Include User1</button>
+						<button type="button" class="btn btn-primary" data-thx-get="click"
+							data-thx-get-path="frags/user/user2"
+							data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+							data-thx-get-dest="#userDest2">Include User2</button>
+						<button type="button" class="btn btn-primary" data-thx-get="click"
+							data-thx-get-path="frags/user/user3"
+							data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+							data-thx-get-dest="#userDest2">Include User3</button>
+					</div>
 				</div>
 				<div id="userDest2" class="list-group-item"></div>
 			</div>

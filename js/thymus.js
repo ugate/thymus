@@ -241,10 +241,12 @@
 	 * @param d
 	 *            the delimiter to use when multiple results are returned from a
 	 *            JQuery selector
+	 * @param el
+	 *            the DOM element that initiated the call (if any)
 	 * @returns the siphoned string with replaced values returned from all/any
 	 *          found JQuery selector(s)
 	 */
-	function extractValues(s, trx, d) {
+	function extractValues(s, trx, d, el) {
 	    if (s) {
 	        var x = s;
 	        var t = '';
@@ -305,12 +307,14 @@
 	 * @param d
 	 *            the delimiter to use when multiple results are returned from a
 	 *            JQuery selector
+	 * @param el
+	 *            the DOM element that initiated the call (if any)
 	 * @returns the siphoned string with replaced values returned from all/any
 	 *          found JQuery selector(s)
 	 */
-	function siphonValues(s, rx, trx, d) {
+	function siphonValues(s, rx, trx, d, el) {
 		return s.replace(rx, function(m, v) {
-			return siphonValues(extractValues(v, trx, d), rx, trx, d);
+			return siphonValues(extractValues(v, trx, d, el), rx, trx, d, el);
 		});
 	}
 
@@ -1116,7 +1120,7 @@
 				rp = rpn ? rpn : rp;
 				if (!rpp || rpn) {
 					rpp = siphonValues(rp, opts.regexPathParamSiphon,
-							opts.regexValueSiphon, '/');
+							opts.regexValueSiphon, '/', this.el);
 				}
 				return rpp;
 			};
