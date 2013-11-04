@@ -85,7 +85,7 @@
 						The <b>DOM routing attribute</b>'s <b>parameter siphon</b> is a <a
 							href="http://api.jquery.com/category/selectors/">JQuery
 							selector</a> that will capture parameters that will be sent along
-						with the <b>routing path</b>. See the <a href="#otherfragtargets">fragment
+						with the <b>path siphon</b>. See the <a href="#otherfragtargets">fragment
 							siphons section</a> for more details on how <b>parameter siphon</b>s
 						use JQuery selectors.
 					</div>
@@ -93,7 +93,7 @@
 				<div id="domroutingpath" class="row row-thymus">
 					<div class="col-md-3">
 						<div>
-							<span class="label label-info">routing path</span> &dagger;
+							<span class="label label-info">path siphon</span> &dagger;
 						</div>
 						<div>
 							<code>data-thx-*VERB*-path</code>
@@ -103,7 +103,7 @@
 						The <b>DOM routing attribute</b>'s <b>path</b> should point to the
 						location where the fragment will be captured (e.g. <i>path/to/my/frag</i>).
 						See the <a href="#paths">path resolution section</a> for more
-						details on how paths are resolved.
+						details on how paths are resolved and <a href="#">path building</a> to dynamically build paths.
 					</div>
 				</div>
 				<div id="domresultsiphon" class="row row-thymus">
@@ -198,8 +198,8 @@
 				(see <a href="#attrpaths">attribute path resolution techniques</a>
 				for more details). A DOM event can also be used by just providing a
 				<b>DOM routing attribute</b> with just an <b>event</b> name, an
-				optional <b>parameter siphon</b> and a corresponding <b>routing
-					path</b>:
+				optional <b>parameter siphon</b> and a corresponding <b>path
+					siphon</b>:
 			</p>
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/other/page&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Sign in<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
@@ -216,7 +216,7 @@
 			<p>
 				A self-targeting asynchronous transfer is a <b>DOM routing
 					attribute</b> that has a value that defines a <b>event</b>, an optional
-				<b>parameter siphon</b>, a <b>routing path</b> and an optional <b>result
+				<b>parameter siphon</b>, a <b>path siphon</b> and an optional <b>result
 					siphon</b>, but does not define a <b>destination siphon</b>. In this
 				case the <b>destination siphon</b> will default to the node where
 				the <b>DOM routing attribute</b> is defined. Consider the following:
@@ -381,16 +381,18 @@
 					Explicit <b>destination siphon</b> <i>update</i> demo:
 				</div>
 				<div class="list-group-item">
-					<select class="btn btn-primary" data-thx-get="change"
-						data-thx-get-path="frags/user/user" data-thx-get-result="user"
+					<select id="demoDomUpdateSel" class="btn btn-primary"
+						data-thx-get="change"
+						data-thx-get-path="frags/user/@{#demoDomUpdateSel}"
+						data-thx-get-result="[class^=&quot;thymus-user&quot;]"
 						data-thx-get-type="update" data-thx-get-dest="#userDest3">
-						<option id="user1">User 1</option>
-						<option id="user2">User 2</option>
-						<option id="user3">User 3</option>
+						<option value="user1">User 1</option>
+						<option value="user2">User 2</option>
+						<option value="user3">User 3</option>
 					</select>
 				</div>
 				<div id="userDest3" class="list-group-item">
-					<div data-thx-replace="frags/user/user :: user">Loading...</div>
+					<div data-thx-replace="@{#demoDomUpdateSel->data-thx-get-path} :: [class^=&quot;thymus-user&quot;]">Loading...</div>
 				</div>
 			</div>
 			<h3 id="shorthand">Auto Loading Fragments (short-hand)</h3>
@@ -398,9 +400,9 @@
 				A short-hand <b>routing attribute</b> can also be used which is
 				equivalent to a <b>DOM routing attribute</b> with a
 				<code>load</code>
-				<b>event</b> and a separate <b>routing path</b> attribute. Instead
-				of two attributes, the short-handed version combines the <b>routing
-					path</b> and <b>result siphon</b> into one attribute separated by a "<b>::</b>"
+				<b>event</b> and a separate <b>path siphon</b> attribute. Instead of
+				two attributes, the short-handed version combines the <b>path
+					siphon</b> and <b>result siphon</b> into one attribute separated by a "<b>::</b>"
 				(the separator can be overridden using the
 				<code>data-thx-separator</code>
 				attribute on the <b>thymus.js</b> script definition or <a
@@ -412,8 +414,8 @@
 				or
 				<code>data-thx-include</code>
 				<b>routing attribute</b> is found throughout the document (including
-				within a fragment itself). It's use is limited to the <b>routing
-					path</b> and <b>result siphon</b> defined within it and will not use
+				within a fragment itself). It's use is limited to the <b>path
+					siphon</b> and <b>result siphon</b> defined within it and will not use
 				any other <b>DOM routing attribute</b>s that may be defined on the
 				node. Examples can be found under the <a href="#usage">fragment
 					types section</a>.

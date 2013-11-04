@@ -217,6 +217,104 @@
 	}
 
 	/**
+	 * Extracts value(s) from node(s) returned from the supplied JQuery
+	 * selector. The JQuery selector can also contain a type that will determine
+	 * how value(s) are captured from node(s) returned from the JQuery selector.
+	 * The "type" regular expression will be used to determine what will be used
+	 * to extract values from the returned nodes from the JQuery selector.
+	 * Possible values are "text", an attribute name or when nothing is defined
+	 * JQuery's serializeArray() will be called on the node(s). When
+	 * serializeArray() is empty an attempt to call JQuery's val() function will
+	 * be made to retrieve the replacement value.
+	 * 
+	 * @param s
+	 *            the string that will contain just a JQuery selector or a
+	 *            JQuery selector and a type that indicates how to extract
+	 *            value(s) from the node(s) returned by the JQuery selector
+	 *            (delimited by character(s) defined by the type regular
+	 *            expression)
+	 * @param trx
+	 *            the regular expression that will be used to find the type of
+	 *            node value extraction (match should return at least two
+	 *            values- the 1st being the JQuery selector and the 2nd being
+	 *            the type)
+	 * @param d
+	 *            the delimiter to use when multiple results are returned from a
+	 *            JQuery selector
+	 * @returns the siphoned string with replaced values returned from all/any
+	 *          found JQuery selector(s)
+	 */
+	function extractValues(s, trx, d) {
+	    if (s) {
+	        var x = s;
+	        var t = '';
+	        s.replace(trx, function(m, v1, v2) {
+	            x = v1;
+	            t = v2 ? v2 : '';
+	        });
+	        var $x = x ? $(x) : null;
+	        if ($x && $x.length > 0) {
+	            var nv = '';
+	            if (!t) {
+	            	// it would be nice if we could check if has
+					// val(), but an empty string may be
+					// returned by val() so serialize array is
+					// checked instead
+					nv = $x.serializeArray();
+	                if (!nv || nv.length <= 0) {
+	                    nv = $x.val();
+	                } else {
+	                	var nva = nv;
+	                    nv = '';
+	                    $.each(nva, function() {
+	                        nv += (nv.length > 0 ? d : '') + this.value;  
+	                    });
+	                }
+	            } else if (t && t.toLowerCase() == 'text') {
+	                nv = $x.text();
+	            } else {
+	                nv = $x.attr(t);
+	            }
+	            return nv !== undefined && nv != null ? nv : s;
+	        }
+	    }
+	    return '';
+	}
+
+	/**
+	 * Recursively replaces values found within a string with values found from
+	 * JQuery selector(s). Results from each JQuery string found will use the
+	 * "type" regular expression to determine what will be used to extract
+	 * values from the returned nodes from the JQuery selector. Possible values
+	 * are "text", an attribute name or when nothing is defined JQuery's
+	 * serializeArray() will be called on the node(s). When serializeArray() is
+	 * empty an attempt to call JQuery's val() function will be made to retrieve
+	 * the replacement value.
+	 * 
+	 * @param s
+	 *            the string to replace JQuery selectors in
+	 * @param rx
+	 *            the regular expression that will be used to find the JQuery
+	 *            selector(s) (replace function is used so the 1st value should
+	 *            be the raw JQuery selector- no other characters allowed)
+	 * @param trx
+	 *            the regular expression that will be used to find the type of
+	 *            node value extraction (match should return at least two
+	 *            values- the 1st being the JQuery selector nad the 2nd being
+	 *            the type)
+	 * @param d
+	 *            the delimiter to use when multiple results are returned from a
+	 *            JQuery selector
+	 * @returns the siphoned string with replaced values returned from all/any
+	 *          found JQuery selector(s)
+	 */
+	function siphonValues(s, rx, trx, d) {
+		return s.replace(rx, function(m, v) {
+			return siphonValues(extractValues(v, trx, d), rx, trx, d);
+		});
+	}
+
+	/**
 	 * Function constructor
 	 * 
 	 * @constructor
@@ -880,7 +978,7 @@
 						|| type == opts.eventFragLoad
 						|| type == opts.eventFragsLoad) {
 					fire();
-				} else if (f && !f.rp) {
+				} else if (f && !f.rp()) {
 					t.addError('Invalid URL for ' + f.toString(), f, null,
 							null, null);
 					t.ccnt++;
@@ -919,11 +1017,11 @@
 			this.len = 0;
 			var c = [];
 			this.addFrag = function(f) {
-				if (c[f.rp]) {
-					c[f.rp].frags[c[f.rp].frags.length] = f;
+				if (c[f.rp()]) {
+					c[f.rp()].frags[c[f.rp()].frags.length] = f;
 					return false;
 				} else {
-					c[f.rp] = {
+					c[f.rp()] = {
 						result : null,
 						status : null,
 						xhr : null,
@@ -1000,19 +1098,28 @@
 			a = a ? a.split(opts.fragSep) : null;
 			this.event = t.siphon ? t.siphon.eventSiphon : null;
 			this.ps = t.siphon ? t.siphon.paramSiphon : null;
-			this.rp = !a ? t.siphon.pathSiphon : a && a.length > 0 ? $.trim(a[0])
+			var rp = !a ? t.siphon.pathSiphon : a && a.length > 0 ? $.trim(a[0])
 					: null;
 			this.rs = !a ? t.siphon.resultSiphon : a && a.length > 1 ? $.trim(a[1])
 					: null;
 			this.ds = !a ? t.siphon.destSiphon : this.el;
 			this.method = t.siphon && t.siphon.method ? t.siphon.method : 'GET';
-			if (this.rp && this.rp.length > 0
-					&& this.rp.toLowerCase() != opts.selfRef.toLowerCase()) {
-				this.rp = adjustPath(t.ctxPath, this.rp, script ? script
+			if (rp && rp.length > 0
+					&& rp.toLowerCase() != opts.selfRef.toLowerCase()) {
+				rp = adjustPath(t.ctxPath, rp, script ? script
 						.attr(opts.fragExtensionAttr) : '');
 			} else if (this.rs && this.rs.length > 0) {
-				this.rp = opts.selfRef;
+				rp = opts.selfRef;
 			}
+			var rpp = null;
+			this.rp = function(rpn) {
+				rp = rpn ? rpn : rp;
+				if (!rpp || rpn) {
+					rpp = siphonValues(rp, opts.regexPathParamSiphon,
+							opts.regexValueSiphon, '/');
+				}
+				return rpp;
+			};
 			this.func = this.rs ? new Func(opts, this.rs, null, true) : null;
 			if (this.rs) {
 				var fpts = opts.regexFunc.exec(this.rs);
@@ -1109,15 +1216,15 @@
 				if (xIsJ && x.is('script')) {
 					if (xhr && xhr.status != 200) {
 						t.addError(xhr.status + ': ' + ts
-								+ ' routing path="' + this.rp + '"', this, e, ts, xhr);
+								+ ' routing path="' + this.rp() + '"', this, e, ts, xhr);
 						this.domDone(true);
 						return;
-					} else if (!xhr && this.rp && this.rs) {
-						var sdi = this.rp.indexOf('data:text/javascript,');
+					} else if (!xhr && rp && this.rs) {
+						var sdi = rp.indexOf('data:text/javascript,');
 						var ss = x.prop('type');
 						$('<script' + (typeof ss === 'string' && ss.length > 0 ? 
 								' type="' + ss + '">' : '>') + (sdi > -1 ? 
-								this.rp.substr('data:text/javascript,'.length) : this.rp) + 
+								rp.substr('data:text/javascript,'.length) : rp) + 
 							'</script>').appendTo(this.rs);
 					}
 				} else {
@@ -1184,7 +1291,7 @@
 				var cf = this;
 				do {
 					us[us.length] = {
-						pathSiphon : cf.rp,
+						pathSiphon : cf.rp(),
 						resultSiphon : cf.getResultSiphon(),
 						destination : cf.ds,
 						source : cf.src
@@ -1196,7 +1303,7 @@
 				return this.constructor.name + ' -> type: ' + this.dt
 						+ ', HTTP method: ' + this.method
 						+ ', parameter siphon: ' + this.ps + ', routing path: '
-						+ this.rp + ', result siphon: ' + this.rs
+						+ this.rp() + ', result siphon: ' + this.rs
 						+ ', destination siphon: ' + this.ds + ', cancelled: '
 						+ this.cancelled + ', error: ' + this.e;
 			};
@@ -1221,7 +1328,7 @@
 			o.routingStack = f ? f.getStack() : undefined;
 			o.sourceEvent = f ? f.event : undefined;
 			o.paramSiphon = f ? f.ps : undefined;
-			o.pathSiphon = f ? f.rp : undefined;
+			o.pathSiphon = f ? f.rp() : undefined;
 			o.resultSiphon = f ? f.getResultSiphon() : undefined;
 			o.destSiphon = f ? f.ds : undefined;
 			o.source = f ? f.src instanceof jQuery ? f.src : f.el : undefined;
@@ -1387,7 +1494,7 @@
 				var hasdu = hasu && url.indexOf('data:text/javascript,') >= 0;
 				t.len++;
 				var sf = new Frag(f, $s, $x, t);
-				sf.rp = hasu ? url : $x.text();
+				sf.rp(hasu ? url : $x.text());
 				sf.rs = $t;
 				if (!$t.is($x)) {
 					// scripts need to be removed from the fragment's DOM in
@@ -1494,7 +1601,7 @@
 						cb(null, f);
 						return;
 					}
-					if (f.rp == opts.selfRef) {
+					if (f.rp() == opts.selfRef) {
 						// fragment is within current page
 						lcont(f, cb, $('html').html(), opts.selfRef, null);
 						return;
@@ -1503,7 +1610,7 @@
 					// the queue will prevent duplicate calls to the same fragment path
 					if (f.ps || t.addFrag(f)) {
 						function adone(r, status, xhr) {
-							var tf = t.getFrags(f.rp);
+							var tf = t.getFrags(f.rp());
 							tf.result = r;
 							tf.status = status;
 							tf.xhr = xhr;
@@ -1513,12 +1620,12 @@
 						}
 						// use ajax vs load w/content target for more granular control
 						$.ajax({
-							url: f.rp,
+							url: f.rp(),
 							type: f.method,
 							data: f.psx(),
 							cache: opts.ajaxCache
 						}).done(adone).fail(function(xhr, ts, e) {
-							var tf = t.getFrags(f.rp);
+							var tf = t.getFrags(f.rp());
 							for (var i = 0; i < tf.frags.length; i++) {
 								t.addError('Error at ' + tf.frags[i].toString() + ': '
 										+ ts + '- ' + e, tf.frags[i], e, ts, xhr);
@@ -1528,7 +1635,7 @@
 							}
 						});
 					} else {
-						var tf = t.getFrags(f.rp);
+						var tf = t.getFrags(f.rp());
 						if (tf.result) {
 							// fragment results already retrieved
 							lcont(f, cb, tf.result, tf.status, tf.xhr);
@@ -1647,6 +1754,9 @@
 			regexAbsPath : /^\/|(\/[^\/]*|[^\/]+)$/g,
 			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g,
 			regexFuncArgReplace : /['"]/g,
+			regexValueSiphon : /(^.*)(?:->)(?=([^.]*)$)/g,
+			regexPathParamSiphon : /(?:@{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
+			regexVarSiphon : /(\${)((\\.)?|((?!}).))+}/g,
 			eventIsBroadcast : true,
 			eventFragChain : 'frag',
 			eventFragsChain : 'frags',

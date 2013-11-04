@@ -17,17 +17,17 @@
 				<code>data-thx-context-path</code>
 				attribute on the <b>thymus.js</b> script tag. It's value establishes
 				the path to the root context of the application that will be
-				resolved along with the fragment's <b>routing path</b>. <b>routing
-					path</b>s can point to resources with different path levels. So, it's
+				resolved along with the fragment's <b>path siphon</b>. <b>path
+					siphon</b>s can point to resources with different path levels. So, it's
 				important that the
 				<code>data-thx-context-path</code>
-				synchronizes with the resources defined within the <b>routing
-					path</b>. For example, a fragment that resides in <b>example.com/my-app/frags/nav.htm</b>
+				synchronizes with the resources defined within the <b>path
+					siphon</b>. For example, a fragment that resides in <b>example.com/my-app/frags/nav.htm</b>
 				may also be included in <b>example.com/my-app/index.htm</b> as well
 				as <b>example.com/my-app/user/info.htm</b>. If the <b>routing
 					attribute</b> is defined something like:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-fragment=</span><span style="color: #0000FF">&quot;topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	...
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
@@ -35,7 +35,7 @@
 						And both <b>example.com/my-app/index.htm</b> and <b>example.com/my-app/user/info.htm</b>
 						contain a corresponding <b>routing attribute</b>:
 					</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/nav/nav :: topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/nav/nav :: #topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	...
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
@@ -63,18 +63,25 @@
 				which infers the current path; which would be <b>example.com/my-app/</b>
 				while <b>example.com/my-app/user/info.htm</b> uses <b>"../"</b>
 				which infers one directory up; which would be <b>example.com/my-app/</b>).
-				This vastly simplifies <b>routing path</b> resolution (especially
-				for nested fragments) and ensures that all <b>routing path</b>s are
+				This vastly simplifies <b>path siphon</b> resolution (especially
+				for nested fragments) and ensures that all <b>path siphon</b>s are
 				relative to the root context path of the application. It also
 				permits the use of the same context path to be used within multiple
-				<b>routing path</b>s; regardless of where the page that defines it
+				<b>path siphon</b>s; regardless of where the page that defines it
 				resides.
+			</p>
+			<h4 id="fragpathsub">Fragment Path Substitutions</h4>
+			<p>
+				When URLs are dependent upon user input static URLs will not
+				suffice. In this case a path substitution can be made using a JQuery
+				selector by <a href="#otherfragtargets">siphoning values from
+					other DOM elements</a>.
 			</p>
 			<h4 id="fileextensions">Fragment File Extensions</h4>
 			<p>
-				File extensions in <b>routing path</b>s are optional (and sometimes
+				File extensions in <b>path siphon</b>s are optional (and sometimes
 				undesirable). That's why <b>thymus.js</b>, by default, will use the
-				URL defined in a <b>routing path</b> per verbatim unless a
+				URL defined in a <b>path siphon</b> per verbatim unless a
 				<code>data-thx-frag-extension</code>
 				is defined. If a
 				<code>data-thx-frag-extension</code>
@@ -82,12 +89,12 @@
 				<code>script</code>
 				it will use the
 				<code>data-thx-frag-extension</code>
-				value as the file extension and will append it to any <b>routing
-					path</b> URL that does not already have a file extension (should
-				typically be prefixed with a period). Any <b>routing path</b> URL
+				value as the file extension and will append it to any <b>path
+					siphon</b> URL that does not already have a file extension (should
+				typically be prefixed with a period). Any <b>path siphon</b> URL
 				that has it's own file extension will not get the
 				<code>data-thx-frag-extension</code>
-				appended to it's <b>routing path</b>. A special value of <b>inherit</b>
+				appended to it's <b>path siphon</b>. A special value of <b>inherit</b>
 				can be used if fragments should inherit the parent page file
 				extension (if any). Here are a few variations:
 			</p>
@@ -95,31 +102,37 @@
 <span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
 	<span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span> <span style="color: #FF0000">data-thx-frag-extension=</span><span style="color: #0000FF">&quot;.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- and the following includes/replacements --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/person :: data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/person.xml :: data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/person.htm :: data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/person.xml :: data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.htm :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 
 <span style="color: #008800; font-style: italic">&lt;!-- assume the following script is loaded into a page at path/to/page.html --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
 	<span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span> <span style="color: #FF0000">data-thx-frag-extension=</span><span style="color: #0000FF">&quot;inherit&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- and the following includes/replacements --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/person :: data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/person.xml :: data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/person.html :: data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/person.xml :: data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.html :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 
 <span style="color: #008800; font-style: italic">&lt;!-- assume the following script --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
 	<span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- and the following includes/replacements --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/person :: data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/person.xml :: data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/person :: data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/person.xml :: data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 </pre></div>
 			<h3 id="attrpaths">Attribute Path Resolution</h3>
 			<p>
@@ -199,13 +212,97 @@
 	<span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;http://code.jquery.com/ui/jquery-ui-git.css&quot;</span>
 	<span style="color: #FF0000">rel=</span><span style="color: #0000FF">&quot;stylesheet&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 </pre></div>
-			<h3 id="otherfragtargets">Fragment Siphon Resolution</h3>
+			<h3 id="otherfragtargets">Siphon Resolution</h3>
 			<p>
-				A <i>siphon</i> in a most practical sense is just a JQuery selector,
-				but can also be a
+				A <i>siphon</i> in a most practical sense is just one or more JQuery
+				selectors with an optional insertion/extraction directives, but can also be a
 				<code>function</code>
 				that will <em>handle</em> the extraction and/or placement of data
-				within the DOM.
+				within the DOM. JQuery selectors can be used with or without an appended <code>-&gt;</code> directive:
+			</p>
+			<ul>
+				<li><code>text</code> - will use <a
+					href="http://api.jquery.com/text/">JQuery.text()</a> to
+					insert/extract value(s) returned from the JQuery selected node(s)</li>
+				<li>a name of an attribute - will use <a
+					href="http://api.jquery.com/attr/">JQuery.attr()</a> to
+					insert/extract value(s) returned from the JQuery selected node(s)
+				</li>
+				<li>no directive (default) - will use values from <a
+					href="http://api.jquery.com/serializeArray/">JQuery.serializeArray()</a>
+					or value(s) from <a href="http://api.jquery.com/val/">JQuery.val()</a>
+					(when applicable) to insert/extract value(s) returned from the
+					JQuery selected node(s)
+				</li>
+			</ul>
+			<p>
+				Lets consider a <b>path siphon</b> where more than one JQuery
+				selector can be used. In this case each JQuery selector and
+				corresponding extraction directive are wrapped within a
+				<code>@{}</code>
+				.
+			</p>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> 
+	<span style="color: #FF0000">data-thx-path=</span><span style="color: #0000FF">&quot;frags/first/@{#secondPath-&gt;text}/sixth&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Something<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;secondPath&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>@{#second}/@{#thirdFourthPath :input}/@{.fifth-path-&gt;data-mypath}<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;second&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;secondPath&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+    <span style="color: #000080; font-weight: bold">&lt;option&gt;</span>second<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+    <span style="color: #000080; font-weight: bold">&lt;option&gt;</span>2nd<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thirdFourthPath&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+    <span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;someInput&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;third&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+    <span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;someOtherInput&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;fourth&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;fifth-path&quot;</span> <span style="color: #FF0000">data-mypath=</span><span style="color: #0000FF">&quot;fifth&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+</pre></div>
+
+			<p>
+				The preceeding <b>path siphon</b> would get evaluated when the button
+				is clicked. When the first URL siphon is discovered within the
+				wrapped
+				<code>@{}</code>
+				it will capture the node(s) returned by the JQuery
+				<code>#secondPath</code>
+				selector. The
+				<code>-&gt;</code>
+				defines a
+				<code>text</code>
+				directive that will use the <a href="http://api.jquery.com/text/">JQuery.text()</a>
+				function to extract the value. Once the path segment is captured
+				from the
+				<code>#secondPath</code>
+				discovery occurs using the same extraction methods on seach of the
+				<code>@{}</code>
+				segments found in
+				<code>@{#second}/@{#thirdFourthPath
+					:input}/@{.fifth-path->data-mypath}</code>
+				. The
+				<code>#second</code>
+				JQuery selector has no
+				<code>-&gt;</code>
+				directive so it uses the default <a
+					href="http://api.jquery.com/val/">JQuery.val()</a>. Next, the
+				<code>#thirdFourthPath :input</code>
+				JQuery selector is used to capture node(s) and <a
+					href="http://api.jquery.com/serializeArray/">JQuery.serializeArray()</a>
+				is called on the returned node(s) because there is no
+				<code>-&gt;</code>
+				directive and there is no <a href="http://api.jquery.com/val/">JQuery.val()</a>
+				on
+				<code>div</code>
+				s. Each of the serialized array values are captured and inserted
+				into the path separated by a
+				<code>/</code>
+				. The final
+				<code>.fifth-path</code>
+				JQuery selector is used to capture the node(s) where the
+				<code>-&gt;</code>
+				directive for the attribute
+				<code>data-mypath</code>
+				is evaluated and inserted into the path. The siphoned path then
+				becomes
+				<code>frags/first/second/third/fourth/fifth/sixth</code>
+				.
 			</p>
 			<h4 id="selfragtargets">JQuery Selector Fragment Targets</h4>
 			<p>

@@ -27,28 +27,28 @@
 				fragment will be processed asynchronously from its parent fragment.
 				This ensures that as new fragments are discovered they will be
 				loaded and its content made available for any subsequent fragments
-				that are encountered that point to the same <b>routing path</b>. It
+				that are encountered that point to the same <b>path siphon</b>. It
 				also prevents uneccessary calls to fragment <b>path</b>s that might
 				be used in more than one <b>routing attribute</b> throughout the
 				fragment load action. For instance, when a <b>routing attribute</b>
 				is encountered that contains
 				<code>frags/nav/nav</code>
-				as its <b>routing path</b> and
+				as its <b>path siphon</b> and
 				<code>.topnav</code>
 				as its <b>result siphon</b> it may discover another <b>routing
-					attribute</b> within its own <b>routing siphon</b>. Lets say the <b>routing
-					attribute</b> found within the fragment's <b>routing path</b>/<b>routing
+					attribute</b> within its own <b>path siphon</b>. Lets say the <b>routing
+					attribute</b> found within the fragment's <b>path siphon</b>/<b>result
 					siphon</b> is another
 				<code>data-thx-replace</code>
-				that defines it's own <b>routing path</b> as
+				that defines it's own <b>path siphon</b> as
 				<code>frags/user/user</code>
-				and <b>routing siphon</b> as
+				and <b>result siphon</b> as
 				<code>.user</code>
 				. <b>thymus.js</b> will proceeded to load
 				<code>frags/user/user</code>
 				, select
 				<code>.user</code>
-				and replace the defining DOM node with the <b>routing siphon</b>/JQuery
+				and replace the defining DOM node with the <b>result siphon</b>/JQuery
 				selector content. To illustrate this concept consider the following:
 			</p>
 <div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
