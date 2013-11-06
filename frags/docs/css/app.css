@@ -128,6 +128,12 @@ div.app-scroll .scroll-spy {
 	-ms-filter: grayscale(100%);
 }
 
+.thymus-demo {
+	overflow: auto;
+	width: auto;
+	padding: .2em .6em;
+}
+
 .icon-green {
 	color: #00ff00 !important;
 }

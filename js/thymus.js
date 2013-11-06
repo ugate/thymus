@@ -38,20 +38,28 @@
 	 *            the parent element that
 	 * @param el
 	 *            the element that will be broadcasting the event
+	 * @param m
+	 *            the HTTP method
 	 * @param en
 	 *            the event name
 	 * @param fx
 	 *            the function that will be executed when an incoming event is
 	 *            received (parameters: current parent element, reference to the
 	 *            DOM event function)
+	 * @param rfx
+	 *            an optional function that will be called once the event has
+	 *            completed
 	 */
-	function DomEventFunc(pel, el, en, fx) {
+	function DomEventFunc(pel, el, en, m, fx, rfx) {
 		var $el = $(el);
 		var $pel = $(pel);
 		var func = fx;
 		var event = en;
 		function on() {
-			func($pel, $(this));
+			var rtn = func($pel, $(this));
+			if (typeof rfx === 'function') {
+				rfx(rtn);
+			}
 		}
 		this.update = function(pel, en, fx, add) {
 			$pel = pel ? $(pel) : $pel;
@@ -64,23 +72,31 @@
 				$el.on(event, on);
 			}
 		};
+		this.isMatch = function(m, el) {
+			return this.getMethod() == m && this.getElement().is(el);
+		};
 		this.getElement = function() {
 			return $el;
 		};
 		this.getEvent = function() {
 			return event;
 		};
+		this.getMethod = function() {
+			return m;
+		};
 		this.update(null, null, null, true);
 	}
 
 	/**
-	 * Adds an event function that will execute the supplied function when the
-	 * specified DOM event occurs
+	 * Adds or updates an event function that will execute the supplied function
+	 * when the specified DOM event occurs
 	 * 
 	 * @param ctx
 	 *            the {FragCtx}
 	 * @param a
 	 *            the action
+	 * @param m
+	 *            the HTTP method
 	 * @param pel
 	 *            the parent element
 	 * @param el
@@ -88,24 +104,31 @@
 	 * @param evt
 	 *            the event name
 	 * @param fx
-	 *            the function to execute when the event occurs
+	 *            the function to execute when the event occurs (when the
+	 *            function returns <code>true</code> the event listener will
+	 *            be turned off)
 	 */
-	function addEventFunc(ctx, a, pel, el, evt, fx) {
+	function addOrUpdateEventFunc(ctx, a, m, pel, el, evt, fx) {
 		var en = getEventName(evt, false);
 		if (el) {
 			// prevent duplicating event listeners
 			for ( var k in eventFuncs) {
-				if (eventFuncs[k].getElement().is(el) && eventFuncs[k].getEvent() == en) {
+				if (eventFuncs[k].isMatch(m, el) && eventFuncs[k].getEvent() == en) {
 					eventFuncs[k].update(pel, null, fx, null);
 					return true;
 				}
 			}
-			var fn = a + ++eventFuncCnt;
+			var fn = a + '.' + m + ++eventFuncCnt;
 			var ev = null;
-			eventFuncs[fn] = new DomEventFunc(pel, el, en, fx);
+			function fxCheck(rmv) {
+				if (rmv === true) {
+					eventFuncs[fn].update(null, null, null, false);
+					eventFuncs[fn] = null;
+				}
+			}
+			eventFuncs[fn] = new DomEventFunc(pel, el, en, m, fx, fxCheck);
 			eventFuncs[fn].getElement().on('remove', function() {
-				eventFuncs[fn].update(null, null, null, false);
-				eventFuncs[fn] = null;
+				fxCheck(true);
 			});
 		} else {
 			throw new Error('Cannot register "' + en
@@ -241,12 +264,16 @@
 	 * @param d
 	 *            the delimiter to use when multiple results are returned from a
 	 *            JQuery selector
+	 * @param useNameId
+	 *            true to use name(s) (or id if a name is not present) along
+	 *            with the value(s) (separated by <code>=</code>); false to
+	 *            use only the value(s)
 	 * @param el
 	 *            the DOM element that initiated the call (if any)
 	 * @returns the siphoned string with replaced values returned from all/any
 	 *          found JQuery selector(s)
 	 */
-	function extractValues(s, trx, d, el) {
+	function extractValues(s, trx, d, useNameId, el) {
 	    if (s) {
 	        var x = s;
 	        var t = '';
@@ -256,26 +283,44 @@
 	        });
 	        var $x = x ? $(x) : null;
 	        if ($x && $x.length > 0) {
+				function getEV(nv, n, v, d) {
+					return (d && nv.length > 0 ? d : '') + (n ? n + '=' : '')
+							+ v;
+				}
 	            var nv = '';
+	            var ci = '';
 	            if (!t) {
 	            	// it would be nice if we could check if has
 					// val(), but an empty string may be
 					// returned by val() so serialize array is
 					// checked instead
-					nv = $x.serializeArray();
+					nv = useNameId ? $x.serialize() : $x.serializeArray();
 	                if (!nv || nv.length <= 0) {
-	                    nv = $x.val();
-	                } else {
-	                	var nva = nv;
-	                    nv = '';
-	                    $.each(nva, function() {
-	                        nv += (nv.length > 0 ? d : '') + this.value;  
-	                    });
-	                }
-	            } else if (t && t.toLowerCase() == 'text') {
-	                nv = $x.text();
+	                	nv = '';
+						$x.each(function() {
+							ci = $(this);
+							nv += getEV(nv, useNameId ? ci.prop('name') : null,
+									ci.val(), d);
+						});
+					} else if (!useNameId) {
+						var nva = nv;
+						nv = '';
+						$.each(nva, function() {
+							nv += getEV(nv, null, this.value, d);
+						});
+					}
 	            } else {
-	                nv = $x.attr(t);
+	            	var ist = t.toLowerCase() == 'text';
+	            	var n = '';
+	                $x.each(function() {
+	                	ci = $(this);
+	                	n = useNameId ? ci.prop('name') : null;
+	                	if (ist) {
+	                		nv += getEV(nv, n, ci.text(), d);
+	                	} else {
+	                		nv += getEV(nv, n, ci.attr(t), d);
+	                	}
+	                });
 	            }
 	            return nv !== undefined && nv != null ? nv : s;
 	        }
@@ -307,15 +352,20 @@
 	 * @param d
 	 *            the delimiter to use when multiple results are returned from a
 	 *            JQuery selector
+	 * @param useNameId
+	 *            true to use name(s) (or id if a name is not present) along
+	 *            with the value(s) (separated by <code>=</code>); false to
+	 *            use only the value(s)
 	 * @param el
 	 *            the DOM element that initiated the call (if any)
 	 * @returns the siphoned string with replaced values returned from all/any
 	 *          found JQuery selector(s)
 	 */
-	function siphonValues(s, rx, trx, d, el) {
-		return s.replace(rx, function(m, v) {
-			return siphonValues(extractValues(v, trx, d, el), rx, trx, d, el);
-		});
+	function siphonValues(s, rx, trx, d, useNameId, el) {
+		return s ? s.replace(rx, function(m, v) {
+			return siphonValues(extractValues(v, trx, d, useNameId, el), rx,
+					trx, d, useNameId, el);
+		}) : '';
 	}
 
 	/**
@@ -409,6 +459,20 @@
 		} catch (e) {
 			log('Error in ' + fs + ' ' + amts(am) + ': ' + e);
 		}
+	}
+
+	/**
+	 * Splits a string and ensures each element in the returned array is trimmed
+	 * of white spaces
+	 * 
+	 * @param s
+	 *            the string to split
+	 * @param exp
+	 *            the expression to split with
+	 * @returns an array of split/trimmed elements
+	 */
+	function splitWithTrim(s, exp) {
+		return $.map(s.split(exp), $.trim);
 	}
 
 	/**
@@ -522,36 +586,59 @@
 		 *            the element that contains the the siphon attributes
 		 * @param m
 		 *            the HTTP method context
+		 * @param evt
+		 *            the event name
 		 * @param o
 		 *            the object where the siphon attribute values will be added
 		 *            to
 		 * @param ns
 		 *            the array of attribute names to look for
-		 * @returns the object where the attribute values are being added to
+		 * @returns true when the event exists for the given method and the
+		 *          siphon attributes have been added
 		 */
-		function addSiphonAttrVals($el, m, o, ns) {
-			if ($el && m && o && $.isArray(ns)) {
+		function addSiphonAttrVals($el, m, evt, o, ns) {
+			if ($el && m && o && evt && $.isArray(ns)) {
+				function getAN(n) {
+					var an = n.charAt(0).toUpperCase() + n.substr(1).toLowerCase();
+					an = m + (m == n ? '' : an) + 'Attrs';
+					return an;
+				}
 				m = m.toLowerCase();
+				var ens = getOptsAttrVal($el, getAN(m));
+				ens = ens ? splitWithTrim(ens, opts.fragSep) : null;
+				var ei = ens ? $.inArray(evt, ens) : -1;
+				if (ei < 0) {
+					// event is not in the attributes
+					return false;
+				}
 				var an = null;
-				var on = null;
+				var n = null;
+				var ov = null;
 				for (var i=0; i<ns.length; i++) {
-					on = ns[i].toLowerCase();
-					an = ns[i].charAt(0).toUpperCase() + ns[i].substr(1).toLowerCase();
-					an = m + (m == on ? '' : an) + 'Attrs';
-					on = (m == on ? 'event' : on) + 'Siphon';
-					if (o[on] !== undefined) {
-						o[on] = getOptsAttrVal($el, an);
+					n = ns[i].toLowerCase();
+					an = getAN(n);
+					n = (m == n ? 'event' : n) + 'Siphon';
+					if (o[n] !== undefined) {
+						// when a siphon attribute corresponds to an event at
+						// the same index we use the attribute value at that
+						// index- otherwise, we just use the attribute at the
+						// last available index
+						ov = getOptsAttrVal($el, an);
+						ov = ov ? splitWithTrim(ov, opts.fragSep) : null;
+						o[n] = ov && ei >= ov.length ? ov[ov.length - 1]
+								: ov ? ov[ei] : undefined;
 					}
 				}
+				return true;
 			}
-			return o;
+			return false;
 		}
 
 		/**
 		 * Updates a navigation {Frag} for an array object returned from
 		 * <code>genAttrQueries</code>. Updates will be made to paths when
 		 * needed. Also, any DOM driven events will be registered that will
-		 * listen for incoming events that will trigger fragment loading.
+		 * listen for incoming events that will trigger fragment loading/submission. When DOM driven events are previously processed
 		 * 
 		 * @param t
 		 *            the {FragsTrack}
@@ -581,40 +668,53 @@
 							+ absolutePath(v, t.ctxPath) + '"';
 				}
 			}
-			var r = {
-				selector : '',
-				action : opts.actionNavInvoke,
-				onEvent : '',
-				eventAttrs : a.items,
-				method : a.method,
-				typeSiphon : a.type,
-				eventSiphon : v,
-				paramSiphon : '',
-				pathSiphon : '',
-				resultSiphon : '',
-				destSiphon : '',
-				funcName : '',
-				isValid : true//v.length > 1
-			};
-			if (r.isValid) {
-				var rtn = addEventFunc(ctx, r.action, f.pel, el, r.eventSiphon,
-						function(pel, ib) {
-							var $ib = $(ib);
-							//getEventName(evt, false);
-							addSiphonAttrVals($ib, r.method, r,
-									[ r.method, 'type', 'params', 'path',
-											'result', 'dest' ]);
-							r.selector = ib;
-							ctx.exec(r, pel, ib);
-						});
-				r.onEvent = rtn.eventAttrValue;
-				r.eventSiphon = rtn.eventName;
-			} else {
-				t.addError('Expected at least two parameters for action "'
-						+ opts.actionNavInvoke + '" and method "' + r.method
-						+ '" for ' + v, f, null, null, null);
-			}
-			return r;
+			var evts = splitWithTrim(v, opts.fragSep);
+			var rs = [];
+			$.each(evts, function(i, ev) {
+				var r = {
+					selector : '',
+					action : opts.actionNavInvoke,
+					onEvent : '',
+					eventAttrs : a.items,
+					method : a.method,
+					typeSiphon : a.type,
+					eventSiphon : ev,
+					eventIndex : i,
+					paramSiphon : '',
+					pathSiphon : '',
+					resultSiphon : '',
+					destSiphon : '',
+					funcName : '',
+					isValid : ev.length > 0
+				};
+				if (r.isValid) {
+					var rtn = addOrUpdateEventFunc(ctx, r.action, r.method,
+							f.pel, el, r.eventSiphon, function(pel, ib) {
+								var $ib = $(ib);
+								if (!addSiphonAttrVals($ib, r.method,
+										r.eventSiphon, r, [ 'type', 'params',
+												'path', 'result', 'dest' ])) {
+									// the event is no longer valid because the
+									// method/event attribute has removed the
+									// event since its registration- thus we
+									// need to trigger a removal of the event
+									// listener by returning true
+									return true;
+								}
+								r.selector = ib;
+								ctx.exec(r, pel, ib);
+								return false;
+							});
+					r.onEvent = rtn.eventAttrValue;
+					r.eventSiphon = rtn.eventName;
+					rs[rs.length] = r;
+				} else {
+					t.addError('Expected an event for action "'
+							+ opts.actionNavInvoke + '" and method "'
+							+ r.method + '"', f, null, null, null);
+				}
+			});
+			return rs;
 		}
 
 		/**
@@ -719,8 +819,8 @@
 				return urlAdjust(relPath, protocolForFile);
 			}
 			absPath = absPath ? absPath.replace(opts.regexAbsPath, '') : '';
-			absStack = absPath ? absPath.split('/') : [];
-			relStack = relPath.split('/');
+			absStack = absPath ? absPath.split(opts.pathSep) : [];
+			relStack = relPath.split(opts.pathSep);
 			for (i = 0; i < relStack.length; i++) {
 				d = relStack[i];
 				if (d == '.') {
@@ -734,7 +834,7 @@
 					absStack.push(d);
 				}
 			}
-			return absStack.join('/');
+			return absStack.join(opts.pathSep);
 		}
 
 		/**
@@ -870,7 +970,7 @@
 		 *            the file extension to apply
 		 */
 		function adjustPath(c, p, x) {
-			x = x && p.lastIndexOf('/') != (p.length - 1) ? 
+			x = x && p.lastIndexOf(opts.pathSep) != (p.length - 1) ? 
 					x.toLowerCase() == opts.inheritRef ? getFileExt(location.href)
 					: getFileExt(p) ? '' : x
 					: '';
@@ -888,12 +988,12 @@
 		function getScriptCtxPath() {
 			var c = getScriptAttr(opts.contextPathAttr);
 			if (!c) {
-				c = '/';
+				c = opts.pathSep;
 			}
 			// capture the absolute URL relative to the defined context path attribute
 			// value
 			c = absolutePath(c, window.location.href);
-			c += c.lastIndexOf('/') != c.length - 1 ? '/' : '';
+			c += c.lastIndexOf(opts.pathSep) != c.length - 1 ? opts.pathSep : '';
 			return c;
 		}
 
@@ -1101,7 +1201,7 @@
 			}
 			a = a ? a.split(opts.fragSep) : null;
 			this.event = t.siphon ? t.siphon.eventSiphon : null;
-			this.ps = t.siphon ? t.siphon.paramSiphon : null;
+			var ps = t.siphon ? t.siphon.paramSiphon : null;
 			var rp = !a ? t.siphon.pathSiphon : a && a.length > 0 ? $.trim(a[0])
 					: null;
 			this.rs = !a ? t.siphon.resultSiphon : a && a.length > 1 ? $.trim(a[1])
@@ -1120,7 +1220,7 @@
 				rp = rpn ? rpn : rp;
 				if (!rpp || rpn) {
 					rpp = siphonValues(rp, opts.regexPathParamSiphon,
-							opts.regexValueSiphon, '/', this.el);
+							opts.regexValueSiphon, opts.pathSep, false, this.el);
 				}
 				return rpp;
 			};
@@ -1152,39 +1252,14 @@
 				// increment child fragment count on parent fragment
 				this.pf.ccnt(true);
 			}
-			function params(s, d) {
-				if (s) {
-					var x = !d ? {} : undefined;
-					var c = 0;
-					$(s).each(function() {
-						var $c = $(this);
-						var p = $c.prop('name');
-						if (d) {
-							if (p && d[p] !== 'undefined') {
-								x[p] = d[p];
-							} else if ((p = $c.prop('id')) && d[p] !== 'undefined') {
-								x[p] = d[p];
-							} else {
-								$c.html(d[p]);
-							}
-						} else {
-							if (p) {
-								var ia = $.isArray(x[p]);
-								if (!ia && x[p] !== 'undefined') {
-									x[p] = [ x[p], v ];
-								} else if (ia) {
-									x[p][x[p].length] = v;
-								} else {
-									x[p] = v;
-								}
-							}
-						}
-					});
-					return c > 0 ? $.param(x) : undefined;
+			var psp = null;
+			this.ps = function(psn) {
+				ps = psn ? psn : ps;
+				if ((ps && !psp) || psn) {
+					psp = siphonValues(ps, opts.regexPathParamSiphon,
+							opts.regexValueSiphon, opts.paramSep, true, this.el);
 				}
-			}
-			this.psx = function() {
-				return params(this.ps);
+				return psp;
 			};
 			this.done = function() {
 				if (!this.cancelled) {
@@ -1220,16 +1295,16 @@
 				if (xIsJ && x.is('script')) {
 					if (xhr && xhr.status != 200) {
 						t.addError(xhr.status + ': ' + ts
-								+ ' routing path="' + this.rp() + '"', this, e, ts, xhr);
+								+ ' path siphon="' + this.rp() + '"', this, e, ts, xhr);
 						this.domDone(true);
 						return;
-					} else if (!xhr && rp && this.rs) {
-						var sdi = rp.indexOf('data:text/javascript,');
+					} else if (!xhr && this.rp() && this.rs) {
+						var sdi = this.rp().indexOf('data:text/javascript,');
 						var ss = x.prop('type');
 						$('<script' + (typeof ss === 'string' && ss.length > 0 ? 
-								' type="' + ss + '">' : '>') + (sdi > -1 ? 
-								rp.substr('data:text/javascript,'.length) : rp) + 
-							'</script>').appendTo(this.rs);
+							' type="' + ss + '">' : '>') + (sdi > -1 ? 
+								this.rp().substr('data:text/javascript,'.length) : this.rp()) + 
+									'</script>').appendTo(this.rs);
 					}
 				} else {
 					var im = this.isModel(xhr);
@@ -1306,7 +1381,7 @@
 			this.toString = function() {
 				return this.constructor.name + ' -> type: ' + this.dt
 						+ ', HTTP method: ' + this.method
-						+ ', parameter siphon: ' + this.ps + ', routing path: '
+						+ ', parameter siphon: ' + this.ps() + ', path siphon: '
 						+ this.rp() + ', result siphon: ' + this.rs
 						+ ', destination siphon: ' + this.ds + ', cancelled: '
 						+ this.cancelled + ', error: ' + this.e;
@@ -1331,7 +1406,7 @@
 			o.fragPendingPeerCount = f && f.pf ? f.pf.ccnt(null) : 0;
 			o.routingStack = f ? f.getStack() : undefined;
 			o.sourceEvent = f ? f.event : undefined;
-			o.paramSiphon = f ? f.ps : undefined;
+			o.paramSiphon = f ? f.ps() : undefined;
 			o.pathSiphon = f ? f.rp() : undefined;
 			o.resultSiphon = f ? f.getResultSiphon() : undefined;
 			o.destSiphon = f ? f.ds : undefined;
@@ -1498,7 +1573,9 @@
 				var hasdu = hasu && url.indexOf('data:text/javascript,') >= 0;
 				t.len++;
 				var sf = new Frag(f, $s, $x, t);
-				sf.rp(hasu ? url : $x.text());
+				var path = hasu ? url : $x.text();
+				path = path ? path : $x.html();
+				sf.rp(path);
 				sf.rs = $t;
 				if (!$t.is($x)) {
 					// scripts need to be removed from the fragment's DOM in
@@ -1612,7 +1689,7 @@
 					}
 					// when the fragment path is the 1st one in the queue retrieve it
 					// the queue will prevent duplicate calls to the same fragment path
-					if (f.ps || t.addFrag(f)) {
+					if (f.ps() || t.addFrag(f)) {
 						function adone(r, status, xhr) {
 							var tf = t.getFrags(f.rp());
 							tf.result = r;
@@ -1626,7 +1703,7 @@
 						$.ajax({
 							url: f.rp(),
 							type: f.method,
-							data: f.psx(),
+							data: f.ps(),
 							cache: opts.ajaxCache
 						}).done(adone).fail(function(xhr, ts, e) {
 							var tf = t.getFrags(f.rp());
@@ -1712,6 +1789,8 @@
 			ajaxCache : false,
 			crossDomain : false,
 			inheritRef : 'inherit',
+			pathSep : '/',
+			paramSep : '&',
 			fragSep : '::',
 			fragExtensionAttr : 'data-thx-frag-extension',
 			fragAttrs : [ 'data-thx-fragment', 'th\\:fragment', 'data-th-fragment' ],

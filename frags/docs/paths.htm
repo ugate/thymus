@@ -212,7 +212,7 @@
 	<span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;http://code.jquery.com/ui/jquery-ui-git.css&quot;</span>
 	<span style="color: #FF0000">rel=</span><span style="color: #0000FF">&quot;stylesheet&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 </pre></div>
-			<h3 id="otherfragtargets">Siphon Resolution</h3>
+			<h3 id="otherfragtargets">Siphons</h3>
 			<p>
 				A <i>siphon</i> in a most practical sense is just one or more JQuery
 				selectors with an optional insertion/extraction directives, but can also be a
@@ -239,7 +239,7 @@
 				Lets consider a <b>path siphon</b> where more than one JQuery
 				selector can be used. In this case each JQuery selector and
 				corresponding extraction directive are wrapped within a
-				<code>@{}</code>
+				<b>siphon resolver</b> <code>@{}</code>
 				.
 			</p>
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> 
@@ -275,7 +275,7 @@
 				<code>@{}</code>
 				segments found in
 				<code>@{#second}/@{#thirdFourthPath
-					:input}/@{.fifth-path->data-mypath}</code>
+					:input}/@{.fifth-path-&gt;data-mypath}</code>
 				. The
 				<code>#second</code>
 				JQuery selector has no

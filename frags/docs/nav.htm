@@ -48,16 +48,16 @@
 				<div id="domevent" class="row row-thymus">
 					<div class="col-md-3">
 						<div>
-							<span class="label label-info">event</span> &Dagger;
+							<span class="label label-info">event siphon</span> &Dagger;
 						</div>
 						<div>
 							<code>data-thx-*VERB*</code>
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>event</b> parameter
-						indicates a <a href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM
-							event</a> that will trigger the fragment transition from/to the
+						The <b>DOM routing attribute</b>'s <b>event siphon</b> parameter
+						indicates one or more <a href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM
+							events</a> that will trigger the fragment transition from/to the
 						client. While most of the DOM events will directly equate to the
 						normal <a href="http://api.jquery.com/on/"><code>$.on(event,
 								...);</code></a> registrations, there is one special case that <b>thymus.js</b>
@@ -197,25 +197,48 @@
 				<code>href</code>
 				(see <a href="#attrpaths">attribute path resolution techniques</a>
 				for more details). A DOM event can also be used by just providing a
-				<b>DOM routing attribute</b> with just an <b>event</b> name, an
+				<b>DOM routing attribute</b> with just an <b>event siphon</b> name, an
 				optional <b>parameter siphon</b> and a corresponding <b>path
 					siphon</b>:
 			</p>
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/other/page&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Sign in<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
-			<div class="panel panel-success">
-				<div class="panel-heading">Working example that will navigate
-					to an example sign in page</div>
-				<div class="panel-body">
-					<button type="button" class="btn btn-primary"
-						data-thx-get="click" data-thx-get-path="login">Goto
-						Sign In</button>
+			<div class="tab-content">
+				<ul class="nav nav-tabs nav-justified">
+					<li class="active"><a href="#userDestSelfIncludeDemo"
+						data-toggle="tab">Demo</a></li>
+					<li><a href="#userDestSelfIncludeCode" data-toggle="tab">Code</a></li>
+				</ul>
+				<div class="tab-pane active thymus-demo" id="userDestSelfIncludeDemo">
+					<div class="list-group">
+						<div class="list-group-item">
+							Working example that will navigate to an sample sign in page (demo):
+						</div>
+						<div class="list-group-item">
+							<button type="button" class="btn btn-primary"
+								data-thx-get="click" data-thx-get-path="login">Goto
+								Sign In</button>
+						</div>
+					</div>
+				</div>
+				<div class="tab-pane" id="userDestSelfIncludeCode">
+					<div class="list-group">
+						<div class="list-group-item">
+							Working example that will navigate to an sample sign in page (code):
+						</div>
+						<div class="list-group-item">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;login&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Goto
+	Sign In<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+</pre></div>
+						</div>
+					</div>
 				</div>
 			</div>
 			<h4 id="httpasyncself">Self-targeting Asynchronous Transfers</h4>
 			<p>
 				A self-targeting asynchronous transfer is a <b>DOM routing
-					attribute</b> that has a value that defines a <b>event</b>, an optional
+					attribute</b> that has a value that defines a <b>event siphon</b>, an optional
 				<b>parameter siphon</b>, a <b>path siphon</b> and an optional <b>result
 					siphon</b>, but does not define a <b>destination siphon</b>. In this
 				case the <b>destination siphon</b> will default to the node where
@@ -257,15 +280,38 @@
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- and so on... --&gt;</span>
 </pre></div>
-			<div class="list-group">
-				<div class="list-group-item thymus-green">
-					Self-targeting <b>destination siphon</b> <i>include</i> demo:
+			<div class="tab-content">
+				<ul class="nav nav-tabs nav-justified">
+					<li class="active"><a href="#userDestSelfIncludeDemo"
+						data-toggle="tab">Demo</a></li>
+					<li><a href="#userDestSelfIncludeCode" data-toggle="tab">Example</a></li>
+				</ul>
+				<div class="tab-pane active thymus-demo" id="userDestSelfIncludeDemo">
+					<div class="list-group">
+						<div class="list-group-item">
+							Self-targeting <b>destination siphon</b> <i>include</i> demo:
+						</div>
+						<div class="list-group-item">
+							<button type="button" class="btn btn-primary"
+								data-thx-get="click" data-thx-get-path="frags/user/user"
+								data-thx-get-result="user">Include
+								User View</button>
+						</div>
+					</div>
 				</div>
-				<div class="list-group-item">
-					<button type="button" class="btn btn-primary"
-						data-thx-get="click" data-thx-get-path="frags/user/user"
-						data-thx-get-result="user">Include
-						User View</button>
+				<div class="tab-pane" id="userDestSelfIncludeCode">
+					<div class="list-group">
+						<div class="list-group-item">
+							Self-targeting <b>destination siphon</b> <i>include</i> example:
+						</div>
+						<div class="list-group-item">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;user&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include
+	User View<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+</pre></div>
+						</div>
+					</div>
 				</div>
 			</div>
 			<p>
@@ -291,15 +337,38 @@
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
-			<div class="list-group">
-				<div class="list-group-item thymus-green">
-					Self-targeting <b>destination siphon</b> <i>replace</i> demo:
+			<div class="tab-content">
+				<ul class="nav nav-tabs nav-justified">
+					<li class="active"><a href="#userDestSelfReplaceDemo" data-toggle="tab">Demo</a></li>
+					<li><a href="#userDestSelfReplaceCode"
+						data-toggle="tab">Code</a></li>
+				</ul>
+				<div class="tab-pane active thymus-demo" id="userDestSelfReplaceDemo">
+					<div class="list-group">
+						<div class="list-group-item">
+							Self-targeting <b>destination siphon</b> <i>replace</i> demo:
+						</div>
+						<div class="list-group-item">
+							<button type="button" class="btn btn-primary"
+								data-thx-get="click" data-thx-get-path="frags/user/user"
+								data-thx-get-result="user" data-thx-get-type="replace">Replace
+								User View</button>
+						</div>
+					</div>
 				</div>
-				<div class="list-group-item">
-					<button type="button" class="btn btn-primary"
-						data-thx-get="click" data-thx-get-path="frags/user/user"
-						data-thx-get-result="user" data-thx-get-type="replace">Replace
-						User View</button>
+				<div class="tab-pane" id="userDestSelfReplaceCode">
+					<div class="list-group">
+						<div class="list-group-item">
+							Self-targeting <b>destination siphon</b> <i>replace</i> example:
+						</div>
+						<div class="list-group-item">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;user&quot;</span> <span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;replace&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Replace
+	User View<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+</pre></div>
+						</div>
+					</div>
 				</div>
 			</div>
 			<h4 id="httpasyncdest">Explicit Destination Asynchronous Transfers</h4>
@@ -352,27 +421,61 @@
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- and so on... --&gt;</span>
 </pre></div>
-			<div class="list-group">
-				<div class="list-group-item thymus-green">
-					Explicit <b>destination siphon</b> <i>include</i> demo:
-				</div>
-				<div class="list-group-item">
-					<div class="btn-group">
-						<button type="button" class="btn btn-primary" data-thx-get="click"
-							data-thx-get-path="frags/user/user1"
-							data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-							data-thx-get-dest="#userDest2">Include User1</button>
-						<button type="button" class="btn btn-primary" data-thx-get="click"
-							data-thx-get-path="frags/user/user2"
-							data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-							data-thx-get-dest="#userDest2">Include User2</button>
-						<button type="button" class="btn btn-primary" data-thx-get="click"
-							data-thx-get-path="frags/user/user3"
-							data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-							data-thx-get-dest="#userDest2">Include User3</button>
+			<div class="tab-content">
+				<ul class="nav nav-tabs nav-justified">
+					<li class="active"><a href="#userDestIncludeDemo" data-toggle="tab">Demo</a></li>
+					<li><a href="#userDestIncludeCode"
+						data-toggle="tab">Code</a></li>
+				</ul>
+				<div class="tab-pane active thymus-demo" id="userDestIncludeDemo">
+					<div class="list-group">
+						<div class="list-group-item">
+							Explicit <b>destination siphon</b> <i>include</i> demo:
+						</div>
+						<div class="list-group-item">
+							<div class="btn-group">
+								<button type="button" class="btn btn-primary" data-thx-get="click"
+									data-thx-get-path="frags/user/user1"
+									data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+									data-thx-get-dest="#userDest2">Include User1</button>
+								<button type="button" class="btn btn-primary" data-thx-get="click"
+									data-thx-get-path="frags/user/user2"
+									data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+									data-thx-get-dest="#userDest2">Include User2</button>
+								<button type="button" class="btn btn-primary" data-thx-get="click"
+									data-thx-get-path="frags/user/user3"
+									data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+									data-thx-get-dest="#userDest2">Include User3</button>
+							</div>
+						</div>
+						<div id="userDest2" class="list-group-item"></div>
 					</div>
 				</div>
-				<div id="userDest2" class="list-group-item"></div>
+				<div class="tab-pane" id="userDestIncludeCode">
+					<div class="list-group">
+						<div class="list-group-item">
+							Explicit <b>destination siphon</b> <i>include</i> example:
+						</div>
+						<div class="list-group-item">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn-group&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
+		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
+		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User1<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
+		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user2&quot;</span>
+		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User2<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
+		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user3&quot;</span>
+		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User3<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest2&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;list-group-item&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+</pre></div>
+						</div>
+					</div>
+				</div>
 			</div>
 			<p>
 				An <i>update</i> <b>DOM routing attribute</b> works similar to a <i>include</i>
@@ -386,31 +489,152 @@
 				<code>.user-detail</code>
 				result.
 			</p>
-			<div class="list-group">
-				<div class="list-group-item thymus-green">
-					Explicit <b>destination siphon</b> <i>update</i> demo:
+			<div class="tab-content">
+				<ul class="nav nav-tabs nav-justified">
+					<li class="active"><a href="#userDestUpdateDemo"
+						data-toggle="tab">Demo</a></li>
+					<li><a href="#userDestUpdateCode" data-toggle="tab">Code</a></li>
+				</ul>
+				<div class="tab-pane active thymus-demo" id="userDestUpdateDemo">
+					<div class="list-group">
+						<div class="list-group-item">
+							Explicit <b>destination siphon</b> <i>update</i> demo:
+						</div>
+						<div class="list-group-item">
+							<select id="demoDomUpdateSel" class="btn btn-primary"
+								data-thx-get="change"
+								data-thx-get-path="frags/user/@{#demoDomUpdateSel}"
+								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+								data-thx-get-type="update" data-thx-get-dest="#userDest3">
+								<option value="user1">User 1</option>
+								<option value="user2">User 2</option>
+								<option value="user3">User 3</option>
+							</select>
+						</div>
+						<div id="userDest3" class="list-group-item">
+							<div data-thx-replace="@{#demoDomUpdateSel->data-thx-get-path} :: [class^=&quot;thymus-user&quot;]">Loading...</div>
+						</div>
+					</div>
 				</div>
-				<div class="list-group-item">
-					<select id="demoDomUpdateSel" class="btn btn-primary"
-						data-thx-get="change"
-						data-thx-get-path="frags/user/@{#demoDomUpdateSel}"
-						data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-						data-thx-get-type="update" data-thx-get-dest="#userDest3">
-						<option value="user1">User 1</option>
-						<option value="user2">User 2</option>
-						<option value="user3">User 3</option>
-					</select>
-				</div>
-				<div id="userDest3" class="list-group-item">
-					<div data-thx-replace="@{#demoDomUpdateSel->data-thx-get-path} :: [class^=&quot;thymus-user&quot;]">Loading...</div>
+				<div class="tab-pane" id="userDestUpdateCode">
+					<div class="list-group">
+						<div class="list-group-item">
+							See <a href="#otherfragtargets">siphon resolver</a>s for further explaination:
+						</div>
+						<div class="list-group-item">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;demoDomUpdateSel&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;change&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/@{#demoDomUpdateSel}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;update&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>User 1<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>User 2<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>User 3<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-replace=</span><span style="color: #0000FF">&quot;@{#demoDomUpdateSel-&gt;data-thx-get-path} :: [class^=&amp;quot;thymus-user&amp;quot;]&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Loading...<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
+						</div>
+					</div>
 				</div>
 			</div>
+			<h3 id="multidomevents">Multiple DOM Events (on a given <b>event siphon</b>)</h3>
+			<p>
+				Each of the <b>DOM routing attribute</b>s can contain multiple
+				events separated by a &quot;<b>::</b>&quot; within a single <i>event
+					siphon</i>. For instance, a
+				<code>data-thx-get="click :: keyup"</code>
+				can be defined on a node that will register a <b>thymus.js</b>
+				listener event on a
+				<code>click</code>
+				and
+				<code>keyup</code>
+				event. Each event defined within an <b>event siphon</b> will
+				correspond to any other <b>DOM routing attribute</b>s that may be
+				defined on the node at the same index. If a <b>DOM routing
+					attribute</b> does not have a value for the given <b>event siphon</b>'s
+				event, then the last parameterized siphon value will be used.
+				Consider the following:
+			</p>
+			<div class="tab-content">
+				<ul class="nav nav-tabs nav-justified">
+					<li class="active"><a href="#userMultiEvtDemo"
+						data-toggle="tab">Demo</a></li>
+					<li><a href="#userMultiEvtCode" data-toggle="tab">Code</a></li>
+				</ul>
+				<div class="tab-pane active thymus-demo" id="userMultiEvtDemo">
+					<div class="list-group">
+						<div class="list-group-item">
+							Multiple DOM events demo:
+						</div>
+						<div class="list-group-item">
+							<input type="text" data-thx-get="click :: keyup"
+								data-thx-get-path="frags/user/user1 :: frags/user/user2"
+								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+								data-thx-get-dest="#userMultiEvt1 :: #userMultiEvt2" 
+								class="form-control thymus-green" placeholder="Click or type anything here" />
+						</div>
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-6">
+									<h4>User 1</h4>
+									<div id="userMultiEvt1" class="well"></div>
+								</div>
+								<div class="col-md-6">
+									<h4>User 2</h4>
+									<div id="userMultiEvt2" class="well"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="tab-pane" id="userMultiEvtCode">
+					<div class="list-group">
+						<div class="list-group-item">
+							Multiple DOM events example:
+						</div>
+						<div class="list-group-item">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click :: keyup&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1 :: frags/user/user2&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userMultiEvt1 :: #userMultiEvt2&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;h4&gt;</span>User 1<span style="color: #000080; font-weight: bold">&lt;/h4&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userMultiEvt1&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;h4&gt;</span>User 2<span style="color: #000080; font-weight: bold">&lt;/h4&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userMultiEvt2&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+</pre></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<p>
+				When the text input receives a
+				<code>click</code>
+				event
+				<code>frags/user/user1</code>
+				is called and the result is caputred via the JQuery selector
+				<code>[class^=&quot;thymus-user&quot;]</code>
+				and includes (default) the results into the destination captured
+				from the JQuery selector
+				<code>#userMultiEvt1</code>
+				. Every time a
+				<code>keyup</code>
+				event is received
+				<code>frags/user/user2</code>
+				is called, the result is captured via the JQuery selector
+				<code>[class^=&quot;thymus-user&quot;]</code>
+				and is included within the destination captured from the JQuery
+				selector
+				<code>#userMultiEvt2</code>
+				.
+			</p>
 			<h3 id="shorthand">Auto Loading Fragments (short-hand)</h3>
 			<p>
 				A short-hand <b>routing attribute</b> can also be used which is
 				equivalent to a <b>DOM routing attribute</b> with a
 				<code>load</code>
-				<b>event</b> and a separate <b>path siphon</b> attribute. Instead of
+				<b>event siphon</b> and a separate <b>path siphon</b> attribute. Instead of
 				two attributes, the short-handed version combines the <b>path
 					siphon</b> and <b>result siphon</b> into one attribute separated by a "<b>::</b>"
 				(the separator can be overridden using the
