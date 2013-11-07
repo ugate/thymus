@@ -20,6 +20,8 @@
 	var FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
 	var FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
 	var FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
+	var DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest' ];
+	var HTTP_METHODS = [ 'GET', 'POST', 'DELETE', 'PUT' ];
 	this.TATTR = 'attribute';
 	this.TINC = 'include';
 	this.TREP = 'replace';
@@ -187,7 +189,7 @@
 	 * @param h
 	 *            the HTTP method name
 	 * @param t
-	 *            the template type
+	 *            the template type (e.g. include, replace, etc.)
 	 * @returns a attributes query object
 	 */
 	function genAttrQueries(a, h, t) {
@@ -492,7 +494,13 @@
 		var includeReplaceAttrs = opts.includeAttrs.concat(opts.replaceAttrs);
 		var protocolForFile = opts.regexFileTransForProtocolRelative
 				.test(location.protocol) ? 'http:' : null;
-		var fragSelector = getThxSel(includeReplaceAttrs, null);
+		// construct the JQuery selector that will identify what fragments to
+		// load
+		var domAttrs = opts.getAttrs.concat(opts.postAttrs
+				.concat(opts.putAttrs.concat(opts.deleteAttrs)));
+		var fragSelector = getThxSel(includeReplaceAttrs, null, null);
+		fragSelector = (fragSelector ? fragSelector + ',' : '')
+				+ getThxSel(domAttrs, 'load', '*');
 		var urlAttrs = genAttrQueries(opts.urlAttrs, 'GET', TATTR);
 		var getAttrs = genAttrQueries(opts.getAttrs, 'GET', TINC);
 		var postAttrs = genAttrQueries(opts.postAttrs, 'POST', TINC);
@@ -548,6 +556,59 @@
 		};
 
 		/**
+		 * Generates a siphon object
+		 * 
+		 * @param m
+		 *            the HTTP method used by the siphon
+		 * @param evt
+		 *            the event name of the siphon
+		 * @param a
+		 *            the optional action that the siphon will execute (valid
+		 *            for DOM siphons only)
+		 * @param s
+		 *            the siphon's JQuery selector
+		 * @param el
+		 *            the DOM element that will be used to capture dynamic
+		 *            siphon attributes from
+		 * @param ml
+		 *            true to look for each HTTP method verbs when the method
+		 *            supplied is not found on the supplied DOM element
+		 * @returns the siphon object
+		 */
+		function genSiphonObj(m, evt, a, s, el, ml) {
+			var so = {
+				selector : s ? s : '',
+				method : m ? m : opts.ajaxTypeDefault,
+				typeSiphon : '',
+				eventSiphon : evt,
+				paramSiphon : '',
+				pathSiphon : '',
+				resultSiphon : '',
+				destSiphon : '',
+				funcName : '',
+				isValid : evt && evt.length > 0
+			};
+			so.captureAttrs = function(el, ml) {
+				if (so.isValid && el) {
+					so.isValid = addSiphonAttrVals(el, so.method,
+							so.eventSiphon, so, DOM_ATTR_TYPES, ml);
+					return so.isValid;
+				}
+				return false;
+			};
+			if (so.isValid) {
+				if (a) {
+					so.selector = '';
+					so.action = a;
+					so.onEvent = '';
+				}
+				if (el) {
+					so.captureAttrs(el, ml);
+				}
+			}
+			return so;
+		}
+		/**
 		 * Gets an attribute value using an plug-in option name
 		 * 
 		 * @param $el
@@ -593,22 +654,43 @@
 		 *            to
 		 * @param ns
 		 *            the array of attribute names to look for
+		 * @param ml
+		 *            true to look for each HTTP method verbs when the method
+		 *            supplied is not found on the supplied DOM element
 		 * @returns true when the event exists for the given method and the
 		 *          siphon attributes have been added
 		 */
-		function addSiphonAttrVals($el, m, evt, o, ns) {
+		function addSiphonAttrVals($el, m, evt, o, ns, ml) {
 			if ($el && m && o && evt && $.isArray(ns)) {
 				function getAN(n) {
 					var an = n.charAt(0).toUpperCase() + n.substr(1).toLowerCase();
 					an = m + (m == n ? '' : an) + 'Attrs';
 					return an;
 				}
+				function getEI(m) {
+					var ens = getOptsAttrVal($el, getAN(m));
+					ens = ens ? splitWithTrim(ens, opts.fragSep) : null;
+					return ens ? $.inArray(evt, ens) : -1;
+				}
 				m = m.toLowerCase();
-				var ens = getOptsAttrVal($el, getAN(m));
-				ens = ens ? splitWithTrim(ens, opts.fragSep) : null;
-				var ei = ens ? $.inArray(evt, ens) : -1;
+				var ei = getEI(m);
 				if (ei < 0) {
 					// event is not in the attributes
+					if (ml) {
+						$.each(HTTP_METHODS, function() {
+							var gm = this.toLowerCase();
+							if (gm != m) {
+								ei = getEI(gm);
+								if (ei >= 0) {
+									m = gm;
+									return false;
+								}
+							}
+						});
+						if (ei < 0) {
+							return false;
+						}
+					}
 					return false;
 				}
 				var an = null;
@@ -671,29 +753,18 @@
 			var evts = splitWithTrim(v, opts.fragSep);
 			var rs = [];
 			$.each(evts, function(i, ev) {
-				var r = {
-					selector : '',
-					action : opts.actionNavInvoke,
-					onEvent : '',
-					eventAttrs : a.items,
-					method : a.method,
-					typeSiphon : a.type,
-					eventSiphon : ev,
-					eventIndex : i,
-					paramSiphon : '',
-					pathSiphon : '',
-					resultSiphon : '',
-					destSiphon : '',
-					funcName : '',
-					isValid : ev.length > 0
-				};
+				if (ev.toLowerCase() == 'load') {
+					// load events are picked up by normal fragment loading
+					return;
+				}
+				var r = genSiphonObj(a.method, ev, opts.actionNavInvoke, null, null, false);
 				if (r.isValid) {
+					r.eventAttrs = a.items;
+					r.typeSiphon = a.type;
 					var rtn = addOrUpdateEventFunc(ctx, r.action, r.method,
 							f.pel, el, r.eventSiphon, function(pel, ib) {
 								var $ib = $(ib);
-								if (!addSiphonAttrVals($ib, r.method,
-										r.eventSiphon, r, [ 'type', 'params',
-												'path', 'result', 'dest' ])) {
+								if (!r.captureAttrs($ib, false)) {
 									// the event is no longer valid because the
 									// method/event attribute has removed the
 									// event since its registration- thus we
@@ -932,7 +1003,7 @@
 		function getFragFromSel(v) {
 			var s = $.trim(v);
 			var hf = s && opts.regexFragName.test(s);
-			s = s + (hf ? ',' + getThxSel(opts.fragAttrs, s) : '');
+			s = s + (hf ? ',' + getThxSel(opts.fragAttrs, s, null) : '');
 			return {
 				s : s,
 				hasFragAttr : hf
@@ -940,19 +1011,24 @@
 		}
 
 		/**
-		 * Gets a template JQuery selector
+		 * Gets the fragment JQuery selector
 		 * 
 		 * @param a
-		 *            the of array of template attributes (matches any)
+		 *            the of array of fragment attributes (matches any)
 		 * @param v
-		 *            the optional attribute value to match in the array
+		 *            the optional attribute value to match for each item in the
+		 *            array
+		 * @param ed
+		 *            the optional equals designation that will prepended to the
+		 *            equals sign (when a valid attribute value is supplied)
 		 * @returns JQuery selector
 		 */
-		function getThxSel(a, v) {
+		function getThxSel(a, v, ed) {
 			var r = '';
 			var as = $.isArray(a) ? a : [ a ];
-			for ( var i = 0; i < as.length; i++) {
-				r += (i > 0 ? ',' : '') + '[' + as[i] + (v ? '="' + v + '"' : '') + ']';
+			for (var i = 0; i < as.length; i++) {
+				r += (i > 0 ? ',' : '') + '[' + as[i]
+						+ (v ? (ed ? ed : '') + '="' + v + '"' : '') + ']';
 			}
 			return r;
 		}
@@ -1183,14 +1259,30 @@
 		 */
 		function Frag(pf, $pel, $fl, t) {
 			var ctx = this;
-			var forcett = t.siphon && t.siphon.typeSiphon;
 			//var isHead = $fl instanceof jQuery ? $fl.is('head') : false;
 			this.pf = pf;
 			this.pel = $pel;
 			this.el = $fl;
-			this.dt = forcett ? t.siphon.typeSiphon : TATTR;
-			var a = !t.isScopeSelect ? getFragAttr($fl, opts.includeAttrs)
-					: null;
+			var a = null;
+			var loadSiphon = null;
+			var siphon = t.siphon;
+			// scope select will identify if fragment details will come from the
+			// passed tracking siphon or extracted by fragment attributes
+			if (!t.isScopeSelect
+					&& (loadSiphon = genSiphonObj(opts.ajaxTypeDefault, 'load',
+							null, siphon.selector, this.el, true)).isValid) {
+				// DOM routing attribute for a load event will take presedence
+				// over short-hand include/replace/etc.
+				siphon = loadSiphon;
+			} else if (!t.isScopeSelect) {
+				a = getFragAttr($fl, opts.includeAttrs);
+			} else {
+				a = null;
+			}
+			var forcett = siphon.typeSiphon;
+			this.dt = forcett ? siphon.typeSiphon : TATTR;
+			this.method = siphon.method ? siphon.method
+					: opts.ajaxTypeDefault;
 			if (!a && !t.isScopeSelect) {
 				a = getFragAttr($fl, opts.replaceAttrs);
 				if (!forcett) {
@@ -1200,14 +1292,13 @@
 				this.dt = TINC;
 			}
 			a = a ? a.split(opts.fragSep) : null;
-			this.event = t.siphon ? t.siphon.eventSiphon : null;
-			var ps = t.siphon ? t.siphon.paramSiphon : null;
-			var rp = !a ? t.siphon.pathSiphon : a && a.length > 0 ? $.trim(a[0])
+			this.event = siphon.eventSiphon;
+			var ps = siphon.paramSiphon;
+			var rp = !a ? siphon.pathSiphon : a && a.length > 0 ? $.trim(a[0])
 					: null;
-			this.rs = !a ? t.siphon.resultSiphon : a && a.length > 1 ? $.trim(a[1])
+			this.rs = !a ? siphon.resultSiphon : a && a.length > 1 ? $.trim(a[1])
 					: null;
-			this.ds = !a ? t.siphon.destSiphon : this.el;
-			this.method = t.siphon && t.siphon.method ? t.siphon.method : 'GET';
+			this.ds = !a ? siphon.destSiphon : this.el;
 			if (rp && rp.length > 0
 					&& rp.toLowerCase() != opts.selfRef.toLowerCase()) {
 				rp = adjustPath(t.ctxPath, rp, script ? script
@@ -1787,6 +1878,7 @@
 		var defs = {
 			selfRef : 'this',
 			ajaxCache : false,
+			ajaxTypeDefault : 'GET',
 			crossDomain : false,
 			inheritRef : 'inherit',
 			pathSep : '/',

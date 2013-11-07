@@ -284,7 +284,7 @@
 				<ul class="nav nav-tabs nav-justified">
 					<li class="active"><a href="#userDestSelfIncludeDemo"
 						data-toggle="tab">Demo</a></li>
-					<li><a href="#userDestSelfIncludeCode" data-toggle="tab">Example</a></li>
+					<li><a href="#userDestSelfIncludeCode" data-toggle="tab">Code</a></li>
 				</ul>
 				<div class="tab-pane active thymus-demo" id="userDestSelfIncludeDemo">
 					<div class="list-group">
@@ -302,7 +302,7 @@
 				<div class="tab-pane" id="userDestSelfIncludeCode">
 					<div class="list-group">
 						<div class="list-group-item">
-							Self-targeting <b>destination siphon</b> <i>include</i> example:
+							Self-targeting <b>destination siphon</b> <i>include</i> code:
 						</div>
 						<div class="list-group-item">
 <div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
@@ -359,7 +359,7 @@
 				<div class="tab-pane" id="userDestSelfReplaceCode">
 					<div class="list-group">
 						<div class="list-group-item">
-							Self-targeting <b>destination siphon</b> <i>replace</i> example:
+							Self-targeting <b>destination siphon</b> <i>replace</i> code:
 						</div>
 						<div class="list-group-item">
 <div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
@@ -454,7 +454,7 @@
 				<div class="tab-pane" id="userDestIncludeCode">
 					<div class="list-group">
 						<div class="list-group-item">
-							Explicit <b>destination siphon</b> <i>include</i> example:
+							Explicit <b>destination siphon</b> <i>include</i> code:
 						</div>
 						<div class="list-group-item">
 <div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn-group&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
@@ -502,7 +502,7 @@
 						</div>
 						<div class="list-group-item">
 							<select id="demoDomUpdateSel" class="btn btn-primary"
-								data-thx-get="change"
+								data-thx-get="load :: change"
 								data-thx-get-path="frags/user/@{#demoDomUpdateSel}"
 								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
 								data-thx-get-type="update" data-thx-get-dest="#userDest3">
@@ -511,19 +511,19 @@
 								<option value="user3">User 3</option>
 							</select>
 						</div>
-						<div id="userDest3" class="list-group-item">
-							<div data-thx-replace="@{#demoDomUpdateSel->data-thx-get-path} :: [class^=&quot;thymus-user&quot;]">Loading...</div>
-						</div>
+						<div id="userDest3" class="list-group-item"></div>
 					</div>
 				</div>
 				<div class="tab-pane" id="userDestUpdateCode">
 					<div class="list-group">
 						<div class="list-group-item">
-							See <a href="#otherfragtargets">siphon resolver</a>s for further explaination:
+							See <a href="#otherfragtargets">siphon resolver</a>s and <a
+								href="#multidomevents">multiple DOM events</a> for further
+							explaination:
 						</div>
 						<div class="list-group-item">
 <div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;demoDomUpdateSel&quot;</span>
-	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;change&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;load :: change&quot;</span>
 	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/@{#demoDomUpdateSel}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
 	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;update&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
@@ -531,9 +531,7 @@
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>User 2<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>User 3<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-replace=</span><span style="color: #0000FF">&quot;@{#demoDomUpdateSel-&gt;data-thx-get-path} :: [class^=&amp;quot;thymus-user&amp;quot;]&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Loading...<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span><span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
 						</div>
 					</div>
