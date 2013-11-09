@@ -21,6 +21,7 @@
 	var FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
 	var FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
 	var DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest' ];
+	var DOM_ATTR_AGENT = 'agent';
 	var HTTP_METHODS = [ 'GET', 'POST', 'DELETE', 'PUT' ];
 	this.TATTR = 'attribute';
 	this.TINC = 'include';
@@ -349,7 +350,7 @@
 	 * @param trx
 	 *            the regular expression that will be used to find the type of
 	 *            node value extraction (match should return at least two
-	 *            values- the 1st being the JQuery selector nad the 2nd being
+	 *            values- the 1st being the JQuery selector and the 2nd being
 	 *            the type)
 	 * @param d
 	 *            the delimiter to use when multiple results are returned from a
@@ -588,10 +589,10 @@
 				funcName : '',
 				isValid : evt && evt.length > 0
 			};
-			so.captureAttrs = function(el, ml) {
+			so.captureAttrs = function(el, ml, ow) {
 				if (so.isValid && el) {
 					so.isValid = addSiphonAttrVals(el, so.method,
-							so.eventSiphon, so, DOM_ATTR_TYPES, ml);
+							so.eventSiphon, so, DOM_ATTR_TYPES, ml, ow);
 					return so.isValid;
 				}
 				return false;
@@ -603,7 +604,7 @@
 					so.onEvent = '';
 				}
 				if (el) {
-					so.captureAttrs(el, ml);
+					so.captureAttrs(el, ml, true);
 				}
 			}
 			return so;
@@ -657,61 +658,118 @@
 		 * @param ml
 		 *            true to look for each HTTP method verbs when the method
 		 *            supplied is not found on the supplied DOM element
+		 * @param ow
+		 *            true to overwrite object properties that already have a
+		 *            non-null or empty value
 		 * @returns true when the event exists for the given method and the
 		 *          siphon attributes have been added
 		 */
-		function addSiphonAttrVals($el, m, evt, o, ns, ml) {
+		function addSiphonAttrVals($el, m, evt, o, ns, ml, ow) {
 			if ($el && m && o && evt && $.isArray(ns)) {
-				function getAN(n) {
+				function getAN(m, n) {
 					var an = n.charAt(0).toUpperCase() + n.substr(1).toLowerCase();
 					an = m + (m == n ? '' : an) + 'Attrs';
 					return an;
 				}
-				function getEI(m) {
-					var ens = getOptsAttrVal($el, getAN(m));
-					ens = ens ? splitWithTrim(ens, opts.fragSep) : null;
+				function getEI($el, m) {
+					var ens = getOptsAttrVal($el, getAN(m, m));
+					ens = ens ? splitWithTrim(ens, opts.multiSep) : null;
 					return ens ? $.inArray(evt, ens) : -1;
 				}
-				m = m.toLowerCase();
-				var ei = getEI(m);
-				if (ei < 0) {
-					// event is not in the attributes
-					if (ml) {
-						$.each(HTTP_METHODS, function() {
-							var gm = this.toLowerCase();
-							if (gm != m) {
-								ei = getEI(gm);
-								if (ei >= 0) {
-									m = gm;
-									return false;
+				function getOV($el, an, ei) {
+					var ov = getOptsAttrVal($el, an);
+					ov = ov ? splitWithTrim(ov, opts.multiSep) : null;
+					ov = ov && ei >= ov.length ? ov[ov.length - 1]
+							: ov ? ov[ei] : undefined;
+					return ov;
+				}
+				function captureSA($el, m, ei, o, ow) {
+					var an = null;
+					var n = null;
+					var ov = null;
+					var agtt = false;
+					var agt = null;
+					var $agt = null;
+					for (var i=0; i<ns.length; i++) {
+						n = ns[i].toLowerCase();
+						an = getAN(m, n);
+						n = (m == n ? 'event' : n) + 'Siphon';
+						// only add values for attributes that exist on the
+						// passed object and have not yet been set
+						if (o[n] !== undefined && (ow || o[n] == null || o[n].length <= 0)) {
+							// when a siphon attribute corresponds to an event at
+							// the same index we use the attribute value at that
+							// index- otherwise, we just use the attribute at the
+							// last available index
+							ov = getOV($el, an, ei);
+							if (!ov) {
+								// try to lookup an agent that has the attribute (if any)
+								if (!agtt) {
+									agtt = true;
+									agt = getOV($el, getAN(m, DOM_ATTR_AGENT), ei);
+									if (agt) {
+										// siphon possible selectors
+										agt = siphonValues(agt, opts.regexSelectSiphon,
+												opts.regexValTypeSiphon, opts.agentSep, false, $el);
+										// capture the agent's siphon attributes
+										$agt = $(agt);
+										agt = genSiphonObj(m, evt, null, $agt.selector, null, false);
+										$agt.each(function() {
+											// 1st come, 1st serve- don't
+											// overwrite attributes that have
+											// already been set by a previous
+											// agent element
+											if (!capture($agt, m, agt, false, false, false)) {
+												agt = null;
+											}
+										});
+									}
 								}
+								if (agt && typeof agt === 'object' && agt[n]) {
+									o[n] = agt[n];
+								} else {
+									o[n] = ov;
+								}
+							} else {
+								o[n] = ov;
 							}
-						});
-						if (ei < 0) {
-							return false;
 						}
 					}
-					return false;
+					return o;
 				}
-				var an = null;
-				var n = null;
-				var ov = null;
-				for (var i=0; i<ns.length; i++) {
-					n = ns[i].toLowerCase();
-					an = getAN(n);
-					n = (m == n ? 'event' : n) + 'Siphon';
-					if (o[n] !== undefined) {
-						// when a siphon attribute corresponds to an event at
-						// the same index we use the attribute value at that
-						// index- otherwise, we just use the attribute at the
-						// last available index
-						ov = getOptsAttrVal($el, an);
-						ov = ov ? splitWithTrim(ov, opts.fragSep) : null;
-						o[n] = ov && ei >= ov.length ? ov[ov.length - 1]
-								: ov ? ov[ei] : undefined;
+				function capture($el, m, o, re, ml, ow) {
+					m = m.toLowerCase();
+					var ei = getEI($el, m);
+					if (ei < 0) {
+						// event is not in the attributes
+						if (ml) {
+							$.each(HTTP_METHODS, function() {
+								var gm = this.toLowerCase();
+								if (gm != m) {
+									ei = getEI($el, gm);
+									if (ei >= 0) {
+										m = gm;
+										return false;
+									}
+								}
+							});
+							if (ei < 0) {
+								if (re) {
+									return false;
+								}
+								ei = 0;
+							}
+						} else {
+							if (re) {
+								return false;
+							}
+							ei = 0;
+						}
 					}
+					captureSA($el, m, ei, o, ow);
+					return true;
 				}
-				return true;
+				return capture($el, m, o, true, ml, ow);
 			}
 			return false;
 		}
@@ -750,7 +808,7 @@
 							+ absolutePath(v, t.ctxPath) + '"';
 				}
 			}
-			var evts = splitWithTrim(v, opts.fragSep);
+			var evts = splitWithTrim(v, opts.multiSep);
 			var rs = [];
 			$.each(evts, function(i, ev) {
 				if (ev.toLowerCase() == 'load') {
@@ -764,7 +822,7 @@
 					var rtn = addOrUpdateEventFunc(ctx, r.action, r.method,
 							f.pel, el, r.eventSiphon, function(pel, ib) {
 								var $ib = $(ib);
-								if (!r.captureAttrs($ib, false)) {
+								if (!r.captureAttrs($ib, false, true)) {
 									// the event is no longer valid because the
 									// method/event attribute has removed the
 									// event since its registration- thus we
@@ -1291,7 +1349,7 @@
 			} else if (!forcett) {
 				this.dt = TINC;
 			}
-			a = a ? a.split(opts.fragSep) : null;
+			a = a ? a.split(opts.multiSep) : null;
 			this.event = siphon.eventSiphon;
 			var ps = siphon.paramSiphon;
 			var rp = !a ? siphon.pathSiphon : a && a.length > 0 ? $.trim(a[0])
@@ -1310,8 +1368,8 @@
 			this.rp = function(rpn) {
 				rp = rpn ? rpn : rp;
 				if (!rpp || rpn) {
-					rpp = siphonValues(rp, opts.regexPathParamSiphon,
-							opts.regexValueSiphon, opts.pathSep, false, this.el);
+					rpp = siphonValues(rp, opts.regexSelectSiphon,
+							opts.regexValTypeSiphon, opts.pathSep, false, this.el);
 				}
 				return rpp;
 			};
@@ -1347,8 +1405,8 @@
 			this.ps = function(psn) {
 				ps = psn ? psn : ps;
 				if ((ps && !psp) || psn) {
-					psp = siphonValues(ps, opts.regexPathParamSiphon,
-							opts.regexValueSiphon, opts.paramSep, true, this.el);
+					psp = siphonValues(ps, opts.regexSelectSiphon,
+							opts.regexValTypeSiphon, opts.paramSep, true, this.el);
 				}
 				return psp;
 			};
@@ -1883,7 +1941,8 @@
 			inheritRef : 'inherit',
 			pathSep : '/',
 			paramSep : '&',
-			fragSep : '::',
+			agentSep : ',',
+			multiSep : '::',
 			fragExtensionAttr : 'data-thx-frag-extension',
 			fragAttrs : [ 'data-thx-fragment', 'th\\:fragment', 'data-th-fragment' ],
 			includeAttrs : [ 'data-thx-include', 'th\\:include', 'data-th-include' ],
@@ -1914,8 +1973,12 @@
 			deleteResultAttrs : [ 'data-thx-delete-result' ],
 			getDestAttrs : [ 'data-thx-get-dest' ],
 			postDestAttrs : [ 'data-thx-post-dest' ],
-			putDestinationAttrs : [ 'data-thx-put-dest' ],
-			deleteDestinationAttrs : [ 'data-thx-delete-dest' ],
+			putDestAttrs : [ 'data-thx-put-dest' ],
+			deleteDestAttrs : [ 'data-thx-delete-dest' ],
+			getAgentAttrs : [ 'data-thx-get-agent' ],
+			postAgentAttrs : [ 'data-thx-post-agent' ],
+			putAgentAttrs : [ 'data-thx-put-agent' ],
+			deleteAgentAttrs : [ 'data-thx-delete-agent' ],
 			contextPathAttr : 'data-thx-context-path',
 			fragListenerAttr : 'data-thx-onfrag',
 			fragsListenerAttr : 'data-thx-onfrags',
@@ -1929,8 +1992,8 @@
 			regexAbsPath : /^\/|(\/[^\/]*|[^\/]+)$/g,
 			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g,
 			regexFuncArgReplace : /['"]/g,
-			regexValueSiphon : /(^.*)(?:->)(?=([^.]*)$)/g,
-			regexPathParamSiphon : /(?:@{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
+			regexValTypeSiphon : /(^.*)(?:->)(?=([^.]*)$)/g,
+			regexSelectSiphon : /(?:@{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexVarSiphon : /(\${)((\\.)?|((?!}).))+}/g,
 			eventIsBroadcast : true,
 			eventFragChain : 'frag',

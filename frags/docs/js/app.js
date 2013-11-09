@@ -2,7 +2,7 @@ function init() {
 	// add some flare to the demo by adding a background splash
 	flickr('thymus vulgaris', 'body');
 	// initialize bootstrap components
-	initScrollSpy('[data-spy="scroll"]');
+	initScrollSpy('.scroll-spy');
 	initToolTips('[class*="app-tooltip"]');
 }
 function initScrollSpy(cssSelector) {

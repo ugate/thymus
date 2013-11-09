@@ -105,11 +105,11 @@ div.app-scroll .scroll-spy {
 }
 
 .thymus-user1 img {
-	filter: sepia(100%);
-	-webkit-filter: sepia(100%);
-	-moz-filter: sepia(100%);
-	-o-filter: sepia(100%);
-	-ms-filter: sepia(100%);
+	filter: grayscale(100%);
+	-webkit-filter: grayscale(100%);
+	-moz-filter: grayscale(100%);
+	-o-filter: grayscale(100%);
+	-ms-filter: grayscale(100%);
 }
 
 .thymus-user2 img {
@@ -121,17 +121,17 @@ div.app-scroll .scroll-spy {
 }
 
 .thymus-user3 img {
-	filter: grayscale(100%);
-	-webkit-filter: grayscale(100%);
-	-moz-filter: grayscale(100%);
-	-o-filter: grayscale(100%);
-	-ms-filter: grayscale(100%);
+	filter: sepia(100%);
+	-webkit-filter: sepia(100%);
+	-moz-filter: sepia(100%);
+	-o-filter: sepia(100%);
+	-ms-filter: sepia(100%);
 }
 
 .thymus-demo {
 	overflow: auto;
 	width: auto;
-	padding: .2em .6em;
+	padding: 0;
 }
 
 .icon-green {
