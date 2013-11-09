@@ -828,7 +828,7 @@
 									// event since its registration- thus we
 									// need to trigger a removal of the event
 									// listener by returning true
-									return true;
+									return true; 
 								}
 								r.selector = ib;
 								ctx.exec(r, pel, ib);

@@ -473,10 +473,10 @@
 						</div>
 						<div class="list-group-item">
 							<select id="demoDomUpdateSel" class="btn btn-primary"
-								data-thx-post="load :: change"
-								data-thx-post-path="frags/user/@{#demoDomUpdateSel}"
-								data-thx-post-result="[class^=&quot;thymus-user&quot;]"
-								data-thx-post-type="update" data-thx-post-dest="#userDest3">
+								data-thx-get="load :: change"
+								data-thx-get-path="frags/user/@{#demoDomUpdateSel}"
+								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+								data-thx-get-type="update" data-thx-get-dest="#userDest3">
 								<option value="user1">John Doe</option>
 								<option value="user2">Jane Wayne</option>
 								<option value="user3">Richard Roe</option>
@@ -498,10 +498,10 @@
 						</div>
 						<div class="list-group-item thymus-demo">
 <div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;demoDomUpdateSel&quot;</span>
-	<span style="color: #FF0000">data-thx-post=</span><span style="color: #0000FF">&quot;load :: change&quot;</span>
-	<span style="color: #FF0000">data-thx-post-path=</span><span style="color: #0000FF">&quot;frags/user/@{#demoDomUpdateSel}&quot;</span>
-	<span style="color: #FF0000">data-thx-post-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
-	<span style="color: #FF0000">data-thx-post-type=</span><span style="color: #0000FF">&quot;update&quot;</span> <span style="color: #FF0000">data-thx-post-dest=</span><span style="color: #0000FF">&quot;#userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;load :: change&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/@{#demoDomUpdateSel}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;update&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>John Doe<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Jane Wayne<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Richard Roe<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
@@ -540,10 +540,10 @@
 							<h4>Demo</h4>
 						</div>
 						<div class="list-group-item">
-							<input type="text" data-thx-post="click :: keyup"
-								data-thx-post-path="frags/user/user1 :: frags/user/user2"
-								data-thx-post-result="[class^=&quot;thymus-user&quot;]"
-								data-thx-post-dest="#userMultiEvt1 :: #userMultiEvt2"
+							<input type="text" data-thx-get="click :: keyup"
+								data-thx-get-path="frags/user/user1 :: frags/user/user2"
+								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+								data-thx-get-dest="#userMultiEvt1 :: #userMultiEvt2"
 								class="form-control thymus-green"
 								placeholder="Click or type anything here" />
 						</div>
@@ -563,10 +563,10 @@
 							<h4>Code</h4>
 						</div>
 						<div class="list-group-item thymus-demo">
-<div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">data-thx-post=</span><span style="color: #0000FF">&quot;click :: keyup&quot;</span>
-	<span style="color: #FF0000">data-thx-post-path=</span><span style="color: #0000FF">&quot;frags/user/user1 :: frags/user/user2&quot;</span>
-	<span style="color: #FF0000">data-thx-post-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
-	<span style="color: #FF0000">data-thx-post-dest=</span><span style="color: #0000FF">&quot;#userMultiEvt1 :: #userMultiEvt2&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click :: keyup&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1 :: frags/user/user2&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userMultiEvt1 :: #userMultiEvt2&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;h4&gt;</span>User 1<span style="color: #000080; font-weight: bold">&lt;/h4&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userMultiEvt1&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;h4&gt;</span>User 2<span style="color: #000080; font-weight: bold">&lt;/h4&gt;</span>
@@ -598,6 +598,65 @@
 				.
 			</p>
 <!-- 			<h3 id="passingparams">Passing Parameters</h3> -->
+<!-- 			<h4> -->
+<!-- 				Explicit <b>destination siphon</b> <i>include</i> example: -->
+<!-- 			</h4> -->
+<!-- 			<div class="row"> -->
+<!-- 				<div class="col-md-6"> -->
+<!-- 					<div class="list-group"> -->
+<!-- 						<div class="list-group-item"> -->
+<!-- 							<h4>Demo</h4> -->
+<!-- 						</div> -->
+<!-- 						<div class="list-group-item"> -->
+<!-- 							<div class="btn-group" id="userDest2Grp" -->
+<!-- 								data-thx-get-path="frags/user/${#userDest2Val}" -->
+<!-- 								data-thx-get-result="[class^=&quot;thymus-user&quot;]" -->
+<!-- 								data-thx-get-dest="#userDest2"> -->
+<!-- 								<button type="button" class="btn btn-primary"  -->
+<!-- 									data-thx-get="click" data-thx-get-agent="#userDest2Grp" -->
+<!-- 									data-thx-get-with="user=user1">Include -->
+<!-- 									User1</button> -->
+<!-- 								<button type="button" class="btn btn-primary" -->
+<!-- 									data-thx-get="click" data-thx-get-agent="#userDest2Grp" -->
+<!-- 									data-thx-get-with="user=user2">Include -->
+<!-- 									User2</button> -->
+<!-- 								<button type="button" class="btn btn-primary" -->
+<!-- 									data-thx-get="click" data-thx-get-agent="#userDest2Grp" -->
+<!-- 									data-thx-get-with="user=user3">Include -->
+<!-- 									User3</button> -->
+<!-- 							</div> -->
+<!-- 						</div> -->
+<!-- 						<div class="list-group-item"> -->
+<!-- 							<div id="userDest2"></div> -->
+<!-- 						</div> -->
+<!-- 					</div> -->
+<!-- 				</div> -->
+<!-- 				<div class="col-md-6"> -->
+<!-- 					<div class="list-group"> -->
+<!-- 						<div class="list-group-item"> -->
+<!-- 							<h4>Code</h4> -->
+<!-- 						</div> -->
+<!-- 						<div class="list-group-item thymus-demo"> -->
+<!-- <div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn-group&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span> -->
+<!-- 	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> -->
+<!-- 		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span> -->
+<!-- 		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span> -->
+<!-- 		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User1<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span> -->
+<!-- 	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> -->
+<!-- 		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user2&quot;</span> -->
+<!-- 		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span> -->
+<!-- 		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User2<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span> -->
+<!-- 	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> -->
+<!-- 		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user3&quot;</span> -->
+<!-- 		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span> -->
+<!-- 		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User3<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span> -->
+<!-- <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span> -->
+<!-- <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest2&quot;</span> <span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span> -->
+<!-- </pre></div> -->
+<!-- 						</div> -->
+<!-- 					</div> -->
+<!-- 				</div> -->
+<!-- 			</div> -->
 			<h3 id="shorthand">Auto Loading Fragments (short-hand)</h3>
 			<p>
 				A short-hand <b>routing attribute</b> can also be used which is
