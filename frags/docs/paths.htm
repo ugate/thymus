@@ -239,7 +239,7 @@
 				Lets consider a <b>path siphon</b> where more than one JQuery
 				selector can be used. In this case each JQuery selector and
 				corresponding extraction directive are wrapped within a
-				<b>siphon resolver</b> <code>@{}</code>
+				<b>siphon resolver</b> <code>?{}</code>
 				.
 			</p>
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> 
@@ -260,7 +260,7 @@
 				The preceeding <b>path siphon</b> would get evaluated when the button
 				is clicked. When the first URL siphon is discovered within the
 				wrapped
-				<code>@{}</code>
+				<code>?{}</code>
 				it will capture the node(s) returned by the JQuery
 				<code>#secondPath</code>
 				selector. The
@@ -272,7 +272,7 @@
 				from the
 				<code>#secondPath</code>
 				discovery occurs using the same extraction methods on seach of the
-				<code>@{}</code>
+				<code>?{}</code>
 				segments found in
 				<code>@{#second}/@{#thirdFourthPath
 					:input}/@{.fifth-path-&gt;data-mypath}</code>

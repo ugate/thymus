@@ -474,7 +474,7 @@
 						<div class="list-group-item">
 							<select id="demoDomUpdateSel" class="btn btn-primary"
 								data-thx-get="load :: change"
-								data-thx-get-path="frags/user/@{#demoDomUpdateSel}"
+								data-thx-get-path="frags/user/?{#demoDomUpdateSel}"
 								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
 								data-thx-get-type="update" data-thx-get-dest="#userDest3">
 								<option value="user1">John Doe</option>
@@ -499,7 +499,7 @@
 						<div class="list-group-item thymus-demo">
 <div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;demoDomUpdateSel&quot;</span>
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;load :: change&quot;</span>
-	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/@{#demoDomUpdateSel}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/?{#demoDomUpdateSel}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
 	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;update&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>John Doe<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
@@ -609,20 +609,20 @@
 <!-- 						</div> -->
 <!-- 						<div class="list-group-item"> -->
 <!-- 							<div class="btn-group" id="userDest2Grp" -->
-<!-- 								data-thx-get-path="frags/user/${#userDest2Val}" -->
+<!-- 								data-thx-get-path="frags/user/${userKey}" -->
 <!-- 								data-thx-get-result="[class^=&quot;thymus-user&quot;]" -->
 <!-- 								data-thx-get-dest="#userDest2"> -->
 <!-- 								<button type="button" class="btn btn-primary"  -->
 <!-- 									data-thx-get="click" data-thx-get-agent="#userDest2Grp" -->
-<!-- 									data-thx-get-with="user=user1">Include -->
+<!-- 									data-thx-get-with="userKey=user1">Include -->
 <!-- 									User1</button> -->
 <!-- 								<button type="button" class="btn btn-primary" -->
 <!-- 									data-thx-get="click" data-thx-get-agent="#userDest2Grp" -->
-<!-- 									data-thx-get-with="user=user2">Include -->
+<!-- 									data-thx-get-with="userKey=user2">Include -->
 <!-- 									User2</button> -->
 <!-- 								<button type="button" class="btn btn-primary" -->
 <!-- 									data-thx-get="click" data-thx-get-agent="#userDest2Grp" -->
-<!-- 									data-thx-get-with="user=user3">Include -->
+<!-- 									data-thx-get-with="userKey=user3">Include -->
 <!-- 									User3</button> -->
 <!-- 							</div> -->
 <!-- 						</div> -->

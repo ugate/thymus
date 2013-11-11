@@ -14,10 +14,9 @@
 					</button>
 					<a class="navbar-brand app-tooltip-bottom" th:title="#{home}"
 						title="Thymus Home" th:href="@{/index.htm}" href="index.htm">
-						<span class="icon-stack"> <i
-							class="icon-sign-blank icon-muted icon-stack-base"></i> <i
-							class="icon-leaf icon-thymus-stacked"></i> <i
-							class="icon-thymus-text-dark">thymus.js</i>
+						<span class="fa-stack fa-1x"> <i
+							class="fa fa-square fa-stack-2x fa-inverse"></i> <i
+							class="fa fa-leaf fa-stack-1x fa-thymus"></i>
 					</span>
 					</a>
 				</div>
@@ -27,28 +26,28 @@
 							href="javascript:void(0);" class="dropdown-toggle"
 							data-toggle="dropdown"> <span th:text="${user.name}"
 								class="user-title">Guest User</span> <i
-								class="icon-chevron-down"></i></a>
+								class="fa fa-chevron-down"></i></a>
 							<ul class="dropdown-menu app-right-menu">
 								<li class="user-info"><a
 									th:include="frags/user/user :: user" href="user/info.htm"
 									th:href="@{user/info}"></a></li>
 								<li><a th:href="@{/login.htm}" href="login.htm"><i
-										class="icon-off"></i> <span th:text="#{signout}">Sign
+										class="fa fa-off"></i> <span th:text="#{signout}">Sign
 											Out</span></a></li>
 							</ul></li>
 					</ul>
 					<ul class="nav navbar-nav navbar-left">
 						<li><a href="https://github.com/ugate/thymus"> <i
-								class="icon-github app-icon-navbar app-tooltip-bottom"
+								class="fa fa-github app-icon-navbar app-tooltip-bottom"
 								title="View project on GitHub" th:title="#{github.view}"></i>
 						</a></li>
 						<li><a href="https://github.com/ugate/thymus/tarball/master">
 								<i
-								class="icon-circle-arrow-down app-icon-navbar app-tooltip-bottom"
+								class="fa fa-download app-icon-navbar app-tooltip-bottom"
 								title="Download .tar.gz file" th:title="#{github.download.gz}"></i>
 						</a></li>
 						<li><a href="https://github.com/ugate/thymus/zipball/master">
-								<i class="icon-download app-icon-navbar app-tooltip-bottom"
+								<i class="fa fa-download app-icon-navbar app-tooltip-bottom"
 								title="Download .zip file" th:title="#{github.download.zip}"></i>
 						</a></li>
 					</ul>

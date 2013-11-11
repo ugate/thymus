@@ -7,16 +7,16 @@
 			<ul class="nav">
 				<li><a th:title="#{access.assigned}"
 					class="app-tooltip-top" title="User Info" href="#user"><i
-						class="icon-male"></i></a></li>
+						class="fa fa-male"></i></a></li>
 				<li><a th:title="#{access.assigned}"
 					class="app-tooltip-top" title="Assigned Access" href="#access"><i
-						class="icon-key"></i></a></li>
+						class="fa fa-key"></i></a></li>
 				<li><a th:title="#{groups.assigned}"
 					class="app-tooltip-top" title="Assigned Groups" href="#groups"><i
-						class="icon-group"></i></a></li>
+						class="fa fa-group"></i></a></li>
 				<li><a th:title="#{roles.assigned}"
 					class="app-tooltip-top" title="Assigned Roles" href="#roles"><i
-						class="icon-user"></i></a></li>
+						class="fa fa-user"></i></a></li>
 			</ul>
 		</div>
 		<section
@@ -30,7 +30,7 @@
 			<div id="access" class="panel panel-default">
 				<div class="panel-heading">
 					<h4>
-						<i class="icon-key"></i> <span th:text="#{access.assigned}">Assigned
+						<i class="fa fa-key"></i> <span th:text="#{access.assigned}">Assigned
 							Access</span>
 					</h4>
 				</div>
@@ -38,100 +38,100 @@
 					<div th:if="${user}" th:each="f,fs : ${user.access}"
 						class="col-lg-3">
 						<i
-							th:class="${f.enabled} ? 'icon-circle icon-green' : 'icon-circle icon-red'"
-							class="icon-circle icon-red"></i> <span
+							th:class="${f.enabled} ? 'fa fa-circle fa-green' : 'fa fa-circle fa-red'"
+							class="fa fa-circle fa-red"></i> <span
 							th:text="${f.name} + ' (' + ${f.value} + ')'">Some Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+						<i class="fa-greencircle fa-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+						<i class="fa fa-circle fa-red"></i> <span>Some Other Access <span class="badge">N</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+						<i class="fa fa-circle fa-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+						<i class="fa fa-circle fa-red"></i> <span>Some Other Access <span class="badge">N</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+						<i class="fa fa-circle fa-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+						<i class="fa fa-circle fa-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+						<i class="fa fa-circle fa-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+						<i class="fa fa-circle fa-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+						<i class="fa fa-circle fa-red"></i> <span>Some Other Access <span class="badge">N</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+						<i class="fa fa-circle fa-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+						<i class="fa fa-circle fa-red"></i> <span>Some Other Access <span class="badge">N</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+						<i class="fa fa-circle fa-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+						<i class="fa fa-circle fa-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+						<i class="fa fa-circle fa-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+						<i class="fa fa-circle fa-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+						<i class="fa fa-circle fa-red"></i> <span>Some Other Access <span class="badge">N</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+						<i class="fa fa-circle fa-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+						<i class="fa fa-circle fa-red"></i> <span>Some Other Access <span class="badge">N</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+						<i class="fa fa-circle fa-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+						<i class="fa fa-circle fa-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+						<i class="fa fa-circle fa-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+						<i class="fa fa-circle fa-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+						<i class="fa fa-circle fa-red"></i> <span>Some Other Access <span class="badge">N</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+						<i class="fa fa-circle fa-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-red"></i> <span>Some Other Access <span class="badge">N</span></span>
+						<i class="fa fa-circle fa-red"></i> <span>Some Other Access <span class="badge">N</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+						<i class="fa fa-circle fa-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
+						<i class="fa fa-circle fa-green"></i> <span>Some Other Access <span class="badge">Y</span></span>
 					</div>
 					<div th:remove="all" class="col-lg-3">
-						<i class="icon-circle icon-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
+						<i class="fa fa-circle fa-yellow"></i> <span>Some Other Access <span class="badge">L</span></span>
 					</div>
 				</div>
 			</div>
 			<div id="groups" class="panel panel-default">
 				<div class="panel-heading">
 					<h4>
-						<i class="icon-group"></i> <span th:text="#{groups.assigned}">Assigned
+						<i class="fa fa-group"></i> <span th:text="#{groups.assigned}">Assigned
 							Groups</span>
 					</h4>
 				</div>
@@ -223,7 +223,7 @@
 			<div id="roles" class="panel panel-default">
 				<div class="panel-heading">
 					<h4>
-						<i class="icon-user"></i> <span th:text="#{roles.assigned}">Assigned
+						<i class="fa fa-user"></i> <span th:text="#{roles.assigned}">Assigned
 							Roles</span>
 					</h4>
 				</div>

@@ -134,37 +134,42 @@ div.app-scroll .scroll-spy {
 	padding: 0;
 }
 
-.icon-green {
+.fa-green {
 	color: #00ff00 !important;
 }
 
-.icon-yellow {
+.fa-yellow {
 	color: #ffff00 !important;
 }
 
-.icon-red {
+.fa-red {
 	color: #ff0000 !important;
 }
 
-.icon-text {
-	font-size: .5em !important;
+.fa-text {
+	font-size: .7em !important;
 }
 
-.icon-thymus,.icon-thymus-stacked {
+.fa-thymus,.fa-thymus-stacked {
 	color: #16a085;
 }
 
-.icon-thymus-stacked {
+.fa-thymus-stacked {
 	line-height: 1.7em !important;
 }
 
-.icon-thymus-text,.icon-thymus-text-dark {
-	line-height: 10.5em !important;
+.fa-thymus-stacked-a {
+	line-height: 1.9em !important;
+	color: #2D608C;
+}
+
+.fa-thymus-text,.fa-thymus-text-dark {
+	line-height: 9.5em !important;
 	font-size: .3em !important;
 	color: #fff;
 }
 
-.icon-thymus-text-dark {
+.fa-thymus-text-dark {
 	color: #000;	
 }
 

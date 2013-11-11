@@ -3,7 +3,8 @@ function init() {
 	flickr('thymus vulgaris', 'body');
 	// initialize bootstrap components
 	initScrollSpy('.scroll-spy');
-	initToolTips('[class*="app-tooltip"]');
+	initTipsPops('app-tooltip');
+	initTipsPops('app-popover');
 }
 function initScrollSpy(cssSelector) {
 	$(cssSelector).each(function() {
@@ -22,6 +23,28 @@ function initToolTips(cssSelector) {
 		     animation: false,
 		     placement: p
 		});
+	});
+}
+function initTipsPops(clzp) {
+	var isp = clzp.indexOf('popover') > -1;
+	$('[class*="' + clzp + '"]').each(function () {
+		var $t = $(this);
+		var p = $t.hasClass(clzp + '-top') ? 'top' : $t
+				.hasClass(clzp + '-right') ? 'right' : $t
+				.hasClass(clzp + '-left') ? 'left' : $t
+				.hasClass(clzp + '-bottom') ? 'bottom' : 'auto';
+		if (isp) {
+			$t.popover({
+			     animation: false,
+			     placement: p
+			});
+		} else {
+			$t.tooltip({
+			     delay: { show: 100 },
+			     animation: false,
+			     placement: p
+			});
+		}
 	});
 }
 function flickr(key, sel) {
