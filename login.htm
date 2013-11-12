@@ -30,7 +30,7 @@
 					</div>
 					<div class="form-group">
 						<div class="input-group">
-							<span class="input-group-addon"><i class="icon-user"></i></span><input
+							<span class="input-group-addon"><i class="fa fa-user"></i></span><input
 								class="form-control" id="username" name="username" type="text"
 								th:placeholder="#{username}" placeholder="Username"
 								required="required" />
@@ -38,17 +38,22 @@
 					</div>
 					<div class="form-group">
 						<div class="input-group">
-							<span class="input-group-addon"><i class="icon-key"></i></span><input
+							<span class="input-group-addon"><i class="fa fa-key"></i></span><input
 								class="form-control" id="password" name="password" type="password"
 								th:placeholder="#{password}" placeholder="Password"
 								required="required" />
 						</div>
 					</div>
+					<div class="form-group">
+						<div class="alert alert-warning">Form submission uses GET
+							method for illustration purposes only!</div>
+					</div>
 					<div class="container">
-						<button class="btn btn-primary btn-lg btn-block" th:type="'submit'"
-							th:onclick="'void(0)'" th:text="#{signin}"
-							data-thx-replace-post="click :: .form-signin:input :: index" type="button">Sign
-							in</button>
+						<button class="btn btn-primary btn-lg btn-block"
+							th:type="'submit'" th:onclick="'void(0)'" th:text="#{signin}"
+							data-thx-get="click" data-thx-get-path="index"
+							data-thx-get-params=".form-signin :input"
+							data-thx-get-type="_self" type="button">Sign in</button>
 					</div>
 				</div>
 			</div>

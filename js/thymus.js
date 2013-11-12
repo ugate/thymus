@@ -27,6 +27,7 @@
 	this.TINC = 'include';
 	this.TREP = 'replace';
 	this.TUPD = 'update';
+	this.TYPES_ASYNC = [ this.TATTR, this.TINC, this.TREP, this.TUPD ];
 	var eventFuncs = {};
 	var eventFuncCnt = 0;
 	this.ieVersion = 0;
@@ -162,6 +163,24 @@
 	function getEventName(n, u) {
 		return n && n.toLowerCase().indexOf('on') == 0 ? u ? n : n.substr(2)
 				: u ? 'on' + n : n;
+	}
+
+	/**
+	 * Navigation options
+	 * 
+	 * @constructor
+	 * @param s
+	 *            the string that will contain the name of the navigation and
+	 *            the options
+	 * @param sep
+	 *            the separator to extract the name from the options
+	 */
+	function NavOptions(s, sep) {
+		this.name = s ? splitWithTrim(s, sep) : [ '_blank' ];
+		this.options = this.name.length > 1 ? this.name[1] : undefined;
+		this.history = this.name.length > 2 ? this.name[2] : undefined;
+		this.name = this.name[0].toLowerCase();
+		this.isNav = s && this.name && $.inArray(this.name, TYPES_ASYNC) < 0;
 	}
 
 	/**
@@ -533,7 +552,8 @@
 			} else if (a.action === opts.actionNavInvoke) {
 				// perform navigation action either as a partial or full page
 				a.method = a.method ? a.method : 'GET';
-				if (a.resultSiphon || a.destSiphon) {
+				var no = new NavOptions(a.typeSiphon, opts.winOpenOptsSep);
+				if (!no.isNav) {
 					loadFragments(c ? c : p, a, true, null);
 				} else if (a.pathSiphon) {
 					var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), {});
@@ -541,10 +561,9 @@
 						siphon : a
 					});
 					broadcast(opts.eventFragChain, opts.eventFragBeforeHttp, t, f);
-					location.href = adjustPath(getScriptCtxPath(), a.pathSiphon,
-							script ? script.attr(opts.fragExtensionAttr) : '');
+					f.nav(no);
 				} else {
-					log('No fragment target specified for ' + a.action);
+					log('No path specified for ' + a.action);
 				}
 			} else if (a.action === opts.actionNavRegister) {
 				// convert URLs and register event driven navigation
@@ -582,7 +601,7 @@
 				method : m ? m : opts.ajaxTypeDefault,
 				typeSiphon : '',
 				eventSiphon : evt,
-				paramSiphon : '',
+				paramsSiphon : '',
 				pathSiphon : '',
 				resultSiphon : '',
 				destSiphon : '',
@@ -710,7 +729,7 @@
 									if (agt) {
 										// siphon possible selectors
 										agt = siphonValues(agt, opts.regexSelectSiphon,
-												opts.regexValTypeSiphon, opts.agentSep, false, $el);
+												opts.regexValTypeSiphon, opts.agentSelSep, false, $el);
 										// capture the agent's siphon attributes
 										$agt = $(agt);
 										agt = genSiphonObj(m, evt, null, $agt.selector, null, false);
@@ -1351,7 +1370,7 @@
 			}
 			a = a ? a.split(opts.multiSep) : null;
 			this.event = siphon.eventSiphon;
-			var ps = siphon.paramSiphon;
+			var ps = siphon.paramsSiphon;
 			var rp = !a ? siphon.pathSiphon : a && a.length > 0 ? $.trim(a[0])
 					: null;
 			this.rs = !a ? siphon.resultSiphon : a && a.length > 1 ? $.trim(a[1])
@@ -1402,11 +1421,14 @@
 				this.pf.ccnt(true);
 			}
 			var psp = null;
-			this.ps = function(psn) {
+			this.ps = function(uj, psn) {
 				ps = psn ? psn : ps;
-				if ((ps && !psp) || psn) {
+				if ((ps && !psp) || psn || (!uj && typeof psp === 'object')
+						|| (uj && typeof psp === 'string')) {
 					psp = siphonValues(ps, opts.regexSelectSiphon,
-							opts.regexValTypeSiphon, opts.paramSep, true, this.el);
+							opts.regexValTypeSiphon, opts.paramSep, true,
+							this.el);
+					psp = uj ? $(psp).serializeArray() : $(psp).serialize();
 				}
 				return psp;
 			};
@@ -1500,6 +1522,43 @@
 				}
 				this.domDone(false);
 			};
+			this.nav = function(no) {
+				no = no ? no : new NavOptions(this.dt, opts.winOpenOptsSep);
+				var vars = null;
+				if (this.method.toLowerCase() != 'get') {
+					// for performance we'll build input strings versus nodes
+					// before we simulate the form submission
+					var fd = $('<form style="display:none;" action="' + this.rp()
+							+ '" method="' + this.method + '" />');
+					vars = this.ps(true);
+					var ips = '';
+					for (var i = 0; i < vars.length; i++) {
+						ips += '<input name="' + vars[i].name + '" value="'
+								+ vars[i].value + '" />';
+					}
+					fd.append(ips);
+					var win = null;
+					if (no.name == '_blank') {
+						win = window.open('about:blank', no.name, no.options,
+								no.history);
+						win.document.write('<html><body></body></html>');
+					} else {
+						win = no.name != '_self' ? window[str.charAt(0) == '_' ? no.name
+								.substring(1)
+								: no.name]
+								: window;
+					}
+					win.document.$('body').append(fd);
+					fd.submit();
+				} else {
+					var loc = this.rp();
+					var vars = this.ps();
+					if (vars) {
+						loc += '?' + vars;
+					}
+					window.open(loc, no.name, no.options, no.history);
+				}
+			};
 			this.isModel = function(xhr) {
 				var mt = xhr ? xhr.getResponseHeader('Content-Type') : null;
 				return mt && (mt.indexOf('json') >= 0 || mt.indexOf('xml') >= 0);
@@ -1555,7 +1614,7 @@
 			o.fragPendingPeerCount = f && f.pf ? f.pf.ccnt(null) : 0;
 			o.routingStack = f ? f.getStack() : undefined;
 			o.sourceEvent = f ? f.event : undefined;
-			o.paramSiphon = f ? f.ps() : undefined;
+			o.paramsSiphon = f ? f.ps() : undefined;
 			o.pathSiphon = f ? f.rp() : undefined;
 			o.resultSiphon = f ? f.getResultSiphon() : undefined;
 			o.destSiphon = f ? f.ds : undefined;
@@ -1569,8 +1628,8 @@
 			o.toFormattedString = function() {
 				return '[' + o.chain + ' event, fragCount: ' + o.fragCount
 						+ ', fragCurrTotal: ' + o.fragCurrTotal
-						+ ', sourceEvent: ' + o.sourceEvent + ', paramSiphon: '
-						+ o.paramSiphon + ', pathSiphon: ' + o.pathSiphon
+						+ ', sourceEvent: ' + o.sourceEvent + ', paramsSiphon: '
+						+ o.paramsSiphon + ', pathSiphon: ' + o.pathSiphon
 						+ ', resultSiphon: ' + o.resultSiphon
 						+ ', destSiphon: ' + o.destSiphon + ', element: '
 						+ o.element + ', error: ' + o.error + ']';
@@ -1941,8 +2000,9 @@
 			inheritRef : 'inherit',
 			pathSep : '/',
 			paramSep : '&',
-			agentSep : ',',
+			agentSelSep : ',',
 			multiSep : '::',
+			winOpenOptsSep : ';',
 			fragExtensionAttr : 'data-thx-frag-extension',
 			fragAttrs : [ 'data-thx-fragment', 'th\\:fragment', 'data-th-fragment' ],
 			includeAttrs : [ 'data-thx-include', 'th\\:include', 'data-th-include' ],

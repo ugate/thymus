@@ -183,48 +183,33 @@
 							siphon</b> events. Valid values are:
 						<ul>
 							<li><span class="badge">include</span> - will append the
-								fragment result within the node where the <b>DOM routing
-									attribute</b> is defined</li>
-							<li><span class="badge">replace</span> - will replace the
-								the node where the <b>DOM routing attribute</b> is defined with
-								the fragment result</li>
+								fragment result within the <b>destination siphon</b>. When there
+								is no <b>destination siphon</b> defined the fragment result will
+								be appended to the node where the <b>DOM routing attribute</b>
+								is defined (<i>model</i> fragment results will cause the last
+								existing destination content to be cloned, populated with the <i>model</i>
+								data and appended to the destination)</li>
+							<li><span class="badge">replace</span> - will replace the <b>destination
+									siphon</b> with the fragment result. When there is no <b>destination
+									siphon</b> defined the node where the <b>DOM routing attribute</b>
+								is defined will be replaced with the fragment result (<i>model</i>
+								fragments will only replace the data and is synonymous to an
+								update)</li>
 							<li><span class="badge">update</span> - will first remove
-								any pre-existing <b>destination siphon</b>s before including the
-								fragment result (if there is no corresponding <b>destination
-									siphon</b> any content within the node where the <b>DOM type</b> is
-								defined will be replaced with new fragment results as incoming
-								fragment data is recieved)</li>
-						</ul>
-					</div>
-				</div>
-				<div id="domdestinationtarget" class="row row-thymus">
-					<div class="col-md-3">
-						<div>
-							<span class="label label-info">DOM target</span> &dagger;
-						</div>
-						<div>
-							<code>data-thx-*VERB*-target</code>
-						</div>
-					</div>
-					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>DOM target</b> designates
-						which window/frame a fragment result will be placed within. Each <b>DOM
-							target</b> can define more than one of the values below (separated
-						by &quot;<b>::</b>&quot;). Each of which corresponds to one or
-						more <b>event siphon</b> events. Valid values are:
-						<ul>
-							<li><span class="badge">_top</span> - will target the
-								current window's/frame's <code>location.href</code> where the <b>DOM
-									routing attribute</b> is defined (default)</li>
-							<li><span class="badge">_self</span> - will target the
-								current window where the <b>DOM routing attribute</b> is defined</li>
-							<li><span class="badge">_parent</span> - will target the
-								parent window/frame of the one where the <b>DOM routing
-									attribute</b> is defined</li>
-							<li><span class="badge">_blank</span> - will target a new
-								window/tab
-							<li><span class="badge">the frame name</span> - will target
-								the frame that has the defined name
+								any pre-existing <b>destination siphon</b>s before appending the
+								fragment result. When there is no <b>destination siphon</b>
+								defined any content within the node where the <b>DOM routing
+									attribute</b> is defined will be removed and replaced with the
+								fragment results (<i>model</i> fragments will only overwrite the
+								data and is synonymous to a replace)</li>
+							<li><span class="badge">_blank</span>, <span class="badge">_parent</span>,
+								<span class="badge">_self</span>, <span class="badge">_top</span>
+								or <span class="badge">frame name</span> - will perform a <code>window.open</code>
+								call using only the <b>path siphon</b> and <b>parameter
+									siphon</b> (optional). Window options and replace history option
+								(same window only) can be passed by appending a semicolon
+								delimiting the window target, window options and replace history
+								option (e.g. <code>_self;toolbar=no,width=190,height=190;true</code>)</li>
 						</ul>
 					</div>
 				</div>
@@ -243,13 +228,11 @@
 				link that contains an
 				<code>href</code>
 				(see <a href="#attrpaths">attribute path resolution techniques</a>
-				for more details). A DOM event can also be used by just providing a
+				for more details). Another option is to use a DOM event. When the by just providing a
 				<b>DOM routing attribute</b> with just an <b>event siphon</b> name, an
 				optional <b>parameter siphon</b> and a corresponding <b>path
 					siphon</b>:
 			</p>
-<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/other/page&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Sign in<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
-</pre></div>
 			<h4>Simple navigation example:</h4>
 			<div class="row">
 				<div class="col-md-6">
@@ -259,8 +242,39 @@
 						</div>
 						<div class="list-group-item">
 							<button type="button" class="btn btn-primary"
-								data-thx-get="click" data-thx-get-path="login">Goto
-								Sign In</button>
+								data-thx-get="click" data-thx-get-path="login"
+								data-thx-get-type="_self"
+								data-thx-get-params=".simple-nav-params :input">Goto Sign In</button>
+							<div class="simple-nav-params">
+								<br />
+								<div class="form-group">
+									<input type="text" class="form-control" name="simpleNavParam1"
+										placeholder="Enter text to send as parameter 1" />
+								</div>
+								<div class="checkbox">
+									<label> <input type="checkbox"
+										class="simple-nav-params" name="simpleNavParam2" /> Param 2
+									</label>
+								</div>
+								<div class="radio">
+									<label> <input type="radio" name="simpleNavParam3"
+										value="radio 3" /> Param 3 (radio 1)
+									</label>
+								</div>
+								<div class="radio">
+									<label> <input type="radio" name="simpleNavParam3"
+										value="radio 2" /> Param 3 (radio 2)
+									</label>
+								</div>
+								<select name="simpleNavParam4" class="form-control"
+									multiple="multiple">
+									<option value="option 1">Param 4 (option 1)</option>
+									<option value="option 2">Param 4 (option 2)</option>
+								</select>
+								<div class="form-group">
+									<input type="range" name="simpleNavParam5" min="1" max="100" />
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -271,8 +285,33 @@
 						</div>
 						<div class="list-group-item thymus-demo">
 <div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
-	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;login&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Goto
-	Sign In<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;login&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;_self&quot;</span>
+	<span style="color: #FF0000">data-thx-get-params=</span><span style="color: #0000FF">&quot;.simple-nav-params :input&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	Goto Sign In<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;simple-nav-params&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;form-control&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam1&quot;</span>
+		<span style="color: #FF0000">placeholder=</span><span style="color: #0000FF">&quot;Enter text to send as parameter 1&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;label&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;checkbox&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;simple-nav-params&quot;</span>
+			<span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam2&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span> Param 2
+	<span style="color: #000080; font-weight: bold">&lt;/label&gt;</span> 
+	<span style="color: #000080; font-weight: bold">&lt;label&gt;</span> 
+		<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;radio&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam3&quot;</span>
+			<span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;radio 3&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span> Param 3 (radio 1)
+	<span style="color: #000080; font-weight: bold">&lt;/label&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;label&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;radio&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam3&quot;</span>
+			<span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;radio 2&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span> Param 3 (radio 2)
+	<span style="color: #000080; font-weight: bold">&lt;/label&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam4&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;form-control&quot;</span>
+		<span style="color: #FF0000">multiple=</span><span style="color: #0000FF">&quot;multiple&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;option 1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Param 4 (option 1)<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;option 2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Param 4 (option 2)<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;range&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam5&quot;</span> 
+		<span style="color: #FF0000">min=</span><span style="color: #0000FF">&quot;1&quot;</span> <span style="color: #FF0000">max=</span><span style="color: #0000FF">&quot;100&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
 						</div>
 					</div>
