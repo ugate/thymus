@@ -242,9 +242,9 @@
 				<b>siphon resolver</b> <code>?{}</code>
 				.
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> 
-	<span style="color: #FF0000">data-thx-path=</span><span style="color: #0000FF">&quot;frags/first/@{#secondPath-&gt;text}/sixth&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Something<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;secondPath&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>@{#second}/@{#thirdFourthPath :input}/@{.fifth-path-&gt;data-mypath}<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-post=</span><span style="color: #0000FF">&quot;click&quot;</span> 
+	<span style="color: #FF0000">data-thx-post-path=</span><span style="color: #0000FF">&quot;frags/first/?{#secondPath-&gt;text}/sixth&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Post Something<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;secondPath&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>?{#second}/?{#thirdFourthPath :input}/?{.fifth-path-&gt;data-mypath}<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;second&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;secondPath&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
     <span style="color: #000080; font-weight: bold">&lt;option&gt;</span>second<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
     <span style="color: #000080; font-weight: bold">&lt;option&gt;</span>2nd<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
@@ -254,12 +254,13 @@
     <span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;someOtherInput&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;fourth&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;fifth-path&quot;</span> <span style="color: #FF0000">data-mypath=</span><span style="color: #0000FF">&quot;fifth&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- result path would be: --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!--frags/first/second/third/fourth/fifth/sixth --&gt;</span>
 </pre></div>
-
 			<p>
-				The preceeding <b>path siphon</b> would get evaluated when the button
-				is clicked. When the first URL siphon is discovered within the
-				wrapped
+				The preceeding <b>path siphon</b> would get evaluated when the
+				button is clicked. When the first URL siphon is discovered within
+				the wrapped
 				<code>?{}</code>
 				it will capture the node(s) returned by the JQuery
 				<code>#secondPath</code>
@@ -271,11 +272,11 @@
 				function to extract the value. Once the path segment is captured
 				from the
 				<code>#secondPath</code>
-				discovery occurs using the same extraction methods on seach of the
+				discovery occurs using the same extraction methods on each of the
 				<code>?{}</code>
 				segments found in
-				<code>@{#second}/@{#thirdFourthPath
-					:input}/@{.fifth-path-&gt;data-mypath}</code>
+				<code>?{#second}/?{#thirdFourthPath
+					:input}/?{.fifth-path-&gt;data-mypath}</code>
 				. The
 				<code>#second</code>
 				JQuery selector has no
@@ -293,7 +294,7 @@
 				s. Each of the serialized array values are captured and inserted
 				into the path separated by a
 				<code>/</code>
-				. The final
+				(<a href="#fragsoptsprog">configurable</a>). The final
 				<code>.fifth-path</code>
 				JQuery selector is used to capture the node(s) where the
 				<code>-&gt;</code>
@@ -304,6 +305,21 @@
 				<code>frags/first/second/third/fourth/fifth/sixth</code>
 				.
 			</p>
+			<p>
+				A <b>parameter siphon</b> can contain a single raw JQuery selector
+				or can contain one or more <b>siphon resolver</b>s in order to build
+				the final <b>parameter siphon</b> JQuery selector. For example:
+			</p>
+<!-- <button data-thx-get="click"  -->
+<!-- 	data-thx-get-path="path/to/get" -->
+<!-- 	data-thx-get-params="?{#param1}?{#param2->text}?{.more-paths :input}" -->
+<!-- 	data-thx-get-result="[class^=&quot;thymus-user&quot;]">Get Something</button> -->
+<!-- <input type="hidden" name="param1" value="value one" /> -->
+<!-- <div id="param2">value two</div> -->
+<!-- <div class=".more-paths"> -->
+<!--     <input type="text" name="param3" value="value three" /> -->
+<!--     <input type="text" name="param4" value="value four" /> -->
+<!-- </div> -->
 			<h4 id="selfragtargets">JQuery Selector Fragment Targets</h4>
 			<p>
 				<a href="http://api.jquery.com/category/selectors/">JQuery

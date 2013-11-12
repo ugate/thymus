@@ -533,7 +533,7 @@
 			} else if (a.action === opts.actionNavInvoke) {
 				// perform navigation action either as a partial or full page
 				a.method = a.method ? a.method : 'GET';
-				if (a.resultSiphon) {
+				if (a.resultSiphon || a.destSiphon) {
 					loadFragments(c ? c : p, a, true, null);
 				} else if (a.pathSiphon) {
 					var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), {});

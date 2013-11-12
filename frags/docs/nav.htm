@@ -56,20 +56,22 @@
 					</div>
 					<div class="col-md-9">
 						The <b>DOM routing attribute</b>'s <b>event siphon</b> parameter
-						indicates one or more <a href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM
-							events</a> that will trigger the fragment transition from/to the
-						client. While most of the DOM events will directly equate to the
-						normal <a href="http://api.jquery.com/on/"><code>$.on(event,
+						indicates one or more <a
+							href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM events</a>
+						separated by &quot;<b>::</b>&quot;. Each of which will trigger a
+						fragment transition from/to the client. While most of the DOM
+						events will directly translated into the normal <a
+							href="http://api.jquery.com/on/"><code>$.on(event,
 								...);</code></a> registrations, there is one special case that <b>thymus.js</b>
 						will pickup regardless of the element that the <b>DOM routing
 							attribute</b> is defined on. A
 						<code>load</code>
 						event will cause <b>thymus.js</b> to automatically process the
-						fragment when the page first loads provided that loading has not
-						been <a href="#fragsprog">deferred</a>. This type of loading is
-						very similar to <a href="#shorthand">the short-hand</a> version,
-						but allows for additional siphons to be declared to permit more
-						control over how fragments are handled.
+						fragment when the page or fragment first loads provided that
+						loading has not been <a href="#fragsprog">deferred</a>. This type
+						of loading is very similar to <a href="#shorthand">the
+							short-hand</a> version, but allows for additional siphons to be
+						declared to permit more control over how fragments are handled.
 					</div>
 				</div>
 				<div id="domparamsiphon" class="row row-thymus">
@@ -82,12 +84,14 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>parameter siphon</b> is a <a
-							href="http://api.jquery.com/category/selectors/">JQuery
-							selector</a> that will capture parameters that will be sent along
-						with the <b>path siphon</b>. See the <a href="#otherfragtargets">fragment
-							siphons section</a> for more details on how <b>parameter siphon</b>s
-						use JQuery selectors.
+						The <b>DOM routing attribute</b>'s <b>parameter siphon</b> is one
+						or more <a href="http://api.jquery.com/category/selectors/">JQuery
+							selectors</a> that correspond to one or more <b>event siphon</b>
+						events separated by &quot;<b>::</b>&quot;. Each of which will
+						capture parameters that will be sent along with the <b>path
+							siphon</b>. See the <a href="#otherfragtargets">fragment siphons
+							section</a> for more details on how <b>parameter siphon</b>s use
+						JQuery selectors.
 					</div>
 				</div>
 				<div id="domroutingpath" class="row row-thymus">
@@ -100,10 +104,13 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>path</b> should point to the
-						location where the fragment will be captured (e.g. <i>path/to/my/frag</i>).
-						See the <a href="#paths">path resolution section</a> for more
-						details on how paths are resolved and <a href="#">path building</a> to dynamically build paths.
+						The <b>DOM routing attribute</b>'s <b>path</b> that correspond to
+						one or more <b>event siphon</b>s separated by &quot;<b>::</b>&quot;.
+						Each of which should point to the location where the fragment will
+						be captured (e.g. <i>path/to/my/frag</i>). See the <a
+							href="#paths">path resolution section</a> for more details on how
+						paths are resolved and <a href="#">path building</a> to
+						dynamically build paths.
 					</div>
 				</div>
 				<div id="domresultsiphon" class="row row-thymus">
@@ -116,21 +123,25 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>result siphon</b> is typically a <a
+						The <b>DOM routing attribute</b>'s <b>result siphon</b> is
+						typically one or more <a
 							href="http://api.jquery.com/category/selectors/">JQuery
-							selector</a>, but can also be a <a href="#fragshandler"><code>function</code>
-							that will handle the result</a>. When a fragment result contains <i>view</i>
-						content or is XML <i>model</i> content the <b>result siphon</b> will
-						be used to select the portion of the fragment result that will be
-						used in the DOM. When the fragment result contains <i>model</i>
+							selectors</a>, but can also be a <a href="#fragshandler"><code>function</code>
+							that will handle the result</a>. Values can be separated by a &quot;<b>::</b>&quot;
+						to indicate which <i>event</i> within the <b>event siphon</b> the
+						value corresponds to. When a fragment result contains <i>view</i>
+						content or is XML <i>model</i> content the <b>result siphon</b>
+						will be used to select the portion of the fragment result that
+						will be used in the DOM. When the fragment result contains <i>model</i>
 						content that is not XML the <b>result siphon</b> can either be
 						omitted to use the entire fragment result or contain a <a
 							href="#fragshandler"><code>function</code></a> that will manually
 						handle selecting the portion of the fragment that will be included
-						in the DOM (e.g. using a 3rd party library to handle the selection-
-						like <a href="http://jsonselect.org/#tryit">json:select()</a>). See
-						the <a href="#otherfragtargets">fragment siphons section</a> for
-						more details on how <b>result siphon</b>s use JQuery selectors.
+						in the DOM (e.g. using a 3rd party library to handle the
+						selection- like <a href="http://jsonselect.org/#tryit">json:select()</a>).
+						See the <a href="#otherfragtargets">fragment siphons section</a>
+						for more details on how <b>result siphon</b>s use JQuery
+						selectors.
 					</div>
 				</div>
 				<div id="domdestinationsiphon" class="row row-thymus">
@@ -143,11 +154,13 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>destination siphon</b> is a
-						<a href="http://api.jquery.com/category/selectors/">JQuery
-							selector</a> that will be used to define destination nodes within the
-						DOM where the <b>result siphon</b>ed fragment results will be
-						placed. How fragment results are placed within the destination is
+						The <b>DOM routing attribute</b>'s <b>destination siphon</b> is
+						one or more <a href="http://api.jquery.com/category/selectors/">JQuery
+							selectors</a> that correspond to one or more <b>event siphon</b>s
+						separated by &quot;<b>::</b>&quot;. Each <b>destination siphon</b>
+						value will be used to define destination nodes within the DOM
+						where the <b>result siphon</b>ed fragment results will be placed.
+						How fragment results are placed within the destination is
 						determined by the <b>DOM type</b>. See the <a
 							href="#otherfragtargets">fragment siphons section</a> for more
 						details on how <b>destination siphon</b>s use JQuery selectors.
@@ -164,7 +177,10 @@
 					</div>
 					<div class="col-md-9">
 						The <b>DOM routing attribute</b>'s <b>DOM type</b> designates how
-						a fragment result will be placed within the DOM. Valid values are:
+						a fragment result will be placed within the DOM. Each <b>DOM
+							type</b> can define more than one of the values below (separated by
+						&quot;<b>::</b>&quot;). Each of which corresponds to one or more <b>event
+							siphon</b> events. Valid values are:
 						<ul>
 							<li><span class="badge">include</span> - will append the
 								fragment result within the node where the <b>DOM routing
@@ -178,6 +194,37 @@
 									siphon</b> any content within the node where the <b>DOM type</b> is
 								defined will be replaced with new fragment results as incoming
 								fragment data is recieved)</li>
+						</ul>
+					</div>
+				</div>
+				<div id="domdestinationtarget" class="row row-thymus">
+					<div class="col-md-3">
+						<div>
+							<span class="label label-info">DOM target</span> &dagger;
+						</div>
+						<div>
+							<code>data-thx-*VERB*-target</code>
+						</div>
+					</div>
+					<div class="col-md-9">
+						The <b>DOM routing attribute</b>'s <b>DOM target</b> designates
+						which window/frame a fragment result will be placed within. Each <b>DOM
+							target</b> can define more than one of the values below (separated
+						by &quot;<b>::</b>&quot;). Each of which corresponds to one or
+						more <b>event siphon</b> events. Valid values are:
+						<ul>
+							<li><span class="badge">_top</span> - will target the
+								current window's/frame's <code>location.href</code> where the <b>DOM
+									routing attribute</b> is defined (default)</li>
+							<li><span class="badge">_self</span> - will target the
+								current window where the <b>DOM routing attribute</b> is defined</li>
+							<li><span class="badge">_parent</span> - will target the
+								parent window/frame of the one where the <b>DOM routing
+									attribute</b> is defined</li>
+							<li><span class="badge">_blank</span> - will target a new
+								window/tab
+							<li><span class="badge">the frame name</span> - will target
+								the frame that has the defined name
 						</ul>
 					</div>
 				</div>
@@ -524,11 +571,11 @@
 				and
 				<code>keyup</code>
 				event. Each event defined within an <b>event siphon</b> will
-				correspond to any other <b>DOM routing attribute</b>s that may be
-				defined on the node at the same index. If a <b>DOM routing
-					attribute</b> does not have a value for the given <b>event siphon</b>'s
-				event, then the last parameterized siphon value will be used.
-				Consider the following:
+				correspond to any other <b>DOM routing attribute</b>s with the same
+				HTTP verb that may be defined on the node at the same position. If a
+				<b>DOM routing attribute</b> does not have a value for the given <b>event
+					siphon</b>'s event, then the last parameterized siphon value will be
+				used. Consider the following:
 			</p>
 			<h4>
 				Multiple DOM events on a given <b>event siphon</b> example:
@@ -597,66 +644,65 @@
 				<code>#userMultiEvt2</code>
 				.
 			</p>
-<!-- 			<h3 id="passingparams">Passing Parameters</h3> -->
-<!-- 			<h4> -->
-<!-- 				Explicit <b>destination siphon</b> <i>include</i> example: -->
-<!-- 			</h4> -->
-<!-- 			<div class="row"> -->
-<!-- 				<div class="col-md-6"> -->
-<!-- 					<div class="list-group"> -->
-<!-- 						<div class="list-group-item"> -->
-<!-- 							<h4>Demo</h4> -->
-<!-- 						</div> -->
-<!-- 						<div class="list-group-item"> -->
-<!-- 							<div class="btn-group" id="userDest2Grp" -->
-<!-- 								data-thx-get-path="frags/user/${userKey}" -->
-<!-- 								data-thx-get-result="[class^=&quot;thymus-user&quot;]" -->
-<!-- 								data-thx-get-dest="#userDest2"> -->
-<!-- 								<button type="button" class="btn btn-primary"  -->
-<!-- 									data-thx-get="click" data-thx-get-agent="#userDest2Grp" -->
-<!-- 									data-thx-get-with="userKey=user1">Include -->
-<!-- 									User1</button> -->
-<!-- 								<button type="button" class="btn btn-primary" -->
-<!-- 									data-thx-get="click" data-thx-get-agent="#userDest2Grp" -->
-<!-- 									data-thx-get-with="userKey=user2">Include -->
-<!-- 									User2</button> -->
-<!-- 								<button type="button" class="btn btn-primary" -->
-<!-- 									data-thx-get="click" data-thx-get-agent="#userDest2Grp" -->
-<!-- 									data-thx-get-with="userKey=user3">Include -->
-<!-- 									User3</button> -->
-<!-- 							</div> -->
-<!-- 						</div> -->
-<!-- 						<div class="list-group-item"> -->
-<!-- 							<div id="userDest2"></div> -->
-<!-- 						</div> -->
-<!-- 					</div> -->
-<!-- 				</div> -->
-<!-- 				<div class="col-md-6"> -->
-<!-- 					<div class="list-group"> -->
-<!-- 						<div class="list-group-item"> -->
-<!-- 							<h4>Code</h4> -->
-<!-- 						</div> -->
-<!-- 						<div class="list-group-item thymus-demo"> -->
-<!-- <div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn-group&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span> -->
-<!-- 	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> -->
-<!-- 		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span> -->
-<!-- 		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span> -->
-<!-- 		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User1<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span> -->
-<!-- 	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> -->
-<!-- 		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user2&quot;</span> -->
-<!-- 		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span> -->
-<!-- 		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User2<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span> -->
-<!-- 	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> -->
-<!-- 		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user3&quot;</span> -->
-<!-- 		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span> -->
-<!-- 		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User3<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span> -->
-<!-- <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span> -->
-<!-- <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest2&quot;</span> <span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span> -->
-<!-- </pre></div> -->
-<!-- 						</div> -->
-<!-- 					</div> -->
-<!-- 				</div> -->
-<!-- 			</div> -->
+			<h4>
+				Explicit <b>destination siphon</b> <i>include</i> example:
+			</h4>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<h4>Demo</h4>
+						</div>
+						<div class="list-group-item">
+							<div class="btn-group" id="userDest2Grp"
+								data-thx-get-path="frags/user/${userKey}"
+								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+								data-thx-get-dest="#userDest2">
+								<button type="button" class="btn btn-primary" 
+									data-thx-get="click" data-thx-get-agent="#userDest2Grp"
+									data-thx-get-with="userKey=user1">Include
+									User1</button>
+								<button type="button" class="btn btn-primary"
+									data-thx-get="click" data-thx-get-agent="#userDest2Grp"
+									data-thx-get-with="userKey=user2">Include
+									User2</button>
+								<button type="button" class="btn btn-primary"
+									data-thx-get="click" data-thx-get-agent="#userDest2Grp"
+									data-thx-get-with="userKey=user3">Include
+									User3</button>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<div id="userDest2"></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<h4>Code</h4>
+						</div>
+						<div class="list-group-item thymus-demo">
+<div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn-group&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
+		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
+		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User1<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
+		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user2&quot;</span>
+		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User2<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
+		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user3&quot;</span>
+		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User3<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest2&quot;</span> <span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+</pre></div>
+						</div>
+					</div>
+				</div>
+			</div>
 			<h3 id="shorthand">Auto Loading Fragments (short-hand)</h3>
 			<p>
 				A short-hand <b>routing attribute</b> can also be used which is
