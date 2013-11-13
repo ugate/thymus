@@ -308,18 +308,79 @@
 			<p>
 				A <b>parameter siphon</b> can contain a single raw JQuery selector
 				or can contain one or more <b>siphon resolver</b>s in order to build
-				the final <b>parameter siphon</b> JQuery selector. For example:
+				the final <b>parameter siphon</b> JQuery selector. Either way, the
+				end result needs to be a vaild JQuery selector.
 			</p>
-<!-- <button data-thx-get="click"  -->
-<!-- 	data-thx-get-path="path/to/get" -->
-<!-- 	data-thx-get-params="?{#param1}?{#param2->text}?{.more-paths :input}" -->
-<!-- 	data-thx-get-result="[class^=&quot;thymus-user&quot;]">Get Something</button> -->
-<!-- <input type="hidden" name="param1" value="value one" /> -->
-<!-- <div id="param2">value two</div> -->
-<!-- <div class=".more-paths"> -->
-<!--     <input type="text" name="param3" value="value three" /> -->
-<!--     <input type="text" name="param4" value="value four" /> -->
-<!-- </div> -->
+			<p>
+				A <b>result siphon</b> works slightly different that most other
+				siphons. Instead of using the current document when making JQuery
+				node selections, it uses the incoming document. If the results have
+				a content-type other than HTML or XML the <b>result siphon</b>
+				should be either omitted (in which case the entire result will be
+				selected) or use a <a href="#fragshandler">result handler</a>. Lets
+				take a look at a few scenarios:
+			</p>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume the following fragment snippet resides at path/to/resource --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myResult&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;selClass&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource2&quot;</span>
+		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;#myResult2&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;.some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Post
+		Something<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+
+<span style="color: #008800; font-style: italic">&lt;!-- 1) the page contains the following node that uses a raw JQuery selector --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;#myResult&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get
+	Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- when clicked would result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;#myResult&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get
+	Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;myResult&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;selClass&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource2&quot;</span>
+			<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;#myResult2&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;.some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Post
+			Something<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+
+
+<span style="color: #008800; font-style: italic">&lt;!-- 2) the page contains the following node that siphons JQuery selector(s) --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;#myResult ?{#selClass-&gt;data-thx-get-dest}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- when clicked would result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;#myResult ?{#selClass-&gt;data-thx-get-dest}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
 			<h4 id="selfragtargets">JQuery Selector Fragment Targets</h4>
 			<p>
 				<a href="http://api.jquery.com/category/selectors/">JQuery

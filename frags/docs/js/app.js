@@ -1,4 +1,4 @@
-function init() {
+function initUI() {
 	// add some flare to the demo by adding a background splash
 	flickr('thymus vulgaris', 'body');
 	// initialize bootstrap components
@@ -6,10 +6,11 @@ function init() {
 	initTipsPops('app-tooltip');
 	initTipsPops('app-popover');
 }
+function updateUI() {
+	initScrollSpy('.scroll-spy');
+}
 function initScrollSpy(cssSelector) {
-	$(cssSelector).each(function() {
-		$(this).scrollspy('refresh');
-	});
+	$(cssSelector).scrollspy('refresh');
 }
 function initToolTips(cssSelector) {
 	$(cssSelector).each(function () {

@@ -16,7 +16,7 @@
 				conjunction with Thymeleaf. A Thymeleaf page can still use the
 				default
 				<code>data-thx-*</code>
-				attributes to process templates via the client to retreive fragments
+				attributes to process templates via the client to retrieve fragments
 				from pre-processed Thymeleaf resources that reside on the server. It
 				can also use any of the Thymeleaf template attributes (ideal for
 				prototyping Thymeleaf). It will simply pick up any of the following
@@ -34,19 +34,19 @@
 				<li><code>data-th-fragment</code>&Dagger;&bull;</li>
 			</ul>
 			<div class="alert alert-info">
-				<small>&dagger; denotes <b>thymus.js</b> default
-					attributes that will only processed by <b>thymus.js</b> (i.e.
-					client side template processing only)
-				</small><br /> <small>&Dagger; denotes attributes that will by
-					processed by <b>thymus.js</b> if present (i.e. Thymeleaf
+				<small>&dagger; denotes <b>thymus.js</b> default attributes
+					that will only processed by <b>thymus.js</b> (i.e. client side
+					template processing only)
+				</small><br /> <small>&Dagger; denotes Thymeleaf attributes that
+					will by processed by <b>thymus.js</b> if present (i.e. Thymeleaf
 					prototyping)
-				</small><br /> <small>&bull; requires Thymeleaf 2.1 or higher,
-					but can be used with any version of <b>thymus.js</b>
+				</small><br /> <small>&bull; requires Thymeleaf 2.1 or higher, but
+					can be used with any version of <b>thymus.js</b>
 				</small>
 			</div>
 			<p>
-				It's perfectly acceptable to use any combination of the preceeding
-				attributes. Any of the Thymeleaf attribues will only be processed
+				It's perfectly acceptable to use any combination of the preceding
+				attributes. Any of the Thymeleaf attributes will only be processed
 				by <b>thymus.js</b> when Thymeleaf hasn't already processed them.
 				To illustrate this concept consider the following:
 			</p>
@@ -70,7 +70,7 @@
 	<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> 
 		<span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span> <span style="color: #FF0000">data-thx-frag-extension=</span><span style="color: #0000FF">&quot;.htm&quot;</span>
-		<span style="color: #FF0000">data-thx-head-frag=</span><span style="color: #0000FF">&quot;th:replace=frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+		<span style="color: #FF0000">data-thx-head-frag=</span><span style="color: #0000FF">&quot;th:include=frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
 	...
@@ -99,7 +99,7 @@
 				<code>th:include</code>
 				syntax for the
 				<code>head</code>
-				that will only be proccessed by Thymeleaf when the page is ran
+				that will only be processed by Thymeleaf when the page is ran
 				through the Thymeleaf engine. If it's not ran though the Thymeleaf
 				engine it will be picked up by <b>thymus.js</b> and processed
 				accordingly. On the other hand, the
@@ -114,19 +114,19 @@
 				Prototyping Thymeleaf applications for navigation can be achieved by
 				simply using the normal
 				<code>href</code>
-				attributes on links (using <a href="#attrpaths">attibute path
+				attributes on links (using <a href="#attrpaths">attribute path
 					resolution techniques</a>) or by invoking a <a href="#httpsimple">DOM
 					event</a>. Because there are no Thymeleaf attribute counterparts to the
 				<a href="#navcontrol">thymus.js navigation attributes</a> some extra
 				Thymeleaf attributes need to be added if the desired behavior is to
 				prevent <b>thymus.js</b> navigation during production use. For
 				example, the following will remove the
-				<code>data-thx-replace-get</code>
-				attribute when ran through the Thymeleaf engine, but will operate as
-				expected otherwise:
+				<code>data-thx-post</code>
+				attribute when ran through the Thymeleaf engine (thus preventing <b>thymus.js</b>
+				event registration), but will operate as expected otherwise:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">th:text=</span><span style="color: #0000FF">&quot;#{signin}&quot;</span> <span style="color: #FF0000">th:attr=</span><span style="color: #0000FF">&quot;data-thx-replace-get=&#39;&#39;&quot;</span>
-	<span style="color: #FF0000">data-thx-replace-get=</span><span style="color: #0000FF">&quot;click :: index&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Sign in<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">th:text=</span><span style="color: #0000FF">&quot;#{signin}&quot;</span> <span style="color: #FF0000">th:attr=</span><span style="color: #0000FF">&quot;data-thx-post=&#39;&#39;&quot;</span>
+	<span style="color: #FF0000">data-thx-post=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-post-path=</span><span style="color: #0000FF">&quot;index&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Sign in<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
 			<div class="alert alert-success">
 				<strong>Tip:</strong> To ensure that <b>thymus.js</b> is ran in a

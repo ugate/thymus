@@ -35,11 +35,12 @@ function fragsListener(event) {
 				+ (event.loadTime / 1000) + ' sec');
 	}
 	if (event.scope.prop('tagName').toLowerCase() !== 'html') {
+		updateUI(event);
 		return;
 	}
 	$('#loadThymus').css('display', 'none');
 	$('#fragTotal').text(event.fragCount);
-	init(event);
+	initUI(event);
 }
 /**
  * Example that shows how to use a <b>result siphon</b> handler. Takes the read

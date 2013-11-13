@@ -157,7 +157,12 @@
 				<code>script</code>
 				tags can be wrapped in a parent node (like the following), but each
 				of them will still fire their own <a href="#frag">fragment event</a>
-				individually.
+				individually. After all of the containing
+				<code>script</code>
+				s have been loaded a <a href="#frag">fragment event</a> will be
+				fired for the node for which the
+				<code>script</code>
+				s are wrapped within.
 			</p>
 <div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/script&quot; --&gt;</span>

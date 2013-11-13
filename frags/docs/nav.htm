@@ -204,12 +204,14 @@
 								data and is synonymous to a replace)</li>
 							<li><span class="badge">_blank</span>, <span class="badge">_parent</span>,
 								<span class="badge">_self</span>, <span class="badge">_top</span>
-								or <span class="badge">frame name</span> - will perform a <code>window.open</code>
-								call using only the <b>path siphon</b> and <b>parameter
-									siphon</b> (optional). Window options and replace history option
-								(same window only) can be passed by appending a semicolon
-								delimiting the window target, window options and replace history
-								option (e.g. <code>_self;toolbar=no,width=190,height=190;true</code>)</li>
+								or <span class="badge">frame name</span> - will perform a
+								synchronous page transfer using <code>window.open</code> for
+								HTTP get calls or a dynamic form submission for all other HTTP
+								verbs. Types of this nature will only use the <b>path siphon</b>
+								and <b>parameter siphon</b> (which is optional). Window options
+								and replace history option (same window only) can be passed by
+								appending a semicolon delimiting the window target, window
+								options and replace history option (e.g. <code>_blank;toolbar=no,width=190,height=190;true</code>)</li>
 						</ul>
 					</div>
 				</div>
@@ -222,18 +224,45 @@
 					the attribute will automatically take effect the next time the DOM
 					event is triggered </small>
 			</div>
-			<h4 id="httpsimple">Simple Navigation</h4>
+			<h4 id="httpsimple">Full Page Navigation/Update</h4>
 			<p>
-				Navigating to other pages can be as simple as providing a normal
-				link that contains an
+				Typlically, navigating to other pages can be acomplished by using
+				links that contain an
 				<code>href</code>
-				(see <a href="#attrpaths">attribute path resolution techniques</a>
-				for more details). Another option is to use a DOM event. When the by just providing a
-				<b>DOM routing attribute</b> with just an <b>event siphon</b> name, an
-				optional <b>parameter siphon</b> and a corresponding <b>path
-					siphon</b>:
+				or a submit
+				<code>button</code>
+				wrapped in a
+				<code>form</code>
+				. That may suffice in some situations. However, in other instances,
+				there may be a need to dynamically build the URL contained in the
+				<code>href</code>
+				and/or
+				<code>action</code>
+				or may need to be triggered outside a form or on an element other
+				than a link or submit button. There also may be a need to
+				dynamically build parameters that will be sent to the server that
+				may or may not reside within a form. Sure, adding some JavaScript
+				could easily solve the problem, but wouldn't be better to allow
+				JQuery selectors to do the work for us by building the URL parts and
+				parameters by <i>siphoning</i> them from other DOM elements? Not
+				only does that allow URLs for an application to be centralized, it
+				also allows them to be automatically built from user input that can
+				be scatterd throughout the page! It can even pull parameters from
+				attributes and node text! What if we were to tell you that this and
+				many other features can be done without a single line of JS? All
+				that is required is that the element contain a few <b>DOM
+					routing attribute</b>s. First, an <b>event siphon</b> will need to
+				declared that will define the event(s) that will trigger the call.
+				Secondly, a <b>path siphon</b> needs to be defined to give direction
+				to the process. The final attribute that will need to be defined is
+				a synchronous <b>DOM type</b> that will determine the target of the
+				transfer. Also, an optional <b>parameter siphon</b> attribute can be
+				used if there are any parameters that need to be passed. Here's an
+				example that illustrates a full page update that dynamically <i>siphons</i>
+				the passed parameters using JQuery (see <a href="#otherfragtargets">siphon
+					resolver</a>s for more details on how to construct <b>path siphon</b>s):
 			</p>
-			<h4>Simple navigation example:</h4>
+			<h4>Full page navigation/update example:</h4>
 			<div class="row">
 				<div class="col-md-6">
 					<div class="list-group">
@@ -242,9 +271,10 @@
 						</div>
 						<div class="list-group-item">
 							<button type="button" class="btn btn-primary"
-								data-thx-get="click" data-thx-get-path="login"
+								data-thx-get="click" data-thx-get-path="?{#globalLoginPath}"
 								data-thx-get-type="_self"
 								data-thx-get-params=".simple-nav-params :input">Goto Sign In</button>
+							<input id="globalLoginPath" type="hidden" value="login" />
 							<div class="simple-nav-params">
 								<br />
 								<div class="form-group">
@@ -271,8 +301,15 @@
 									<option value="option 1">Param 4 (option 1)</option>
 									<option value="option 2">Param 4 (option 2)</option>
 								</select>
+								<div class="radio">
+									<label> <input type="range" name="simpleNavParam5"
+										min="1" max="100" /> Param 5
+									</label>
+								</div>
 								<div class="form-group">
-									<input type="range" name="simpleNavParam5" min="1" max="100" />
+									<textarea rows="4" cols="50" name="simpleNavParam6"
+										style="width: 100%;"
+										placeholder="Enter text to send as parameter 6"></textarea>
 								</div>
 							</div>
 						</div>
@@ -285,10 +322,11 @@
 						</div>
 						<div class="list-group-item thymus-demo">
 <div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
-	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;login&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;?{#globalLoginPath}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;_self&quot;</span>
 	<span style="color: #FF0000">data-thx-get-params=</span><span style="color: #0000FF">&quot;.simple-nav-params :input&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	Goto Sign In<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;globalLoginPath&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;hidden&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;login&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;simple-nav-params&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;form-control&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam1&quot;</span>
 		<span style="color: #FF0000">placeholder=</span><span style="color: #0000FF">&quot;Enter text to send as parameter 1&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
@@ -319,12 +357,12 @@
 			</div>
 			<h4 id="httpasyncself">Self-targeting Asynchronous Transfers</h4>
 			<p>
-				A self-targeting asynchronous transfer is a <b>DOM routing
-					attribute</b> that has a value that defines a <b>event siphon</b>, an optional
-				<b>parameter siphon</b>, a <b>path siphon</b> and an optional <b>result
-					siphon</b>, but does not define a <b>destination siphon</b>. In this
-				case the <b>destination siphon</b> will default to the node where
-				the <b>DOM routing attribute</b> is defined. Consider the following:
+				A self-targeting asynchronous transfer is a node in which defines an
+				<b>event siphon</b>, a <b>path siphon</b> and any other pertinent <b>DOM
+					routing attribute</b>s. The difference is that it does not define a <b>destination
+					siphon</b>. In this case the <b>destination siphon</b> will default to
+				the node where the <b>DOM routing attribute</b> is defined. Consider
+				the following:
 			</p>
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
@@ -405,11 +443,12 @@
 <span style="color: #008800; font-style: italic">&lt;!-- assume a page contains the following --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/user&quot;</span> <span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;.user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/user&quot;</span> 
+			<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;.user-detail&quot;</span> <span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;replace&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 		Load User
 	<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- when the div is clicked and the fragment is loaded and will result in --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- when the button is clicked and the fragment is loaded and will result in --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
