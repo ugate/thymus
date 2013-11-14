@@ -29,7 +29,7 @@
 				<code>data-thx-get</code>
 				):
 			</p>
-			<ul>
+			<ul id="supportedhttpverbs">
 				<li class="badge">get</li>
 				<li class="badge">post</li>
 				<li class="badge">put</li>
@@ -109,8 +109,8 @@
 						Each of which should point to the location where the fragment will
 						be captured (e.g. <i>path/to/my/frag</i>). See the <a
 							href="#paths">path resolution section</a> for more details on how
-						paths are resolved and <a href="#">path building</a> to
-						dynamically build paths.
+						paths are evaluated and <a href="#otherfragtargets">siphon
+							resolvers</a> to dynamically build paths based upon user input.
 					</div>
 				</div>
 				<div id="domresultsiphon" class="row row-thymus">
@@ -132,13 +132,13 @@
 						value corresponds to. When a fragment result contains <i>view</i>
 						content or is XML <i>model</i> content the <b>result siphon</b>
 						will be used to select the portion of the fragment result that
-						will be used in the DOM. When the fragment result contains <i>model</i>
-						content that is not XML the <b>result siphon</b> can either be
-						omitted to use the entire fragment result or contain a <a
-							href="#fragshandler"><code>function</code></a> that will manually
-						handle selecting the portion of the fragment that will be included
-						in the DOM (e.g. using a 3rd party library to handle the
-						selection- like <a href="http://jsonselect.org/#tryit">json:select()</a>).
+						will be used for insertion into the DOM. When the fragment result
+						contains <i>model</i> content that is not XML the <b>result
+							siphon</b> can either be omitted to use the entire fragment result or
+						contain a <a href="#fragshandler"><code>function</code></a> that
+						will manually handle selecting the portion of the fragment that
+						will be included in the DOM (e.g. using a 3rd party library to
+						handle the selection- like <a href="http://jsonselect.org/#tryit">json:select()</a>).
 						See the <a href="#otherfragtargets">fragment siphons section</a>
 						for more details on how <b>result siphon</b>s use JQuery
 						selectors.
@@ -178,7 +178,7 @@
 					<div class="col-md-9">
 						The <b>DOM routing attribute</b>'s <b>DOM type</b> designates how
 						a fragment result will be placed within the DOM. Each <b>DOM
-							type</b> can define more than one of the values below (separated by
+							type</b> can define one or more of the values below (separated by
 						&quot;<b>::</b>&quot;). Each of which corresponds to one or more <b>event
 							siphon</b> events. Valid values are:
 						<ul>
@@ -206,13 +206,36 @@
 								<span class="badge">_self</span>, <span class="badge">_top</span>
 								or <span class="badge">frame name</span> - will perform a
 								synchronous page transfer using <code>window.open</code> for
-								HTTP get calls or a dynamic form submission for all other HTTP
-								verbs. Types of this nature will only use the <b>path siphon</b>
-								and <b>parameter siphon</b> (which is optional). Window options
-								and replace history option (same window only) can be passed by
-								appending a semicolon delimiting the window target, window
-								options and replace history option (e.g. <code>_blank;toolbar=no,width=190,height=190;true</code>)</li>
+								HTTP get calls or a dynamic form submission for all other <a
+								href="#supportedhttpverbs">supported HTTP verbs</a>. Types of
+								this nature will only use the <b>path siphon</b> and <b>parameter
+									siphon</b> (which is optional). Window options and replace history
+								option (same window only) can be passed by appending a semicolon
+								delimited window target, window options and replace history
+								option (e.g. <code>_blank;toolbar=no,width=190,height=190;true</code>)</li>
 						</ul>
+					</div>
+				</div>
+				<div id="domagentsiphon" class="row row-thymus">
+					<div class="col-md-3">
+						<div>
+							<span class="label label-info">agent siphon</span> &dagger;
+						</div>
+						<div>
+							<code>data-thx-*VERB*-agent</code>
+						</div>
+					</div>
+					<div class="col-md-9">
+						The <b>DOM routing attribute</b>'s <b>agent siphon</b> is one or
+						more <a href="http://api.jquery.com/category/selectors/">JQuery
+							selectors</a> that correspond to one or more <b>event siphon</b>s
+						separated by &quot;<b>::</b>&quot;. Each <b>agent siphon</b> value
+						will be used to define agent nodes within the DOM where any <b>DOM
+							routing attribute</b>s will be found that may be missing from the
+						node where the <b>agent siphon</b> is defined. See the <a
+							href="#otherfragtargets">fragment siphons section</a> for more
+						details on how <b>agent siphon</b>s use JQuery selectors and <a
+							href="#domagentsdetail">agents</a> for more details.
 					</div>
 				</div>
 			</div>
@@ -722,9 +745,29 @@
 				<code>#userMultiEvt2</code>
 				.
 			</p>
-			<h4>
-				Explicit <b>destination siphon</b> <i>include</i> example:
+			<h4 id="domagentsdetail">
+				Agents
 			</h4>
+			<p>
+				Nodes that need to trigger similar transfers can become redundantly
+				verbose. That's why <b>thymus.js</b> provides a concept of an agent.
+				An agent can be thought of as a node that will provide a service on
+				behalf of other node(s). There is little difference between a node
+				with the typical <b>DOM routing attribute</b>s and an agent. So, any
+				node can become an agent without having to explicitly declare it as
+				an agent. However, other node(s) can add an <b>agent siphon</b> that
+				will contain a JQuery selector that will select the node(s) that
+				will act as an agent. This causes <b>thymus.js</b> to look at the
+				agent node(s) for any <b>DOM routing attribute</b>s that are missing
+				from the node where the <b>agent siphon</b> is defined. When the
+				JQuery selector returns more than one node, the first node that
+				contains the missing <b>DOM routing attribute</b> will be used until
+				all <b>DOM routing attribute</b>s are found or all of the selected
+				agents are exhausted (whichever occurs first). An agent itself can
+				define it's own <b>event siphon</b> if so desired, but it is
+				optional. Lets take a look at an example where we might want to use
+				an agent.
+			</p>
 			<div class="row">
 				<div class="col-md-6">
 					<div class="list-group">
@@ -733,9 +776,9 @@
 						</div>
 						<div class="list-group-item">
 							<div class="btn-group" id="userDest2Grp"
-								data-thx-get-path="frags/user/${userKey}"
+								data-thx-get-path="frags/user/user1"
 								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-								data-thx-get-dest="#userDest2">
+								data-thx-get-dest="#userDestAgent" data-thx-get-type="update">
 								<button type="button" class="btn btn-primary" 
 									data-thx-get="click" data-thx-get-agent="#userDest2Grp"
 									data-thx-get-with="userKey=user1">Include
@@ -751,7 +794,7 @@
 							</div>
 						</div>
 						<div class="list-group-item">
-							<div id="userDest2"></div>
+							<div id="userDestAgent"></div>
 						</div>
 					</div>
 				</div>

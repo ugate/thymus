@@ -265,12 +265,13 @@
 	 * Extracts value(s) from node(s) returned from the supplied JQuery
 	 * selector. The JQuery selector can also contain a type that will determine
 	 * how value(s) are captured from node(s) returned from the JQuery selector.
-	 * The "type" regular expression will be used to determine what will be used
-	 * to extract values from the returned nodes from the JQuery selector.
-	 * Possible values are "text", an attribute name or when nothing is defined
-	 * JQuery's serializeArray() will be called on the node(s). When
-	 * serializeArray() is empty an attempt to call JQuery's val() function will
-	 * be made to retrieve the replacement value.
+	 * The &quot;type&quot; regular expression will be used to determine what
+	 * will be used to extract values from the returned nodes from the JQuery
+	 * selector. Possible values are &quot;text&quot;, &quot;html&quot; or an
+	 * attribute name or when nothing is defined JQuery's serializeArray() will
+	 * be called on the node(s). When serializeArray() is empty an attempt to
+	 * call JQuery's val() function will be made to retrieve the replacement
+	 * value.
 	 * 
 	 * @param s
 	 *            the string that will contain just a JQuery selector or a
@@ -297,6 +298,46 @@
 	 *          found JQuery selector(s)
 	 */
 	function extractValues(s, trx, d, useNameId, el) {
+		function getEV(nv, n, v, d) {
+			return (d && nv.length > 0 ? d : '') + (n ? n + '=' : '')
+					+ v;
+		}
+    	function exNVs(t, $x) {
+            var nv = '';
+            var ci = '';
+            if (!t) {
+            	// it would be nice if we could check if has
+				// val(), but an empty string may be
+				// returned by val() so serialize array is
+				// checked instead
+				nv = useNameId ? $x.serialize() : $x.serializeArray();
+                if (!nv || nv.length <= 0) {
+                	nv = '';
+					$x.each(function() {
+						ci = $(this);
+						nv += getEV(nv, useNameId ? ci.prop('name') : null,
+								ci.val(), d);
+					});
+				} else if (!useNameId) {
+					var nva = nv;
+					nv = '';
+					$.each(nva, function() {
+						nv += getEV(nv, null, this.value, d);
+					});
+				}
+            } else {
+				var ist = t.toLowerCase() == 'text';
+				var ish = t.toLowerCase() == 'html';
+				var n = '';
+				$x.each(function() {
+					ci = $(this);
+					n = useNameId ? ci.prop('name') : null;
+					nv += getEV(nv, n, ist ? ci.text() : ish ? ci.html()
+							: ci.attr(t), d);
+				});
+            }
+            return nv !== undefined && nv != null ? nv : s;
+    	}
 	    if (s) {
 	        var x = s;
 	        var t = '';
@@ -306,46 +347,7 @@
 	        });
 	        var $x = x ? el ? el.find(x) : $(x) : null;
 	        if ($x && $x.length > 0) {
-				function getEV(nv, n, v, d) {
-					return (d && nv.length > 0 ? d : '') + (n ? n + '=' : '')
-							+ v;
-				}
-	            var nv = '';
-	            var ci = '';
-	            if (!t) {
-	            	// it would be nice if we could check if has
-					// val(), but an empty string may be
-					// returned by val() so serialize array is
-					// checked instead
-					nv = useNameId ? $x.serialize() : $x.serializeArray();
-	                if (!nv || nv.length <= 0) {
-	                	nv = '';
-						$x.each(function() {
-							ci = $(this);
-							nv += getEV(nv, useNameId ? ci.prop('name') : null,
-									ci.val(), d);
-						});
-					} else if (!useNameId) {
-						var nva = nv;
-						nv = '';
-						$.each(nva, function() {
-							nv += getEV(nv, null, this.value, d);
-						});
-					}
-	            } else {
-	            	var ist = t.toLowerCase() == 'text';
-	            	var n = '';
-	                $x.each(function() {
-	                	ci = $(this);
-	                	n = useNameId ? ci.prop('name') : null;
-	                	if (ist) {
-	                		nv += getEV(nv, n, ci.text(), d);
-	                	} else {
-	                		nv += getEV(nv, n, ci.attr(t), d);
-	                	}
-	                });
-	            }
-	            return nv !== undefined && nv != null ? nv : s;
+	        	return exNVs(t, $x);
 	        }
 	    }
 	    return '';
@@ -354,15 +356,21 @@
 	/**
 	 * Recursively replaces values found within a string with values found from
 	 * JQuery selector(s). Results from each JQuery string found will use the
-	 * "type" regular expression to determine what will be used to extract
-	 * values from the returned nodes from the JQuery selector. Possible values
-	 * are "text", an attribute name or when nothing is defined JQuery's
-	 * serializeArray() will be called on the node(s). When serializeArray() is
-	 * empty an attempt to call JQuery's val() function will be made to retrieve
-	 * the replacement value.
+	 * &quot;type&quot; regular expression to determine what will be used to
+	 * extract values from the returned nodes from the JQuery selector. Possible
+	 * values are &quot;text&quot;, &quot;html&quot; or an attribute name or
+	 * when nothing is defined JQuery's serializeArray() will be called on the
+	 * node(s). When serializeArray() is empty an attempt to call JQuery's val()
+	 * function will be made to retrieve the replacement value.
 	 * 
 	 * @param s
 	 *            the string to replace JQuery selectors in
+	 * @param vrx
+	 *            the regular expression that will be used to extact variable
+	 *            paths/names
+	 * @param vars
+	 *            the associative array cache of name/value variables that will
+	 *            be used for substituting values within the passed string
 	 * @param rx
 	 *            the regular expression that will be used to find the JQuery
 	 *            selector(s) (replace function is used so the 1st value should
@@ -385,15 +393,33 @@
 	 * @returns the siphoned string with replaced values returned from all/any
 	 *          found JQuery selector(s)
 	 */
-	function siphonValues(s, rx, trx, d, useNameId, el) {
-		return s ? s.replace(rx, function(m, v) {
-			return siphonValues(extractValues(v, trx, d, useNameId, el), rx,
-					trx, d, useNameId, el);
-		}) : '';
+	function siphonValues(s, vrx, vars, rx, trx, d, useNameId, el) {
+		// siphon variable values
+		function sVars(s, vrx, c, el) {
+			return s.replace(vrx, function(m, v) {
+				return sVars(v, vrx, c, el);
+			});
+		}
+		// siphon node values
+		function sVals(s, rx, trx, d, useNameId, el) {
+			return s.replace(rx, function(m, v) {
+				return sVals(extractValues(v, trx, d, useNameId, el), rx, trx,
+						d, useNameId, el);
+			});
+		}
+		return s ? sVals(sVars(s, vrx, vars, el), rx, trx, d, useNameId, el)
+				: '';
 	}
 
 	/**
-	 * Function constructor
+	 * Function constructor that evaluates an expression string to determine if
+	 * it is a valid function within the current window. When the function
+	 * exists it will be made available for execution along with any arguments
+	 * that may have been declared within the passed string. An attempt will be
+	 * made during execution of the function to pass any arguments that match
+	 * the name/key in the specified argument array. A special argument
+	 * substitution is given to an argument with a key/name of &quot;event&quot;
+	 * that pass the event object as one of the arguments.
 	 * 
 	 * @constructor
 	 * @param opts
@@ -595,12 +621,14 @@
 		 * @param el
 		 *            the DOM element that will be used to capture dynamic
 		 *            siphon attributes from
+		 * @param vars
+		 *            the associative array cache of names/values variables
 		 * @param ml
 		 *            true to look for each HTTP method verbs when the method
 		 *            supplied is not found on the supplied DOM element
 		 * @returns the siphon object
 		 */
-		function genSiphonObj(m, evt, a, s, el, ml) {
+		function genSiphonObj(m, evt, a, s, el, vars, ml) {
 			var so = {
 				selector : s ? s : '',
 				method : m ? m : opts.ajaxTypeDefault,
@@ -610,13 +638,14 @@
 				pathSiphon : '',
 				resultSiphon : '',
 				destSiphon : '',
+				agentSiphon : '',
 				funcName : '',
 				isValid : evt && evt.length > 0
 			};
-			so.captureAttrs = function(el, ml, ow) {
+			so.captureAttrs = function(el, vars, ml, ow) {
 				if (so.isValid && el) {
 					so.isValid = addSiphonAttrVals(el, so.method,
-							so.eventSiphon, so, DOM_ATTR_TYPES, ml, ow);
+							so.eventSiphon, so, DOM_ATTR_TYPES, vars, ml, ow);
 					return so.isValid;
 				}
 				return false;
@@ -628,7 +657,7 @@
 					so.onEvent = '';
 				}
 				if (el) {
-					so.captureAttrs(el, ml, true);
+					so.captureAttrs(el, vars, ml, true);
 				}
 			}
 			return so;
@@ -679,6 +708,8 @@
 		 *            to
 		 * @param ns
 		 *            the array of attribute names to look for
+		 * @param vars
+		 *            the associative array cache of names/values variables
 		 * @param ml
 		 *            true to look for each HTTP method verbs when the method
 		 *            supplied is not found on the supplied DOM element
@@ -688,7 +719,7 @@
 		 * @returns true when the event exists for the given method and the
 		 *          siphon attributes have been added
 		 */
-		function addSiphonAttrVals($el, m, evt, o, ns, ml, ow) {
+		function addSiphonAttrVals($el, m, evt, o, ns, vars, ml, ow) {
 			if ($el && m && o && evt && $.isArray(ns)) {
 				function getAN(m, n) {
 					var an = n.charAt(0).toUpperCase() + n.substr(1).toLowerCase();
@@ -707,20 +738,27 @@
 							: ov ? ov[ei] : undefined;
 					return ov;
 				}
+				function isAdd(n, o, ow) {
+					return o[n] !== undefined && (ow || o[n] == null || o[n].length <= 0);
+				}
+				function getSAN(m, n) {
+					return (m == n ? 'event' : n) + 'Siphon';
+				}
 				function captureSA($el, m, ei, o, ow) {
 					var an = null;
 					var n = null;
 					var ov = null;
 					var agtt = false;
+					var agtn = null;
 					var agt = null;
 					var $agt = null;
 					for (var i=0; i<ns.length; i++) {
 						n = ns[i].toLowerCase();
 						an = getAN(m, n);
-						n = (m == n ? 'event' : n) + 'Siphon';
+						n = getSAN(m, n);
 						// only add values for attributes that exist on the
 						// passed object and have not yet been set
-						if (o[n] !== undefined && (ow || o[n] == null || o[n].length <= 0)) {
+						if (isAdd(n, o, ow)) {
 							// when a siphon attribute corresponds to an event at
 							// the same index we use the attribute value at that
 							// index- otherwise, we just use the attribute at the
@@ -730,14 +768,23 @@
 								// try to lookup an agent that has the attribute (if any)
 								if (!agtt) {
 									agtt = true;
+									agtn = getSAN(m, DOM_ATTR_AGENT);
 									agt = getOV($el, getAN(m, DOM_ATTR_AGENT), ei);
 									if (agt) {
 										// siphon possible selectors
-										agt = siphonValues(agt, opts.regexSelectSiphon,
-												opts.regexValTypeSiphon, opts.agentSelSep, false);
+										agt = siphonValues(agt, opts.regexVarSiphon, vars, 
+												opts.regexSelectSiphon, opts.regexValTypeSiphon, 
+												opts.agentSelSep, false);
+									}
+									if (isAdd(agtn, o, ow)) {
+										o[agtn] = agt;
+									}
+									if (agt) {
 										// capture the agent's siphon attributes
 										$agt = $(agt);
-										agt = genSiphonObj(m, evt, null, $agt.selector, null, false);
+										agt = genSiphonObj(m, evt, null,
+												$agt.selector, null, vars,
+												false);
 										$agt.each(function() {
 											// 1st come, 1st serve- don't
 											// overwrite attributes that have
@@ -839,14 +886,15 @@
 					// load events are picked up by normal fragment loading
 					return;
 				}
-				var r = genSiphonObj(a.method, ev, opts.actionNavInvoke, null, null, false);
+				var r = genSiphonObj(a.method, ev, opts.actionNavInvoke, null,
+						null, t.vars, false);
 				if (r.isValid) {
 					r.eventAttrs = a.items;
 					r.typeSiphon = a.type;
 					var rtn = addOrUpdateEventFunc(ctx, r.action, r.method,
 							f.pel, el, r.eventSiphon, function(pel, ib) {
 								var $ib = $(ib);
-								if (!r.captureAttrs($ib, false, true)) {
+								if (!r.captureAttrs($ib, t.vars, false, true)) {
 									// the event is no longer valid because the
 									// method/event attribute has removed the
 									// event since its registration- thus we
@@ -1081,10 +1129,10 @@
 		 * @constructor
 		 * @param rs
 		 *            the raw result siphon string
-		 * @param iel
-		 *            the element that that initiated the creation (if any)
+		 * @param vars
+		 *            the associative array cache of names/values variables
 		 */
-		function FragResultSel(rs, iel) {
+		function FragResultSel(rs, vars) {
 			rs = rs ? $.trim(rs) : null;
 			var rsp = null;
 			var fx = null;
@@ -1094,10 +1142,10 @@
 			};
 			this.resultSiphon = function(el, rsn) {
 				rsp = rsn ? rsn : rsp;
-				if (!rsp || rsn || (el && !el.is(cel))) {
-					rsp = siphonValues(rs, opts.regexSelectSiphon,
-							opts.regexValTypeSiphon, opts.resultSep, false,
-							el);
+				if (!rsp || rsn || (el && el.nodeType && !el.is(cel))) {
+					rsp = siphonValues(rs, opts.regexVarSiphon, vars,
+							opts.regexSelectSiphon, opts.regexValTypeSiphon,
+							opts.resultSep, false, el);
 					// check if the result siphon is a function
 					fx = new Func(opts, rsp, null, true);
 					cel = el;
@@ -1298,6 +1346,7 @@
 		 */
 		function FragsTrack(s, siphon) {
 			var start = new Date();
+			this.vars = [];
 			this.isTopLevel = isTopLevelEl(s);
 			this.ctxPath = getScriptCtxPath();
 			this.isScopeSelect = siphon && s.is(siphon.selector);
@@ -1381,7 +1430,7 @@
 			// passed tracking siphon or extracted by fragment attributes
 			if (!t.isScopeSelect
 					&& (loadSiphon = genSiphonObj(opts.ajaxTypeDefault, 'load',
-							null, siphon.selector, this.el, true)).isValid) {
+							null, siphon.selector, this.el, t.vars, true)).isValid) {
 				// DOM routing attribute for a load event will take presedence
 				// over short-hand include/replace/etc.
 				siphon = loadSiphon;
@@ -1413,8 +1462,9 @@
 			this.ds = function(dsn) {
 				dsp = dsn ? dsn : dsp;
 				if (!dsp || dsn) {
-					dsp = siphonValues(dsp, opts.regexSelectSiphon,
-							opts.regexValTypeSiphon, opts.destSep, false);
+					dsp = siphonValues(dsp, opts.regexVarSiphon, t.vars,
+							opts.regexSelectSiphon, opts.regexValTypeSiphon,
+							opts.destSep, false);
 				}
 				return dsp;
 			};
@@ -1429,12 +1479,13 @@
 			this.rp = function(rpn) {
 				rp = rpn ? rpn : rp;
 				if (!rpp || rpn) {
-					rpp = siphonValues(rp, opts.regexSelectSiphon,
-							opts.regexValTypeSiphon, opts.pathSep, false);
+					rpp = siphonValues(rp, opts.regexVarSiphon, t.vars,
+							opts.regexSelectSiphon, opts.regexValTypeSiphon,
+							opts.pathSep, false);
 				}
 				return rpp;
 			};
-			this.frs = new FragResultSel(rs, this.el);
+			this.frs = new FragResultSel(rs, t.vars);
 			this.src = null;
 			this.e = null;
 			this.cancelled = false;
@@ -1459,12 +1510,14 @@
 				// parameter siphons can capture either JSON or URL encoded strings
 				if ((ps && !psp) || psn || (!uj && typeof psp === 'object')
 						|| (uj && typeof psp === 'string')) {
-					psp = siphonValues(ps, opts.regexSelectSiphon,
-							opts.regexValTypeSiphon, opts.paramSep, true);
+					psp = siphonValues(ps, opts.regexVarSiphon, t.vars,
+							opts.regexSelectSiphon, opts.regexValTypeSiphon,
+							opts.paramSep, true);
 					psp = uj ? $(psp).serializeArray() : $(psp).serialize();
 				}
 				return psp;
 			};
+			this.as = siphon.agentSiphon;
 			this.done = function() {
 				if (!this.cancelled) {
 					this.ccnt(false);
@@ -1624,8 +1677,8 @@
 						+ ', path siphon: ' + this.rp() + ', result siphon: '
 						+ this.frs.getFuncOrResultSiphon()
 						+ ', destination siphon: ' + this.ds()
-						+ ', cancelled: ' + this.cancelled + ', error: '
-						+ this.e;
+						+ ', agent siphon' + this.as + ', cancelled: '
+						+ this.cancelled + ', error: ' + this.e;
 			};
 		}
 
@@ -1651,6 +1704,7 @@
 			o.pathSiphon = f ? f.rp() : undefined;
 			o.resultSiphon = f ? f.frs.getFuncOrResultSiphon() : undefined;
 			o.destSiphon = f ? f.ds() : undefined;
+			o.agentSiphon = f ? f.as : undefined;
 			o.source = f ? f.src instanceof jQuery ? f.src : f.el : undefined;
 			o.error = f ? f.e : undefined;
 			o.scope = t.scope;

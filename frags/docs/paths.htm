@@ -381,70 +381,34 @@
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
-			<h4 id="selfragtargets">JQuery Selector Fragment Targets</h4>
 			<p>
-				<a href="http://api.jquery.com/category/selectors/">JQuery
-					selectors</a> can be used to identify the retrieved fragment's DOM
-				element(s) that will be <i>included</i> or <i>replaced</i> within
-				the DOM. For example:
+				In the first example
+				<code>.some-class</code>
+				is used as the raw JQuery selector for capturing the nodes from the
+				fragment results that will be inserted into the DOM. The second
+				example uses
+				<code>#myResult ?{#selClass-&gt;data-thx-get-dest}</code>
+				which contains a <b>siphon resolver</b> that will capture the value
+				from the
+				<code>data-thx-get-dest</code>
+				attribute on the button with the
+				<code>selClass</code>
+				ID. The <b>result siphon</b> then becomes
+				<code>#myResult .some-class</code>
+				. There are no more <b>siphon resolver</b>s that need to be
+				evaluated in the expression. So, all elements under the element with
+				the
+				<code>myResult</code>
+				ID that have a class of
+				<code>some-class</code>
+				will be <i>included</i> in the <b>destination siphon</b>.
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/user&quot; --&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		...
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- and the current page contains --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/user/user :: .user&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;span&gt;</span>User<span style="color: #000080; font-weight: bold">&lt;/span&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/user/user :: .user&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;span&gt;</span>User<span style="color: #000080; font-weight: bold">&lt;/span&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-			...
-		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-</pre></div>
-			<p>
-				A
-				<code>data-thx-replace</code>
-				would not make sense if the <i>selector</i> returned more than one
-				element (in which case only the last found element would be
-				present in the replacement). However, a
-				<code>data-thx-include</code>
-				with a <i>selector</i> that returns more than one result would:
-			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/user/user&quot; --&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;ul</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;users&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;li&gt;</span>User 1<span style="color: #000080; font-weight: bold">&lt;/li&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;li&gt;</span>User 2<span style="color: #000080; font-weight: bold">&lt;/li&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/ul&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- and the current page contains --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;ol</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/user/user :: .users li&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/ol&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;ol</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/user/user :: .users li&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;li&gt;</span>User 1<span style="color: #000080; font-weight: bold">&lt;/li&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;li&gt;</span>User 2<span style="color: #000080; font-weight: bold">&lt;/li&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/ol&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-</pre></div>
 			<div class="alert alert-warning">
-				<strong>Reminder!</strong> Make sure to escape any quotations that may
-				exist in your <i>selector</i>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/user/user :: [class*=&amp;quot;icon-&amp;quot;]&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+				<strong>Reminder!</strong> Make sure to escape any quotations that
+				may exist in
+				<a href="http://api.jquery.com/category/selectors/">JQuery
+					selectors</a>
+<div style="overflow:auto;width:auto;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/user/user :: [class*=&amp;quot;icon-&amp;quot;]&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 </pre></div>
 			</div>
 		</div>

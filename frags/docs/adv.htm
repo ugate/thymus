@@ -178,6 +178,20 @@
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
+							<code>agentSiphon</code>
+						</div>
+						<div class="col-md-10">
+							either the DOM element, a <a
+								href="http://api.jquery.com/category/selectors/">JQuery
+								selector</a> to the DOM element(s) where any missing <b>routing
+								attribute</b>s were extracted, or
+							<code>undefined</code>
+							when an <b>agent siphon</b> was not defined in the <b>routing
+								attribute</b>.
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
 							<code>routingStack</code>
 						</div>
 						<div class="col-md-10">
@@ -319,10 +333,12 @@
 				(the HTML element when <a href="#deferred">auto-loaded</a>) and
 				<code>event</code>
 				referencing a <a href="#fragsevent">fragments event</a>. Supplied
-				functions can also contain additional argument values by adding them
-				to the function signature (e.g.
+				functions can also contain additional arguments by adding them to
+				the function signature (e.g.
 				<code>data-thx-onfrags="done(event, 'myValue')"</code>
-				).
+				). When additional arguments are specified the &quot;event&quot;
+				argument must be explicilty declared in the function signature if
+				access to the event within the function is required.
 			</p>
 			<p id="fragsinjs">
 				Similarly, we could have <a href="#fragseventprog">programmatically</a>
@@ -410,7 +426,8 @@
 			<p>
 				Not only can <b>result siphon</b>s contain corresponding <a
 					href="http://api.jquery.com/category/selectors/">JQuery
-					selectors</a>, they can also contain a
+					selectors</a> and/or <a href="#otherfragtargets">siphon resolvers</a>,
+				they can also contain a
 				<code>function</code>
 				that will handle raw fragment results.
 			</p>
