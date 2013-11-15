@@ -776,11 +776,11 @@
 						</div>
 						<div class="list-group-item">
 							<div class="btn-group" id="userDest2Grp"
-								data-thx-get-path="frags/user/user1"
+								data-thx-get-path="frags/user/${userKey}"
 								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
 								data-thx-get-dest="#userDestAgent" data-thx-get-type="update">
-								<button type="button" class="btn btn-primary" 
-									data-thx-get="click" data-thx-get-agent="#userDest2Grp"
+								<button type="button" class="btn btn-primary active" 
+									data-thx-get="load :: click" data-thx-get-agent="#userDest2Grp"
 									data-thx-get-with="userKey=user1">Include
 									User1</button>
 								<button type="button" class="btn btn-primary"
@@ -802,23 +802,28 @@
 					<div class="list-group">
 						<div class="list-group-item">
 							<h4>Code</h4>
+							<small> See <a href="#otherfragtargets">siphon
+									resolver</a>s for further explaination:
+							</small>
 						</div>
 						<div class="list-group-item thymus-demo">
-<div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn-group&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
-		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
-		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
-		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User1<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
-		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user2&quot;</span>
-		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
-		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User2<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
-		<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user3&quot;</span>
-		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
-		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User3<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn-group&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest2Grp&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/${userKey}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDestAgent&quot;</span> <span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;update&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span> 
+		<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-agent=</span><span style="color: #0000FF">&quot;#userDest2Grp&quot;</span>
+		<span style="color: #FF0000">data-thx-get-with=</span><span style="color: #0000FF">&quot;userKey=user1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include
+		User1<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+		<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-agent=</span><span style="color: #0000FF">&quot;#userDest2Grp&quot;</span>
+		<span style="color: #FF0000">data-thx-get-with=</span><span style="color: #0000FF">&quot;userKey=user2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include
+		User2<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+		<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-agent=</span><span style="color: #0000FF">&quot;#userDest2Grp&quot;</span>
+		<span style="color: #FF0000">data-thx-get-with=</span><span style="color: #0000FF">&quot;userKey=user3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include
+		User3<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest2&quot;</span> <span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 </pre></div>
 						</div>
 					</div>

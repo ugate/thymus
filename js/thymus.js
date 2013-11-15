@@ -20,7 +20,8 @@
 	var FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
 	var FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
 	var FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
-	var DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest' ];
+	var VARS_ATTR_TYPE = 'with';
+	var DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest', 'with' ];
 	var DOM_ATTR_AGENT = 'agent';
 	var HTTP_METHODS = [ 'GET', 'POST', 'DELETE', 'PUT' ];
 	this.TATTR = 'attribute';
@@ -262,6 +263,48 @@
 	}
 
 	/**
+	 * Variables cache for localized attribute name/value pairs.
+	 * 
+	 * @constructor
+	 * @param arx
+	 *            the global regular expression that will be used to extact
+	 *            variable names/values when adding variables (replace function
+	 *            is used so the passed parameters should be the match for the
+	 *            entire expression, the 2nd name of the variable and the 3rd
+	 *            parameter should be the value of the variable)
+	 * @param rrx
+	 *            the global regular expression that will be used to substitute
+	 *            variable values when performing a string replacement (replace
+	 *            function is used so the passed parameters should be the match
+	 *            for the entire expression, the 2nd should be the variable name
+	 *            expression)
+	 */
+	function Vars(arx, rrx) {
+		var cache = [];
+		this.add = function(ctx, nvs) {
+			return nvs ? nvs.replace(arx, function(m, n, v) {
+				if (!cache[ctx]) {
+					cache[ctx] = [];
+				}
+				cache[ctx][n] = v;
+				return n;
+			}) : '';
+		};
+		this.replace = function(ctx, s) {
+			return s ? s.replace(rrx, function(m, n) {
+				if (cache[ctx]) {
+					return cache[ctx][n];
+				}
+				return undefined;
+			}) : '';
+		};
+		this.get = function(ctx, n) {
+			return ctx ? cache[ctx] ? n ? cache[ctx][n] : cache[ctx].slice(0)
+					: cache.slice(0) : undefined;
+		};
+	}
+
+	/**
 	 * Extracts value(s) from node(s) returned from the supplied JQuery
 	 * selector. The JQuery selector can also contain a type that will determine
 	 * how value(s) are captured from node(s) returned from the JQuery selector.
@@ -280,10 +323,12 @@
 	 *            (delimited by character(s) defined by the type regular
 	 *            expression)
 	 * @param trx
-	 *            the regular expression that will be used to find the type of
-	 *            node value extraction (match should return at least two
-	 *            values- the 1st being the JQuery selector and the 2nd being
-	 *            the type)
+	 *            the global regular expression that will be used to find the
+	 *            type of node value extraction (replace function is used so the
+	 *            passed parameters should be the match for the entire
+	 *            expression, the 2nd parameter should be the raw JQuery
+	 *            selector and the 3rd parameter should be the type- i.e.
+	 *            &quot;text&quot;, &quot;html&quot; or attribute name)
 	 * @param d
 	 *            the delimiter to use when multiple results are returned from a
 	 *            JQuery selector
@@ -365,21 +410,23 @@
 	 * 
 	 * @param s
 	 *            the string to replace JQuery selectors in
-	 * @param vrx
-	 *            the regular expression that will be used to extact variable
-	 *            paths/names
+	 * @param ctx
+	 *            the context of the passed {Vars}
 	 * @param vars
-	 *            the associative array cache of name/value variables that will
-	 *            be used for substituting values within the passed string
+	 *            the {Vars} used for variable substitution
 	 * @param rx
-	 *            the regular expression that will be used to find the JQuery
-	 *            selector(s) (replace function is used so the 1st value should
-	 *            be the raw JQuery selector- no other characters allowed)
+	 *            the global regular expression that will be used to find the
+	 *            JQuery selector(s) (replace function is used so the passed
+	 *            parameters should be the match for the entire expression and
+	 *            the 2nd parameter should be the raw JQuery selector- no other
+	 *            characters allowed)
 	 * @param trx
-	 *            the regular expression that will be used to find the type of
-	 *            node value extraction (match should return at least two
-	 *            values- the 1st being the JQuery selector and the 2nd being
-	 *            the type)
+	 *            the global regular expression that will be used to find the
+	 *            type of node value extraction (replace function is used so the
+	 *            passed parameters should be the match for the entire
+	 *            expression, the 2nd parameter should be the raw JQuery
+	 *            selector and the 3rd parameter should be the type- i.e.
+	 *            &quot;text&quot;, &quot;html&quot; or attribute name)
 	 * @param d
 	 *            the delimiter to use when multiple results are returned from a
 	 *            JQuery selector
@@ -393,13 +440,7 @@
 	 * @returns the siphoned string with replaced values returned from all/any
 	 *          found JQuery selector(s)
 	 */
-	function siphonValues(s, vrx, vars, rx, trx, d, useNameId, el) {
-		// siphon variable values
-		function sVars(s, vrx, c, el) {
-			return s.replace(vrx, function(m, v) {
-				return sVars(v, vrx, c, el);
-			});
-		}
+	function siphonValues(s, ctx, vars, rx, trx, d, useNameId, el) {
 		// siphon node values
 		function sVals(s, rx, trx, d, useNameId, el) {
 			return s.replace(rx, function(m, v) {
@@ -407,7 +448,8 @@
 						d, useNameId, el);
 			});
 		}
-		return s ? sVals(sVars(s, vrx, vars, el), rx, trx, d, useNameId, el)
+		// substitute variables and siphon node values
+		return s ? sVals(vars.replace(ctx, s), rx, trx, d, useNameId, el)
 				: '';
 	}
 
@@ -639,6 +681,7 @@
 				resultSiphon : '',
 				destSiphon : '',
 				agentSiphon : '',
+				withSiphon : '',
 				funcName : '',
 				isValid : evt && evt.length > 0
 			};
@@ -772,8 +815,9 @@
 									agt = getOV($el, getAN(m, DOM_ATTR_AGENT), ei);
 									if (agt) {
 										// siphon possible selectors
-										agt = siphonValues(agt, opts.regexVarSiphon, vars, 
-												opts.regexSelectSiphon, opts.regexValTypeSiphon, 
+										agt = siphonValues(agt, m, vars, 
+												opts.regexSelectSiphon, 
+												opts.regexValTypeSiphon, 
 												opts.agentSelSep, false);
 									}
 									if (isAdd(agtn, o, ow)) {
@@ -887,14 +931,14 @@
 					return;
 				}
 				var r = genSiphonObj(a.method, ev, opts.actionNavInvoke, null,
-						null, t.vars, false);
+						null, t.siphon.vars, false);
 				if (r.isValid) {
 					r.eventAttrs = a.items;
 					r.typeSiphon = a.type;
 					var rtn = addOrUpdateEventFunc(ctx, r.action, r.method,
 							f.pel, el, r.eventSiphon, function(pel, ib) {
 								var $ib = $(ib);
-								if (!r.captureAttrs($ib, t.vars, false, true)) {
+								if (!r.captureAttrs($ib, t.siphon.vars, false, true)) {
 									// the event is no longer valid because the
 									// method/event attribute has removed the
 									// event since its registration- thus we
@@ -1127,12 +1171,14 @@
 		 * Fragment result selector
 		 * 
 		 * @constructor
+		 * @param m
+		 *            the HTTP method
 		 * @param rs
 		 *            the raw result siphon string
 		 * @param vars
 		 *            the associative array cache of names/values variables
 		 */
-		function FragResultSel(rs, vars) {
+		function FragResultSel(m, rs, vars) {
 			rs = rs ? $.trim(rs) : null;
 			var rsp = null;
 			var fx = null;
@@ -1143,9 +1189,8 @@
 			this.resultSiphon = function(el, rsn) {
 				rsp = rsn ? rsn : rsp;
 				if (!rsp || rsn || (el && el.nodeType && !el.is(cel))) {
-					rsp = siphonValues(rs, opts.regexVarSiphon, vars,
-							opts.regexSelectSiphon, opts.regexValTypeSiphon,
-							opts.resultSep, false, el);
+					rsp = siphonValues(rs, m, vars, opts.regexSelectSiphon,
+							opts.regexValTypeSiphon, opts.resultSep, false, el);
 					// check if the result siphon is a function
 					fx = new Func(opts, rsp, null, true);
 					cel = el;
@@ -1346,16 +1391,21 @@
 		 */
 		function FragsTrack(s, siphon) {
 			var start = new Date();
-			this.vars = [];
 			this.isTopLevel = isTopLevelEl(s);
 			this.ctxPath = getScriptCtxPath();
 			this.isScopeSelect = siphon && s.is(siphon.selector);
 			this.scope = s;
-			this.siphon = siphon;
+			this.siphon = siphon ? siphon : {};
+			this.siphon.vars = this.siphon.vars ? this.siphon.vars : new Vars(
+					opts.regexVarNameVal, opts.regexVarSiphon);
 			this.ccnt = 0;
 			this.cnt = 0;
 			this.len = 0;
 			var c = [];
+			if (this.siphon.vars === undefined) {
+				//addSiphonAttrVals(el, so.method,
+				//		so.eventSiphon, so, VARS_ATTR_TYPE, vars, ml, ow);
+			}
 			this.addFrag = function(f) {
 				if (c[f.rp()]) {
 					c[f.rp()].frags[c[f.rp()].frags.length] = f;
@@ -1430,9 +1480,10 @@
 			// passed tracking siphon or extracted by fragment attributes
 			if (!t.isScopeSelect
 					&& (loadSiphon = genSiphonObj(opts.ajaxTypeDefault, 'load',
-							null, siphon.selector, this.el, t.vars, true)).isValid) {
+							null, siphon.selector, this.el, t.siphon.vars, true)).isValid) {
 				// DOM routing attribute for a load event will take presedence
 				// over short-hand include/replace/etc.
+				loadSiphon.vars = t.siphon.vars;
 				siphon = loadSiphon;
 			} else if (!t.isScopeSelect) {
 				a = getFragAttr($fl, opts.includeAttrs);
@@ -1443,6 +1494,14 @@
 			this.dt = forcett ? siphon.typeSiphon : TATTR;
 			this.method = siphon.method ? siphon.method
 					: opts.ajaxTypeDefault;
+			this.getVars = function() {
+				return siphon.vars ? siphon.vars.get(this.method) : null;
+			};
+			this.ws = siphon.withSiphon;
+			if (siphon.vars && this.ws) {
+				// add user variables
+				siphon.vars.add(this.method, this.ws);
+			}
 			if (!a && !t.isScopeSelect) {
 				a = getFragAttr($fl, opts.replaceAttrs);
 				if (!forcett) {
@@ -1462,7 +1521,7 @@
 			this.ds = function(dsn) {
 				dsp = dsn ? dsn : dsp;
 				if (!dsp || dsn) {
-					dsp = siphonValues(dsp, opts.regexVarSiphon, t.vars,
+					dsp = siphonValues(dsp, this.method, siphon.vars,
 							opts.regexSelectSiphon, opts.regexValTypeSiphon,
 							opts.destSep, false);
 				}
@@ -1479,13 +1538,13 @@
 			this.rp = function(rpn) {
 				rp = rpn ? rpn : rp;
 				if (!rpp || rpn) {
-					rpp = siphonValues(rp, opts.regexVarSiphon, t.vars,
+					rpp = siphonValues(rp, this.method, siphon.vars,
 							opts.regexSelectSiphon, opts.regexValTypeSiphon,
 							opts.pathSep, false);
 				}
 				return rpp;
 			};
-			this.frs = new FragResultSel(rs, t.vars);
+			this.frs = new FragResultSel(this.method, rs, siphon.vars);
 			this.src = null;
 			this.e = null;
 			this.cancelled = false;
@@ -1510,7 +1569,7 @@
 				// parameter siphons can capture either JSON or URL encoded strings
 				if ((ps && !psp) || psn || (!uj && typeof psp === 'object')
 						|| (uj && typeof psp === 'string')) {
-					psp = siphonValues(ps, opts.regexVarSiphon, t.vars,
+					psp = siphonValues(ps, this.method, siphon.vars,
 							opts.regexSelectSiphon, opts.regexValTypeSiphon,
 							opts.paramSep, true);
 					psp = uj ? $(psp).serializeArray() : $(psp).serialize();
@@ -1695,6 +1754,7 @@
 		 * @returns the passed object
 		 */
 		function addFragProps(o, t, f) {
+			o.httpMethod = f ? f.method : undefined;
 			o.fragCount = t.cnt;
 			o.fragCurrTotal = t.len;
 			o.fragPendingPeerCount = f && f.pf ? f.pf.ccnt(null) : 0;
@@ -1709,6 +1769,8 @@
 			o.error = f ? f.e : undefined;
 			o.scope = t.scope;
 			o.chain = opts.eventFragChain;
+			o.variables = f ? f.getVars() : t.siphon ? t.siphon.vars.get()
+					: undefined;
 			o.log = function() {
 				log(o);
 			};
@@ -2128,6 +2190,10 @@
 			postAgentAttrs : [ 'data-thx-post-agent' ],
 			putAgentAttrs : [ 'data-thx-put-agent' ],
 			deleteAgentAttrs : [ 'data-thx-delete-agent' ],
+			getWithAttrs : [ 'data-thx-get-with' ],
+			postWithAttrs : [ 'data-thx-post-with' ],
+			putWithAttrs : [ 'data-thx-put-with' ],
+			deleteWithAttrs : [ 'data-thx-delete-with' ],
 			contextPathAttr : 'data-thx-context-path',
 			fragListenerAttr : 'data-thx-onfrag',
 			fragsListenerAttr : 'data-thx-onfrags',
@@ -2144,6 +2210,7 @@
 			regexValTypeSiphon : /(^.*)(?:->)(?=([^.]*)$)/g,
 			regexSelectSiphon : /(?:\?{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexVarSiphon : /(?:\${)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
+			regexVarNameVal : /((?:\\.|[^=,]+)*)=("(?:\\.|[^"\\]+)*"|(?:\\.|[^,"\\]+)*)/g,
 			eventIsBroadcast : true,
 			eventFragChain : 'frag',
 			eventFragsChain : 'frags',
