@@ -639,10 +639,8 @@
 					loadFragments(c ? c : p, a, true, null);
 				} else {
 					// full page transfer
-					var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), {});
-					var f = new Frag(null, t.scope, t.scope, {
-						siphon : a
-					});
+					var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), a);
+					var f = new Frag(null, t.scope, t.scope, t);
 					broadcast(opts.eventFragChain, opts.eventFragBeforeHttp, t, f);
 					f.nav(no);
 				}
@@ -1410,10 +1408,6 @@
 			this.cnt = 0;
 			this.len = 0;
 			var c = [];
-			if (this.siphon.vars === undefined) {
-				//addSiphonAttrVals(el, so.method,
-				//		so.eventSiphon, so, VARS_ATTR_TYPE, vars, ml, ow);
-			}
 			this.addFrag = function(f) {
 				if (c[f.rp()]) {
 					c[f.rp()].frags[c[f.rp()].frags.length] = f;
@@ -1535,13 +1529,6 @@
 				}
 				return dsp;
 			};
-			if (rp && rp.length > 0
-					&& rp.toLowerCase() != opts.selfRef.toLowerCase()) {
-				rp = adjustPath(t.ctxPath, rp, script ? script
-						.attr(opts.fragExtensionAttr) : '');
-			} else if (rs && rs.length > 0) {
-				rp = opts.selfRef;
-			}
 			var rpp = null;
 			this.rp = function(rpn) {
 				rp = rpn ? rpn : rp;
@@ -1549,6 +1536,13 @@
 					rpp = siphonValues(rp, this.method, siphon.vars,
 							opts.regexSelectSiphon, opts.regexValTypeSiphon,
 							opts.pathSep, false);
+					if (rpp && rpp.length > 0
+							&& rpp.toLowerCase() != opts.selfRef.toLowerCase()) {
+						rpp = adjustPath(t.ctxPath, rpp, script ? script
+								.attr(opts.fragExtensionAttr) : '');
+					} else if (rs && rs.length > 0) {
+						rpp = opts.selfRef;
+					}
 				}
 				return rpp;
 			};
