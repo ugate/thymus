@@ -21,7 +21,7 @@
 	var FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
 	var FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
 	var VARS_ATTR_TYPE = 'with';
-	var DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest', 'with' ];
+	var DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest', VARS_ATTR_TYPE ];
 	var DOM_ATTR_AGENT = 'agent';
 	var HTTP_METHODS = [ 'GET', 'POST', 'DELETE', 'PUT' ];
 	this.TATTR = 'attribute';
@@ -211,9 +211,12 @@
 	 *            the HTTP method name
 	 * @param t
 	 *            the template type (e.g. include, replace, etc.)
+	 * @param rxs
+	 *            the regular expression suffix used to capture the attribute
+	 *            (should include anything after the attribute name)
 	 * @returns a attributes query object
 	 */
-	function genAttrQueries(a, h, t) {
+	function genAttrQueries(a, h, t, rxs) {
 		var ra = {
 			items : [],
 			sel : '',
@@ -228,7 +231,7 @@
 			ra.items.push({
 				name : x[i],
 				sel : y,
-				regExp : new RegExp('\\s' + x[i] + '=[\\"|\'](.*?)[\\"|\']',
+				regExp : new RegExp('\\s' + x[i] + rxs,
 						'ig')
 			});
 			ra.sel += ra.sel.length > 0 ? ',' + y : y;
@@ -591,11 +594,16 @@
 		var fragSelector = getThxSel(includeReplaceAttrs, null, null);
 		fragSelector = (fragSelector ? fragSelector + ',' : '')
 				+ getThxSel(domAttrs, 'load', '*');
-		var urlAttrs = genAttrQueries(opts.urlAttrs, 'GET', TATTR);
-		var getAttrs = genAttrQueries(opts.getAttrs, 'GET', TINC);
-		var postAttrs = genAttrQueries(opts.postAttrs, 'POST', TINC);
-		var putAttrs = genAttrQueries(opts.putAttrs, 'PUT', TINC);
-		var deleteAttrs = genAttrQueries(opts.deleteAttrs, 'DELETE', TINC);
+		var urlAttrs = genAttrQueries(opts.urlAttrs, 'GET', TATTR,
+				opts.regexAttrRelUrlSuffix);
+		var getAttrs = genAttrQueries(opts.getAttrs, 'GET', TINC,
+				opts.regexAttrAnyUrlSuffix);
+		var postAttrs = genAttrQueries(opts.postAttrs, 'POST', TINC,
+				opts.regexAttrAnyUrlSuffix);
+		var putAttrs = genAttrQueries(opts.putAttrs, 'PUT', TINC,
+				opts.regexAttrAnyUrlSuffix);
+		var deleteAttrs = genAttrQueries(opts.deleteAttrs, 'DELETE', TINC,
+				opts.regexAttrAnyUrlSuffix);
 
 		/**
 		 * Executes a {FragCtx} action
@@ -2202,7 +2210,9 @@
 			regexFunc : /^[_$a-zA-Z\xA0-\uFFFF].+?\(/i,
 			regexFileName : /[^\/?#]+(?=$|[?#])/,
 			regexScriptTags : /<script[^>]*>([\\S\\s]*?)<\/script>/img,
-			regexIanaProtocol : /^(([a-z]+)?:|\/\/|#)/i,
+			regexAttrRelUrlSuffix : '\s*=\s*[\"|\\\'](?!(?:[a-z]+:)|/|#)(.*?)[\"|\\\']',
+			regexAttrAnyUrlSuffix : '\s*=\s*[\\"|\'](.*?)[\\"|\']',
+			regexIanaProtocol : /^(([a-z]+)?:|\/|#)/i,
 			regexFileTransForProtocolRelative : /^(file:?)/i,
 			regexAbsPath : /^\/|(\/[^\/]*|[^\/]+)$/g,
 			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g,
