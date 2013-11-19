@@ -284,23 +284,25 @@
 	 */
 	function Vars(arx, rrx) {
 		var cache = [];
-		this.add = function(ctx, nvs) {
+		function add(ctx, nvs) {
 			return nvs ? nvs.replace(arx, function(m, n, v) {
 				if (!cache[ctx]) {
 					cache[ctx] = [];
 				}
-				cache[ctx][n] = v;
+				cache[ctx][n] = sub(ctx, v);
 				return n;
 			}) : '';
-		};
-		this.replace = function(ctx, s) {
+		}
+		function sub(ctx, s) {
 			return s ? s.replace(rrx, function(m, n) {
 				if (cache[ctx]) {
 					return cache[ctx][n];
 				}
 				return undefined;
 			}) : '';
-		};
+		}
+		this.add = add;
+		this.sub = sub;
 		this.get = function(ctx, n) {
 			return ctx ? cache[ctx] ? n ? cache[ctx][n] : cache[ctx].slice(0)
 					: cache.slice(0) : undefined;
@@ -452,7 +454,7 @@
 			});
 		}
 		// substitute variables and siphon node values
-		return s ? sVals(vars.replace(ctx, s), rx, trx, d, useNameId, el)
+		return s ? sVals(vars.sub(ctx, s), rx, trx, d, useNameId, el)
 				: '';
 	}
 
@@ -1261,7 +1263,12 @@
 					: getFileExt(p) ? '' : x
 					: '';
 			if (x) {
-				p += x;
+				var pi = p.indexOf('?');
+				if (pi >= 0) {
+					p = p.substring(0, pi) + x + p.substring(pi);
+				} else {
+					p += x;
+				}
 			}
 			p = absolutePath(p, c);
 			return p;

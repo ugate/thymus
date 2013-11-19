@@ -224,6 +224,9 @@
 				<li><code>text</code> - will use <a
 					href="http://api.jquery.com/text/">JQuery.text()</a> to
 					insert/extract value(s) returned from the JQuery selected node(s)</li>
+				<li><code>html</code> - will use <a
+					href="http://api.jquery.com/html/">JQuery.html()</a> to
+					insert/extract value(s) returned from the JQuery selected node(s)</li>
 				<li>a name of an attribute - will use <a
 					href="http://api.jquery.com/attr/">JQuery.attr()</a> to
 					insert/extract value(s) returned from the JQuery selected node(s)
@@ -305,6 +308,29 @@
 				<code>frags/first/second/third/fourth/fifth/sixth</code>
 				.
 			</p>
+<!-- 			<p> -->
+<!-- 				Siphons can also contain HTTP verb-relative variables. <b>siphon variables</b> can be defined by adding the appropriate HTTP ver  -->
+<!-- 										<div class="btn-group" id="userDest2Grp" -->
+<!-- 								data-thx-get-path="frags/user/${userKey}?userKey2=${userKey2}" -->
+<!-- 								data-thx-get-result="[class^=&quot;thymus-user&quot;]" -->
+<!-- 								data-thx-get-dest="#userDestAgent" data-thx-get-type="update"> -->
+<!-- 								<button type="button" class="btn btn-primary active"  -->
+<!-- 									data-thx-get="load :: click"  -->
+<!-- 									data-thx-get-agent="#userDest2Grp" -->
+<!-- 									data-thx-get-with="userKey=user1">Include -->
+<!-- 									User1</button> -->
+<!-- 								<button type="button" class="btn btn-primary" -->
+<!-- 									data-thx-get="click"  -->
+<!-- 									data-thx-get-agent="#userDest2Grp" -->
+<!-- 									data-thx-get-with="userKey=user2,userKey2=${userKey}">Include -->
+<!-- 									User2</button> -->
+<!-- 								<button type="button" class="btn btn-primary" -->
+<!-- 									data-thx-get="click"  -->
+<!-- 									data-thx-get-agent="#userDest2Grp" -->
+<!-- 									data-thx-get-with="userKey=user3">Include -->
+<!-- 									User3</button> -->
+<!-- 							</div> -->
+<!-- 			</p> -->
 			<p>
 				A <b>parameter siphon</b> can contain a single raw JQuery selector
 				or can contain one or more <b>siphon resolver</b>s in order to build
