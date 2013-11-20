@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <!-- thymus.js script -->
 <script th:remove="all" src="js/thymus.js" id="thymus"
-	data-thx-context-path="." data-thx-frag-extension=".htm"
+	data-thx-base-path="." data-thx-frag-extension=".htm"
 	data-thx-head-frag="th:include=frags/head :: header"
 	data-thx-preload-css="frags/docs/css/loader.css"
 	data-thx-preload-js="frags/docs/js/loader.js"
@@ -145,7 +145,7 @@
 <span style="color: #000080; font-weight: bold">&lt;script </span><span
 								style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span
 								style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> <span
-								style="color: #FF0000">data-thx-context-path=</span><span
+								style="color: #FF0000">data-thx-base-path=</span><span
 								style="color: #0000FF">&quot;.&quot;</span><span
 								style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
@@ -156,12 +156,31 @@
 						id/namespace is used to identify the <b>thymus.js</b> script in
 						order to capture various attribute options on the script tag while
 						the
-						<code>data-thx-context-path</code>
+						<code>data-thx-base-path</code>
 						is used for <a href="#fragpath">fragment path resolution</a> and <a
 							href="#attrpaths">attribute path resolution</a>. It should point
 						to the root context of the application relative to the page in
-						which <b>thymus.js</b> is loaded.
+						which <b>thymus.js</b> is loaded. A
+						<code>base</code>
+						tag is added to the
+						<code>head</code>
+						using the value from
+						<code>data-thx-base-path</code>
+						as the
+						<code>href</code>
+						. An alternative setup for the
+						<code>script</code>
+						location conscience would be:
 					</p>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;base</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;.&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
+	...
+	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
+</pre></div>
 					<p>
 						Internally, when <b>thymus.js</b> loads, it checks for the presence
 						of the JQuery API. If it's not found it will automatically load

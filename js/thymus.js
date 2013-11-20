@@ -14,24 +14,30 @@
    limitations under the License.
  */// ============================================
 (function() {
-	var NS = this.displayName = 'thymus';
-	var JQUERY_URL_ATTR = 'data-thx-jquery-url';
-	var JQUERY_DEFAULT_URL = 'http://code.jquery.com/jquery.min.js';
-	var FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
-	var FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
-	var FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
-	var VARS_ATTR_TYPE = 'with';
-	var DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest', VARS_ATTR_TYPE ];
-	var DOM_ATTR_AGENT = 'agent';
-	var HTTP_METHODS = [ 'GET', 'POST', 'DELETE', 'PUT' ];
-	this.TATTR = 'attribute';
+	this.NS = this.displayName = 'thymus';
+	this.JQUERY_URL_ATTR = 'data-thx-jquery-url';
+	this.JQUERY_DEFAULT_URL = 'http://code.jquery.com/jquery.min.js';
+	this.FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
+	this.BASE_PATH_ATTR = 'data-thx-base-path';
+	this.FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
+	this.FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
+	this.VARS_ATTR_TYPE = 'with';
+	this.DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest', VARS_ATTR_TYPE ];
+	this.DOM_ATTR_AGENT = 'agent';
+	this.HTTP_METHODS = [ 'GET', 'POST', 'DELETE', 'PUT' ];
+	this.URL_ATTR = 'attribute';
+	this.TATTR = 'attr=';
 	this.TINC = 'include';
 	this.TREP = 'replace';
 	this.TUPD = 'update';
-	this.TYPES_ASYNC = [ this.TATTR, this.TINC, this.TREP, this.TUPD ];
-	var eventFuncs = {};
-	var eventFuncCnt = 0;
+	this.TYPES_ASYNC = [ this.URL_ATTR, this.TATTR, this.TINC, this.TREP,
+			this.TUPD ];
+	this.eventFuncs = {};
+	this.eventFuncCnt = 0;
 	this.ieVersion = 0;
+	this.jq = window.jQuery;
+	this.basePath = null;
+	this.updateUrls = false;
 	this.firstRun = true;
 	this.rootRun = true;
 
@@ -189,13 +195,24 @@
 	 * 
 	 * @param m
 	 *            the message to log
+	 * @param l
+	 *            the logging level (i.e. <code>1</code> is <code>error</code>,
+	 *            <code>2</code> is <code>warn</code>, <code>3</code> is
+	 *            <code>log</code> (default))
 	 */
-	function log(m) {
+	function log(m, l) {
 		if (m && typeof window.console !== 'undefined'
 				&& typeof window.console.log !== 'undefined') {
-			window.console.log(ieVersion <= 0 || ieVersion > 9 ? m
+			var nm = ieVersion <= 0 || ieVersion > 9 ? m
 					: typeof m.toFormattedString === 'function' ? m
-							.toFormattedString() : m);
+							.toFormattedString() : m;
+			if (l == 1 && window.console.error) {
+				window.console.error(nm);
+			} else if (l == 2 && window.console.warn) {
+				window.console.warn(nm);
+			} else {
+				window.console.log(nm);
+			}
 		}
 	}
 
@@ -548,13 +565,13 @@
 						}
 					} catch (e) {
 						log('Error while calling ' + fs + ' ' + amts(am)
-								+ ': ' + e);
+								+ ': ' + e, 1);
 					}
 				}
 				return;
 			};
 		} catch (e) {
-			log('Error in ' + fs + ' ' + amts(am) + ': ' + e);
+			log('Error in ' + fs + ' ' + amts(am) + ': ' + e, 1);
 		}
 	}
 
@@ -596,7 +613,7 @@
 		var fragSelector = getThxSel(includeReplaceAttrs, null, null);
 		fragSelector = (fragSelector ? fragSelector + ',' : '')
 				+ getThxSel(domAttrs, 'load', '*');
-		var urlAttrs = genAttrQueries(opts.urlAttrs, 'GET', TATTR,
+		var urlAttrs = genAttrQueries(opts.urlAttrs, 'GET', URL_ATTR,
 				opts.regexAttrRelUrlSuffix);
 		var getAttrs = genAttrQueries(opts.getAttrs, 'GET', TINC,
 				opts.regexAttrAnyUrlSuffix);
@@ -631,7 +648,7 @@
 				loadFragments(p, fragSelector, false, null);
 			} else if (a.action === opts.actionNavInvoke) {
 				if (!a.pathSiphon) {
-					log('No path specified for ' + a.action);
+					log('No path specified for ' + a.action, 1);
 					return;
 				}
 				a.method = a.method ? a.method : 'GET';
@@ -919,7 +936,7 @@
 		 *          has been made or needs to be made
 		 */
 		function updateNav(t, f, a, ai, v, el) {
-			if (a.type === TATTR) {
+			if (a.type === URL_ATTR) {
 				if (el) {
 					if (!script.is(el)) {
 						el.attr(a.items[ai].name, absolutePath(el
@@ -1026,7 +1043,9 @@
 		 */
 		function htmlDataAdjust(t, f, s) {
 			//s = s.replace(/\<(\?xml|(\!DOCTYPE[^\>\[]+(\[[^\]]+)?))+[^>]+\>/g, '');
-			s = updateNavAttrs(t, f, urlAttrs, s);
+			if (updateUrls) {
+				s = updateNavAttrs(t, f, urlAttrs, s);
+			}
 			return s;
 		}
 
@@ -1042,10 +1061,10 @@
 		 *            the DOM element source to be adjusted
 		 * @param uu
 		 *            true to update any relative URLs to their absolute
-		 *            counterparts
+		 *            counterparts (only performed when {updateUrls} is true)
 		 */
 		function htmlDomAdjust(t, f, s, uu) {
-			if (uu) {
+			if (uu && updateUrls) {
 				updateNavAttrs(t, f, urlAttrs, s);
 			}
 			updateNavAttrs(t, f, getAttrs, s);
@@ -1279,7 +1298,7 @@
 		 * href/src/etc. attributes contained in fragments
 		 */
 		function getScriptCtxPath() {
-			var c = getScriptAttr(opts.contextPathAttr);
+			var c = basePath;
 			if (!c) {
 				c = opts.pathSep;
 			}
@@ -1338,13 +1357,13 @@
 								}
 							}
 						} catch (e) {
-							log('Error in ' + fs + ' ' + (evt ? evt : '') + ': ' + e);
+							log('Error in ' + fs + ' ' + (evt ? evt : '') + ': ' + e, 1);
 						}
 					}
 				}
 				return evt.isDefaultPrevented();
 			} catch (e) {
-				log('Error in ' + evt.type + ' ' + (evt ? evt : '') + ': ' + e);
+				log('Error in ' + evt.type + ' ' + (evt ? evt : '') + ': ' + e, 1);
 			}
 			return false;
 		}
@@ -1780,8 +1799,8 @@
 			o.chain = opts.eventFragChain;
 			o.variables = f ? f.getVars() : t.siphon ? t.siphon.vars.get()
 					: undefined;
-			o.log = function() {
-				log(o);
+			o.log = function(l) {
+				log(o, l);
 			};
 			o.toFormattedString = function() {
 				return '[' + o.chain + ' event, fragCount: ' + o.fragCount
@@ -1830,8 +1849,8 @@
 			e.scope = t.scope;
 			e.errors = t.getErrors();
 			e.loadTime = t.elapsedTime(e.timeStamp);
-			e.log = function() {
-				log(this);
+			e.log = function(l) {
+				log(this, l);
 			};
 			e.toFormattedString = function() {
 				return '[' + e.chain + ' event, fragCancelCount: '
@@ -2203,7 +2222,6 @@
 			postWithAttrs : [ 'data-thx-post-with' ],
 			putWithAttrs : [ 'data-thx-put-with' ],
 			deleteWithAttrs : [ 'data-thx-delete-with' ],
-			contextPathAttr : 'data-thx-context-path',
 			fragListenerAttr : 'data-thx-onfrag',
 			fragsListenerAttr : 'data-thx-onfrags',
 			fragHeadAttr : 'data-thx-head-frag',
@@ -2271,7 +2289,7 @@
 			}
 			ieVersion = t.id > 5 ? +t.id : 0;
 		} catch (e) {
-			log('Unable to detect IE version: ' + e.message);
+			log('Unable to detect IE version: ' + e, 1);
 		}
 
 		/**
@@ -2306,7 +2324,7 @@
 				throw e;
 			} else {
 				var $p = $('html');
-				if (!getPreLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR)) {
+				if (!preLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR)) {
 					// auto-process the fragments
 					$p[NS](defs.actionLoadFrags);
 				}
@@ -2327,32 +2345,90 @@
 	}
 
 	/**
-	 * Gets an elements attribute before loading has begun
+	 * Retrieves or assigns an elements attribute before loading has begun
 	 * 
 	 * @param a
-	 *            the attribute to retrieve
+	 *            the attribute to retrieve or assign
 	 * @param d
 	 *            the optional default value to return when the attribute cannot
 	 *            be found
+	 * @param v
+	 *            the value to set (when invalid nothing will be set, but rather
+	 *            the existing vlaue will be returned)
 	 * @param e
 	 *            the optional element to retrieve the attribute value from
 	 *            (null/undefined will use script element)
 	 */
-	function getPreLoadAttr(a, d, e) {
+	function preLoadAttr(a, d, e, v) {
 		if (!e) {
 			e = document.getElementById(NS);
 			if (!e) {
 				throw new Error('Missing script ID: ' + NS);
 			}
 		}
-		var r = e ? e.getAttribute ? e.getAttribute(a) : e.attributes[a].nodeValue : null;
+		if (v && e) {
+			if (e.setAttribute) {
+				e.setAttribute(a, v);
+			} else {
+				e.attributes[a].nodeValue = v;
+			}
+		}
+		var r = e ? e.getAttribute ? e.getAttribute(a)
+				: e.attributes[a].nodeValue : null;
 		return d && !r ? d : r;
 	}
 
-	// verfifies/loads JQuery using the URL (if needed)
-	var jq = window.jQuery;
-	if (!jq) {
-		var su = getPreLoadAttr(JQUERY_URL_ATTR, JQUERY_DEFAULT_URL);
+	/**
+	 * Preforms pre-initialization tasks like the capture setting of the
+	 * <code>href</code> of the document's <code>base</code> to the path
+	 * from the {BASE_PATH_ATTR} attribute and loading JQuery (if needed).
+	 */
+	function preInit() {
+		basePath = preLoadAttr(BASE_PATH_ATTR);
+		var body = document.getElementsByTagName('body')[0];
+		var base = document.getElementsByTagName('base')[0];
+		if (body && base) {
+			// base is already processed at this point, need to manually handle
+			// conversion of relative URLs to absolute paths
+			//updateUrls = true;
+			var bp = preLoadAttr('href', null, base);
+			if (bp && basePath && bp.toLowerCase() != basePath.toLowerCase()) {
+				updateUrls = true;
+				log('Unable to update base href "' + bp + '" with "' + basePath
+						+ '" URLs context will be updated via JQuery', 2);
+			} else if (!basePath) {
+				basePath = bp;
+			}
+		} else if (base && basePath) {
+			// update the href on the base to point to the script defined path
+			preLoadAttr('href', null, base, basePath);
+		} else {
+			// write the base href
+			basePath = basePath ? basePath : base ? preLoadAttr('href', null,
+					base) : null;
+			if (basePath) {
+				document.write('<base href="' + basePath + '" />');
+			}
+		}
+		if (!basePath) {
+			updateUrls = false;
+			throw new Error('Unable to capture a context path from '
+					+ BASE_PATH_ATTR + ' or a base tags href');
+		}
+		// initialize
+		if (!jq) {
+			loadJQuery();
+		} else {
+			init(null);
+		}
+	}
+
+	/**
+	 * Loads JQuery using a value set with the {JQUERY_URL_ATTR} attribute or
+	 * {JQUERY_DEFAULT_URL} when the {JQUERY_URL_ATTR} attribute is not defined
+	 */
+	function loadJQuery() {
+		var su = preLoadAttr(JQUERY_URL_ATTR, JQUERY_DEFAULT_URL);
 		var s = document.createElement('script');
 		s.src = urlAdjust(su);
 		s.type = 'text/javascript';
@@ -2365,9 +2441,8 @@
 		};
 		s.src = su;
 		document.getElementsByTagName('head')[0].appendChild(s);
-	} else {
-		$(function() {
-			init(null);
-		});
 	}
+	
+	// start thymus.js
+	preInit();
 })();
