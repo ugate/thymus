@@ -55,7 +55,7 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>event siphon</b> parameter
+						The <b>DOM routing node</b>'s <b>event siphon</b> parameter
 						indicates one or more <a
 							href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM events</a>
 						separated by &quot;<b>::</b>&quot;. Each of which will trigger a
@@ -84,7 +84,7 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>parameter siphon</b> is one
+						The <b>DOM routing node</b>'s <b>parameter siphon</b> is one
 						or more <a href="http://api.jquery.com/category/selectors/">JQuery
 							selectors</a> that correspond to one or more <b>event siphon</b>
 						events separated by &quot;<b>::</b>&quot;. Each of which will
@@ -104,7 +104,7 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>path</b> that correspond to
+						The <b>DOM routing node</b>'s <b>path</b> that correspond to
 						one or more <b>event siphon</b>s separated by &quot;<b>::</b>&quot;.
 						Each of which should point to the location where the fragment will
 						be captured (e.g. <i>path/to/my/frag</i>). See the <a
@@ -123,7 +123,7 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>result siphon</b> is
+						The <b>DOM routing node</b>'s <b>result siphon</b> is
 						typically one or more <a
 							href="http://api.jquery.com/category/selectors/">JQuery
 							selectors</a>, but can also be a <a href="#fragshandler"><code>function</code>
@@ -154,14 +154,14 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>destination siphon</b> is
+						The <b>DOM routing node</b>'s <b>destination siphon</b> is
 						one or more <a href="http://api.jquery.com/category/selectors/">JQuery
 							selectors</a> that correspond to one or more <b>event siphon</b>s
 						separated by &quot;<b>::</b>&quot;. Each <b>destination siphon</b>
 						value will be used to define destination nodes within the DOM
 						where the <b>result siphon</b>ed fragment results will be placed.
 						How fragment results are placed within the destination is
-						determined by the <b>DOM type</b>. See the <a
+						determined by the <b>type siphon</b>. See the <a
 							href="#otherfragtargets">fragment siphons section</a> for more
 						details on how <b>destination siphon</b>s use JQuery selectors.
 					</div>
@@ -169,50 +169,91 @@
 				<div id="domdestinationtype" class="row row-thymus">
 					<div class="col-md-3">
 						<div>
-							<span class="label label-info">DOM type</span> &dagger;
+							<span class="label label-info">type siphon</span> &dagger;
 						</div>
 						<div>
 							<code>data-thx-*VERB*-type</code>
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>DOM type</b> designates how
-						a fragment result will be placed within the DOM. Each <b>DOM
+						The <b>DOM routing node</b>'s <b>type siphon</b> designates how a
+						fragment result will be placed within the DOM. Each <b>DOM
 							type</b> can define one or more of the values below (separated by
 						&quot;<b>::</b>&quot;). Each of which corresponds to one or more <b>event
-							siphon</b> events. Valid values are:
+							siphon</b> events. See the <a href="#otherfragtargets">fragment
+							siphons section</a> for more details on how <b>type siphon</b>s
+						use JQuery selectors. Valid values are:
 						<ul>
-							<li><span class="badge">include</span> - will append the
-								fragment result within the <b>destination siphon</b>. When there
-								is no <b>destination siphon</b> defined the fragment result will
-								be appended to the node where the <b>DOM routing attribute</b>
-								is defined (<i>model</i> fragment results will cause the last
-								existing destination content to be cloned, populated with the <i>model</i>
-								data and appended to the destination)</li>
-							<li><span class="badge">replace</span> - will replace the <b>destination
+							<li><span class="badge">async|include</span> (default) or <span
+								class="badge">sync|include</span> - will append the fragment
+								result within the <b>destination siphon</b>. When there is no <b>destination
+									siphon</b> defined the fragment result will be appended to the node
+								where the <b>DOM routing attribute</b> is defined (<i>model</i>
+								fragment results will cause the last existing destination
+								content to be cloned, populated with the <i>model</i> data and
+								appended to the destination)</li>
+							<li><span class="badge">async|replace</span> or <span
+								class="badge">sync|replace</span> - will replace the <b>destination
 									siphon</b> with the fragment result. When there is no <b>destination
 									siphon</b> defined the node where the <b>DOM routing attribute</b>
-								is defined will be replaced with the fragment result (<i>model</i>
+								is defined will be replaced with the fragment results (<i>model</i>
 								fragments will only replace the data and is synonymous to an
 								update)</li>
-							<li><span class="badge">update</span> - will first remove
-								any pre-existing <b>destination siphon</b>s before appending the
+							<li><span class="badge">async|update</span> or <span
+								class="badge">sync|update</span> - will first remove any
+								pre-existing <b>destination siphon</b>s before appending the
 								fragment result. When there is no <b>destination siphon</b>
 								defined any content within the node where the <b>DOM routing
 									attribute</b> is defined will be removed and replaced with the
 								fragment results (<i>model</i> fragments will only overwrite the
 								data and is synonymous to a replace)</li>
-							<li><span class="badge">_blank</span>, <span class="badge">_parent</span>,
-								<span class="badge">_self</span>, <span class="badge">_top</span>
-								or <span class="badge">frame name</span> - will perform a
-								synchronous page transfer using <code>window.open</code> for
+							<li><span class="badge">async|attribute name</span> or <span
+								class="badge">sync|attribute name</span> - will add/replace the
+								specified attribute value on the fragment destination with the
+								fragment results</li>
+							<li><span class="badge">sync|transfer</span> - will perform
+								a synchronous page transfer using <code>window.open</code> for
 								HTTP get calls or a dynamic form submission for all other <a
 								href="#supportedhttpverbs">supported HTTP verbs</a>. Types of
 								this nature will only use the <b>path siphon</b> and <b>parameter
-									siphon</b> (which is optional). Window options and replace history
-								option (same window only) can be passed by appending a semicolon
-								delimited window target, window options and replace history
-								option (e.g. <code>_blank;toolbar=no,width=190,height=190;true</code>)</li>
+									siphon</b> (which is optional).</li>
+						</ul>
+					</div>
+				</div>
+				<div id="domdestinationtype" class="row row-thymus">
+					<div class="col-md-3">
+						<div>
+							<span class="label label-info">target siphon</span> &dagger;
+						</div>
+						<div>
+							<code>data-thx-*VERB*-target</code>
+						</div>
+					</div>
+					<div class="col-md-9">
+						The <b>DOM routing node</b>'s <b>target siphon</b> designates the
+						window/frame to use for DOM interaction. Each <b>target siphon</b>
+						can define one or more of the values below (separated by &quot;<b>::</b>&quot;).
+						Each of which corresponds to one or more <b>event siphon</b>
+						events. Within each event relative target window options and
+						replace history option (same window only) can be passed by
+						appending a &quot;<b>|</b>&quot; delimited window options and
+						replace history option to the target- when applicable (e.g.
+						<code>_blank|toolbar=no,width=190,height=190|true</code>
+						). See the <a href="#otherfragtargets">fragment siphons
+							section</a> for more details on how <b>target siphon</b>s use JQuery
+						selectors. Valid values are:
+						<ul>
+							<li><span class="badge">_self</span> (default) - will target
+								the current window</li>
+							<li><span class="badge">_blank</span> - will target a new
+								window</li>
+							<li><span class="badge">_parent</span> - will target the
+								parent window or the current window when there is no parent</li>
+							<li><span class="badge">_top</span> - will target the
+								top-level window that does not have a parent or the current
+								window when there is no parent</li>
+							<li><span class="badge">window name</span> - the
+								window/frame name that will be targeted</li>
 						</ul>
 					</div>
 				</div>
@@ -302,11 +343,13 @@
 				declared that will define the event(s) that will trigger the call.
 				Secondly, a <b>path siphon</b> needs to be defined to give direction
 				to the process. The final attribute that will need to be defined is
-				a synchronous <b>DOM type</b> that will determine the target of the
-				transfer. Also, an optional <b>parameter siphon</b> attribute can be
-				used if there are any parameters that need to be passed. Here's an
-				example that illustrates a full page update that dynamically <i>siphons</i>
-				the passed parameters using JQuery (see <a href="#otherfragtargets">siphon
+				a synchronous <b>type siphon</b> that will specify that a full-page
+				transfer will be performed. There is no <b>target siphon</b> so the
+				operation will occur in the current window/frame. Also, an optional
+				<b>parameter siphon</b> attribute can be used if there are any
+				parameters that need to be passed. Here's an example that
+				illustrates a full page update that dynamically <i>siphons</i> the
+				passed parameters using JQuery (see <a href="#otherfragtargets">siphon
 					resolver</a>s for more details on how to construct <b>path siphon</b>s):
 			</p>
 			<h4>Full page navigation/update example:</h4>
@@ -319,7 +362,7 @@
 						<div class="list-group-item">
 							<button type="button" class="btn btn-primary"
 								data-thx-get="click" data-thx-get-path="?{#globalLoginPath}"
-								data-thx-get-type="_self"
+								data-thx-get-type="sync|transfer"
 								data-thx-get-params=".simple-nav-params :input">Goto Sign In</button>
 							<input id="globalLoginPath" type="hidden" value="login" />
 							<div class="simple-nav-params">
@@ -370,7 +413,7 @@
 						<div class="list-group-item thymus-demo">
 <div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;?{#globalLoginPath}&quot;</span>
-	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;_self&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;sync|transfer&quot;</span>
 	<span style="color: #FF0000">data-thx-get-params=</span><span style="color: #0000FF">&quot;.simple-nav-params :input&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	Goto Sign In<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;globalLoginPath&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;hidden&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;login&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
@@ -516,7 +559,7 @@
 							<button type="button" class="btn btn-primary"
 								data-thx-get="click" data-thx-get-path="frags/user/user1"
 								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-								data-thx-get-type="replace">Replace User View</button>
+								data-thx-get-type="sync|replace">Replace User View</button>
 						</div>
 					</div>
 				</div>
@@ -529,7 +572,7 @@
 <div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
-	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;replace&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Replace User View<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;sync|replace&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Replace User View<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
 						</div>
 					</div>
@@ -648,7 +691,7 @@
 								data-thx-get="load :: change"
 								data-thx-get-path="frags/user/?{#demoDomUpdateSel}"
 								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-								data-thx-get-type="update" data-thx-get-dest="#userDest3">
+								data-thx-get-type="async|update" data-thx-get-dest="#userDest3">
 								<option value="user1">John Doe</option>
 								<option value="user2">Jane Wayne</option>
 								<option value="user3">Richard Roe</option>
@@ -673,7 +716,7 @@
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;load :: change&quot;</span>
 	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/?{#demoDomUpdateSel}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
-	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;update&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;async|update&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>John Doe<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Jane Wayne<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Richard Roe<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
@@ -802,22 +845,17 @@
 							<div class="btn-group" id="userDest2Grp"
 								data-thx-get-path="frags/user/${userKey}"
 								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-								data-thx-get-dest="#userDestAgent" data-thx-get-type="update">
-								<button type="button" class="btn btn-primary active" 
-									data-thx-get="load :: click" 
-									data-thx-get-agent="#userDest2Grp"
-									data-thx-get-with="userKey=user1">Include
-									User1</button>
+								data-thx-get-dest="#userDestAgent"
+								data-thx-get-type="async|update">
+								<button type="button" class="btn btn-primary active"
+									data-thx-get="load :: click" data-thx-get-agent="#userDest2Grp"
+									data-thx-get-with="userKey=user1">Include User1</button>
 								<button type="button" class="btn btn-primary"
-									data-thx-get="click" 
-									data-thx-get-agent="#userDest2Grp"
-									data-thx-get-with="userKey=user2">Include
-									User2</button>
+									data-thx-get="click" data-thx-get-agent="#userDest2Grp"
+									data-thx-get-with="userKey=user2">Include User2</button>
 								<button type="button" class="btn btn-primary"
-									data-thx-get="click" 
-									data-thx-get-agent="#userDest2Grp"
-									data-thx-get-with="userKey=user3">Include
-									User3</button>
+									data-thx-get="click" data-thx-get-agent="#userDest2Grp"
+									data-thx-get-with="userKey=user3">Include User3</button>
 							</div>
 						</div>
 						<div class="list-group-item">
@@ -837,7 +875,8 @@
 <div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn-group&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest2Grp&quot;</span>
 	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/${userKey}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
-	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDestAgent&quot;</span> <span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;update&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDestAgent&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;async|update&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary active&quot;</span> 
 		<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;load :: click&quot;</span> 
 		<span style="color: #FF0000">data-thx-get-agent=</span><span style="color: #0000FF">&quot;#userDest2Grp&quot;</span>
@@ -871,7 +910,7 @@
 				<code>data-thx-separator</code>
 				attribute on the <b>thymus.js</b> script definition or <a
 					href="#fragsoptsprog">programmatically by passing the
-					appropriate option parameter</a>). It also infers the <b>DOM type</b>
+					appropriate option parameter</a>). It also infers the <b>type siphon</b>
 				based upon the short-hand attribute used. The short-handed version
 				can be used as either a replacement or inclusion anywhere a
 				<code>data-thx-replace</code>

@@ -15,6 +15,8 @@
  */// ============================================
 (function() {
 	this.NS = this.displayName = 'thymus';
+	this.DFLT_PATH_SEP = '/';
+	this.DFLT_ABS_PATH_REGEX = /^\/|(\/[^\/]*|[^\/]+)$/g;
 	this.JQUERY_URL_ATTR = 'data-thx-jquery-url';
 	this.JQUERY_DEFAULT_URL = 'http://code.jquery.com/jquery.min.js';
 	this.FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
@@ -25,16 +27,20 @@
 	this.DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest', VARS_ATTR_TYPE ];
 	this.DOM_ATTR_AGENT = 'agent';
 	this.HTTP_METHODS = [ 'GET', 'POST', 'DELETE', 'PUT' ];
-	this.URL_ATTR = 'attribute';
-	this.TATTR = 'attr=';
+	this.ASYNC = 'async';
+	this.SYNC = 'sync';
+	this.URL_ATTR = 'urlattr';
+	this.TTRAN = 'transfer';
+	this.TATTR = 'attribute';
 	this.TINC = 'include';
 	this.TREP = 'replace';
 	this.TUPD = 'update';
-	this.TYPES_ASYNC = [ this.URL_ATTR, this.TATTR, this.TINC, this.TREP,
-			this.TUPD ];
+	this.TYPES_PPU = [ URL_ATTR, TATTR, TINC, TREP, TUPD ];
+	this.TDFLT = TINC;
 	this.eventFuncs = {};
 	this.eventFuncCnt = 0;
 	this.ieVersion = 0;
+	this.ieVersionCompliant = 9;
 	this.jq = window.jQuery;
 	this.basePath = null;
 	this.updateUrls = false;
@@ -179,15 +185,57 @@
 	 * @param s
 	 *            the string that will contain the name of the navigation and
 	 *            the options
-	 * @param sep
+	 * @param tsep
+	 *            the separator to extract the type of navigation
+	 * @param osep
 	 *            the separator to extract the name from the options
 	 */
-	function NavOptions(s, sep) {
-		this.name = s ? splitWithTrim(s, sep) : [ '_blank' ];
-		this.options = this.name.length > 1 ? this.name[1] : undefined;
-		this.history = this.name.length > 2 ? this.name[2] : undefined;
-		this.name = this.name[0].toLowerCase();
-		this.isFullPageSync = s && this.name && $.inArray(this.name, TYPES_ASYNC) < 0;
+	function NavOptions(type, typeSep, target, targetSep) {
+		var win = null, rcnt = 0;
+		var ptype = type ? splitWithTrim(type, typeSep) : [ ASYNC ];
+		this.isAsync = ptype[0].toLowerCase() == SYNC ? false : true;
+		var forceType = ptype.length > 1;
+		ptype = forceType ? ptype[1].toLowerCase() : TDFLT;
+		this.target = target ? splitWithTrim(target, targetSep) : [ '_self' ];
+		this.options = this.target.length > 1 ? this.target[1] : undefined;
+		this.history = this.target.length > 2 ? this.target[2] : undefined;
+		this.target = this.target[0].toLowerCase();
+		this.reuseMax = 1;
+		this.reuse = function() {
+			return rcnt < this.reuseMax ? ++rcnt : 0;
+		};
+		this.isFullPageSync = function() {
+			return !this.isAsync && ptype == TTRAN;
+		};
+		this.type = function(nt) {
+			if (!forceType && nt) {
+				ptype = nt;
+			}
+			return ptype;
+		};
+		this.getWin = function(loc) {
+			if (loc) {
+				return window
+						.open(loc, this.target, this.options, this.history);
+			}
+			if (!win && this.type == '_blank') {
+				win = window.open('about:blank', this.target, this.options,
+						this.history);
+				win.document.write('<html><body></body></html>');
+			} else if (!win) {
+				win = this.target != '_self' ? window[this.target.charAt(0) == '_' ? this.target
+						.substring(1)
+						: this.target]
+						: window;
+			}
+			return win;
+		};
+		this.toString = function() {
+			return this.constructor.name + ' -> type: ' + this.type()
+					+ ', forceType: ' + forceType + ', target: ' + this.target
+					+ ', options: ' + this.options + ', history: '
+					+ this.history;
+		};
 	}
 
 	/**
@@ -203,7 +251,7 @@
 	function log(m, l) {
 		if (m && typeof window.console !== 'undefined'
 				&& typeof window.console.log !== 'undefined') {
-			var nm = ieVersion <= 0 || ieVersion > 9 ? m
+			var nm = ieVersion <= 0 || ieVersion > ieVersionCompliant ? m
 					: typeof m.toFormattedString === 'function' ? m
 							.toFormattedString() : m;
 			if (l == 1 && window.console.error) {
@@ -280,6 +328,102 @@
 		if (i >= 0) {
 			location.href = location.href.substring(i);
 		}
+	}
+
+	/**
+	 * Converts a relative path to an absolute path
+	 * 
+	 * @param relPath
+	 *            the relative path to convert
+	 * @param absPath
+	 *            the absolute path to do the conversion from
+	 * @param rxAbsPath
+	 *            the regular expression that will be used to replace the
+	 *            absolute path with
+	 * @param pathSep
+	 *            the path separator to use during conversion
+	 * @param bypassFunc
+	 *            a function that will return a path when absolute path
+	 *            resolution needs to be bypassed (returns <code>null</code>
+	 *            to resolve)
+	 * @returns the absolute path version of the relative path in relation to
+	 *          the provided absolute path (or just the supplied relative path
+	 *          when it's really an absolute path)
+	 */
+	function absolutePath(relPath, absPath, rxAbsPath, pathSep, bypassFunc) {
+		var absStack, relStack, i, d;
+		relPath = relPath || '';
+		if (typeof bypassFunc === 'function') {
+			var vp = bypassFunc(relPath);
+			if (vp) {
+				return vp;
+			}
+		}
+		absPath = absPath ? absPath.replace(rxAbsPath, '') : '';
+		absStack = absPath ? absPath.split(pathSep) : [];
+		relStack = relPath.split(pathSep);
+		for (i = 0; i < relStack.length; i++) {
+			d = relStack[i];
+			if (d == '.') {
+				continue;
+			}
+			if (d == '..') {
+				if (absStack.length) {
+					absStack.pop();
+				}
+			} else {
+				absStack.push(d);
+			}
+		}
+		return absStack.join(pathSep);
+	}
+
+	/**
+	 * Gets the context path used to resolve paths to fragments and URLs within
+	 * href/src/etc. attributes contained in fragments
+	 * 
+	 * @param rxAbsPath
+	 *            the regular expression that will be used to replace the
+	 *            absolute path with
+	 * @param pathSep
+	 *            the path separator to use during conversion
+	 * @param bypassFunc
+	 *            a function that will return a path when absolute path
+	 *            resolution needs to be bypassed (returns <code>null</code>
+	 *            to resolve)
+	 * @returns the application context path
+	 */
+	function getAppCtxPath(rxAbsPath, pathSep, bypassFunc) {
+		var c = basePath;
+		if (!c) {
+			c = pathSep;
+		}
+		// capture the absolute URL relative to the defined context path
+		// attribute value
+		c = absolutePath(c, window.location.href, rxAbsPath, pathSep,
+				bypassFunc);
+		c += c.lastIndexOf(pathSep) != c.length - 1 ? pathSep : '';
+		return c;
+	}
+
+	/**
+	 * Converts a relative path into an absolute path
+	 * 
+	 * @param relPath
+	 *            the relative path
+	 * @param rxAbsPath
+	 *            the regular expression that will be used to replace the
+	 *            absolute path with
+	 * @param pathSep
+	 *            the path separator to use during conversion
+	 * @param bypassFunc
+	 *            a function that will return a path when absolute path
+	 *            resolution needs to be bypassed (returns <code>null</code>
+	 *            to resolve)
+	 */
+	function getAppCtxRelPath(relPath, rxAbsPath, pathSep, bypassFunc) {
+		return absolutePath(relPath, getAppCtxPath(rxAbsPath, pathSep),
+				rxAbsPath, pathSep, bypassFunc);
 	}
 
 	/**
@@ -551,24 +695,33 @@
 				return x.length > 1 ? '[' + x.substring(0, x.length - 2) + ']' : '';
 			}
 			this.run = function(thisArg, nam) {
+				var rr = {
+					result : '',
+					errorMessage : '',
+					errorCause : ''
+				};
 				if (this.isValid) {
 					try {
 						if (nam && a) {
 							this.setArgs(nam);
 						}
 						if ($.isArray(a) && a.length > 0) {
-							return f.apply(thisArg, a);
+							rr.result = f.apply(thisArg, a);
 						} else if (a) {
-							return f.call(thisArg, a);
+							rr.result = f.call(thisArg, a);
 						} else {
-							return f.call(thisArg);
+							rr.result = f.call(thisArg);
 						}
 					} catch (e) {
-						log('Error while calling ' + fs + ' ' + amts(am)
-								+ ': ' + e, 1);
+						rr.errorMessage = 'Error while calling ' + fs + ' '
+								+ amts(am) + ': ' + e;
+						rr.errorCause = e;
 					}
 				}
-				return;
+				return rr;
+			};
+			this.getFuncString = function() {
+				return this.isValid ? f.toString() : '';
 			};
 		} catch (e) {
 			log('Error in ' + fs + ' ' + amts(am) + ': ' + e, 1);
@@ -615,13 +768,13 @@
 				+ getThxSel(domAttrs, 'load', '*');
 		var urlAttrs = genAttrQueries(opts.urlAttrs, 'GET', URL_ATTR,
 				opts.regexAttrRelUrlSuffix);
-		var getAttrs = genAttrQueries(opts.getAttrs, 'GET', TINC,
+		var getAttrs = genAttrQueries(opts.getAttrs, 'GET', TDFLT,
 				opts.regexAttrAnyUrlSuffix);
-		var postAttrs = genAttrQueries(opts.postAttrs, 'POST', TINC,
+		var postAttrs = genAttrQueries(opts.postAttrs, 'POST', TDFLT,
 				opts.regexAttrAnyUrlSuffix);
-		var putAttrs = genAttrQueries(opts.putAttrs, 'PUT', TINC,
+		var putAttrs = genAttrQueries(opts.putAttrs, 'PUT', TDFLT,
 				opts.regexAttrAnyUrlSuffix);
-		var deleteAttrs = genAttrQueries(opts.deleteAttrs, 'DELETE', TINC,
+		var deleteAttrs = genAttrQueries(opts.deleteAttrs, 'DELETE', TDFLT,
 				opts.regexAttrAnyUrlSuffix);
 
 		/**
@@ -645,17 +798,18 @@
 				// directly invoke action as a function
 				hf.f(p, c);
 			} else if (a.action === opts.actionLoadFrags) {
-				loadFragments(p, fragSelector, false, null);
+				loadFragments(p, fragSelector, null, null);
 			} else if (a.action === opts.actionNavInvoke) {
 				if (!a.pathSiphon) {
 					log('No path specified for ' + a.action, 1);
 					return;
 				}
 				a.method = a.method ? a.method : 'GET';
-				var no = new NavOptions(a.typeSiphon, opts.winOpenOptsSep);
-				if (!no.isFullPageSync) {
+				var no = new NavOptions(a.typeSiphon, opts.typeSep,
+						a.targetSiphon, opts.targetSep);
+				if (!no.isFullPageSync()) {
 					// partial page update
-					loadFragments(c ? c : p, a, true, null);
+					loadFragments(c ? c : p, a, no, null);
 				} else {
 					// full page transfer
 					var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), a);
@@ -664,7 +818,7 @@
 					f.nav(no);
 				}
 			} else if (a.action === opts.actionNavRegister) {
-				// convert URLs and register event driven navigation
+				// convert URLs (if needed) and register event driven templating
 				var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), {});
 				var f = new Frag(null, t.scope, t.scope, t);
 				htmlDomAdjust(t, f, t.scope, true);
@@ -699,12 +853,13 @@
 			var so = {
 				selector : s ? s : '',
 				method : m ? m : opts.ajaxTypeDefault,
-				typeSiphon : '',
 				eventSiphon : evt,
 				paramsSiphon : '',
 				pathSiphon : '',
 				resultSiphon : '',
 				destSiphon : '',
+				typeSiphon : '',
+				targetSiphon : '',
 				agentSiphon : '',
 				withSiphon : '',
 				funcName : '',
@@ -939,13 +1094,13 @@
 			if (a.type === URL_ATTR) {
 				if (el) {
 					if (!script.is(el)) {
-						el.attr(a.items[ai].name, absolutePath(el
+						el.attr(a.items[ai].name, absoluteUrl(el
 								.attr(a.items[ai].name), t.ctxPath));
 					}
 					return '';
 				} else {
 					return ' ' + a.items[ai].name + '="'
-							+ absolutePath(v, t.ctxPath) + '"';
+							+ absoluteUrl(v, t.ctxPath) + '"';
 				}
 			}
 			var evts = splitWithTrim(v, opts.multiSep);
@@ -969,7 +1124,7 @@
 									// event since its registration- thus we
 									// need to trigger a removal of the event
 									// listener by returning true
-									return true; 
+									return true;
 								}
 								r.selector = ib;
 								ctx.exec(r, pel, ib);
@@ -1071,42 +1226,6 @@
 			updateNavAttrs(t, f, postAttrs, s);
 			updateNavAttrs(t, f, putAttrs, s);
 			updateNavAttrs(t, f, deleteAttrs, s);
-		}
-
-		/**
-		 * Converts a relative path to an absolute path
-		 * 
-		 * @param relPath
-		 *            the relative path to convert
-		 * @param absPath
-		 *            the absolute path to do the conversion from
-		 * @returns the absolute path version of the relative path in relation to
-		 *          the provided absolute path (or just the supplied relative path
-		 *          when it's really an absolute path)
-		 */
-		function absolutePath(relPath, absPath) {
-			var absStack, relStack, i, d;
-			relPath = relPath || '';
-			if (opts.regexIanaProtocol.test(relPath)) {
-				return urlAdjust(relPath, protocolForFile);
-			}
-			absPath = absPath ? absPath.replace(opts.regexAbsPath, '') : '';
-			absStack = absPath ? absPath.split(opts.pathSep) : [];
-			relStack = relPath.split(opts.pathSep);
-			for (i = 0; i < relStack.length; i++) {
-				d = relStack[i];
-				if (d == '.') {
-					continue;
-				}
-				if (d == '..') {
-					if (absStack.length) {
-						absStack.pop();
-					}
-				} else {
-					absStack.push(d);
-				}
-			}
-			return absStack.join(opts.pathSep);
 		}
 
 		/**
@@ -1226,7 +1345,7 @@
 			};
 			this.getFuncOrResultSiphon = function() {
 				return this.getFunc() && this.getFunc().isValid ? this
-						.getFunc().run : this.resultSiphon();
+						.getFunc().getFuncString() : this.resultSiphon();
 			};
 			// retrieves the JQuery selector for capturing a fragments content
 			this.getSel = function(el, rsn) {
@@ -1289,24 +1408,36 @@
 					p += x;
 				}
 			}
-			p = absolutePath(p, c);
+			p = absoluteUrl(p, c);
 			return p;
 		}
 
 		/**
-		 * Gets the context path used to resolve paths to fragments and URLs within
-		 * href/src/etc. attributes contained in fragments
+		 * Converts a relative URL to an absolute URL
+		 * 
+		 * @param relPath
+		 *            the relative path to convert
+		 * @param absPath
+		 *            the absolute path to do the conversion from
+		 * @returns the absolute path version of the relative path in relation to
+		 *          the provided absolute path (or just the supplied relative path
+		 *          when it's really an absolute path)
 		 */
-		function getScriptCtxPath() {
-			var c = basePath;
-			if (!c) {
-				c = opts.pathSep;
-			}
-			// capture the absolute URL relative to the defined context path attribute
-			// value
-			c = absolutePath(c, window.location.href);
-			c += c.lastIndexOf(opts.pathSep) != c.length - 1 ? opts.pathSep : '';
-			return c;
+		function absoluteUrl(relPath, absPath) {
+			return absolutePath(relPath, absPath, opts.regexAbsPath,
+					opts.pathSep, bypassPath);
+		}
+
+		/**
+		 * Bypasses a path when the path is determined to be an IANA protocol
+		 * 
+		 * @param p
+		 *            the path to check for bypass
+		 * @returns the bypass path (or null when no bypass is needed)
+		 */
+		function bypassPath(p) {
+			return opts.regexIanaProtocol.test(p) ? urlAdjust(p,
+					protocolForFile) : null;
 		}
 
 		/**
@@ -1351,7 +1482,8 @@
 						try {
 							var f = new Func(opts, fs, evt);
 							if (f.isValid) {
-								if (f.run(el) == false) {
+								var rr = f.run(el);
+								if (rr.result == false) {
 									evt.preventDefault();
 									evt.stopPropagation();
 								}
@@ -1421,15 +1553,17 @@
 		 *            true when the root frament selection is the actual
 		 *            template element
 		 */
-		function FragsTrack(s, siphon) {
+		function FragsTrack(s, siphon, navOpts) {
 			var start = new Date();
 			this.isTopLevel = isTopLevelEl(s);
-			this.ctxPath = getScriptCtxPath();
-			this.isScopeSelect = siphon && s.is(siphon.selector);
+			this.ctxPath = getAppCtxPath(opts.regexAbsPath, opts.pathSep,
+					bypassPath);
+			this.isSelfSelect = siphon && s.is(siphon.selector);
 			this.scope = s;
 			this.siphon = siphon ? siphon : {};
 			this.siphon.vars = this.siphon.vars ? this.siphon.vars : new Vars(
 					opts.regexVarNameVal, opts.regexVarSiphon);
+			this.navOpts = navOpts;
 			this.ccnt = 0;
 			this.cnt = 0;
 			this.len = 0;
@@ -1454,7 +1588,7 @@
 			var e = [];
 			this.addError = function(em, f, oc, hs, xhr) {
 				function newError(f) {
-					var e = new Error(em);
+					var e = new Error(em + (oc ? '. Cause: ' + oc.message : ''));
 					var o = {
 							cause : oc,
 							status : hs,
@@ -1501,43 +1635,35 @@
 			this.pf = pf;
 			this.pel = $pel;
 			this.el = $fl;
-			var a = null;
-			var loadSiphon = null;
 			var siphon = t.siphon;
+			var loadSiphon = null;
+			// "a" will represent the short-hand attrs
+			var a = null;
 			// scope select will identify if fragment details will come from the
 			// passed tracking siphon or extracted by fragment attributes
-			if (!t.isScopeSelect
+			if (!t.isSelfSelect
 					&& (loadSiphon = genSiphonObj(opts.ajaxTypeDefault, 'load',
 							null, siphon.selector, this.el, t.siphon.vars, true)).isValid) {
 				// DOM routing attribute for a load event will take presedence
 				// over short-hand include/replace/etc.
 				loadSiphon.vars = t.siphon.vars;
 				siphon = loadSiphon;
-			} else if (!t.isScopeSelect) {
+			} else if (!t.isSelfSelect) {
 				a = getFragAttr($fl, opts.includeAttrs);
 			} else {
 				a = null;
 			}
-			var forcett = siphon.typeSiphon;
-			this.dt = forcett ? siphon.typeSiphon : TATTR;
-			this.method = siphon.method ? siphon.method
-					: opts.ajaxTypeDefault;
-			this.getVars = function() {
-				return siphon.vars ? siphon.vars.get(this.method) : null;
-			};
-			this.ws = siphon.withSiphon;
-			if (siphon.vars && this.ws) {
-				// add user variables
-				siphon.vars.add(this.method, this.ws);
-			}
-			if (!a && !t.isScopeSelect) {
+			this.ajaxAsync = true;
+			this.navOpts = t.navOpts && t.navOpts.reuse() ? t.navOpts
+					: new NavOptions(siphon.typeSiphon, opts.typeSep,
+							siphon.targetSiphon, opts.targetSep);
+			if (!a && !t.isSelfSelect) {
 				a = getFragAttr($fl, opts.replaceAttrs);
-				if (!forcett) {
-					this.dt = TREP;
-				}
-			} else if (!forcett) {
-				this.dt = TINC;
+				this.navOpts.type(TREP);
+			} else {
+				this.navOpts.type(TINC);
 			}
+			// short-hand attrs may have path and result siphon
 			a = a ? a.split(opts.multiSep) : null;
 			this.event = siphon.eventSiphon;
 			var ps = siphon.paramsSiphon;
@@ -1555,6 +1681,16 @@
 				}
 				return dsp;
 			};
+			this.method = siphon.method ? siphon.method
+					: opts.ajaxTypeDefault;
+			this.getVars = function() {
+				return siphon.vars ? siphon.vars.get(this.method) : null;
+			};
+			this.ws = siphon.withSiphon;
+			if (siphon.vars && this.ws) {
+				// add user variables
+				siphon.vars.add(this.method, this.ws);
+			}
 			var rpp = null;
 			this.rp = function(rpn) {
 				rp = rpn ? rpn : rp;
@@ -1652,7 +1788,7 @@
 					}
 				} else {
 					var im = this.isModel(xhr);
-					if (this.dt === TREP) {
+					if (this.navOpts.type() === TREP) {
 						var $d = this.ds() ? $(this.ds()) : this.el;
 						try {
 							var $x = $(x);
@@ -1664,11 +1800,11 @@
 							$d.replaceWith(x);
 							this.src = $x;
 						}
-					} else if (this.dt === TINC || this.dt === TUPD) {
-						if (this.ds() || this.dt === TUPD) {
+					} else if (this.navOpts.type() === TINC || this.navOpts.type() === TUPD) {
+						if (this.ds() || this.navOpts.type() === TUPD) {
 							var $d = this.ds() ? $(this.ds()) : null;
 							if ($d) {
-								if (this.dt === TUPD) {
+								if (this.navOpts.type() === TUPD) {
 									// remove any existing fragments that may exist
 									// under the destination that match the fragment
 									// selection
@@ -1676,7 +1812,7 @@
 								}
 								$d.append(x);
 							} else {
-								if (this.dt === TUPD) {
+								if (this.navOpts.type() === TUPD) {
 									// remove any existing content that may exist
 									// under the element
 									this.el.contents().remove();
@@ -1696,7 +1832,7 @@
 				this.domDone(false);
 			};
 			this.nav = function(no) {
-				no = no ? no : new NavOptions(this.dt, opts.winOpenOptsSep);
+				no = no ? no : this.navOpts;
 				var vars = null;
 				if (this.method.toLowerCase() != 'get') {
 					// for performance we'll build input strings versus nodes
@@ -1711,26 +1847,16 @@
 								+ vars[i].value + '" />';
 					}
 					fd.append(ips);
-					var win = null;
-					if (no.name == '_blank') {
-						win = window.open('about:blank', no.name, no.options,
-								no.history);
-						win.document.write('<html><body></body></html>');
-					} else {
-						win = no.name != '_self' ? window[str.charAt(0) == '_' ? no.name
-								.substring(1)
-								: no.name]
-								: window;
-					}
-					win.$('body').append(fd);
+					no.getWin().$('body').append(fd);
 					fd.submit();
+					return no.getWin();
 				} else {
 					var loc = this.rp();
 					var vars = this.ps();
 					if (vars) {
 						loc += '?' + vars;
 					}
-					window.open(loc, no.name, no.options, no.history);
+					return no.getWin(loc);
 				}
 			};
 			this.isModel = function(xhr) {
@@ -1758,14 +1884,15 @@
 				return us;
 			};
 			this.toString = function() {
-				return this.constructor.name + ' -> type: ' + this.dt
-						+ ', HTTP method: ' + this.method
-						+ ', parameter siphon: ' + this.ps()
+				return this.constructor.name + ' -> ['
+						+ this.navOpts.toString() + '], HTTP method: '
+						+ this.method + ', parameter siphon: ' + this.ps()
 						+ ', path siphon: ' + this.rp() + ', result siphon: '
 						+ this.frs.getFuncOrResultSiphon()
 						+ ', destination siphon: ' + this.ds()
 						+ ', agent siphon' + this.as + ', cancelled: '
-						+ this.cancelled + ', error: ' + this.e;
+						+ this.cancelled + ', error: '
+						+ (this.e ? this.e.message : null);
 			};
 		}
 
@@ -1785,7 +1912,13 @@
 			o.httpMethod = f ? f.method : undefined;
 			o.fragCount = t.cnt;
 			o.fragCurrTotal = t.len;
-			o.fragPendingPeerCount = f && f.pf ? f.pf.ccnt(null) : 0;
+			o.fragPendingPeerCount = f && f.pf ? f.pf.ccnt() : 0;
+			o.fragWin = f ? f.navOpts.getWin() : undefined;
+			o.fragIsAsync = f ? f.navOpts.isAsync : undefined;
+			o.fragType = f ? f.navOpts.type() : undefined;
+			o.fragWinTarget = f ? f.navOpts.target : undefined;
+			o.fragWinOptions = f ? f.navOpts.options : undefined;
+			o.fragWinHistoryFlag = f ? f.navOpts.history : undefined;
 			o.routingStack = f ? f.getStack() : undefined;
 			o.sourceEvent = f ? f.event : undefined;
 			o.paramsSiphon = f ? f.ps() : undefined;
@@ -1862,51 +1995,54 @@
 		}
 
 		/**
-		 * Loads fragments (nested supported) into the page using a predefined HTML
-		 * attribute for fragment discovery. The attribute value should contain a URL
-		 * followed by a replacement/include value that will match a fragment result
-		 * attribute. For example:
+		 * Loads fragments (nested supported) into the page using a predefined
+		 * HTML attribute for fragment discovery. The attribute value should
+		 * contain a URL followed by a replacement/include value that will match
+		 * a fragment result attribute. For example:
 		 * 
 		 * <pre>
 		 * &lt;!-- source element --&gt;
-		 * &lt;div id="parent"&gt;
-		 * 	&lt;div th:fragments="path/to/frags :: fragContents"&gt;&lt;/div&gt;
+		 * &lt;div id=&quot;parent&quot;&gt;
+		 * 	&lt;div th:fragments=&quot;path/to/frags :: fragContents&quot;&gt;&lt;/div&gt;
 		 * &lt;/div&gt;
 		 * &lt;!-- fragment element --&gt;
-		 * &lt;div th:fragment="fragContents"&gt;Contents&lt;/div&gt;
+		 * &lt;div th:fragment=&quot;fragContents&quot;&gt;Contents&lt;/div&gt;
 		 * </pre>
 		 * 
 		 * Will result in:
 		 * 
 		 * <pre>
 		 * &lt;!-- when including --&gt;
-		 * &lt;div id="parent"&gt;
-		 * 	&lt;div th:fragments="path/to/frags :: fragContents"&gt;Contents&lt;/div&gt;
+		 * &lt;div id=&quot;parent&quot;&gt;
+		 * 	&lt;div th:fragments=&quot;path/to/frags :: fragContents&quot;&gt;Contents&lt;/div&gt;
 		 * &lt;/div&gt;
 		 * &lt;!-- when replacing --&gt;
-		 * &lt;div id="parent"&gt;
-		 * 	&lt;div th:fragment="fragContents"&gt;Contents&lt;/div&gt;
+		 * &lt;div id=&quot;parent&quot;&gt;
+		 * 	&lt;div th:fragment=&quot;fragContents&quot;&gt;Contents&lt;/div&gt;
 		 * &lt;/div&gt;
 		 * </pre>
 		 * 
 		 * @param scopeSel
-		 *            the selector to the root element where fragments will be looked for
+		 *            the selector to the root element where fragments will be
+		 *            looked for
 		 * @param siphon
-		 *            the siphon/selector to the templates that will be included/replaced
-		 * @param altDest
-		 *            true to attempt to extract an alternate destination from the template 
-		 *            attribute value (falls back on on self destination when not present)
+		 *            the siphon/selector to the templates that will be
+		 *            included/replaced
+		 * @param nav
+		 *            a {NavOptions} reference that will be used (otherwise, one will
+		 *            be created dynamically for each fragment encountered)
 		 * @param func
-		 *            the callback function that will be called when all fragments have
-		 *            been loaded (parameters: the original root element, the number of
-		 *            fragments processed and an array of error objects- if any)
+		 *            the callback function that will be called when all
+		 *            fragments have been loaded (parameters: the original root
+		 *            element, the number of fragments processed and an array of
+		 *            error objects- if any)
 		 */
-		function loadFragments(scopeSel, siphon, altDest, func) {
+		function loadFragments(scopeSel, siphon, nav, func) {
 			var $s = $(scopeSel);
 			var so = typeof siphon === 'object' ? siphon : {
 				selector : siphon
 			};
-			var t = new FragsTrack($s, so);
+			var t = new FragsTrack($s, so, nav);
 			function done(pf, t, f) {
 				if (t.cnt > t.len) {
 					t.addError('Expected ' + t.len
@@ -1929,19 +2065,29 @@
 			}
 			function hndlFunc(f, cb, r, status, xhr) {
 				if (f.frs.getFunc() && f.frs.getFunc().isValid) {
-					f.frs.getFunc().run({
+					var rr = f.frs.getFunc().run({
 						handle : {
-							type : f.dt,
+							type : f.navOpts.type(),
+							target : f.navOpts.target,
 							data : r,
 							status : status,
 							xhr : xhr,
 							fragSrc : addFragProps({}, t, f),
 							proceed : function(x) {
-								f.px(x);
+								try {
+									f.px(x);
+								} catch (e) {
+									t.addError('Error during handler proceed', f, e, 
+											status, xhr);
+								}
 							}
 						}
 					});
-					cb(null, f);
+					if (rr.errorMessage) {
+						t.addError(rr.errorMessage, f, rr.errorCause, status,
+								xhr);
+					}
+					cb(f.el, f);
 					return true;
 				}
 				return false;
@@ -2016,6 +2162,7 @@
 						var $h = $('head');
 						hr = htmlDataAdjust(t, f, hr);
 						var hf = new Frag(null, $s, $h, t);
+						// prevent script from auto loading
 						var scs = hr.match(opts.regexScriptTags);
 						if (scs) {
 							$.each(scs, function(i, sc) {
@@ -2089,7 +2236,9 @@
 							url: f.rp(),
 							type: f.method,
 							data: f.ps(),
-							cache: opts.ajaxCache
+							async: f.ajaxAsync,
+							cache: opts.ajaxCache,
+							crossDomain: opts.ajaxCrossDomain
 						}).done(adone).fail(function(xhr, ts, e) {
 							var tf = t.getFrags(f.rp());
 							for (var i = 0; i < tf.frags.length; i++) {
@@ -2141,7 +2290,7 @@
 			}
 			// recursivly process all the includes/replacements
 			function lfi($f, f) {
-				var $fs = t.isScopeSelect && $f.is(t.scope) ? $f : $f.find(so.selector);
+				var $fs = t.isSelfSelect && $f.is(t.scope) ? $f : $f.find(so.selector);
 				t.len += $fs.length;
 				$fs.each(function() {
 					lfc(f, $(this));
@@ -2172,17 +2321,17 @@
 		var defs = {
 			selfRef : 'this',
 			ajaxCache : false,
+			ajaxCrossDomain : false,
 			ajaxTypeDefault : 'GET',
-			crossDomain : false,
 			inheritRef : 'inherit',
-			pathSep : '/',
+			pathSep : DFLT_PATH_SEP,
 			paramSep : '&',
 			agentSelSep : ',',
 			resultSep : ',',
 			destSep : ',',
+			typeSep : '|',
+			targetSep : '|',
 			multiSep : '::',
-			winOpenOptsSep : ';',
-			fragExtensionAttr : 'data-thx-frag-extension',
 			fragAttrs : [ 'data-thx-fragment', 'th\\:fragment', 'data-th-fragment' ],
 			includeAttrs : [ 'data-thx-include', 'th\\:include', 'data-th-include' ],
 			replaceAttrs : [ 'data-thx-replace', 'th\\:replace', 'data-th-replace' ],
@@ -2198,10 +2347,6 @@
 			postPathAttrs : [ 'data-thx-post-path' ],
 			putPathAttrs : [ 'data-thx-put-path' ],
 			deletePathAttrs : [ 'data-thx-delete-path' ],
-			getTypeAttrs : [ 'data-thx-get-type' ],
-			postTypeAttrs : [ 'data-thx-post-type' ],
-			putTypeAttrs : [ 'data-thx-put-type' ],
-			deleteTypeAttrs : [ 'data-thx-delete-type' ],
 			getParamsAttrs : [ 'data-thx-get-params' ],
 			postParamsAttrs : [ 'data-thx-post-params' ],
 			putParamsAttrs : [ 'data-thx-put-params' ],
@@ -2214,6 +2359,14 @@
 			postDestAttrs : [ 'data-thx-post-dest' ],
 			putDestAttrs : [ 'data-thx-put-dest' ],
 			deleteDestAttrs : [ 'data-thx-delete-dest' ],
+			getTypeAttrs : [ 'data-thx-get-type' ],
+			postTypeAttrs : [ 'data-thx-post-type' ],
+			putTypeAttrs : [ 'data-thx-put-type' ],
+			deleteTypeAttrs : [ 'data-thx-delete-type' ],
+			getTargetAttrs : [ 'data-thx-get-target' ],
+			postTargetAttrs : [ 'data-thx-post-target' ],
+			putTargetAttrs : [ 'data-thx-put-target' ],
+			deleteTargetAttrs : [ 'data-thx-delete-target' ],
 			getAgentAttrs : [ 'data-thx-get-agent' ],
 			postAgentAttrs : [ 'data-thx-post-agent' ],
 			putAgentAttrs : [ 'data-thx-put-agent' ],
@@ -2222,6 +2375,7 @@
 			postWithAttrs : [ 'data-thx-post-with' ],
 			putWithAttrs : [ 'data-thx-put-with' ],
 			deleteWithAttrs : [ 'data-thx-delete-with' ],
+			fragExtensionAttr : 'data-thx-frag-extension',
 			fragListenerAttr : 'data-thx-onfrag',
 			fragsListenerAttr : 'data-thx-onfrags',
 			fragHeadAttr : 'data-thx-head-frag',
@@ -2233,7 +2387,7 @@
 			regexAttrAnyUrlSuffix : '\s*=\s*[\\"|\'](.*?)[\\"|\']',
 			regexIanaProtocol : /^(([a-z]+)?:|\/|#)/i,
 			regexFileTransForProtocolRelative : /^(file:?)/i,
-			regexAbsPath : /^\/|(\/[^\/]*|[^\/]+)$/g,
+			regexAbsPath : DFLT_ABS_PATH_REGEX,
 			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g,
 			regexFuncArgReplace : /['"]/g,
 			regexValTypeSiphon : /(^.*)(?:->)(?=([^.]*)$)/g,
@@ -2309,19 +2463,23 @@
 						.appendTo('head');
 			}
 			if (s) {
-				$.getScript(s).done(function(data, ts, jqxhr) {
-					cb(data, ts, jqxhr, null);
+				var su = getAppCtxRelPath(s, DFLT_ABS_PATH_REGEX, DFLT_PATH_SEP);
+				$.getScript(su).done(function(data, ts, jqxhr) {
+					cb(su, data, ts, jqxhr, null);
 				}).fail(function(jqxhr, ts, e) {
-					cb(data, ts, jqxhr, e);
+					cb(su, null, ts, jqxhr, e);
 				});
 			} else {
 				cb(null, null, null, null);
 			}
 		}
 		preloadResources(script.attr(FRAGS_PRE_LOAD_CSS_ATTR), script
-				.attr(FRAGS_PRE_LOAD_JS_ATTR), function (d, ts, jqxhr, e) {
+				.attr(FRAGS_PRE_LOAD_JS_ATTR), function (s, d, ts, jqxhr, e) {
 			if (e) {
-				throw e;
+				var ne = 'Unable to load "' + s + '" ' + e + ', status: ' + ts
+						+ ', data: ' + d;
+				log(ne, 1);
+				throw new Error(ne);
 			} else {
 				var $p = $('html');
 				if (!preLoadAttr(FRAGS_LOAD_DEFERRED_LOAD_ATTR)) {
@@ -2407,13 +2565,16 @@
 			basePath = basePath ? basePath : base ? preLoadAttr('href', null,
 					base) : null;
 			if (basePath) {
-				document.write('<base href="' + basePath + '" />');
+				document.write('<base href="' + urlAdjust(basePath) + '" />');
 			}
 		}
 		if (!basePath) {
 			updateUrls = false;
 			throw new Error('Unable to capture a context path from '
 					+ BASE_PATH_ATTR + ' or a base tags href');
+		} else if (ieVersion <= ieVersionCompliant) {
+			// some IE versions do not handle URLs from base properly
+			updateUrls = true;
 		}
 		// initialize
 		if (!jq) {

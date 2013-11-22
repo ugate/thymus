@@ -2,6 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:include="frags/head :: header">
 <meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 <!-- thymus.js script -->
 <script th:remove="all" src="js/thymus.js" id="thymus"
 	data-thx-base-path="." data-thx-frag-extension=".htm"
@@ -52,8 +53,9 @@
 						<button class="btn btn-primary btn-lg btn-block"
 							th:type="'submit'" th:onclick="'void(0)'" th:text="#{signin}"
 							data-thx-get="click" data-thx-get-path="index"
-							data-thx-get-params=".form-signin :input"
-							data-thx-get-type="_self" type="button">Sign in</button>
+							data-thx-get-params=".form-signin :input" 
+							data-thx-get-type="sync|transfer"
+							type="button">Sign in</button>
 					</div>
 				</div>
 			</div>
