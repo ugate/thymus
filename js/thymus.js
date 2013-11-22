@@ -1823,6 +1823,9 @@
 							this.el.append(x);
 						}
 						this.src = x;
+					} else {
+						var $d = this.ds() ? $(this.ds()) : this.el;
+						$d.attr(this.navOpts.type(), xIsJ ? $.trim(x.text()) : x);
 					}
 					// make post template DOM adjustments- no need for URL updates-
 					// they needed to be completed prior to placement in the DOM or

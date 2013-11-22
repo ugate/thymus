@@ -70,13 +70,6 @@
 				<b>path siphon</b>s; regardless of where the page that defines it
 				resides.
 			</p>
-			<h4 id="fragpathsub">Fragment Path Substitutions</h4>
-			<p>
-				When URLs are dependent upon user input static URLs will not
-				suffice. In this case a path substitution can be made using a JQuery
-				selector by <a href="#otherfragtargets">siphoning values from
-					other DOM elements</a>.
-			</p>
 			<h4 id="fileextensions">Fragment File Extensions</h4>
 			<p>
 				File extensions in <b>path siphon</b>s are optional (and sometimes
@@ -136,15 +129,16 @@
 </pre></div>
 			<h3 id="attrpaths">Attribute Path Resolution</h3>
 			<p>
-				As with <a href="#fragpath">Fragment Path Resolution</a>, relative
-				URLs within some standard URL related attributes are resolved to
-				their absolute URL counterparts relative to the root context of the
-				application as defined by the
-				<code>data-thx-context-path</code>
-				on the <b>thymus.js</b>
-				<code>script</code>
-				. Although automatically resolving URL related attributes is
-				configurable, by default, the following attributes are resolved:
+				Relative URLs within the standard URL related attributes are
+				resolved <b>automatically</b> by the browser using the
+				<code>href</code>
+				attribute set on the
+				<code>base</code>
+				tag (<a href="#getstarted">more details</a>). However, some versions
+				of Internet Explorer do not properly resolve relative URLs using the
+				<b>base</b> tag. In that case, <b>thymus.js</b> will handle the
+				following relative URLs that are found within the following
+				attributes:
 			</p>
 			<ul id="attrpathsdflt">
 				<li class="badge"><code>action</code></li>
@@ -166,52 +160,6 @@
 				<li class="badge"><code>src</code></li>
 				<li class="badge"><code>usemap</code></li>
 			</ul>
-			<p>
-				Any of the resolved attributes that contain URLs that begin with an
-				<a
-					href="http://en.wikipedia.org/wiki/URI_scheme#Official_IANA-registered_schemes">IANA
-					registered scheme</a> or begin with a <b>/</b> will <i>NOT</i> be
-				updated by <b>thymus.js</b>. When any of the resolved attributes
-				within a fragment begin with a <a
-					href="http://tools.ietf.org/html/rfc3986#section-4.2">protocol-relative
-					URL</a> (i.e. <b>//</b>) and the page is being called using a <a
-					href="http://en.wikipedia.org/wiki/File_URI_scheme">file URI
-					scheme</a> the URL will default to
-				<code>http:</code>
-				in order to preserve external URL integrity. Here are a few
-				examples:
-			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- a page at: http://example.com/my-app/login.htm --&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- with a data-thx-context-path=&quot;.&quot; that contains a fragment with a --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;a</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;index.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>...<span style="color: #000080; font-weight: bold">&lt;/a&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- will be result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;a</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;http://example.com/my-app/index.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/a&gt;</span>
-</pre></div>
-
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- a page at: http://example.com/my-app/user/info.htm --&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- with a data-thx-context-path=&quot;../&quot; that contains a fragment with a --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;a</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;index.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>...<span style="color: #000080; font-weight: bold">&lt;/a&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- will be result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;a</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;http://example.com/my-app/index.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/a&gt;</span>
-</pre></div>
-
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- a page at: http://example.com/my-app/index.htm --&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- with a data-thx-context-path=&quot;.&quot; that contains a fragment with a --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;a</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;user/info.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>...<span style="color: #000080; font-weight: bold">&lt;/a&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- will be result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;a</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;http://example.com/my-app/user/info.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/a&gt;</span>
-</pre></div>
-
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- a page at: file://example.com/my-app/index.htm (notice the file: scheme) --&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- with a data-thx-context-path=&quot;.&quot; that contains a fragment with a --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;link</span>
-	<span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;//code.jquery.com/ui/jquery-ui-git.css&quot;</span>
-	<span style="color: #FF0000">rel=</span><span style="color: #0000FF">&quot;stylesheet&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- will be result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;link</span>
-	<span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;http://code.jquery.com/ui/jquery-ui-git.css&quot;</span>
-	<span style="color: #FF0000">rel=</span><span style="color: #0000FF">&quot;stylesheet&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
-</pre></div>
 			<h3 id="otherfragtargets">Siphons</h3>
 			<p>
 				A <i>siphon</i> in a most practical sense is just one or more JQuery
@@ -238,12 +186,19 @@
 					JQuery selected node(s)
 				</li>
 			</ul>
+			<h4 id="fragpathsub">Fragment Path Substitutions</h4>
 			<p>
-				Lets consider a <b>path siphon</b> where more than one JQuery
-				selector can be used. In this case each JQuery selector and
-				corresponding extraction directive are wrapped within a
-				<b>siphon resolver</b> <code>?{}</code>
-				.
+				When URLs are dependent upon user input static URLs will not
+				suffice. In this case a path substitution can be made using one or
+				more <b>siphon resolver</b>. Lets consider a <b>path siphon</b>
+				where <b>siphon resolver</b>s can be used. Any <b>siphon
+					resolver</b> found result in a JQuery lookup. Values will be captured
+				from the queried nodes using the appropriate directive and replaced
+				within the <b>path siphon</b>. Each JQuery selector and
+				corresponding extraction directive should be wrapped within a <b>siphon
+					resolver</b>
+				<code>?{}</code>
+				to achieve this behavior.
 			</p>
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-post=</span><span style="color: #0000FF">&quot;click&quot;</span> 
 	<span style="color: #FF0000">data-thx-post-path=</span><span style="color: #0000FF">&quot;frags/first/?{#secondPath-&gt;text}/sixth&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Post Something<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>

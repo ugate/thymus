@@ -21,7 +21,7 @@
 		</div>
 	</div>
 	<div th:replace="frags/nav/nav :: topnav"></div>
-	<div class="container app-scroll">
+	<div class="container app-scroll" th:attr-data-content="README.md :: handleReadme()">
 		<div id="docs" class="app-scroll-nav">
 			<ul class="nav navbar-inverse">
 				<li><a th:title="#{about}"

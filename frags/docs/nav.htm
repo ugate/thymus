@@ -154,14 +154,14 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing node</b>'s <b>destination siphon</b> is
-						one or more <a href="http://api.jquery.com/category/selectors/">JQuery
+						The <b>DOM routing node</b>'s <b>destination siphon</b> is one or
+						more <a href="http://api.jquery.com/category/selectors/">JQuery
 							selectors</a> that correspond to one or more <b>event siphon</b>s
 						separated by &quot;<b>::</b>&quot;. Each <b>destination siphon</b>
 						value will be used to define destination nodes within the DOM
 						where the <b>result siphon</b>ed fragment results will be placed.
 						How fragment results are placed within the destination is
-						determined by the <b>type siphon</b>. See the <a
+						determined by the <b>destination type siphon</b>. See the <a
 							href="#otherfragtargets">fragment siphons section</a> for more
 						details on how <b>destination siphon</b>s use JQuery selectors.
 					</div>
@@ -169,20 +169,24 @@
 				<div id="domdestinationtype" class="row row-thymus">
 					<div class="col-md-3">
 						<div>
-							<span class="label label-info">type siphon</span> &dagger;
+							<span class="label label-info">destination type siphon</span>
+							&dagger;
 						</div>
 						<div>
 							<code>data-thx-*VERB*-type</code>
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing node</b>'s <b>type siphon</b> designates how a
-						fragment result will be placed within the DOM. Each <b>DOM
-							type</b> can define one or more of the values below (separated by
-						&quot;<b>::</b>&quot;). Each of which corresponds to one or more <b>event
-							siphon</b> events. See the <a href="#otherfragtargets">fragment
-							siphons section</a> for more details on how <b>type siphon</b>s
-						use JQuery selectors. Valid values are:
+						The <b>DOM routing node</b>'s <b>destination type siphon</b>
+						designates how a fragment result will be placed within the DOM.
+						Each
+						<b>DOM type</b> can define one or more of the values below
+						(separated by &quot;<b>::</b>&quot;). Each of which corresponds to
+						one or more
+						<b>event siphon</b> events. See the <a
+							href="#otherfragtargets">fragment siphons section</a> for more
+						details on how <b>destination
+							type siphon</b>s use JQuery selectors. Valid values are:
 						<ul>
 							<li><span class="badge">async|include</span> (default) or <span
 								class="badge">sync|include</span> - will append the fragment
@@ -207,10 +211,10 @@
 									attribute</b> is defined will be removed and replaced with the
 								fragment results (<i>model</i> fragments will only overwrite the
 								data and is synonymous to a replace)</li>
-							<li><span class="badge">async|attribute name</span> or <span
-								class="badge">sync|attribute name</span> - will add/replace the
-								specified attribute value on the fragment destination with the
-								fragment results</li>
+<!-- 							<li><span class="badge">async|attribute name</span> or <span -->
+<!-- 								class="badge">sync|attribute name</span> - will add/replace the -->
+<!-- 								specified attribute value on the fragment destination with the -->
+<!-- 								fragment results</li> -->
 							<li><span class="badge">sync|transfer</span> - will perform
 								a synchronous page transfer using <code>window.open</code> for
 								HTTP get calls or a dynamic form submission for all other <a
@@ -343,13 +347,13 @@
 				declared that will define the event(s) that will trigger the call.
 				Secondly, a <b>path siphon</b> needs to be defined to give direction
 				to the process. The final attribute that will need to be defined is
-				a synchronous <b>type siphon</b> that will specify that a full-page
-				transfer will be performed. There is no <b>target siphon</b> so the
-				operation will occur in the current window/frame. Also, an optional
-				<b>parameter siphon</b> attribute can be used if there are any
-				parameters that need to be passed. Here's an example that
-				illustrates a full page update that dynamically <i>siphons</i> the
-				passed parameters using JQuery (see <a href="#otherfragtargets">siphon
+				a synchronous <b>destination type siphon</b> that will specify that
+				a full-page transfer will be performed. There is no <b>target
+					siphon</b> so the operation will occur in the current window/frame.
+				Also, an optional <b>parameter siphon</b> attribute can be used if
+				there are any parameters that need to be passed. Here's an example
+				that illustrates a full page update that dynamically <i>siphons</i>
+				the passed parameters using JQuery (see <a href="#otherfragtargets">siphon
 					resolver</a>s for more details on how to construct <b>path siphon</b>s):
 			</p>
 			<h4>Full page navigation/update example:</h4>
@@ -903,16 +907,17 @@
 				A short-hand <b>routing attribute</b> can also be used which is
 				equivalent to a <b>DOM routing attribute</b> with a
 				<code>load</code>
-				<b>event siphon</b> and a separate <b>path siphon</b> attribute. Instead of
-				two attributes, the short-handed version combines the <b>path
+				<b>event siphon</b> and a separate <b>path siphon</b> attribute.
+				Instead of two attributes, the short-handed version combines the <b>path
 					siphon</b> and <b>result siphon</b> into one attribute separated by a "<b>::</b>"
 				(the separator can be overridden using the
 				<code>data-thx-separator</code>
 				attribute on the <b>thymus.js</b> script definition or <a
 					href="#fragsoptsprog">programmatically by passing the
-					appropriate option parameter</a>). It also infers the <b>type siphon</b>
-				based upon the short-hand attribute used. The short-handed version
-				can be used as either a replacement or inclusion anywhere a
+					appropriate option parameter</a>). It also infers the <b>destination
+					type siphon</b> based upon the short-hand attribute used. The
+				short-handed version can be used as either a replacement or
+				inclusion anywhere a
 				<code>data-thx-replace</code>
 				or
 				<code>data-thx-include</code>
