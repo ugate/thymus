@@ -2061,7 +2061,8 @@
 					}
 					if (firstRun) {
 						firstRun = false;
-						refreshNamedAnchor();
+						// TODO : base tag href doesn't play well with named anchors
+						//refreshNamedAnchor();
 					}
 					broadcast(opts.eventFragsChain, opts.eventFragsLoad, t);
 				}
