@@ -130,15 +130,26 @@
 			<h3 id="attrpaths">Attribute Path Resolution</h3>
 			<p>
 				Relative URLs within the standard URL related attributes are
-				resolved <b>automatically</b> by the browser using the
+				resolved using either the pathed defined within
+				<code>data-thx-base-path</code>
+				(<a href="#getstarted">more details</a>) or <b>automatically</b> by
+				the browser using the
 				<code>href</code>
 				attribute set on the
 				<code>base</code>
-				tag (<a href="#getstarted">more details</a>). However, some versions
-				of Internet Explorer do not properly resolve relative URLs using the
-				<b>base</b> tag. In that case, <b>thymus.js</b> will handle the
-				following relative URLs that are found within the following
-				attributes:
+				tag. However, some versions of Internet Explorer do not properly
+				resolve relative URLs using the <b>base</b> tag. In that case, when
+				an
+				<code>href</code>
+				has been defined on a
+				<code>base</code>
+				tag and no path has been defined using the
+				<code>data-thx-base-path</code>
+				attribute or when a path has been defined using the
+				<code>data-thx-base-path</code>
+				attribute, <b>thymus.js</b> will convert the following relative URLs
+				to their absolute counterparts that are found within the following
+				attributes (<a href="#fragsoptsprog">configurable</a>):
 			</p>
 			<ul id="attrpathsdflt">
 				<li class="badge"><code>action</code></li>

@@ -2061,8 +2061,9 @@
 					}
 					if (firstRun) {
 						firstRun = false;
-						// TODO : base tag href doesn't play well with named anchors
-						//refreshNamedAnchor();
+						if (updateUrls) {
+							refreshNamedAnchor();
+						}
 					}
 					broadcast(opts.eventFragsChain, opts.eventFragsLoad, t);
 				}
@@ -2546,39 +2547,32 @@
 	 * from the {BASE_PATH_ATTR} attribute and loading JQuery (if needed).
 	 */
 	function preInit() {
+		updateUrls = true;
 		basePath = preLoadAttr(BASE_PATH_ATTR);
-		var body = document.getElementsByTagName('body')[0];
+		//var body = document.getElementsByTagName('body')[0];
 		var base = document.getElementsByTagName('base')[0];
-		if (body && base) {
+		var bp = base ? preLoadAttr('href', null, base) : null;
+		var bpu = bp && basePath && bp.toLowerCase() != basePath.toLowerCase();
+		var fbpu = ieVersion > 0 && ieVersion <= ieVersionCompliant;
+		if (bpu) {
 			// base is already processed at this point, need to manually handle
 			// conversion of relative URLs to absolute paths
-			//updateUrls = true;
-			var bp = preLoadAttr('href', null, base);
-			if (bp && basePath && bp.toLowerCase() != basePath.toLowerCase()) {
-				updateUrls = true;
-				log('Unable to update base href "' + bp + '" with "' + basePath
-						+ '" URLs context will be updated via JQuery', 2);
-			} else if (!basePath) {
-				basePath = bp;
-			}
-		} else if (base && basePath) {
-			// update the href on the base to point to the script defined path
-			preLoadAttr('href', null, base, basePath);
-		} else {
-			// write the base href
-			basePath = basePath ? basePath : base ? preLoadAttr('href', null,
-					base) : null;
-			if (basePath) {
-				document.write('<base href="' + urlAdjust(basePath) + '" />');
-			}
+			log('Found base href="' + bp + '" while ' + NS + ' '
+					+ BASE_PATH_ATTR + '="' + basePath
+					+ '". Relative URLs will be updated via JQuery and may '
+					+ 'not reflect the base tag href', 2);
+			// update base href
+			//preLoadAttr('href', null, base, basePath);
+			// write base href
+			// document.write('<base href="' + urlAdjust(basePath) + '" />');
+		} else if (!basePath && !fbpu) {
+			// some IE versions do not handle URLs from base properly
+			updateUrls = false;
+			basePath = bp;
 		}
 		if (!basePath) {
 			updateUrls = false;
-			throw new Error('Unable to capture a context path from '
-					+ BASE_PATH_ATTR + ' or a base tags href');
-		} else if (ieVersion <= ieVersionCompliant) {
-			// some IE versions do not handle URLs from base properly
-			updateUrls = true;
+			throw new Error('Unable to capture ' + BASE_PATH_ATTR);
 		}
 		// initialize
 		if (!jq) {

@@ -161,27 +161,7 @@
 						is used for <a href="#fragpath">fragment path resolution</a> and <a
 							href="#attrpaths">attribute path resolution</a>. It should point
 						to the root context of the application relative to the page in
-						which <b>thymus.js</b> is loaded. A
-						<code>base</code>
-						tag is added to the
-						<code>head</code>
-						using the value from
-						<code>data-thx-base-path</code>
-						as the
-						<code>href</code>
-						. An alternative setup for the
-						<code>script</code>
-						location conscience would be:
-					</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;base</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&quot;.&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	...
-	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-</pre></div>
+						which <b>thymus.js</b> is loaded.
 					<p>
 						Internally, when <b>thymus.js</b> loads, it checks for the presence
 						of the JQuery API. If it's not found it will automatically load
