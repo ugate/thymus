@@ -174,10 +174,28 @@
 			<h3 id="otherfragtargets">Siphons</h3>
 			<p>
 				A <i>siphon</i> in a most practical sense is just one or more JQuery
-				selectors with an optional insertion/extraction directives, but can also be a
+				selectors with an optional insertion/extraction directives and in
+				some cases can also be a
 				<code>function</code>
 				that will <em>handle</em> the extraction and/or placement of data
-				within the DOM. JQuery selectors can be used with or without an appended <code>-&gt;</code> directive:
+				within the DOM. There are two types of <b>siphon resolver</b>s:
+			</p>
+			<ul>
+				<li><code>?{}</code> (<b>surrogate siphon resolver</b>) - the
+					wrapped JQuery selector will be used to select the node(s) where
+					value(s) will be extracted and used to replace the expression
+					within the final siphon definition string</li>
+				<li><code>!{}</code> (<b>node siphon resolver</b>) - the
+					wrapped JQuery selector will be used to select the node(s) used by
+					the siphon (<b>parameter siphon</b>s, <b>result siphon</b>s and <b>destination
+						siphon</b>s only)</li>
+			</ul>
+			<p>
+				Each <b>siphon resolver</b> can also be used with or without an
+				appended
+				<code>-&gt;</code>
+				directive that indicates how to insert/extract value(s) from the
+				selected node(s):
 			</p>
 			<ul>
 				<li><code>text</code> - will use <a
@@ -190,26 +208,26 @@
 					href="http://api.jquery.com/attr/">JQuery.attr()</a> to
 					insert/extract value(s) returned from the JQuery selected node(s)
 				</li>
-				<li>no directive (default) - will use values from <a
-					href="http://api.jquery.com/serializeArray/">JQuery.serializeArray()</a>
+				<li>no directive - <b>surrogate siphon resolver</b>s will use
+					values from <a href="http://api.jquery.com/serializeArray/">JQuery.serializeArray()</a>
 					or value(s) from <a href="http://api.jquery.com/val/">JQuery.val()</a>
 					(when applicable) to insert/extract value(s) returned from the
-					JQuery selected node(s)
+					JQuery selected node(s). <b>node siphon resolver</b>s will use the
+					default value insertion/extraction operation used by the siphon
+					it's defined within.
 				</li>
 			</ul>
 			<h4 id="fragpathsub">Fragment Path Substitutions</h4>
 			<p>
 				When URLs are dependent upon user input static URLs will not
 				suffice. In this case a path substitution can be made using one or
-				more <b>siphon resolver</b>. Lets consider a <b>path siphon</b>
-				where <b>siphon resolver</b>s can be used. Any <b>siphon
-					resolver</b> found result in a JQuery lookup. Values will be captured
-				from the queried nodes using the appropriate directive and replaced
-				within the <b>path siphon</b>. Each JQuery selector and
-				corresponding extraction directive should be wrapped within a <b>siphon
-					resolver</b>
-				<code>?{}</code>
-				to achieve this behavior.
+				more
+				<b>surrogate siphon resolver</b>s. Lets consider a <b>path
+					siphon</b> where <b>surrogate siphon resolver</b>s can be used. Any
+				<b>surrogate siphon resolver</b> found will result in a JQuery node
+				selection. Node value(s) will be captured from the queried nodes
+				using the appropriate directive and replaced within the
+				<b>path siphon</b>.
 			</p>
 <div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-post=</span><span style="color: #0000FF">&quot;click&quot;</span> 
 	<span style="color: #FF0000">data-thx-post-path=</span><span style="color: #0000FF">&quot;frags/first/?{#secondPath-&gt;text}/sixth&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Post Something<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
@@ -307,8 +325,7 @@
 			<p>
 				A <b>parameter siphon</b> can contain a single raw JQuery selector
 				or can contain one or more <b>siphon resolver</b>s in order to build
-				the final <b>parameter siphon</b> JQuery selector. Either way, the
-				end result needs to be a vaild JQuery selector.
+				the final <b>parameter siphon</b> JQuery selector.
 			</p>
 			<h4 id="fragresultchain">Chaining Result Selectors</h4>
 			<p>
@@ -404,12 +421,16 @@
 				will be <i>included</i> in the <b>destination siphon</b>.
 			</p>
 			<div class="alert alert-warning">
-				<strong>Reminder!</strong> Make sure to escape any quotations that
-				may exist in
-				<a href="http://api.jquery.com/category/selectors/">JQuery
-					selectors</a>
-<div style="overflow:auto;width:auto;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/user/user :: [class*=&amp;quot;icon-&amp;quot;]&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-</pre></div>
+				<strong>Nested <b>siphon resolver</b>s
+				</strong> - although nesting different types of <b>siphon resolver</b>s is
+				discouraged for readability sake, <b>node siphon resolver</b>s can
+				contain any number of nested <b>surrogate siphon resolver</b>s within
+				them (e.g.
+				<code>!{?{.my-class}-&gt;text}</code>
+				), but <b>surrogate siphon resolver</b>s should <strong>never</strong>
+				contain <b>node siphon resolver</b>s (e.g.
+				<code>?{!{.my-class-&gt;text}}</code>
+				)
 			</div>
 		</div>
 	</div>

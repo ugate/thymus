@@ -450,11 +450,11 @@
 				if (!cache[ctx]) {
 					cache[ctx] = [];
 				}
-				cache[ctx][n] = sub(ctx, v);
+				cache[ctx][n] = rep(ctx, v);
 				return n;
 			}) : '';
 		}
-		function sub(ctx, s) {
+		function rep(ctx, s) {
 			return s ? s.replace(rrx, function(m, n) {
 				if (cache[ctx]) {
 					return cache[ctx][n];
@@ -463,7 +463,7 @@
 			}) : '';
 		}
 		this.add = add;
-		this.sub = sub;
+		this.rep = rep;
 		this.get = function(ctx, n) {
 			return ctx ? cache[ctx] ? n ? cache[ctx][n] : cache[ctx].slice(0)
 					: cache.slice(0) : undefined;
@@ -615,7 +615,7 @@
 			});
 		}
 		// substitute variables and siphon node values
-		return s ? sVals(vars.sub(ctx, s), rx, trx, d, useNameId, el)
+		return s ? sVals(vars.rep(ctx, s), rx, trx, d, useNameId, el)
 				: '';
 	}
 
