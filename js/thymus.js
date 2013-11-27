@@ -27,6 +27,8 @@
 	this.DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest', VARS_ATTR_TYPE ];
 	this.DOM_ATTR_AGENT = 'agent';
 	this.HTTP_METHODS = [ 'GET', 'POST', 'DELETE', 'PUT' ];
+	this.DTEXT = 'text';
+	this.DHTML = 'html';
 	this.ASYNC = 'async';
 	this.SYNC = 'sync';
 	this.URL_ATTR = 'urlattr';
@@ -321,6 +323,21 @@
 	}
 
 	/**
+	 * JQuery add convienience for <code>add</code> function with validation
+	 * 
+	 * @param o
+	 *            the JQuery object to add to
+	 * @param ao
+	 *            the item to add to the JQuery object
+	 */
+	function jqAdd(o, ao) {
+		if (o instanceof jQuery) {
+			return ao ? o.add(ao) : o;
+		}
+		return ao ? $(o).add(ao) : $(o);
+	}
+
+	/**
 	 * Refreshes the named anchor for the page (if any)
 	 */
 	function refreshNamedAnchor() {
@@ -537,8 +554,8 @@
 					});
 				}
             } else {
-				var ist = t.toLowerCase() == 'text';
-				var ish = t.toLowerCase() == 'html';
+				var ist = t.toLowerCase() == DTEXT;
+				var ish = t.toLowerCase() == DHTML;
 				var n = '';
 				$x.each(function() {
 					ci = $(this);
@@ -996,7 +1013,7 @@
 									if (agt) {
 										// siphon possible selectors
 										agt = siphonValues(agt, m, vars, 
-												opts.regexSelectSiphon, 
+												opts.regexSurrogateSiphon, 
 												opts.regexValTypeSiphon, 
 												opts.agentSelSep, false);
 									}
@@ -1314,7 +1331,64 @@
 		}
 
 		/**
-		 * Fragment result selector
+		 * Node resolvers captures one or more JQuery selectors along with any
+		 * directives (e.g. &quot;text&quot;, &quot;html&quot; or attribute
+		 * name)
+		 * 
+		 * @constructor
+		 * @param s
+		 *            the string that will be used to contruct node resolvers
+		 *            from
+		 * @param pa
+		 *            array of additional attributes to add resolvers for
+		 *            (optional and will be treated cumulatively as one single
+		 *            resolver)
+		 */
+		function NodeResolvers(s, pa) {
+			var rvs = [];
+			var gs = '';
+			function add(s, d) {
+				if (!s) {
+					return null;
+				}
+				var r = rvs[rvs.length] = {};
+	            r.selector = $.trim(s);
+	            r.directive = d ? $.trim(d) : '';
+	            r.isForAttr = d && d != DTEXT && d != DHTML;
+	            gs += (gs.length > 0 ? ',' : '') + r.selector;
+	            return r;
+			}
+			function resolve(s) {
+				// regular expression must match entire expression
+				var nv = s.replace(opts.regexNodeSiphon, function(m, v) {
+					// regular expression must match entire string
+			        v.replace(opts.regexValTypeSiphon, function(m, v1, v2) {
+			            add(v1, v2);
+			        });
+					return '';
+				});
+				return nv;
+			}
+			this.siphon = s;
+			this.each = function(fx) {
+				if (typeof fx === 'function') {
+					return $.each(rvs, fx);
+				}
+			};
+			this.getGlobalSel = function() {
+				return gs;
+			};
+			// add any remaining selectors that may not be wrapped in the
+			// regular expression
+			add(resolve(s));
+			if (pa && s && opts.regexFragName.test(s)) {
+				// add selection for predefined attributes
+				add(getThxSel(pa, s, null));
+			}
+		}
+
+		/**
+		 * Fragment result siphon
 		 * 
 		 * @constructor
 		 * @param m
@@ -1324,9 +1398,10 @@
 		 * @param vars
 		 *            the associative array cache of names/values variables
 		 */
-		function FragResultSel(m, rs, vars) {
+		function FragResultSiphon(m, rs, vars) {
 			rs = rs ? $.trim(rs) : null;
 			var rsp = null;
+			var rsr = null;
 			var fx = null;
 			var cel = null;
 			this.getFunc = function() {
@@ -1335,29 +1410,51 @@
 			this.resultSiphon = function(el, rsn) {
 				rsp = rsn ? rsn : rsp;
 				if (!rsp || rsn || (el && el.nodeType && !el.is(cel))) {
-					rsp = siphonValues(rs, m, vars, opts.regexSelectSiphon,
+					rsp = siphonValues(rs, m, vars, opts.regexSurrogateSiphon,
 							opts.regexValTypeSiphon, opts.resultSep, false, el);
 					// check if the result siphon is a function
 					fx = new Func(opts, rsp, null, true);
+					rsr = new NodeResolvers(rsp, opts.fragAttrs);
 					cel = el;
 				}
 				return rsp;
 			};
+			this.resolvers = function(el, rsn) {
+				this.resultSiphon(el, rsn);
+				return rsr;
+			};
 			this.getFuncOrResultSiphon = function() {
-				return this.getFunc() && this.getFunc().isValid ? this
-						.getFunc().getFuncString() : this.resultSiphon();
+				return fx && fx.isValid ? fx.getFuncString() : this
+						.resultSiphon();
 			};
-			// retrieves the JQuery selector for capturing a fragments content
-			this.getSel = function(el, rsn) {
-				var crs = this.resultSiphon(el, rsn);
-				return crs && (!fx || !fx.isValid) ? crs
-						+ (this.usesFragAttr() ? ','
-								+ getThxSel(opts.fragAttrs, crs, null) : '')
-						: '';
+			this.getGlobalSel = function(el, rsn) {
+				var crsr = this.resolvers(el, rsn);
+				return crsr ? crsr.getGlobalSel() : '';
 			};
-			this.usesFragAttr = function() {
-				return rsp && opts.regexFragName.test(rsp);
+		}
+
+		/**
+		 * Fragment result siphon
+		 * 
+		 * @constructor
+		 * @param m
+		 *            the HTTP method
+		 * @param ds
+		 *            the raw destination siphon string (or element)
+		 * @param vars
+		 *            the associative array cache of names/values variables
+		 */
+		function FragDestSiphon(m, ds, vars) {
+			var dsp = typeof ds === 'string' ? $.trim(ds) : ds ? ds : null;
+			this.destSiphon = function(dsn) {
+				dsp = dsn ? dsn : dsp;
+				if (!dsp || dsn) {
+					dsp = siphonValues(dsp, m, vars, opts.regexSurrogateSiphon,
+							opts.regexValTypeSiphon, opts.destSep, false);
+				}
+				return dsp;
 			};
+			
 		}
 
 		/**
@@ -1676,7 +1773,7 @@
 				dsp = dsn ? dsn : dsp;
 				if (!dsp || dsn) {
 					dsp = siphonValues(dsp, this.method, siphon.vars,
-							opts.regexSelectSiphon, opts.regexValTypeSiphon,
+							opts.regexSurrogateSiphon, opts.regexValTypeSiphon,
 							opts.destSep, false);
 				}
 				return dsp;
@@ -1696,7 +1793,7 @@
 				rp = rpn ? rpn : rp;
 				if (!rpp || rpn) {
 					rpp = siphonValues(rp, this.method, siphon.vars,
-							opts.regexSelectSiphon, opts.regexValTypeSiphon,
+							opts.regexSurrogateSiphon, opts.regexValTypeSiphon,
 							opts.pathSep, false);
 					if (rpp && rpp.length > 0
 							&& rpp.toLowerCase() != opts.selfRef.toLowerCase()) {
@@ -1708,8 +1805,8 @@
 				}
 				return rpp;
 			};
-			this.frs = new FragResultSel(this.method, rs, siphon.vars);
-			this.src = null;
+			this.frs = new FragResultSiphon(this.method, rs, siphon.vars);
+			this.destScope = null;
 			this.e = null;
 			this.cancelled = false;
 			var wcnt = 1;
@@ -1734,7 +1831,7 @@
 				if ((ps && !psp) || psn || (!uj && typeof psp === 'object')
 						|| (uj && typeof psp === 'string')) {
 					psp = siphonValues(ps, this.method, siphon.vars,
-							opts.regexSelectSiphon, opts.regexValTypeSiphon,
+							opts.regexSurrogateSiphon, opts.regexValTypeSiphon,
 							opts.paramSep, true);
 					psp = uj ? $(psp).serializeArray() : $(psp).serialize();
 				}
@@ -1759,7 +1856,18 @@
 					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t, this);
 				}
 			};
-			this.px = function(x, xhr, ts, e) {
+			function attrp($x, r, x) {
+				return r && r.isForAttr ? x ? $x.attr(r.directive, x) : $x
+						.attr(r.directive) : false;
+			}
+			function appendRepl(ia, $x, rr, x) {
+				var xIsJ = x instanceof jQuery;
+				var ra = attrp(xIsJ ? x : $x, rr);
+				ra = ra === false ? x instanceof jQuery
+						&& rr.directive == DTEXT ? x.text() : x : ra ? ra : '';
+				return ia ? $x.append(ra) : $x.replaceWith(ra);
+			}
+			this.px = function(x, rr, xhr, ts, e) {
 				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, this);
 				if (this.cancelled) {
 					this.domDone(false);
@@ -1788,49 +1896,51 @@
 					}
 				} else {
 					var im = this.isModel(xhr);
+					var $x = null;
 					if (this.navOpts.type() === TREP) {
 						var $d = this.ds() ? $(this.ds()) : this.el;
 						try {
-							var $x = $(x);
-							$d.replaceWith($x);
-							this.src = $x;
+							$x = $(x);
+							appendRepl(false, $d, rr, $x);
 						} catch (e) {
 							// node may contain top level text nodes
-							var $x = $d.parent();
-							$d.replaceWith(x);
-							this.src = $x;
+							$x = $d.parent();
+							appendRepl(false, $d, rr, x);
 						}
 					} else if (this.navOpts.type() === TINC || this.navOpts.type() === TUPD) {
 						if (this.ds() || this.navOpts.type() === TUPD) {
-							var $d = this.ds() ? $(this.ds()) : null;
-							if ($d) {
+							var $ds = this.ds() ? $(this.ds()) : null;
+							if ($ds) {
 								if (this.navOpts.type() === TUPD) {
 									// remove any existing fragments that may exist
 									// under the destination that match the fragment
 									// selection
-									$d.find(this.frs.getSel(x)).remove();
+									$ds.find(this.frs.getGlobalSel(x)).remove();
 								}
-								$d.append(x);
+								$x = appendRepl(true, $ds, rr, x);
 							} else {
 								if (this.navOpts.type() === TUPD) {
 									// remove any existing content that may exist
 									// under the element
 									this.el.contents().remove();
 								}
-								this.el.append(x);
+								$x = appendRepl(true, this.el, rr, x);
 							}
 						} else {
-							this.el.append(x);
+							$x = appendRepl(true, this.el, rr, x);
 						}
-						this.src = x;
 					} else {
-						var $d = this.ds() ? $(this.ds()) : this.el;
-						$d.attr(this.navOpts.type(), xIsJ ? $.trim(x.text()) : x);
+						t.addError('Invalid destination type "'
+								+ this.navOpts.type() + '" for '
+								+ this.toString(), this, null, ts, xhr);
+						this.domDone(true);
+						return;
 					}
 					// make post template DOM adjustments- no need for URL updates-
 					// they needed to be completed prior to placement in the DOM or
 					// URLs in some cases will be missed (like within the head)
-					htmlDomAdjust(t, ctx, this.src, false);
+					htmlDomAdjust(t, ctx, $x, false);
+					this.destScope = jqAdd(this.destScope, $x);
 				}
 				this.domDone(false);
 			};
@@ -1880,8 +1990,8 @@
 					us[us.length] = {
 						pathSiphon : cf.rp(),
 						resultSiphon : cf.frs.getFuncOrResultSiphon(),
-						destination : cf.ds(),
-						source : cf.src
+						destSiphon : cf.ds(),
+						destScope : cf.destScope
 					};
 				} while ((cf = cf.pf));
 				return us;
@@ -1893,7 +2003,7 @@
 						+ ', path siphon: ' + this.rp() + ', result siphon: '
 						+ this.frs.getFuncOrResultSiphon()
 						+ ', destination siphon: ' + this.ds()
-						+ ', agent siphon' + this.as + ', cancelled: '
+						+ ', agent siphon: ' + this.as + ', cancelled: '
 						+ this.cancelled + ', error: '
 						+ (this.e ? this.e.message : null);
 			};
@@ -1929,7 +2039,8 @@
 			o.resultSiphon = f ? f.frs.getFuncOrResultSiphon() : undefined;
 			o.destSiphon = f ? f.ds() : undefined;
 			o.agentSiphon = f ? f.as : undefined;
-			o.source = f ? f.src instanceof jQuery ? f.src : f.el : undefined;
+			o.destScope = f ? f.destScope instanceof jQuery ? f.destScope
+					: f.el : undefined;
 			o.error = f ? f.e : undefined;
 			o.scope = t.scope;
 			o.chain = opts.eventFragChain;
@@ -2101,7 +2212,7 @@
 				function sdone(sf, jqxhr, ts, e) {
 					// when there is no xhr, assume inline script that needs to
 					// be processed on the target
-					sf.px(sf.el, jqxhr, ts, e);
+					sf.px(sf.el, null, jqxhr, ts, e);
 					cb(jqxhr && (!ts || !e) ? $t : null, sf);
 				}
 				var url = $x.prop('src');
@@ -2140,7 +2251,7 @@
 					return;
 				}
 				if (f.isModel(xhr) || f.isSimpleView(xhr)) {
-					f.px(r, status, xhr, null);
+					f.px(r, null, status, xhr, null);
 					cb(null, f);
 					return;
 				}
@@ -2184,29 +2295,42 @@
 				// (links need to be converted via raw results to
 				// prevent warnings and undesired network traffic)
 				var $c = $('<results>' + htmlDataAdjust(t, f, r) + '</results>');
-				var fs = $c.find(f.frs.getSel($c));
-				if (fs.length <= 0) {
-					fs = $c.filter(f.frs.getSel($c));
-					if (fs.length <= 0) {
-						t.addError('No matching results for ' + f.toString()
-								+ ' in\n' + r, f, null, status, xhr);
-						cb(null, f);
-						return;
+				var rsvCnt = 0;
+				var $fss = null;
+				// loop through the resolvers separately in order to handle any
+				// directives that may be defined
+				f.frs.resolvers($c).each(function(i, rr) {
+					var $fs = $c.find(rr.selector);
+					if ($fs.length <= 0) {
+						$fs = $c.filter(rr.selector);
+						if ($fs.length <= 0) {
+							return true;
+						}
 					}
-				}
-				fs.each(function() {
-					var $cf = $(this);
-					var $cfs = $cf.find('script');
-					$cfs.each(function() {
-						doScript(f, $cf, $(this), cb);
+					// loop through the selected result nodes and handle DOM
+					// insertion
+					$fs.each(function() {
+						rsvCnt++;
+						var $cf = $(this);
+						var $cfs = $cf.find('script');
+						$cfs.each(function() {
+							doScript(f, $cf, $(this), cb);
+						});
+						if ($cf.is('script')) {
+							doScript(f, $cf, $cf, cb);
+						} else {
+							f.px($cf, rr);
+						}
 					});
-					if ($cf.is('script')) {
-						doScript(f, $cf, $cf, cb);
-					} else {
-						f.px($cf);
-					}
-					cb($cf, f);
+					$fss = jqAdd($fss, $fs);
 				});
+				if (rsvCnt > 0) {
+					cb($fss, f);
+				} else {
+					t.addError('No matching results for ' + f.toString()
+							+ ' in\n' + r, f, null, status, xhr);
+					cb(null, f);
+				}
 			}
 			function lfg(pf, $fl, cb) {
 				var f = null;
@@ -2395,8 +2519,9 @@
 			regexAbsPath : DFLT_ABS_PATH_REGEX,
 			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g,
 			regexFuncArgReplace : /['"]/g,
-			regexValTypeSiphon : /(^.*)(?:->)(?=([^.]*)$)/g,
-			regexSelectSiphon : /(?:\?{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
+			regexValTypeSiphon : /(^.*)(?:->)(.*$)/g,
+			regexSurrogateSiphon : /(?:\?{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
+			regexNodeSiphon : /(?:!{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexVarSiphon : /(?:\${)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexVarNameVal : /((?:\\.|[^=,]+)*)=("(?:\\.|[^"\\]+)*"|(?:\\.|[^,"\\]+)*)/g,
 			eventIsBroadcast : true,

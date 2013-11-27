@@ -172,7 +172,7 @@
 							<code>destSiphon</code>
 						</div>
 						<div class="col-md-10">
-							either the DOM element, a <a
+							either the DOM element(s), a <a
 								href="http://api.jquery.com/category/selectors/">JQuery
 								selector</a> to the DOM element(s) where the fragment will be
 							placed, or
@@ -185,10 +185,21 @@
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
+							<code>destScope</code>
+						</div>
+						<div class="col-md-10">
+							the DOM node(s) that were designated as the destination or the
+							parent node when the fragment was not HTML content or outer HTML
+							string when the fragment was a
+							<code>script</code>
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
 							<code>agentSiphon</code>
 						</div>
 						<div class="col-md-10">
-							either the DOM element, a <a
+							either the DOM element(s), a <a
 								href="http://api.jquery.com/category/selectors/">JQuery
 								selector</a> to the DOM element(s) where any missing <b>routing
 								attribute</b>s were extracted, or
@@ -211,8 +222,10 @@
 									defined in the <b>routing attribute</b> of the fragment</li>
 								<li><code>resultSiphon</code> - the <b>result siphon</b>
 									defined in the <b>routing attribute</b> of the fragment</li>
-								<li><code>destination</code> - the fragment destination</li>
-								<li><code>source</code> - the fragment destination</li>
+								<li><code>destSiphon</code> - the <b>destination siphon</b>
+									defined in the <b>routing attribute</b> of the fragment</li>
+								<li><code>destScope</code> - the fragment destination scope
+									of the fragment</li>
 							</ul>
 						</div>
 					</div>
@@ -306,25 +319,15 @@
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
-							<code>source</code>
-						</div>
-						<div class="col-md-10">
-							the DOM node that was included/replaced or the parent node when
-							the fragment was not HTML content or outer HTML string when the
-							fragment was a
-							<code>script</code>
-						</div>
-					</div>
-					<div class="row row-thymus">
-						<div class="col-md-2">
 							<code>scope</code>
 						</div>
 						<div class="col-md-10">
-							the DOM node for which the fragment was loaded under (typically
-							this will be the
+							the DOM node(s) for which the fragment was loaded under
+							(typically this will be the
 							<code>html</code>
-							node unless the fragment has been loaded manually via a
-							different node)
+							node during automatic fragment loading; during a
+							programmatically/user initiated fragment, the root node that
+							initiated the fragment load)
 						</div>
 					</div>
 					<div class="row row-thymus">

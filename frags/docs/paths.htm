@@ -4,9 +4,7 @@
 <body>
 	<div id="paths" class="panel panel-default">
 		<div class="panel-heading">
-			<h2>
-				Path/Siphon Resolution
-			</h2>
+			<h2>Path/Siphon Resolution</h2>
 		</div>
 		<div class="panel-body app-code">
 			<h3 id="fragpath">Fragment Path Resolution</h3>
@@ -27,32 +25,57 @@
 				as <b>example.com/my-app/user/info.htm</b>. If the <b>routing
 					attribute</b> is defined something like:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+	style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;topnav&quot;</span><span
+	style="color: #000080; font-weight: bold">&gt;</span>
 	...
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
-					<p>
-						And both <b>example.com/my-app/index.htm</b> and <b>example.com/my-app/user/info.htm</b>
-						contain a corresponding <b>routing attribute</b>:
-					</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/nav/nav :: #topnav&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			<p>
+				And both <b>example.com/my-app/index.htm</b> and <b>example.com/my-app/user/info.htm</b>
+				contain a corresponding <b>routing attribute</b>:
+			</p>
+			<div style="overflow: auto; width: auto; padding: .2em .6em;">
+				<pre style="margin: 0; line-height: 125%">
+					<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;frags/nav/nav :: #topnav&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
 	...
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
-					<p>
-						Then the <b>thymus.js</b> script definitions would be as follows:
-					</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+			<p>
+				Then the <b>thymus.js</b> script definitions would be as follows:
+			</p>
+			<div style="overflow: auto; width: auto; padding: .2em .6em;">
+				<pre style="margin: 0; line-height: 125%">
+					<span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;meta</span> <span
+						style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span
+						style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- example.com/my-app/index.htm --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> <span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;script </span><span
+						style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> <span
+						style="color: #FF0000">data-thx-context-path=</span><span
+						style="color: #0000FF">&quot;.&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
 </pre></div>
 
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;meta</span> <span
+						style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span
+						style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- example.com/my-app/user/info.htm --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span><span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;../&quot;</span> <span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;script </span><span
+						style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span><span
+						style="color: #FF0000">data-thx-context-path=</span><span
+						style="color: #0000FF">&quot;../&quot;</span> <span
+						style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
 </pre></div>
 			<p>
@@ -63,8 +86,8 @@
 				which infers the current path; which would be <b>example.com/my-app/</b>
 				while <b>example.com/my-app/user/info.htm</b> uses <b>"../"</b>
 				which infers one directory up; which would be <b>example.com/my-app/</b>).
-				This vastly simplifies <b>path siphon</b> resolution (especially
-				for nested fragments) and ensures that all <b>path siphon</b>s are
+				This vastly simplifies <b>path siphon</b> resolution (especially for
+				nested fragments) and ensures that all <b>path siphon</b>s are
 				relative to the root context path of the application. It also
 				permits the use of the same context path to be used within multiple
 				<b>path siphon</b>s; regardless of where the page that defines it
@@ -91,41 +114,112 @@
 				can be used if fragments should inherit the parent page file
 				extension (if any). Here are a few variations:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume the following script --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
-	<span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span> <span style="color: #FF0000">data-thx-frag-extension=</span><span style="color: #0000FF">&quot;.htm&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<span style="color: #008800; font-style: italic">&lt;!-- assume the following script --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;script </span><span
+						style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
+	<span style="color: #FF0000">data-thx-context-path=</span><span
+						style="color: #0000FF">&quot;.&quot;</span> <span
+						style="color: #FF0000">data-thx-frag-extension=</span><span
+						style="color: #0000FF">&quot;.htm&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- and the following includes/replacements --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.htm :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person.htm :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 
 <span style="color: #008800; font-style: italic">&lt;!-- assume the following script is loaded into a page at path/to/page.html --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
-	<span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span> <span style="color: #FF0000">data-thx-frag-extension=</span><span style="color: #0000FF">&quot;inherit&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;script </span><span
+						style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
+	<span style="color: #FF0000">data-thx-context-path=</span><span
+						style="color: #0000FF">&quot;.&quot;</span> <span
+						style="color: #FF0000">data-thx-frag-extension=</span><span
+						style="color: #0000FF">&quot;inherit&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- and the following includes/replacements --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.html :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person.html :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 
 <span style="color: #008800; font-style: italic">&lt;!-- assume the following script --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
-	<span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;script </span><span
+						style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
+	<span style="color: #FF0000">data-thx-context-path=</span><span
+						style="color: #0000FF">&quot;.&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- and the following includes/replacements --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person/ :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">data-thx-include=</span><span
+						style="color: #0000FF">&quot;/frags/person.xml :: #data&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 </pre></div>
 			<h3 id="attrpaths">Attribute Path Resolution</h3>
 			<p>
@@ -217,30 +311,67 @@
 					it's defined within.
 				</li>
 			</ul>
+			<div class="alert alert-info">
+				<strong>Note:</strong> although nesting different types of <b>siphon
+					resolver</b>s is discouraged for readability sake, <b>node siphon
+					resolver</b>s can contain any number of nested <b>surrogate siphon
+					resolver</b>s within them (e.g.
+				<code>!{?{.my-class}-&gt;text}</code>
+				), but <b>surrogate siphon resolver</b>s should <strong>never</strong>
+				contain <b>node siphon resolver</b>s (e.g.
+				<code>?{!{.my-class-&gt;text}}</code>
+				)
+			</div>
 			<h4 id="fragpathsub">Fragment Path Substitutions</h4>
 			<p>
 				When URLs are dependent upon user input static URLs will not
 				suffice. In this case a path substitution can be made using one or
-				more
-				<b>surrogate siphon resolver</b>s. Lets consider a <b>path
-					siphon</b> where <b>surrogate siphon resolver</b>s can be used. Any
-				<b>surrogate siphon resolver</b> found will result in a JQuery node
-				selection. Node value(s) will be captured from the queried nodes
-				using the appropriate directive and replaced within the
-				<b>path siphon</b>.
+				more <b>surrogate siphon resolver</b>s. Lets consider a <b>path
+					siphon</b> where <b>surrogate siphon resolver</b>s can be used. Any <b>surrogate
+					siphon resolver</b> found will result in a JQuery node selection. Node
+				value(s) will be captured from the queried nodes using the
+				appropriate directive and replaced within the <b>path siphon</b>.
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-post=</span><span style="color: #0000FF">&quot;click&quot;</span> 
-	<span style="color: #FF0000">data-thx-post-path=</span><span style="color: #0000FF">&quot;frags/first/?{#secondPath-&gt;text}/sixth&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Post Something<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;secondPath&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>?{#second}/?{#thirdFourthPath :input}/?{.fifth-path-&gt;data-mypath}<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;second&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;secondPath&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-    <span style="color: #000080; font-weight: bold">&lt;option&gt;</span>second<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
-    <span style="color: #000080; font-weight: bold">&lt;option&gt;</span>2nd<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<span style="color: #000080; font-weight: bold">&lt;button</span> <span
+	style="color: #FF0000">data-thx-post=</span><span
+	style="color: #0000FF">&quot;click&quot;</span> 
+	<span style="color: #FF0000">data-thx-post-path=</span><span
+						style="color: #0000FF">&quot;frags/first/?{#secondPath-&gt;text}/sixth&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>Post Something<span
+						style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;secondPath&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>?{#second}/?{#thirdFourthPath :input}/?{.fifth-path-&gt;data-mypath}<span
+						style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;select</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;second&quot;</span> <span
+						style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;secondPath&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
+    <span style="color: #000080; font-weight: bold">&lt;option&gt;</span>second<span
+						style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+    <span style="color: #000080; font-weight: bold">&lt;option&gt;</span>2nd<span
+						style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thirdFourthPath&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-    <span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;someInput&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;third&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
-    <span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;someOtherInput&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;fourth&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thirdFourthPath&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
+    <span style="color: #000080; font-weight: bold">&lt;input</span> <span
+						style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span
+						style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;someInput&quot;</span> <span
+						style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;third&quot;</span> <span
+						style="color: #000080; font-weight: bold">/&gt;</span>
+    <span style="color: #000080; font-weight: bold">&lt;input</span> <span
+						style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span
+						style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;someOtherInput&quot;</span> <span
+						style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;fourth&quot;</span> <span
+						style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;fifth-path&quot;</span> <span style="color: #FF0000">data-mypath=</span><span style="color: #0000FF">&quot;fifth&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;fifth-path&quot;</span> <span
+						style="color: #FF0000">data-mypath=</span><span
+						style="color: #0000FF">&quot;fifth&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- result path would be: --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!--frags/first/second/third/fourth/fifth/sixth --&gt;</span>
 </pre></div>
@@ -337,43 +468,94 @@
 				selected) or use a <a href="#fragshandler">result handler</a>. Lets
 				take a look at a few scenarios:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume the following fragment snippet resides at path/to/resource --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myResult&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;selClass&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource2&quot;</span>
-		<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;#myResult2&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;.some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Post
+<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<span style="color: #008800; font-style: italic">&lt;!-- assume the following fragment snippet resides at path/to/resource --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myResult&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;selClass&quot;</span> <span
+						style="color: #FF0000">data-thx-get=</span><span
+						style="color: #0000FF">&quot;click&quot;</span> <span
+						style="color: #FF0000">data-thx-get-path=</span><span
+						style="color: #0000FF">&quot;path/to/resource2&quot;</span>
+		<span style="color: #FF0000">data-thx-get-result=</span><span
+						style="color: #0000FF">&quot;#myResult2&quot;</span> <span
+						style="color: #FF0000">data-thx-get-dest=</span><span
+						style="color: #0000FF">&quot;.some-class&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>Post
 		Something<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
 		...
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 		...
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
 		...
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 
 <span style="color: #008800; font-style: italic">&lt;!-- 1) the page contains the following node that uses a raw JQuery selector --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource&quot;</span>
-	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;#myResult&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get
+<span style="color: #000080; font-weight: bold">&lt;button</span> <span
+						style="color: #FF0000">data-thx-get=</span><span
+						style="color: #0000FF">&quot;click&quot;</span> <span
+						style="color: #FF0000">data-thx-get-path=</span><span
+						style="color: #0000FF">&quot;path/to/resource&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span
+						style="color: #0000FF">&quot;#myResult&quot;</span> <span
+						style="color: #FF0000">data-thx-get-dest=</span><span
+						style="color: #0000FF">&quot;#myDest&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>Get
 	Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- when clicked would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource&quot;</span>
-	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;#myResult&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get
+<span style="color: #000080; font-weight: bold">&lt;button</span> <span
+						style="color: #FF0000">data-thx-get=</span><span
+						style="color: #0000FF">&quot;click&quot;</span> <span
+						style="color: #FF0000">data-thx-get-path=</span><span
+						style="color: #0000FF">&quot;path/to/resource&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span
+						style="color: #0000FF">&quot;#myResult&quot;</span> <span
+						style="color: #FF0000">data-thx-get-dest=</span><span
+						style="color: #0000FF">&quot;#myDest&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>Get
 	Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;myResult&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;selClass&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource2&quot;</span>
-			<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;#myResult2&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;.some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Post
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;myResult&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;button</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;selClass&quot;</span> <span
+						style="color: #FF0000">data-thx-get=</span><span
+						style="color: #0000FF">&quot;click&quot;</span> <span
+						style="color: #FF0000">data-thx-get-path=</span><span
+						style="color: #0000FF">&quot;path/to/resource2&quot;</span>
+			<span style="color: #FF0000">data-thx-get-result=</span><span
+						style="color: #0000FF">&quot;#myResult2&quot;</span> <span
+						style="color: #FF0000">data-thx-get-dest=</span><span
+						style="color: #0000FF">&quot;.some-class&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>Post
 			Something<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
 			...
 		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 			...
 		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
 			...
 		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
@@ -381,19 +563,43 @@
 
 
 <span style="color: #008800; font-style: italic">&lt;!-- 2) the page contains the following node that siphons JQuery selector(s) --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource&quot;</span>
-	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;#myResult ?{#selClass-&gt;data-thx-get-dest}&quot;</span>
-	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;button</span> <span
+						style="color: #FF0000">data-thx-get=</span><span
+						style="color: #0000FF">&quot;click&quot;</span> <span
+						style="color: #FF0000">data-thx-get-path=</span><span
+						style="color: #0000FF">&quot;path/to/resource&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span
+						style="color: #0000FF">&quot;#myResult ?{#selClass-&gt;data-thx-get-dest}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span
+						style="color: #0000FF">&quot;#myDest&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span
+						style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- when clicked would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource&quot;</span>
-	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;#myResult ?{#selClass-&gt;data-thx-get-dest}&quot;</span>
-	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;button</span> <span
+						style="color: #FF0000">data-thx-get=</span><span
+						style="color: #0000FF">&quot;click&quot;</span> <span
+						style="color: #FF0000">data-thx-get-path=</span><span
+						style="color: #0000FF">&quot;path/to/resource&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span
+						style="color: #0000FF">&quot;#myResult ?{#selClass-&gt;data-thx-get-dest}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span
+						style="color: #0000FF">&quot;#myDest&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span
+						style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
 		...
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+						style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;some-class&quot;</span><span
+						style="color: #000080; font-weight: bold">&gt;</span>
 		...
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
@@ -420,16 +626,50 @@
 				<code>some-class</code>
 				will be <i>included</i> in the <b>destination siphon</b>.
 			</p>
-			<div class="alert alert-warning">
-				<strong>Nested <b>siphon resolver</b>s
-				</strong> - although nesting different types of <b>siphon resolver</b>s is
-				discouraged for readability sake, <b>node siphon resolver</b>s can
-				contain any number of nested <b>surrogate siphon resolver</b>s within
-				them (e.g.
-				<code>!{?{.my-class}-&gt;text}</code>
-				), but <b>surrogate siphon resolver</b>s should <strong>never</strong>
-				contain <b>node siphon resolver</b>s (e.g.
-				<code>?{!{.my-class-&gt;text}}</code>
+			<p>
+				<b>result siphon</b>s can also use <b>node siphon resolver</b>s to
+				designate directives that indicate what parts of the selected
+				node(s) will be used. Lets take a look at an example:
+			</p>
+<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume the following fragment snippet resides at path/to/resource --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;my-other-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;someData&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;my-class&quot;</span> <span style="color: #FF0000">data-my-attr=</span><span style="color: #0000FF">&quot;abc&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;my-class&quot;</span> <span style="color: #FF0000">data-my-attr=</span><span style="color: #0000FF">&quot;def&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- and the page contains the following node that siphons JQuery selector(s) --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;!{.my-class-&gt;data-my-attr} !{.my-other-class}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- when clicked would result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;!{.my-class-&gt;data-my-attr} !{.my-other-class}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	abcdef
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;my-other-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;someData&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
+			<div class="alert alert-info">
+				<strong>Note:</strong> although <b>result siphon</b>s can
+				simultaneously contain raw JQuery selectors as well as <b>node
+					siphon resolver</b>s (e.g.
+				<code>.my-class !{.my-other-class-&gt;text}</code>
+				), the order of insertion into the DOM is not guaranteed as it would
+				be for <b>result siphon</b>s that contained only <b>node siphon
+					resolver</b>s (e.g.
+				<code>!{.my-class} !{.my-other-class-&gt;text}</code>
 				)
 			</div>
 		</div>
