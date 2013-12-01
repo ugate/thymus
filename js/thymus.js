@@ -1863,7 +1863,7 @@
 			function appendRepl(ia, $x, rr, x) {
 				var xIsJ = x instanceof jQuery;
 				var ra = attrp(xIsJ ? x : $x, rr);
-				ra = ra === false ? x instanceof jQuery
+				ra = ra === false ? x instanceof jQuery && rr
 						&& rr.directive == DTEXT ? x.text() : x : ra ? ra : '';
 				return ia ? $x.append(ra) : $x.replaceWith(ra);
 			}
