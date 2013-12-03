@@ -456,10 +456,11 @@
 			</p>
 <div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- the following button --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;/path/to/resource&quot;</span>
-	<span style="color: #FF0000">data-thx-get-params=</span><span style="color: #0000FF">&quot;|{#one} |{#two-&gt;text} |{#three-&gt;data-my-param} ?{select[name=&amp;quot;fourSel&amp;quot;]}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-params=</span><span style="color: #0000FF">&quot;|{.one-vals} |{#two-&gt;text} |{#three-&gt;data-my-param} ?{select[name=&amp;quot;fourSel&amp;quot;]}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDestw&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDestw&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;#1 value&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;one&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;#1a value&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;one-vals&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;oneA&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;#1b value&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;one-vals&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;oneB&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;two&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>#2 value<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-my-param=</span><span style="color: #0000FF">&quot;#3 value&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;three&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;fourSel&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
@@ -469,8 +470,41 @@
 <span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;four&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;four-1&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;#4 option 1&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;four&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;four-2&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;#4 option 2&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- would send the parameters: --&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- one=%231%20value&amp;two=%232%20value&amp;three=%233%20value&amp;four=%234%20option%202 --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- oneA=%231a%20value&amp;oneB=%231b%20value&amp;two=%232%20value&amp;three=%233%20value&amp;four=%234%20option%202 --&gt;</span>
 </pre></div>
+			<p>
+				The first order of resolution in the example above will be to
+				replace any <b>surrogate siphon resolver</b>s that may exist in the
+				<b>parameter siphon</b>. So,
+				<code>?{select[name=&quot;fourSel&quot;]}</code>
+				gets replaced with the <a href="http://api.jquery.com/val/">JQuery.val()</a>
+				(default directive) of the <i>select</i> node returned from the
+				JQuery selector which results in
+				<code>|{.one-vals} |{#two-&gt;text}
+					|{#three-&gt;data-my-param} |{.four-2}</code>
+				. Next,
+				<code>|{.one-vals}</code>
+				selects the two nodes that have the <i>one-vals</i> class. The <i>id</i>
+				is captured as the key and the default directive uses <a
+					href="http://api.jquery.com/val/">JQuery.val()</a> as the parameter
+				<i>value</i> for each of the two nodes (i.e.
+				<code>oneA=%231a%20value&amp;oneB=%231b%20value</code>
+				). Then,
+				<code>|{#two-&gt;text}</code>
+				uses the JQuery selector <i>#two</i> to capture the div with the
+				matching id and extracts the <i>text</i> of the node using the
+				supplied directive. A simliar capture is performed for the
+				<code>|{#three-&gt;data-my-param}</code>
+				<b>node siphon resolver</b>, but using an attribute as the
+				directive. Finally, the default <a href="http://api.jquery.com/val/">JQuery.val()</a>
+				directive is used for
+				<code>|{.four-2}</code>
+				completing the final parameter extraction of
+				<code>oneA=%231a%20value&amp;oneB=%231b%20value&amp;two=%232%20value&amp;three=%233%20value&amp;four=%234%20option%202</code>
+				(each value is set using
+				<code>encodeURIComponent</code>
+				) that will be sent when the button is clicked.
+			</p>
 			<h4 id="fragresultchain">Chaining Result Selectors</h4>
 			<p>
 				A <b>result siphon</b> works slightly different that most other
