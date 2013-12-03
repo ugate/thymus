@@ -50,7 +50,7 @@
 				by <b>thymus.js</b> when Thymeleaf hasn't already processed them.
 				To illustrate this concept consider the following:
 			</p>
-<div style="background: #ffffff; overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/head&quot; --&gt;</span>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/head&quot; --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;head</span> <span style="color: #FF0000">th:fragment=</span><span style="color: #0000FF">&quot;header&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;link</span> <span style="color: #FF0000">href=</span><span style="color: #0000FF">&#39;http://fonts.googleapis.com/css?family=Open+Sans&#39;</span>
@@ -125,7 +125,7 @@
 				attribute when ran through the Thymeleaf engine (thus preventing <b>thymus.js</b>
 				event registration), but will operate as expected otherwise:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">th:text=</span><span style="color: #0000FF">&quot;#{signin}&quot;</span> <span style="color: #FF0000">th:attr=</span><span style="color: #0000FF">&quot;data-thx-post=&#39;&#39;&quot;</span>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">th:text=</span><span style="color: #0000FF">&quot;#{signin}&quot;</span> <span style="color: #FF0000">th:attr=</span><span style="color: #0000FF">&quot;data-thx-post=&#39;&#39;&quot;</span>
 	<span style="color: #FF0000">data-thx-post=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-post-path=</span><span style="color: #0000FF">&quot;index&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Sign in<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
 			<div class="alert alert-success">

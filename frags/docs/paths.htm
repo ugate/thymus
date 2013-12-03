@@ -25,7 +25,7 @@
 				as <b>example.com/my-app/user/info.htm</b>. If the <b>routing
 					attribute</b> is defined something like:
 			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span
 	style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;topnav&quot;</span><span
 	style="color: #000080; font-weight: bold">&gt;</span>
@@ -36,21 +36,19 @@
 				And both <b>example.com/my-app/index.htm</b> and <b>example.com/my-app/user/info.htm</b>
 				contain a corresponding <b>routing attribute</b>:
 			</p>
-			<div style="overflow: auto; width: auto; padding: .2em .6em;">
-				<pre style="margin: 0; line-height: 125%">
-					<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-						style="color: #FF0000">data-thx-include=</span><span
-						style="color: #0000FF">&quot;frags/nav/nav :: #topnav&quot;</span><span
-						style="color: #000080; font-weight: bold">&gt;</span>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+	style="color: #FF0000">data-thx-include=</span><span
+	style="color: #0000FF">&quot;frags/nav/nav :: #topnav&quot;</span><span
+	style="color: #000080; font-weight: bold">&gt;</span>
 	...
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
 			<p>
 				Then the <b>thymus.js</b> script definitions would be as follows:
 			</p>
-			<div style="overflow: auto; width: auto; padding: .2em .6em;">
-				<pre style="margin: 0; line-height: 125%">
-					<span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
+<span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;meta</span> <span
 						style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span
 						style="color: #000080; font-weight: bold">/&gt;</span>
@@ -64,7 +62,7 @@
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
 </pre></div>
 
-<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
 <span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;meta</span> <span
 						style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span
@@ -103,18 +101,14 @@
 				<code>data-thx-frag-extension</code>
 				attribute is defined on the <b>thymus.js</b>
 				<code>script</code>
-				it will use the
+				it will append the
 				<code>data-thx-frag-extension</code>
-				value as the file extension and will append it to any <b>path
-					siphon</b> URL that does not already have a file extension (should
-				typically be prefixed with a period). Any <b>path siphon</b> URL
-				that has it's own file extension will not get the
-				<code>data-thx-frag-extension</code>
-				appended to it's <b>path siphon</b>. A special value of <b>inherit</b>
-				can be used if fragments should inherit the parent page file
-				extension (if any). Here are a few variations:
+				to any <b>path siphon</b> URL that does not already have a file
+				extension and does not end with a &quot;<b>/</b>&quot;. A special
+				value of <b>inherit</b> can be used if fragments should inherit the
+				parent page file extension (if any). Here are a few variations:
 			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume the following script --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;script </span><span
 						style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span
@@ -224,7 +218,7 @@
 			<h3 id="attrpaths">Attribute Path Resolution</h3>
 			<p>
 				Relative URLs within the standard URL related attributes are
-				resolved using either the pathed defined within
+				resolved using either the path defined within
 				<code>data-thx-base-path</code>
 				(<a href="#getstarted">more details</a>) or <b>automatically</b> by
 				the browser using the
@@ -239,7 +233,7 @@
 				<code>base</code>
 				tag and no path has been defined using the
 				<code>data-thx-base-path</code>
-				attribute or when a path has been defined using the
+				attribute or when a path has been defined by using just the
 				<code>data-thx-base-path</code>
 				attribute, <b>thymus.js</b> will convert the following relative URLs
 				to their absolute counterparts that are found within the following
@@ -272,14 +266,19 @@
 				some cases can also be a
 				<code>function</code>
 				that will <em>handle</em> the extraction and/or placement of data
-				within the DOM. There are two types of <b>siphon resolver</b>s:
+				within the DOM. In order to aid in the process of JQuery node
+				selection, <b>thymus.js</b> introduces the concept of <b>siphon
+					resolver</b>s. A <b>siphon resolver</b> gives a JQuery selector the
+				ability to designate how the selected node(s) will be used. <b>siphon
+					resolver</b>s come in two flavors:
 			</p>
 			<ul>
 				<li><code>?{}</code> (<b>surrogate siphon resolver</b>) - the
 					wrapped JQuery selector will be used to select the node(s) where
 					value(s) will be extracted and used to replace the expression
-					within the final siphon definition string</li>
-				<li><code>!{}</code> (<b>node siphon resolver</b>) - the
+					within the final siphon definition string (can be used within any <b>siphon
+						attribute</b>)</li>
+				<li><code>|{}</code> (<b>node siphon resolver</b>) - the
 					wrapped JQuery selector will be used to select the node(s) used by
 					the siphon (<b>parameter siphon</b>s, <b>result siphon</b>s and <b>destination
 						siphon</b>s only)</li>
@@ -311,17 +310,6 @@
 					it's defined within.
 				</li>
 			</ul>
-			<div class="alert alert-info">
-				<strong>Note:</strong> although nesting different types of <b>siphon
-					resolver</b>s is discouraged for readability sake, <b>node siphon
-					resolver</b>s can contain any number of nested <b>surrogate siphon
-					resolver</b>s within them (e.g.
-				<code>!{?{.my-class}-&gt;text}</code>
-				), but <b>surrogate siphon resolver</b>s should <strong>never</strong>
-				contain <b>node siphon resolver</b>s (e.g.
-				<code>?{!{.my-class-&gt;text}}</code>
-				)
-			</div>
 			<h4 id="fragpathsub">Fragment Path Substitutions</h4>
 			<p>
 				When URLs are dependent upon user input static URLs will not
@@ -332,7 +320,7 @@
 				value(s) will be captured from the queried nodes using the
 				appropriate directive and replaced within the <b>path siphon</b>.
 			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
 <span style="color: #000080; font-weight: bold">&lt;button</span> <span
 	style="color: #FF0000">data-thx-post=</span><span
 	style="color: #0000FF">&quot;click&quot;</span> 
@@ -455,9 +443,26 @@
 			<h4 id="fragparamchain">Chaining Parameter Selectors</h4>
 			<p>
 				A <b>parameter siphon</b> can contain a single raw JQuery selector
-				or can contain one or more <b>siphon resolver</b>s in order to build
-				the final <b>parameter siphon</b> JQuery selector.
+				or can contain one or more <b>surrogate siphon resolver</b>s in
+				order to build the final <b>parameter siphon</b> JQuery selector. A
+				<b>parameter siphon</b> can also contain one or more <b>node
+					siphon resolver</b>s. Each parameter sent will contain a <i>key</i>/<i>value</i>
+				pair for each node returned from the JQuery selector results. The <i>key</i>
+				will use either the <b>name</b> or <b>id</b> of the selected node
+				(in that order of precedence- can be <a href="#fragsoptsprog">configured</a> to
+				use a custom set of attributes as well). A simple example would be:
 			</p>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- the following button --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;/path/to/resource&quot;</span>
+	<span style="color: #FF0000">data-thx-get-params=</span><span style="color: #0000FF">&quot;|{#one} |{#two-&gt;text} |{#three-&gt;data-my-param}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDestw&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDestw&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;#1 value&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;one&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;two&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>#2 value<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-my-param=</span><span style="color: #0000FF">&quot;#3 value&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;three&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- would send the parameters: --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- one=%231%20value&amp;two=%232%20value&amp;three=%233%20value --&gt;</span>
+</pre></div>
 			<h4 id="fragresultchain">Chaining Result Selectors</h4>
 			<p>
 				A <b>result siphon</b> works slightly different that most other
@@ -468,7 +473,7 @@
 				selected) or use a <a href="#fragshandler">result handler</a>. Lets
 				take a look at a few scenarios:
 			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume the following fragment snippet resides at path/to/resource --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span
 						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myResult&quot;</span><span
@@ -631,7 +636,7 @@
 				designate directives that indicate what parts of the selected
 				node(s) will be used. Lets take a look at an example:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume the following fragment snippet resides at path/to/resource --&gt;</span>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume the following fragment snippet resides at path/to/resource --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;my-other-class&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;someData&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 		...
@@ -645,12 +650,12 @@
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- and the page contains the following node that siphons JQuery selector(s) --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource&quot;</span>
-	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;!{.my-class-&gt;data-my-attr} !{.my-other-class}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;|{.my-class-&gt;data-my-attr} |{.my-other-class}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- when clicked would result in --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/resource&quot;</span>
-	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;!{.my-class-&gt;data-my-attr} !{.my-other-class}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;|{.my-class-&gt;data-my-attr} |{.my-other-class}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	abcdef
@@ -662,14 +667,25 @@
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
 			<div class="alert alert-info">
-				<strong>Note:</strong> although <b>result siphon</b>s can
-				simultaneously contain raw JQuery selectors as well as <b>node
-					siphon resolver</b>s (e.g.
-				<code>.my-class !{.my-other-class-&gt;text}</code>
-				), the order of insertion into the DOM is not guaranteed as it would
-				be for <b>result siphon</b>s that contained only <b>node siphon
+				<strong>Note:</strong> even though some siphons can simultaneously
+				contain raw JQuery selectors as well as <b>node siphon resolver</b>s
+				(e.g.
+				<code>.my-class |{.my-other-class-&gt;text}</code>
+				), the order of usage or insertion into the DOM is not guaranteed as
+				it would be for siphons that contained only <b>node siphon
 					resolver</b>s (e.g.
-				<code>!{.my-class} !{.my-other-class-&gt;text}</code>
+				<code>|{.my-class} |{.my-other-class-&gt;text}</code>
+				)
+			</div>
+			<div class="alert alert-info">
+				<strong>Note:</strong> although nesting different types of <b>siphon
+					resolver</b>s is discouraged for readability sake, <b>node siphon
+					resolver</b>s can contain any number of nested <b>surrogate siphon
+					resolver</b>s within them (e.g.
+				<code>|{?{.my-class}-&gt;text}</code>
+				), but <b>surrogate siphon resolver</b>s should <strong>never</strong>
+				contain <b>node siphon resolver</b>s (e.g.
+				<code>?{|{.my-class-&gt;text}}</code>
 				)
 			</div>
 		</div>

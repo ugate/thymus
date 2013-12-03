@@ -9,7 +9,7 @@
 			</h2>
 		</div>
 		<div class="panel-body app-code">
-			<h3 id="httpmethods"><b>DOM routing attribute</b>s</h3>
+			<h3 id="httpmethods"><b>Siphon Attribute</b>s</h3>
 			<p>
 				There are times where it's desirable to load fragment views and/or
 				models after some action has taken place. In this case, one of the <a
@@ -24,7 +24,7 @@
 				data and/or <i>views</i> are transfered to a page is determined by
 				the type of HTTP method <i>verb</i> used on one of the corresponding
 				<code>data-thx-*VERB*</code>
-				<b>DOM routing attribute</b>s; where <i>*VERB*</i> would be replaced
+				<b>siphon attribute</b>s; where <i>*VERB*</i> would be replaced
 				with one of the following HTTP method <i>verbs</i> (e.g.
 				<code>data-thx-get</code>
 				):
@@ -38,11 +38,11 @@
 			<p>
 				From this point on we will refer to
 				<code>data-thx-*VERB*</code>
-				as a <b>DOM routing attribute</b> to reference the entire suite of
+				as a <b>siphon attribute</b> to reference the entire suite of
 				supported <b>thymus.js</b> event driven HTTP method verb attributes.
-				<b>DOM routing attribute</b>s should reside on the node where the
-				DOM event will be triggered. The semantics for <b>DOM routing
-					attribute</b> are separated into multiple facets that control behavior:
+				<b>siphon attribute</b>s should reside on the node where the DOM
+				event will be triggered. The semantics for <b>siphon attribute</b>
+				are separated into multiple facets that control behavior:
 			</p>
 			<div>
 				<div id="domevent" class="row row-thymus">
@@ -55,7 +55,7 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing node</b>'s <b>event siphon</b> parameter
+						The <b>siphon attribute</b>'s <b>event siphon</b> parameter
 						indicates one or more <a
 							href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM events</a>
 						separated by &quot;<b>::</b>&quot;. Each of which will trigger a
@@ -63,7 +63,7 @@
 						events will directly translated into the normal <a
 							href="http://api.jquery.com/on/"><code>$.on(event,
 								...);</code></a> registrations, there is one special case that <b>thymus.js</b>
-						will pickup regardless of the element that the <b>DOM routing
+						will pickup regardless of the element that the <b>siphon
 							attribute</b> is defined on. A
 						<code>load</code>
 						event will cause <b>thymus.js</b> to automatically process the
@@ -84,7 +84,7 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing node</b>'s <b>parameter siphon</b> is one
+						The <b>siphon attribute</b>'s <b>parameter siphon</b> is one
 						or more <a href="http://api.jquery.com/category/selectors/">JQuery
 							selectors</a> that correspond to one or more <b>event siphon</b>
 						events separated by &quot;<b>::</b>&quot;. Each of which will
@@ -104,7 +104,7 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing node</b>'s <b>path</b> that correspond to
+						The <b>siphon attribute</b>'s <b>path</b> that correspond to
 						one or more <b>event siphon</b>s separated by &quot;<b>::</b>&quot;.
 						Each of which should point to the location where the fragment will
 						be captured (e.g. <i>path/to/my/frag</i>). See the <a
@@ -123,7 +123,7 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing node</b>'s <b>result siphon</b> is
+						The <b>siphon attribute</b>'s <b>result siphon</b> is
 						typically one or more <a
 							href="http://api.jquery.com/category/selectors/">JQuery
 							selectors</a>, but can also be a <a href="#fragshandler"><code>function</code>
@@ -154,7 +154,7 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing node</b>'s <b>destination siphon</b> is one or
+						The <b>siphon attribute</b>'s <b>destination siphon</b> is one or
 						more <a href="http://api.jquery.com/category/selectors/">JQuery
 							selectors</a> that correspond to one or more <b>event siphon</b>s
 						separated by &quot;<b>::</b>&quot;. Each <b>destination siphon</b>
@@ -177,7 +177,7 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing node</b>'s <b>destination type siphon</b>
+						The <b>siphon attribute</b>'s <b>destination type siphon</b>
 						designates how a fragment result will be placed within the DOM.
 						Each
 						<b>DOM type</b> can define one or more of the values below
@@ -192,14 +192,14 @@
 								class="badge">sync|include</span> - will append the fragment
 								result within the <b>destination siphon</b>. When there is no <b>destination
 									siphon</b> defined the fragment result will be appended to the node
-								where the <b>DOM routing attribute</b> is defined (<i>model</i>
+								where the <b>siphon attribute</b> is defined (<i>model</i>
 								fragment results will cause the last existing destination
 								content to be cloned, populated with the <i>model</i> data and
 								appended to the destination)</li>
 							<li><span class="badge">async|replace</span> or <span
 								class="badge">sync|replace</span> - will replace the <b>destination
 									siphon</b> with the fragment result. When there is no <b>destination
-									siphon</b> defined the node where the <b>DOM routing attribute</b>
+									siphon</b> defined the node where the <b>siphon attribute</b>
 								is defined will be replaced with the fragment results (<i>model</i>
 								fragments will only replace the data and is synonymous to an
 								update)</li>
@@ -207,14 +207,10 @@
 								class="badge">sync|update</span> - will first remove any
 								pre-existing <b>destination siphon</b>s before appending the
 								fragment result. When there is no <b>destination siphon</b>
-								defined any content within the node where the <b>DOM routing
+								defined any content within the node where the <b>siphon
 									attribute</b> is defined will be removed and replaced with the
 								fragment results (<i>model</i> fragments will only overwrite the
 								data and is synonymous to a replace)</li>
-<!-- 							<li><span class="badge">async|attribute name</span> or <span -->
-<!-- 								class="badge">sync|attribute name</span> - will add/replace the -->
-<!-- 								specified attribute value on the fragment destination with the -->
-<!-- 								fragment results</li> -->
 							<li><span class="badge">sync|transfer</span> - will perform
 								a synchronous page transfer using <code>window.open</code> for
 								HTTP get calls or a dynamic form submission for all other <a
@@ -234,7 +230,7 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing node</b>'s <b>target siphon</b> designates the
+						The <b>siphon attribute</b>'s <b>target siphon</b> designates the
 						window/frame to use for DOM interaction. Each <b>target siphon</b>
 						can define one or more of the values below (separated by &quot;<b>::</b>&quot;).
 						Each of which corresponds to one or more <b>event siphon</b>
@@ -271,42 +267,18 @@
 						</div>
 					</div>
 					<div class="col-md-9">
-						The <b>DOM routing attribute</b>'s <b>agent siphon</b> is one or
-						more <a href="http://api.jquery.com/category/selectors/">JQuery
+						The <b>siphon attribute</b>'s <b>agent siphon</b> is one or more <a
+							href="http://api.jquery.com/category/selectors/">JQuery
 							selectors</a> that correspond to one or more <b>event siphon</b>s
 						separated by &quot;<b>::</b>&quot;. Each <b>agent siphon</b> value
-						will be used to define agent nodes within the DOM where any <b>DOM
-							routing attribute</b>s will be found that may be missing from the
-						node where the <b>agent siphon</b> is defined. See the <a
+						will be used to define agent nodes within the DOM where any <b>siphon
+							attribute</b>s will be found that may be missing from the node where
+						the <b>agent siphon</b> is defined. See the <a
 							href="#otherfragtargets">fragment siphons section</a> for more
 						details on how <b>agent siphon</b>s use JQuery selectors and <a
 							href="#domagentsdetail">agents</a> for more details.
 					</div>
 				</div>
-<!-- 				<div id="domvarsiphon" class="row row-thymus"> -->
-<!-- 					<div class="col-md-3"> -->
-<!-- 						<div> -->
-<!-- 							<span class="label label-info">variable siphon</span> &dagger; -->
-<!-- 						</div> -->
-<!-- 						<div> -->
-<!-- 							<code>data-thx-*VERB*-with</code> -->
-<!-- 						</div> -->
-<!-- 					</div> -->
-<!-- 					<div class="col-md-9"> -->
-<!-- 						The <b>DOM routing attribute</b>'s <b>variable siphon</b> is one -->
-<!-- 						or more comma-delimited variable definitions (e.g. -->
-<!-- 						<code>var1=someValue,var2=otherValue</code> -->
-<!-- 						) that correspond to one or more <b>event siphon</b>s separated by -->
-<!-- 						&quot;<b>::</b>&quot;. Each <b>variable siphon</b> will be limited -->
-<!-- 						to the context of the HTTP verb used. Variable values will be -->
-<!-- 						discoverable for the entire lifespan of the current fragment(s) -->
-<!-- 						load cycle. So, variables can be defined on a node and referenced -->
-<!-- 						within other nodes that have their own <b>DOM routing -->
-<!-- 							attribute</b>s (within the the current load). See the <a -->
-<!-- 							href="#otherfragtargets">fragment siphons section</a> for more -->
-<!-- 						details on how <b>variable siphon</b>s are resolved. -->
-<!-- 					</div> -->
-<!-- 				</div> -->
 			</div>
 			<div class="alert alert-info">
 				<small>&Dagger; indicates that any updates made to the
@@ -342,13 +314,13 @@
 				be scatterd throughout the page! It can even pull parameters from
 				attributes and node text! What if we were to tell you that this and
 				many other features can be done without a single line of JS? All
-				that is required is that the element contain a few <b>DOM
-					routing attribute</b>s. First, an <b>event siphon</b> will need to
-				declared that will define the event(s) that will trigger the call.
-				Secondly, a <b>path siphon</b> needs to be defined to give direction
-				to the process. The final attribute that will need to be defined is
-				a synchronous <b>destination type siphon</b> that will specify that
-				a full-page transfer will be performed. There is no <b>target
+				that is required is that the element contain a few <b>siphon
+					attribute</b>s. First, an <b>event siphon</b> will need to declared
+				that will define the event(s) that will trigger the call. Secondly,
+				a <b>path siphon</b> needs to be defined to give direction to the
+				process. The final attribute that will need to be defined is a
+				synchronous <b>destination type siphon</b> that will specify that a
+				full-page transfer will be performed. There is no <b>target
 					siphon</b> so the operation will occur in the current window/frame.
 				Also, an optional <b>parameter siphon</b> attribute can be used if
 				there are any parameters that need to be passed. Here's an example
@@ -414,8 +386,7 @@
 						<div class="list-group-item">
 							<h4>Code</h4>
 						</div>
-						<div class="list-group-item thymus-demo">
-<div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;?{#globalLoginPath}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;sync|transfer&quot;</span>
 	<span style="color: #FF0000">data-thx-get-params=</span><span style="color: #0000FF">&quot;.simple-nav-params :input&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
@@ -445,20 +416,19 @@
 		<span style="color: #FF0000">min=</span><span style="color: #0000FF">&quot;1&quot;</span> <span style="color: #FF0000">max=</span><span style="color: #0000FF">&quot;100&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
-						</div>
 					</div>
 				</div>
 			</div>
 			<h4 id="httpasyncself">Self-targeting Asynchronous Transfers</h4>
 			<p>
 				A self-targeting asynchronous transfer is a node in which defines an
-				<b>event siphon</b>, a <b>path siphon</b> and any other pertinent <b>DOM
-					routing attribute</b>s. The difference is that it does not define a <b>destination
+				<b>event siphon</b>, a <b>path siphon</b> and any other pertinent <b>siphon
+					attribute</b>s. The difference is that it does not define a <b>destination
 					siphon</b>. In this case the <b>destination siphon</b> will default to
-				the node where the <b>DOM routing attribute</b> is defined. Consider
-				the following:
+				the node where the <b>siphon attribute</b> is defined. Consider the
+				following:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	...
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
@@ -516,13 +486,11 @@
 						<div class="list-group-item">
 							<h4>Code</h4>
 						</div>
-						<div class="list-group-item thymus-demo">
-<div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+<div class="list-group-item thymus-demo">><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include
 	User View<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
-						</div>
 					</div>
 				</div>
 			</div>
@@ -530,7 +498,7 @@
 				In a similar fashion a self-targeting asynchronous transfer can be
 				<i>replaced</i> rather than <i>included</i>:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	...
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
@@ -572,13 +540,11 @@
 						<div class="list-group-item">
 							<h4>Code</h4>
 						</div>
-						<div class="list-group-item thymus-demo">
-<div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
 	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;sync|replace&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Replace User View<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
-						</div>
 					</div>
 				</div>
 			</div>
@@ -589,7 +555,7 @@
 				tells <b>thymus.js</b> where the returned fragment should be placed.
 				Following the previous trend of examples...
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	...
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
@@ -658,20 +624,18 @@
 						<div class="list-group-item">
 							<h4>Code</h4>
 						</div>
-						<div class="list-group-item thymus-demo">
-<div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
 	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
 	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User View<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
-						</div>
 					</div>
 				</div>
 			</div>
 			<p>
-				An <i>update</i> <b>DOM routing attribute</b> works similar to a <i>include</i>
-				<b>DOM routing attribute</b> except it will remove any prior
+				An <i>update</i> <b>siphon attribute</b> works similar to a <i>include</i>
+				<b>siphon attribute</b> except it will remove any prior
 				fragment insertions made before appending the fragment results. In
 				the example above, that would mean any
 				<code>.user-detail</code>
@@ -715,8 +679,7 @@
 								for further explaination:
 							</small>
 						</div>
-						<div class="list-group-item thymus-demo">
-<div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;demoDomUpdateSel&quot;</span>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;demoDomUpdateSel&quot;</span>
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;load :: change&quot;</span>
 	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/?{#demoDomUpdateSel}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
@@ -727,13 +690,12 @@
 <span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span><span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
-						</div>
 					</div>
 				</div>
 			</div>
 			<h3 id="multidomevents">Multiple DOM Events (on a given <b>event siphon</b>)</h3>
 			<p>
-				Each of the <b>DOM routing attribute</b>s can contain multiple
+				Each of the <b>siphon attribute</b>s can contain multiple
 				events separated by a &quot;<b>::</b>&quot; within a single <i>event
 					siphon</i>. For instance, a
 				<code>data-thx-get="click :: keyup"</code>
@@ -743,9 +705,9 @@
 				and
 				<code>keyup</code>
 				event. Each event defined within an <b>event siphon</b> will
-				correspond to any other <b>DOM routing attribute</b>s with the same
+				correspond to any other <b>siphon attribute</b>s with the same
 				HTTP verb that may be defined on the node at the same position. If a
-				<b>DOM routing attribute</b> does not have a value for the given <b>event
+				<b>siphon attribute</b> does not have a value for the given <b>event
 					siphon</b>'s event, then the last parameterized siphon value will be
 				used. Consider the following:
 			</p>
@@ -781,8 +743,7 @@
 						<div class="list-group-item">
 							<h4>Code</h4>
 						</div>
-						<div class="list-group-item thymus-demo">
-<div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click :: keyup&quot;</span>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click :: keyup&quot;</span>
 	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1 :: frags/user/user2&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
 	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userMultiEvt1 :: #userMultiEvt2&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
@@ -791,7 +752,6 @@
 <span style="color: #000080; font-weight: bold">&lt;h4&gt;</span>User 2<span style="color: #000080; font-weight: bold">&lt;/h4&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userMultiEvt2&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 </pre></div>
-						</div>
 					</div>
 				</div>
 			</div>
@@ -824,20 +784,19 @@
 				verbose. That's why <b>thymus.js</b> provides a concept of an agent.
 				An agent can be thought of as a node that will provide a service on
 				behalf of other node(s). There is little difference between a node
-				with the typical <b>DOM routing attribute</b>s and an agent. So, any
-				node can become an agent without having to explicitly declare it as
-				an agent. However, other node(s) can add an <b>agent siphon</b> that
+				with the typical <b>siphon attribute</b>s and an agent. So, any node
+				can become an agent without having to explicitly declare it as an
+				agent. However, other node(s) can add an <b>agent siphon</b> that
 				will contain a JQuery selector that will select the node(s) that
 				will act as an agent. This causes <b>thymus.js</b> to look at the
-				agent node(s) for any <b>DOM routing attribute</b>s that are missing
-				from the node where the <b>agent siphon</b> is defined. When the
-				JQuery selector returns more than one node, the first node that
-				contains the missing <b>DOM routing attribute</b> will be used until
-				all <b>DOM routing attribute</b>s are found or all of the selected
-				agents are exhausted (whichever occurs first). An agent itself can
-				define it's own <b>event siphon</b> if so desired, but it is
-				optional. Lets take a look at an example where we might want to use
-				an agent.
+				agent node(s) for any <b>siphon attribute</b>s that are missing from
+				the node where the <b>agent siphon</b> is defined. When the JQuery
+				selector returns more than one node, the first node that contains
+				the missing <b>siphon attribute</b> will be used until all <b>siphon
+					attribute</b>s are found or all of the selected agents are exhausted
+				(whichever occurs first). An agent itself can define it's own <b>event
+					siphon</b> if so desired, but it is optional. Lets take a look at an
+				example where we might want to use an agent.
 			</p>
 			<div class="row">
 				<div class="col-md-6">
@@ -875,8 +834,7 @@
 									resolver</a>s for further explaination:
 							</small>
 						</div>
-						<div class="list-group-item thymus-demo">
-<div><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn-group&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest2Grp&quot;</span>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn-group&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest2Grp&quot;</span>
 	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/${userKey}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
 	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDestAgent&quot;</span>
@@ -898,14 +856,13 @@
 		User3<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
-						</div>
 					</div>
 				</div>
 			</div>
 			<h3 id="shorthand">Auto Loading Fragments (short-hand)</h3>
 			<p>
 				A short-hand <b>routing attribute</b> can also be used which is
-				equivalent to a <b>DOM routing attribute</b> with a
+				equivalent to a <b>siphon attribute</b> with a
 				<code>load</code>
 				<b>event siphon</b> and a separate <b>path siphon</b> attribute.
 				Instead of two attributes, the short-handed version combines the <b>path
@@ -924,7 +881,7 @@
 				<b>routing attribute</b> is found throughout the document (including
 				within a fragment itself). It's use is limited to the <b>path
 					siphon</b> and <b>result siphon</b> defined within it and will not use
-				any other <b>DOM routing attribute</b>s that may be defined on the
+				any other <b>siphon attribute</b>s that may be defined on the
 				node. Examples can be found under the <a href="#usage">fragment
 					types section</a>.
 			</p>
@@ -934,7 +891,7 @@
 				<code>data-thx-replace</code>
 				attribute:
 			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- that contains the following --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span
@@ -968,7 +925,7 @@
 				which would have appended the fragment rather than replacing the
 				placeholder:
 			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- that contains the following --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span
@@ -1014,7 +971,7 @@
 				). Only use this approach when the fragment <b>result siphon</b> is
 				not referencing nodes that reside in other fragments.
 			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- a page with --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span

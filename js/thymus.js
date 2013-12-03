@@ -1347,13 +1347,26 @@
 		function NodeResolvers(s, pa) {
 			var rvs = [];
 			var gs = '';
+			function select(r, $el) {
+				var $r = $el.find(r.selector);
+				return $r.length <= 0 ? $el.filter(r.selector) : $r;
+			}
 			function add(s, d) {
 				if (!s) {
 					return null;
 				}
 				var r = rvs[rvs.length] = {};
+				r.select = function($el) {
+					return select(r, $el);
+				};
 	            r.selector = $.trim(s);
 	            r.directive = d ? $.trim(d) : '';
+	            if (r.directive) {
+	            	var ld = r.directive.toLowerCase();
+	            	if (ld == DTEXT || ld == DHTML) {
+	            		r.directive = ld;
+	            	}
+	            }
 	            r.isForAttr = d && d != DTEXT && d != DHTML;
 	            gs += (gs.length > 0 ? ',' : '') + r.selector;
 	            return r;
@@ -1362,9 +1375,14 @@
 				// regular expression must match entire expression
 				var nv = s.replace(opts.regexNodeSiphon, function(m, v) {
 					// regular expression must match entire string
+					var isr = false;
 			        v.replace(opts.regexValTypeSiphon, function(m, v1, v2) {
 			            add(v1, v2);
+			            isr = true;
 			        });
+			        if (!isr) {
+			        	add(v);
+			        }
 					return '';
 				});
 				return nv;
@@ -1388,6 +1406,102 @@
 		}
 
 		/**
+		 * Fragment parameters siphon
+		 * 
+		 * @constructor
+		 * @param m
+		 *            the HTTP method
+		 * @param ps
+		 *            the raw parameter siphon string
+		 * @param vars
+		 *            the associative array cache of names/values variables used
+		 *            for <b>surrogate siphon resolver</b>s
+		 */
+		function FragParamSiphon(m, ps, vars) {
+			var pnr = null;
+			var psp = null;
+			function kv(ps, k, v) {
+				var ev = encodeURIComponent(v.replace(opts.regexParamReplace,
+						opts.paramReplaceWith));
+				if (typeof ps === 'string') {
+					return ps + (ps.length > 0 ? opts.paramSep : '') + k + '='
+							+ ev;
+				} else {
+					var o = {};
+					o[k] = ev;
+					$.extend(ps, o);
+					return ps;
+				}
+			}
+			function add(r, $p, ps, uj) {
+				if ($p.is(':disabled')
+						|| (!$p.is(':checked')
+								&& $p.prop('tagName').toLowerCase() == 'input' && opts.regexParamCheckable
+								.test($p.prop('type')))) {
+					return ps;
+				}
+				var k = null;
+				$.each(opts.paramNameAttrs, function(i, v) {
+					k = $p.attr(v);
+					if (k) {
+						return false;
+					}
+				});
+				if (!k) {
+					return ps;
+				}
+				var v = !r.directive ? $p.val() : r.directive == DTEXT ? $p
+						.text() : r.directive == DHTML ? $p.html() : $p
+						.attr(r.directive);
+				if (v !== undefined && v !== null) {
+					if ($.isArray(v)) {
+						if (uj) {
+							var vm = $.map(v, function(ev){
+								return kv({}, k, ev);
+							});
+							ps = kv(ps, k, vm);
+						} else {
+							$.each(v, function(i, ev) {
+								ps = kv(ps, k, ev);
+							});
+						}
+					} else {
+						ps = kv(ps, k, v);
+					}
+				}
+				return ps;
+			}
+			this.paramSiphon = function(uj, psn) {
+				ps = psn ? psn : ps;
+				// parameter siphons can capture either JSON or URL encoded strings
+				if ((ps && !psp) || psn || (!uj && typeof psp === 'object')
+						|| (uj && typeof psp === 'string')) {
+					psp = siphonValues(ps, m, vars, opts.regexSurrogateSiphon,
+							opts.regexValTypeSiphon, opts.paramSep, true);
+					pnr = new NodeResolvers(psp);
+				}
+				return psp;
+			};
+			this.params = function($el, uj, psn) {
+				var $pel = $el instanceof jQuery ? $el : $('html');
+				var ps = uj ? {} : '';
+				this.paramSiphon(uj, psn);
+				pnr.each(function(i, r) {
+					var $p = r.select($pel);
+					// avoiding JQuery serialize functions due to name only capture
+					// ps = add(r, $p, ps, uj);
+					// ps = kv(ps, uj ? $p.serializeArray() : $p.serialize());
+					$p.each(function() {
+						// add the key/value parameters individually in order to
+						// handle the directive
+						ps = add(r, $(this), ps, uj);
+					});
+				});
+				return ps;
+			};
+		}
+
+		/**
 		 * Fragment result siphon
 		 * 
 		 * @constructor
@@ -1396,7 +1510,8 @@
 		 * @param rs
 		 *            the raw result siphon string
 		 * @param vars
-		 *            the associative array cache of names/values variables
+		 *            the associative array cache of names/values variables used
+		 *            for <b>surrogate siphon resolver</b>s
 		 */
 		function FragResultSiphon(m, rs, vars) {
 			rs = rs ? $.trim(rs) : null;
@@ -1442,7 +1557,8 @@
 		 * @param ds
 		 *            the raw destination siphon string (or element)
 		 * @param vars
-		 *            the associative array cache of names/values variables
+		 *            the associative array cache of names/values variables used
+		 *            for <b>surrogate siphon resolver</b>s
 		 */
 		function FragDestSiphon(m, ds, vars) {
 			var dsp = typeof ds === 'string' ? $.trim(ds) : ds ? ds : null;
@@ -1763,7 +1879,6 @@
 			// short-hand attrs may have path and result siphon
 			a = a ? a.split(opts.multiSep) : null;
 			this.event = siphon.eventSiphon;
-			var ps = siphon.paramsSiphon;
 			var rp = !a ? siphon.pathSiphon : a && a.length > 0 ? $.trim(a[0])
 					: null;
 			var rs = !a ? siphon.resultSiphon : a && a.length > 1 ? $.trim(a[1])
@@ -1824,19 +1939,7 @@
 				// increment child fragment count on parent fragment
 				this.pf.ccnt(true);
 			}
-			var psp = null;
-			this.ps = function(uj, psn) {
-				ps = psn ? psn : ps;
-				// parameter siphons can capture either JSON or URL encoded strings
-				if ((ps && !psp) || psn || (!uj && typeof psp === 'object')
-						|| (uj && typeof psp === 'string')) {
-					psp = siphonValues(ps, this.method, siphon.vars,
-							opts.regexSurrogateSiphon, opts.regexValTypeSiphon,
-							opts.paramSep, true);
-					psp = uj ? $(psp).serializeArray() : $(psp).serialize();
-				}
-				return psp;
-			};
+			this.fps = new FragParamSiphon(this.method, siphon.paramsSiphon, siphon.vars);
 			this.as = siphon.agentSiphon;
 			this.done = function() {
 				if (!this.cancelled) {
@@ -1953,7 +2056,7 @@
 					// transfer
 					var fd = $('<form style="display:none;" action="' + this.rp()
 							+ '" method="' + this.method + '" />');
-					vars = this.ps(true);
+					vars = this.fps.params(true);
 					var ips = '';
 					for (var i = 0; i < vars.length; i++) {
 						ips += '<input name="' + vars[i].name + '" value="'
@@ -1965,7 +2068,7 @@
 					return no.getWin();
 				} else {
 					var loc = this.rp();
-					var vars = this.ps();
+					var vars = this.fps.params();
 					if (vars) {
 						loc += '?' + vars;
 					}
@@ -1999,8 +2102,9 @@
 			this.toString = function() {
 				return this.constructor.name + ' -> ['
 						+ this.navOpts.toString() + '], HTTP method: '
-						+ this.method + ', parameter siphon: ' + this.ps()
-						+ ', path siphon: ' + this.rp() + ', result siphon: '
+						+ this.method + ', parameter siphon: '
+						+ this.fps.paramSiphon() + ', path siphon: '
+						+ this.rp() + ', result siphon: '
 						+ this.frs.getFuncOrResultSiphon()
 						+ ', destination siphon: ' + this.ds()
 						+ ', agent siphon: ' + this.as + ', cancelled: '
@@ -2034,7 +2138,7 @@
 			o.fragWinHistoryFlag = f ? f.navOpts.history : undefined;
 			o.routingStack = f ? f.getStack() : undefined;
 			o.sourceEvent = f ? f.event : undefined;
-			o.paramsSiphon = f ? f.ps() : undefined;
+			o.paramsSiphon = f ? f.fps.paramSiphon() : undefined;
 			o.pathSiphon = f ? f.rp() : undefined;
 			o.resultSiphon = f ? f.frs.getFuncOrResultSiphon() : undefined;
 			o.destSiphon = f ? f.ds() : undefined;
@@ -2300,12 +2404,10 @@
 				// loop through the resolvers separately in order to handle any
 				// directives that may be defined
 				f.frs.resolvers($c).each(function(i, rr) {
-					var $fs = $c.find(rr.selector);
+					var $fs = rr.select($c);
 					if ($fs.length <= 0) {
-						$fs = $c.filter(rr.selector);
-						if ($fs.length <= 0) {
-							return true;
-						}
+						// nothing found
+						return true;
 					}
 					// loop through the selected result nodes and handle DOM
 					// insertion
@@ -2350,7 +2452,7 @@
 					}
 					// when the fragment path is the 1st one in the queue retrieve it
 					// the queue will prevent duplicate calls to the same fragment path
-					if (f.ps() || t.addFrag(f)) {
+					if (f.fps.paramSiphon() || t.addFrag(f)) {
 						function adone(r, status, xhr) {
 							var tf = t.getFrags(f.rp());
 							tf.result = r;
@@ -2364,7 +2466,7 @@
 						$.ajax({
 							url: f.rp(),
 							type: f.method,
-							data: f.ps(),
+							data: f.fps.params(),
 							async: f.ajaxAsync,
 							cache: opts.ajaxCache,
 							crossDomain: opts.ajaxCrossDomain
@@ -2508,6 +2610,7 @@
 			fragListenerAttr : 'data-thx-onfrag',
 			fragsListenerAttr : 'data-thx-onfrags',
 			fragHeadAttr : 'data-thx-head-frag',
+			paramNameAttrs : [ 'name', 'id' ],
 			regexFragName : /^[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*$/,
 			regexFunc : /^[_$a-zA-Z\xA0-\uFFFF].+?\(/i,
 			regexFileName : /[^\/?#]+(?=$|[?#])/,
@@ -2521,9 +2624,12 @@
 			regexFuncArgReplace : /['"]/g,
 			regexValTypeSiphon : /(^.*)(?:->)(.*$)/g,
 			regexSurrogateSiphon : /(?:\?{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
-			regexNodeSiphon : /(?:!{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
+			regexNodeSiphon : /(?:\|{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexVarSiphon : /(?:\${)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexVarNameVal : /((?:\\.|[^=,]+)*)=("(?:\\.|[^"\\]+)*"|(?:\\.|[^,"\\]+)*)/g,
+			regexParamCheckable : /^(?:checkbox|radio)$/i,
+			regexParamReplace : /\r?\n/g,
+			paramReplaceWith : '\r\n',
 			eventIsBroadcast : true,
 			eventFragChain : 'frag',
 			eventFragsChain : 'frags',

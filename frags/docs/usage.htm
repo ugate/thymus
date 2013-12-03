@@ -11,8 +11,8 @@
 		<div class="panel-body app-code">
 			<p>
 				As <a href="#navcontrol">previously discussed</a> fragments are
-				resolved using <b>DOM routing attribute</b>s that provide siphons
-				that move model/view content to and from the DOM. There are a few
+				resolved using <b>siphon attribute</b>s that provide a mechanism
+				to move model/view content to and from the DOM. There are a few
 				use cases that are worth mentioning that will provide insight into
 				how fragment resolution is impacted during the process. For
 				simplicity sake we will use short-hand version for the <b>routing
@@ -51,7 +51,7 @@
 				and replace the defining DOM node with the <b>result siphon</b>/JQuery
 				selector content. To illustrate this concept consider the following:
 			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span
@@ -113,7 +113,7 @@
 				<code>data-thx-head-frag</code>
 				as in the following example:
 			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
 <span style="color: #000080; font-weight: bold">&lt;head</span> <span
 								style="color: #FF0000">data-thx-include=</span><span
 								style="color: #0000FF">&quot;frags/head :: header&quot;</span><span
@@ -164,7 +164,7 @@
 				<code>script</code>
 				s are wrapped within.
 			</p>
-<div style="overflow: auto; width: auto; padding: .2em .6em;"><pre style="margin: 0; line-height: 125%">
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
 <span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/script&quot; --&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
@@ -251,7 +251,7 @@
 				returned data it can be ommitted from the <b>routing attribute</b>.
 				So, only a <b>path</b> will remain. Similar to the following:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- the the following replacement --&gt;</span>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- the the following replacement --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-replace=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>Will be replaced.<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
