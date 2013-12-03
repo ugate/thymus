@@ -233,10 +233,9 @@
 			return win;
 		};
 		this.toString = function() {
-			return this.constructor.name + ' -> type: ' + this.type()
-					+ ', forceType: ' + forceType + ', target: ' + this.target
-					+ ', options: ' + this.options + ', history: '
-					+ this.history;
+			return lbls('object', this.constructor.name, 'type', this.type(),
+					'forceType', forceType, 'target', this.target, 'options',
+					this.options, 'history', this.history);
 		};
 	}
 
@@ -335,6 +334,24 @@
 			return ao ? o.add(ao) : o;
 		}
 		return ao ? $(o).add(ao) : $(o);
+	}
+
+	/**
+	 * @returns a label/value to-string representation of the specified
+	 *          arguments
+	 */
+	function lbls() {
+		var s = '[';
+		var l = '';
+		for (var i = 0; i < arguments.length; i++) {
+			if (l) {
+				s += arguments[i] ? l + arguments[i] : '';
+				l = '';
+			} else {
+				l = (s.length > 1 ? ', ' : '') + arguments[i] + ': ';
+			}
+		}
+		return s + ']';
 	}
 
 	/**
@@ -488,15 +505,68 @@
 	}
 
 	/**
+	 * Extracts a key from 
+	 */
+	function extractKey($p, attrs) {
+		// iterate over the attributes that will be used as keys
+		var k = null;
+		$.each(opts.paramNameAttrs, function(i, v) {
+			k = $p.attr(v);
+			if (k) {
+				return false;
+			}
+		});
+		return k;
+	}
+
+	/**
+	 * Gets an attribute value using an plug-in option name
+	 * 
+	 * @param $el
+	 *            the element to get the attribute from
+	 * @param n
+	 *            the name of the plug-in option that will be used in retrieving
+	 *            the attribute value (optional)
+	 * @param opts
+	 *            the options that should contain either a property that matches
+	 *            the passed name that will contain an array of attribute names
+	 *            or just an array of attribute names (optional)
+	 * @param emptyChk
+	 *            true to validate the attribute value is not empty before
+	 *            returning the value
+	 * @returns the first valid attribute value occurrence (if any)
+	 */
+	function getOptsAttrVal($el, n, opts, emptyChk) {
+		if ((!n && !opts) || !$el) {
+			return undefined;
+		} else {
+			var o = n;
+			var a = null;
+			if (opts && $.isArray(o = !n ? opts : opts[n])) {
+				for (var i = 0; i < o.length; i++) {
+					a = $el.attr(o[i]);
+					if ((!emptyChk && a !== undefined) || (emptyChk && a)) {
+						return a;
+					}
+				}
+			} else if (typeof o === 'string') {
+				a = $el.attr(o);
+				return a !== undefined ? a : null;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Extracts value(s) from node(s) returned from the supplied JQuery
 	 * selector. The JQuery selector can also contain a type that will determine
 	 * how value(s) are captured from node(s) returned from the JQuery selector.
-	 * The &quot;type&quot; regular expression will be used to determine what
-	 * will be used to extract values from the returned nodes from the JQuery
-	 * selector. Possible values are &quot;text&quot;, &quot;html&quot; or an
-	 * attribute name or when nothing is defined JQuery's serializeArray() will
-	 * be called on the node(s). When serializeArray() is empty an attempt to
-	 * call JQuery's val() function will be made to retrieve the replacement
+	 * The &quot;directive&quot; regular expression will be used to determine
+	 * what will be used to extract values from the returned nodes from the
+	 * JQuery selector. Possible values are &quot;text&quot;, &quot;html&quot;
+	 * or an attribute name or when nothing is defined JQuery's serializeArray()
+	 * will be called on the node(s). When serializeArray() is empty an attempt
+	 * to call JQuery's val() function will be made to retrieve the replacement
 	 * value.
 	 * 
 	 * @param s
@@ -505,27 +575,28 @@
 	 *            value(s) from the node(s) returned by the JQuery selector
 	 *            (delimited by character(s) defined by the type regular
 	 *            expression)
-	 * @param trx
-	 *            the global regular expression that will be used to find the
-	 *            type of node value extraction (replace function is used so the
-	 *            passed parameters should be the match for the entire
-	 *            expression, the 2nd parameter should be the raw JQuery
+	 * @param drx
+	 *            the global directive regular expression that will be used to
+	 *            find the type of node value extraction (replace function is
+	 *            used so the passed parameters should be the match for the
+	 *            entire expression, the 2nd parameter should be the raw JQuery
 	 *            selector and the 3rd parameter should be the type- i.e.
 	 *            &quot;text&quot;, &quot;html&quot; or attribute name)
 	 * @param d
 	 *            the delimiter to use when multiple results are returned from a
 	 *            JQuery selector
-	 * @param useNameId
-	 *            true to use name(s) (or id if a name is not present) along
-	 *            with the value(s) (separated by <code>=</code>); false to
-	 *            use only the value(s)
+	 * @param attrNames
+	 *            array of attribute name(s) to use to extract keys from that
+	 *            will be sent along with the value(s) (separated by
+	 *            <code>=</code>); when not a valid array only value(s) will
+	 *            be used
 	 * @param el
 	 *            the DOM element that will be used to find siphoned values on
 	 *            (when omitted the current document will be queried)
 	 * @returns the siphoned string with replaced values returned from all/any
 	 *          found JQuery selector(s)
 	 */
-	function extractValues(s, trx, d, useNameId, el) {
+	function extractValues(s, drx, d, attrNames, el) {
 		function getEV(nv, n, v, d) {
 			return (d && nv.length > 0 ? d : '') + (n ? n + '=' : '')
 					+ v;
@@ -538,15 +609,15 @@
 				// val(), but an empty string may be
 				// returned by val() so serialize array is
 				// checked instead
-				nv = useNameId ? $x.serialize() : $x.serializeArray();
+				nv = attrNames ? $x.serialize() : $x.serializeArray();
                 if (!nv || nv.length <= 0) {
                 	nv = '';
 					$x.each(function() {
 						ci = $(this);
-						nv += getEV(nv, useNameId ? ci.prop('name') : null,
-								ci.val(), d);
+						nv += getEV(nv, attrNames ? getOptsAttrVal(ci, null,
+								attrNames, true) : null, ci.val(), d);
 					});
-				} else if (!useNameId) {
+				} else if (!attrNames) {
 					var nva = nv;
 					nv = '';
 					$.each(nva, function() {
@@ -559,9 +630,10 @@
 				var n = '';
 				$x.each(function() {
 					ci = $(this);
-					n = useNameId ? ci.prop('name') : null;
-					nv += getEV(nv, n, ist ? ci.text() : ish ? ci.html()
-							: ci.attr(t), d);
+					n = attrNames ? getOptsAttrVal(ci, null, attrNames, true)
+							: null;
+					nv += getEV(nv, n, ist ? ci.text() : ish ? ci.html() : ci
+							.attr(t), d);
 				});
             }
             return nv !== undefined && nv != null ? nv : s;
@@ -569,7 +641,7 @@
 	    if (s) {
 	        var x = s;
 	        var t = '';
-	        s.replace(trx, function(m, v1, v2) {
+	        s.replace(drx, function(m, v1, v2) {
 	            x = v1;
 	            t = v2 ? v2 : '';
 	        });
@@ -584,12 +656,12 @@
 	/**
 	 * Recursively replaces values found within a string with values found from
 	 * JQuery selector(s). Results from each JQuery string found will use the
-	 * &quot;type&quot; regular expression to determine what will be used to
-	 * extract values from the returned nodes from the JQuery selector. Possible
-	 * values are &quot;text&quot;, &quot;html&quot; or an attribute name or
-	 * when nothing is defined JQuery's serializeArray() will be called on the
-	 * node(s). When serializeArray() is empty an attempt to call JQuery's val()
-	 * function will be made to retrieve the replacement value.
+	 * &quot;directive&quot; regular expression to determine what will be used
+	 * to extract values from the returned nodes from the JQuery selector.
+	 * Possible values are &quot;text&quot;, &quot;html&quot; or an attribute
+	 * name or when nothing is defined JQuery's serializeArray() will be called
+	 * on the node(s). When serializeArray() is empty an attempt to call
+	 * JQuery's val() function will be made to retrieve the replacement value.
 	 * 
 	 * @param s
 	 *            the string to replace JQuery selectors in
@@ -603,37 +675,37 @@
 	 *            parameters should be the match for the entire expression and
 	 *            the 2nd parameter should be the raw JQuery selector- no other
 	 *            characters allowed)
-	 * @param trx
-	 *            the global regular expression that will be used to find the
-	 *            type of node value extraction (replace function is used so the
-	 *            passed parameters should be the match for the entire
-	 *            expression, the 2nd parameter should be the raw JQuery
+	 * @param drx
+	 *            the global directive regular expression that will be used to
+	 *            find the type of node value extraction (replace function is
+	 *            used so the passed parameters should be the match for the
+	 *            entire expression, the 2nd parameter should be the raw JQuery
 	 *            selector and the 3rd parameter should be the type- i.e.
 	 *            &quot;text&quot;, &quot;html&quot; or attribute name)
 	 * @param d
 	 *            the delimiter to use when multiple results are returned from a
 	 *            JQuery selector
-	 * @param useNameId
-	 *            true to use name(s) (or id if a name is not present) along
-	 *            with the value(s) (separated by <code>=</code>); false to
-	 *            use only the value(s)
+	 * @param attrNames
+	 *            array of attribute name(s) to use to extract keys from that
+	 *            will be sent along with the value(s) (separated by
+	 *            <code>=</code>); when not a valid array only value(s) will
+	 *            be used
 	 * @param el
 	 *            the DOM element that will be used to find siphoned values on
 	 *            (when omitted the current document will be queried)
 	 * @returns the siphoned string with replaced values returned from all/any
 	 *          found JQuery selector(s)
 	 */
-	function siphonValues(s, ctx, vars, rx, trx, d, useNameId, el) {
+	function siphonValues(s, ctx, vars, rx, drx, d, attrNames, el) {
 		// siphon node values
-		function sVals(s, rx, trx, d, useNameId, el) {
+		function sVals(s, rx, drx, d, attrNames, el) {
 			return s.replace(rx, function(m, v) {
-				return sVals(extractValues(v, trx, d, useNameId, el), rx, trx,
-						d, useNameId, el);
+				return sVals(extractValues(v, drx, d, attrNames, el), rx, drx,
+						d, attrNames, el);
 			});
 		}
 		// substitute variables and siphon node values
-		return s ? sVals(vars.rep(ctx, s), rx, trx, d, useNameId, el)
-				: '';
+		return s ? sVals(vars.rep(ctx, s), rx, drx, d, attrNames, el) : '';
 	}
 
 	/**
@@ -902,36 +974,6 @@
 			}
 			return so;
 		}
-		/**
-		 * Gets an attribute value using an plug-in option name
-		 * 
-		 * @param $el
-		 *            the element to get the attribute from
-		 * @param n
-		 *            the name of the plug-in option that will be used in
-		 *            retrieving the attribute value
-		 * @returns the attribute value
-		 */
-		function getOptsAttrVal($el, n) {
-			if (!n || !$el) {
-				return undefined;
-			} else {
-				var o = null;
-				var a = null;
-				if ($.isArray(o = opts[n])) {
-					for (var i = 0; i < o.length; i++) {
-						a = $el.attr(o[i]);
-						if (a !== undefined) {
-							return a;
-						}
-					}
-				} else if (typeof o === 'string') {
-					a = $el.attr(o);
-					return a !== undefined ? $el.attr(o) : null;
-				}
-			}
-			return null;
-		}
 
 		/**
 		 * Adds DOM siphon attributes to an object based upon an array of
@@ -967,12 +1009,12 @@
 					return an;
 				}
 				function getEI($el, m) {
-					var ens = getOptsAttrVal($el, getAN(m, m));
+					var ens = getOptsAttrVal($el, getAN(m, m), opts);
 					ens = ens ? splitWithTrim(ens, opts.multiSep) : null;
 					return ens ? $.inArray(evt, ens) : -1;
 				}
 				function getOV($el, an, ei) {
-					var ov = getOptsAttrVal($el, an);
+					var ov = getOptsAttrVal($el, an, opts);
 					ov = ov ? splitWithTrim(ov, opts.multiSep) : null;
 					ov = ov && ei >= ov.length ? ov[ov.length - 1]
 							: ov ? ov[ei] : undefined;
@@ -1015,7 +1057,7 @@
 										agt = siphonValues(agt, m, vars, 
 												opts.regexSurrogateSiphon, 
 												opts.regexValTypeSiphon, 
-												opts.agentSelSep, false);
+												opts.agentSelSep, null);
 									}
 									if (isAdd(agtn, o, ow)) {
 										o[agtn] = agt;
@@ -1409,6 +1451,8 @@
 		 * Fragment parameters siphon
 		 * 
 		 * @constructor
+		 * @param t
+		 *            the {FragsTrack}
 		 * @param m
 		 *            the HTTP method
 		 * @param ps
@@ -1417,9 +1461,20 @@
 		 *            the associative array cache of names/values variables used
 		 *            for <b>surrogate siphon resolver</b>s
 		 */
-		function FragParamSiphon(m, ps, vars) {
+		function FragParamSiphon(t, m, ps, vars) {
 			var pnr = null;
 			var psp = null;
+			var pspp = null;
+			var $ell = null;
+			function getNewPs(uj, psn) {
+				ps = psn ? psn : ps;
+				// parameter siphons can capture either JSON or URL encoded
+				// strings; so, only return a parameter siphon when either the
+				// requested type has changed or a parameter siphon has not yet
+				// been generated
+				return (ps && !psp) || psn || (!uj && typeof psp === 'object')
+						|| (uj && typeof psp === 'string') ? ps : null;
+			}
 			function kv(ps, k, v) {
 				var ev = encodeURIComponent(v.replace(opts.regexParamReplace,
 						opts.paramReplaceWith));
@@ -1440,13 +1495,8 @@
 								.test($p.prop('type')))) {
 					return ps;
 				}
-				var k = null;
-				$.each(opts.paramNameAttrs, function(i, v) {
-					k = $p.attr(v);
-					if (k) {
-						return false;
-					}
-				});
+				// iterate over the attributes that will be used as keys
+				var k = getOptsAttrVal($p, null, opts.paramNameAttrs, true);
 				if (!k) {
 					return ps;
 				}
@@ -1456,6 +1506,8 @@
 				if (v !== undefined && v !== null) {
 					if ($.isArray(v)) {
 						if (uj) {
+							// convert each item in the array to a key/value
+							// pair and add the array to the master object
 							var vm = $.map(v, function(ev){
 								return kv({}, k, ev);
 							});
@@ -1471,33 +1523,57 @@
 				}
 				return ps;
 			}
-			this.paramSiphon = function(uj, psn) {
-				ps = psn ? psn : ps;
-				// parameter siphons can capture either JSON or URL encoded strings
-				if ((ps && !psp) || psn || (!uj && typeof psp === 'object')
-						|| (uj && typeof psp === 'string')) {
-					psp = siphonValues(ps, m, vars, opts.regexSurrogateSiphon,
-							opts.regexValTypeSiphon, opts.paramSep, true);
+			function resolve(uj, psn) {
+				var psx = getNewPs(uj, psn);
+				if (psx) {
+					psp = siphonValues(psx, m, vars, opts.regexSurrogateSiphon,
+							opts.regexValTypeSiphon, opts.paramSep, null);
 					pnr = new NodeResolvers(psp);
 				}
-				return psp;
+				return psx;
+			}
+			// gets/sets and returns a parameter siphon string or object with
+			// replaced surrogate siphon resolvers
+			this.paramSiphon = function(uj, psn) {
+				try {
+					resolve(uj, psn);
+					return psp;
+				} catch (e) {
+					t.addError('Failed to capture parameter siphon on '
+							+ (psn ? psn : ps), null, e);
+				}
 			};
+			// gets/sets and returns a parameter siphon string or object with
+			// replaced surrogate siphon resolvers and node siphon resolvers
 			this.params = function($el, uj, psn) {
-				var $pel = $el instanceof jQuery ? $el : $('html');
-				var ps = uj ? {} : '';
-				this.paramSiphon(uj, psn);
-				pnr.each(function(i, r) {
-					var $p = r.select($pel);
-					// avoiding JQuery serialize functions due to name only capture
-					// ps = add(r, $p, ps, uj);
-					// ps = kv(ps, uj ? $p.serializeArray() : $p.serialize());
-					$p.each(function() {
-						// add the key/value parameters individually in order to
-						// handle the directive
-						ps = add(r, $(this), ps, uj);
-					});
-				});
-				return ps;
+				try {
+					var $elc = $el instanceof jQuery ? $el : $ell ? $ell
+							: $('html');
+					// only trigger a capture when element has changed or a new
+					// parameter siphon has been requested
+					if (resolve(uj, psn) || (psp && (!$ell || !$ell.is($elc)))) {
+						$ell = $elc;
+						var x = uj ? {} : '';
+						pnr.each(function(i, r) {
+							var $p = r.select($ell);
+							// avoiding JQuery serialize functions due to name
+							// only capture
+							// ps = add(r, $p, ps, uj);
+							// ps = kv(ps, uj ? $p.serializeArray() :
+							// $p.serialize());
+							$p.each(function() {
+								// add the key/value parameters individually in
+								// order to handle the directive
+								x = add(r, $(this), x, uj);
+							});
+						});
+						pspp = x;
+					}
+					return pspp;
+				} catch (e) {
+					t.addError('Failed to capture parameters for element '
+							+ $el + ' on ' + (psn ? psn : ps), null, e);
+				}
 			};
 		}
 
@@ -1505,6 +1581,8 @@
 		 * Fragment result siphon
 		 * 
 		 * @constructor
+		 * @param t
+		 *            the {FragsTrack}
 		 * @param m
 		 *            the HTTP method
 		 * @param rs
@@ -1513,7 +1591,7 @@
 		 *            the associative array cache of names/values variables used
 		 *            for <b>surrogate siphon resolver</b>s
 		 */
-		function FragResultSiphon(m, rs, vars) {
+		function FragResultSiphon(t, m, rs, vars) {
 			rs = rs ? $.trim(rs) : null;
 			var rsp = null;
 			var rsr = null;
@@ -1523,16 +1601,23 @@
 				return fx;
 			};
 			this.resultSiphon = function(el, rsn) {
-				rsp = rsn ? rsn : rsp;
-				if (!rsp || rsn || (el && el.nodeType && !el.is(cel))) {
-					rsp = siphonValues(rs, m, vars, opts.regexSurrogateSiphon,
-							opts.regexValTypeSiphon, opts.resultSep, false, el);
-					// check if the result siphon is a function
-					fx = new Func(opts, rsp, null, true);
-					rsr = new NodeResolvers(rsp, opts.fragAttrs);
-					cel = el;
+				try {
+					rsp = rsn ? rsn : rsp;
+					if (!rsp || rsn || (el && el.nodeType && !el.is(cel))) {
+						rsp = siphonValues(rs, m, vars,
+								opts.regexSurrogateSiphon,
+								opts.regexValTypeSiphon, opts.resultSep, null,
+								el);
+						// check if the result siphon is a function
+						fx = new Func(opts, rsp, null, true);
+						rsr = new NodeResolvers(rsp, opts.fragAttrs);
+						cel = el;
+					}
+					return rsp;
+				} catch (e) {
+					t.addError('Failed to capture result siphon on ' + rsn,
+							null, e);
 				}
-				return rsp;
 			};
 			this.resolvers = function(el, rsn) {
 				this.resultSiphon(el, rsn);
@@ -1566,7 +1651,7 @@
 				dsp = dsn ? dsn : dsp;
 				if (!dsp || dsn) {
 					dsp = siphonValues(dsp, m, vars, opts.regexSurrogateSiphon,
-							opts.regexValTypeSiphon, opts.destSep, false);
+							opts.regexValTypeSiphon, opts.destSep, null);
 				}
 				return dsp;
 			};
@@ -1782,11 +1867,12 @@
 			this.len = 0;
 			var c = [];
 			this.addFrag = function(f) {
-				if (c[f.rp()]) {
-					c[f.rp()].frags[c[f.rp()].frags.length] = f;
+				var url = f.pseudoUrl();
+				if (c[url]) {
+					c[url].frags[c[url].frags.length] = f;
 					return false;
 				} else {
-					c[f.rp()] = {
+					c[url] = {
 						result : null,
 						status : null,
 						xhr : null,
@@ -1795,8 +1881,8 @@
 				}
 				return true;
 			};
-			this.getFrags = function(url) {
-				return c[url];
+			this.getFrags = function(f) {
+				return c[f.pseudoUrl()];
 			};
 			var e = [];
 			this.addError = function(em, f, oc, hs, xhr) {
@@ -1889,7 +1975,7 @@
 				if (!dsp || dsn) {
 					dsp = siphonValues(dsp, this.method, siphon.vars,
 							opts.regexSurrogateSiphon, opts.regexValTypeSiphon,
-							opts.destSep, false);
+							opts.destSep, null);
 				}
 				return dsp;
 			};
@@ -1909,7 +1995,7 @@
 				if (!rpp || rpn) {
 					rpp = siphonValues(rp, this.method, siphon.vars,
 							opts.regexSurrogateSiphon, opts.regexValTypeSiphon,
-							opts.pathSep, false);
+							opts.pathSep, null);
 					if (rpp && rpp.length > 0
 							&& rpp.toLowerCase() != opts.selfRef.toLowerCase()) {
 						rpp = adjustPath(t.ctxPath, rpp, script ? script
@@ -1920,7 +2006,7 @@
 				}
 				return rpp;
 			};
-			this.frs = new FragResultSiphon(this.method, rs, siphon.vars);
+			this.frs = new FragResultSiphon(t, this.method, rs, siphon.vars);
 			this.destScope = null;
 			this.e = null;
 			this.cancelled = false;
@@ -1939,7 +2025,11 @@
 				// increment child fragment count on parent fragment
 				this.pf.ccnt(true);
 			}
-			this.fps = new FragParamSiphon(this.method, siphon.paramsSiphon, siphon.vars);
+			this.fps = new FragParamSiphon(t, this.method, siphon.paramsSiphon,
+					siphon.vars);
+			this.pseudoUrl = function(f) {
+				return this.rp() + '?' + this.fps.params();
+			};
 			this.as = siphon.agentSiphon;
 			this.done = function() {
 				if (!this.cancelled) {
@@ -2100,16 +2190,14 @@
 				return us;
 			};
 			this.toString = function() {
-				return this.constructor.name + ' -> ['
-						+ this.navOpts.toString() + '], HTTP method: '
-						+ this.method + ', parameter siphon: '
-						+ this.fps.paramSiphon() + ', path siphon: '
-						+ this.rp() + ', result siphon: '
-						+ this.frs.getFuncOrResultSiphon()
-						+ ', destination siphon: ' + this.ds()
-						+ ', agent siphon: ' + this.as + ', cancelled: '
-						+ this.cancelled + ', error: '
-						+ (this.e ? this.e.message : null);
+				return lbls('object', this.constructor.name, 'options',
+						this.navOpts.toString(), 'HTTP method', this.method,
+						'URL', (this.pseudoUrl()), 'parameter siphon', this.fps
+								.paramSiphon(), 'path siphon', this.rp(),
+						'result siphon', this.frs.getFuncOrResultSiphon(),
+						'destination siphon', this.ds(), 'agent siphon',
+						this.as, 'cancelled', this.cancelled, 'error',
+						(this.e ? this.e.message : null));
 			};
 		}
 
@@ -2139,6 +2227,7 @@
 			o.routingStack = f ? f.getStack() : undefined;
 			o.sourceEvent = f ? f.event : undefined;
 			o.paramsSiphon = f ? f.fps.paramSiphon() : undefined;
+			o.parameters = f ? f.fps.params() : undefined;
 			o.pathSiphon = f ? f.rp() : undefined;
 			o.resultSiphon = f ? f.frs.getFuncOrResultSiphon() : undefined;
 			o.destSiphon = f ? f.ds() : undefined;
@@ -2154,13 +2243,13 @@
 				log(o, l);
 			};
 			o.toFormattedString = function() {
-				return '[' + o.chain + ' event, fragCount: ' + o.fragCount
-						+ ', fragCurrTotal: ' + o.fragCurrTotal
-						+ ', sourceEvent: ' + o.sourceEvent + ', paramsSiphon: '
-						+ o.paramsSiphon + ', pathSiphon: ' + o.pathSiphon
-						+ ', resultSiphon: ' + o.resultSiphon
-						+ ', destSiphon: ' + o.destSiphon + ', element: '
-						+ o.element + ', error: ' + o.error + ']';
+				return lbls('event chain', o.chain, 'fragCount', o.fragCount,
+						'fragCurrTotal', o.fragCurrTotal, 'sourceEvent',
+						o.sourceEvent, 'parameters', o.parameters,
+						'paramsSiphon', o.paramsSiphon, 'pathSiphon',
+						o.pathSiphon, 'resultSiphon', o.resultSiphon,
+						'destSiphon', o.destSiphon, 'element', o.element,
+						'error', o.error);
 			};
 			return o;
 		}
@@ -2204,10 +2293,9 @@
 				log(this, l);
 			};
 			e.toFormattedString = function() {
-				return '[' + e.chain + ' event, fragCancelCount: '
-						+ e.fragCancelCount + ', fragCount: ' + e.fragCount
-						+ ', scope: ' + e.scope + ', errors: ' + e.errors
-						+ ', loadTime: ' + e.loadTime + ']';
+				return lbls('event chain', e.chain, 'fragCancelCount',
+						e.fragCancelCount, 'fragCount', e.fragCount, 'scope',
+						e.scope, 'errors', e.errors, 'loadTime', e.loadTime);
 			};
 			return e;
 		}
@@ -2452,9 +2540,9 @@
 					}
 					// when the fragment path is the 1st one in the queue retrieve it
 					// the queue will prevent duplicate calls to the same fragment path
-					if (f.fps.paramSiphon() || t.addFrag(f)) {
+					if (t.addFrag(f)) {
 						function adone(r, status, xhr) {
-							var tf = t.getFrags(f.rp());
+							var tf = t.getFrags(f);
 							tf.result = r;
 							tf.status = status;
 							tf.xhr = xhr;
@@ -2471,7 +2559,7 @@
 							cache: opts.ajaxCache,
 							crossDomain: opts.ajaxCrossDomain
 						}).done(adone).fail(function(xhr, ts, e) {
-							var tf = t.getFrags(f.rp());
+							var tf = t.getFrags(f);
 							for (var i = 0; i < tf.frags.length; i++) {
 								t.addError('Error at ' + tf.frags[i].toString() + ': '
 										+ ts + '- ' + e, tf.frags[i], e, ts, xhr);
@@ -2481,7 +2569,7 @@
 							}
 						});
 					} else {
-						var tf = t.getFrags(f.rp());
+						var tf = t.getFrags(f);
 						if (tf.result) {
 							// fragment results already retrieved
 							lcont(f, cb, tf.result, tf.status, tf.xhr);

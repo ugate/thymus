@@ -449,19 +449,27 @@
 					siphon resolver</b>s. Each parameter sent will contain a <i>key</i>/<i>value</i>
 				pair for each node returned from the JQuery selector results. The <i>key</i>
 				will use either the <b>name</b> or <b>id</b> of the selected node
-				(in that order of precedence- can be <a href="#fragsoptsprog">configured</a> to
-				use a custom set of attributes as well). A simple example would be:
+				(in that order of precedence- can be <a href="#fragsoptsprog">configured</a>
+				to use a custom set of attributes as well). To illustrate the
+				dynamic nature of <b>siphon resolver</b>s within <b>parameter
+					siphon</b>s consider the following example:
 			</p>
 <div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- the following button --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;/path/to/resource&quot;</span>
-	<span style="color: #FF0000">data-thx-get-params=</span><span style="color: #0000FF">&quot;|{#one} |{#two-&gt;text} |{#three-&gt;data-my-param}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-params=</span><span style="color: #0000FF">&quot;|{#one} |{#two-&gt;text} |{#three-&gt;data-my-param} ?{select[name=&amp;quot;fourSel&amp;quot;]}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#myDestw&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Get Resource<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;myDestw&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;#1 value&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;one&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;two&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>#2 value<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-my-param=</span><span style="color: #0000FF">&quot;#3 value&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;three&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;fourSel&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;|{.four-1}&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Parameter Option 1<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;|{.four-2}&quot;</span> <span style="color: #FF0000">selected=</span><span style="color: #0000FF">&quot;selected&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Parameter Option 2<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;four&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;four-1&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;#4 option 1&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;four&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;four-2&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;#4 option 2&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- would send the parameters: --&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- one=%231%20value&amp;two=%232%20value&amp;three=%233%20value --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- one=%231%20value&amp;two=%232%20value&amp;three=%233%20value&amp;four=%234%20option%202 --&gt;</span>
 </pre></div>
 			<h4 id="fragresultchain">Chaining Result Selectors</h4>
 			<p>
@@ -667,7 +675,7 @@
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
 			<div class="alert alert-info">
-				<strong>Note:</strong> even though some siphons can simultaneously
+				<strong>Note:</strong> Even though some siphons can simultaneously
 				contain raw JQuery selectors as well as <b>node siphon resolver</b>s
 				(e.g.
 				<code>.my-class |{.my-other-class-&gt;text}</code>
@@ -675,10 +683,10 @@
 				it would be for siphons that contained only <b>node siphon
 					resolver</b>s (e.g.
 				<code>|{.my-class} |{.my-other-class-&gt;text}</code>
-				)
+				).
 			</div>
 			<div class="alert alert-info">
-				<strong>Note:</strong> although nesting different types of <b>siphon
+				<strong>Note:</strong> Although nesting different types of <b>siphon
 					resolver</b>s is discouraged for readability sake, <b>node siphon
 					resolver</b>s can contain any number of nested <b>surrogate siphon
 					resolver</b>s within them (e.g.
@@ -686,7 +694,9 @@
 				), but <b>surrogate siphon resolver</b>s should <strong>never</strong>
 				contain <b>node siphon resolver</b>s (e.g.
 				<code>?{|{.my-class-&gt;text}}</code>
-				)
+				). Also,<b>node siphon resolver</b>s will not evaluate any <b>siphon
+					resolver</b>s contained within values returned by <b>node siphon
+					resolver</b> JQuery selectors.
 			</div>
 		</div>
 	</div>
