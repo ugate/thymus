@@ -486,7 +486,7 @@
 						<div class="list-group-item">
 							<h4>Code</h4>
 						</div>
-<div class="list-group-item thymus-demo">><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include
 	User View<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
@@ -861,12 +861,12 @@
 			</div>
 			<h3 id="shorthand">Auto Loading Fragments (short-hand)</h3>
 			<p>
-				A short-hand <b>routing attribute</b> can also be used which is
-				equivalent to a <b>siphon attribute</b> with a
+				A short-hand for loading fragments which is equivalent to a <b>event
+					siphon</b> with a
 				<code>load</code>
-				<b>event siphon</b> and a separate <b>path siphon</b> attribute.
-				Instead of two attributes, the short-handed version combines the <b>path
-					siphon</b> and <b>result siphon</b> into one attribute separated by a "<b>::</b>"
+				event and a separate <b>path siphon</b> attribute. Instead of two
+				attributes, the short-handed version combines the <b>path siphon</b>
+				and <b>result siphon</b> into one attribute separated by a "<b>::</b>"
 				(the separator can be overridden using the
 				<code>data-thx-separator</code>
 				attribute on the <b>thymus.js</b> script definition or <a
@@ -878,12 +878,12 @@
 				<code>data-thx-replace</code>
 				or
 				<code>data-thx-include</code>
-				<b>routing attribute</b> is found throughout the document (including
+				<b>siphon attribute</b> is found throughout the document (including
 				within a fragment itself). It's use is limited to the <b>path
 					siphon</b> and <b>result siphon</b> defined within it and will not use
-				any other <b>siphon attribute</b>s that may be defined on the
-				node. Examples can be found under the <a href="#usage">fragment
-					types section</a>.
+				any other <b>siphon attribute</b>s that may be defined on the node.
+				Examples can be found under the <a href="#usage">fragment types
+					section</a>.
 			</p>
 			<p>
 				The following example demonstrates how to automatically load a
@@ -962,13 +962,12 @@
 <span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
 </pre></div>
 			<p id="selfref">
-				Templates can also refer to fragments that exist in the same page
-				that the <b>routing attribute</b> resides in by using
+				<b>path siphon</b>s can also refer to fragments that exist in the
+				same page where the <b>path siphon</b> resides by using
 				<code>this</code>
-				or omitting the <b>routing attribute</b>'s <b>path</b> altogether
-				(e.g.
+				or omitting the <b>path</b> altogether (e.g.
 				<code>data-thx-include="::.my-inline-frag"</code>
-				). Only use this approach when the fragment <b>result siphon</b> is
+				). Only use this approach when the fragment's <b>result siphon</b> is
 				not referencing nodes that reside in other fragments.
 			</p>
 <div class="thymus-demo"><pre style="margin: 0; line-height: 125%">

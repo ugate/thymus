@@ -24,7 +24,7 @@
 				<code>data-thx-onfrag</code>
 				attribute on the <b>thymus.js</b> tag itself:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text/javascript&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">function</span> fragListener(event) {
@@ -53,7 +53,7 @@
 				the <i>window.fragListener</i> function will be called. Within the
 				function ,
 				<code>this</code>
-				will reference the element that contained the <b>routing
+				will reference the element that contained the <b>siphon
 					attribute</b> while the passed
 				<code>event</code>
 				will reference a <a href="#fragevent">fragment event</a>. Supplied
@@ -66,7 +66,7 @@
 			</p>
 			<p id="fraginjs">
 				Similarly, we could have <a href="#fragseventprog">programmatically</a>
-				listened for the event using the element where the <b>routing
+				listened for the event using the element where the <b>siphon
 					attribute</b> is defined. A <a href="#fragevent">fragment event</a>
 				contains the following properties:
 			</p>
@@ -85,30 +85,24 @@
 						<div class="col-md-10">
 							one of the event types below
 							<ul>
-								<li><code>beforehttp.thx.frag</code> - before any <b>parameter
-										siphon</b> data has been sent for fragment retrieval using the <b>routing
-										attribute</b>'s <b>path</b> (when the <a
+								<li><code>beforehttp.thx.frag</code> - before
+									submission/retrieval (when the <a
 									href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
-									returns <b>true</b> nothing will be sent and therefore no
-									fragment will be retrieved)</li>
-								<li><code>beforedom.thx.frag</code> - after any <b>parameter
-										siphon</b> data has been sent for fragment retrieval using the <b>routing
-										attribute</b>'s <b>path</b>, but not updated in the DOM using the
-									<b>result siphon</b> and <b>destination siphon</b> (when the <a
+									returns <b>true</b> the submission/retrieval process will be
+									cancelled)</li>
+								<li><code>beforedom.thx.frag</code> - after
+									submission/retrieval has taken place, but has not been updated
+									in the DOM (when the <a
 									href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
-									returns <b>true</b> any <b>result siphon</b> fragments will not
-									be updated in the DOM)</li>
-								<li><code>afterdom.thx.frag</code> - after any <b>parameter
-										siphon</b> data has been sent for fragment retrieval using the <b>routing
-										attribute</b>'s <b>path</b>and any fragments are updated in the
-									DOM using the <b>result siphon</b> and <b>destination
-										siphon</b> (any child/nested fragments may not be processed/loaded
-									yet)</li>
-								<li><code>load.thx.frag</code> - after any <b>parameter
-										siphon</b> data has been sent for fragment retrieval using the <b>routing
-										attribute</b>'s <b>path</b>, updated in the DOM using the <b>result
-										siphon</b> and <b>destination siphon</b> and all child/nested <b>routing
-										attribute</b>'s have been loaded/cancelled/etc.</li>
+									returns <b>true</b> any <b>result siphon</b> the DOM will not
+									be updated)</li>
+								<li><code>afterdom.thx.frag</code> - after
+									submission/retrieval and the DOM has been updated (keep in mind
+									that if the returned fragment contains child/nested fragments
+									they may not yet be processed/loaded)</li>
+								<li><code>load.thx.frag</code> - after
+									submission/retrieval, the DOM has been updated and all
+									child/nested fragments have been loaded/cancelled/etc.</li>
 							</ul>
 							Any of the above event types can be used when
 							<a href="#fraginjs">programatically registering a listener
@@ -122,9 +116,8 @@
 							<code>sourceEvent</code>
 						</div>
 						<div class="col-md-10">
-							the <b>event siphon</b> defined in the <b>routing attribute</b> of the
-							fragment that initiated the fragment event (may be undefined/null
-							when not provided in the <b>routing attribute</b>)
+							the <b>event siphon</b> indicating the event(s) that initiated
+							the fragment event
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -139,12 +132,11 @@
 							<code>paramsSiphon</code>
 						</div>
 						<div class="col-md-10">
-							the <a href="#paramsiphon"><b>parameter siphon</b></a> defined in
-							the <b>routing attribute</b> of the fragment (<a
+							the <a href="#paramsiphon"><b>parameter siphon</b></a> that
+							indicates one or more <a
 								href="http://api.jquery.com/category/selectors/">JQuery
-								selector</a> that extracted key/value pairs that were sent to the
-							server when retrieving the fragment- may be undefined if not
-							provided in the <b>routing attribute</b>)
+								selectors</a> where extracted key/value pairs will or have been
+							extracted for submission (if any).
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -153,8 +145,7 @@
 						</div>
 						<div class="col-md-10">
 							the resolved parameters from the <a href="#paramsiphon"><b>parameter
-									siphon</b></a> defined in the <b>routing attribute</b> of the fragment
-							(if any)
+									siphon</b></a> (if any)
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -162,8 +153,7 @@
 							<code>pathSiphon</code>
 						</div>
 						<div class="col-md-10">
-							the <b>path siphon</b> defined in the <b>routing attribute</b>
-							of the fragment
+							the <b>path siphon</b> that inidcates the path to the fragment
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -171,10 +161,9 @@
 							<code>resultSiphon</code>
 						</div>
 						<div class="col-md-10">
-							the <b>result siphon</b> defined in the <b>routing attribute</b>
-							of the fragment (usually a <a
+							the <b>result siphon</b> that contains one or more <a
 								href="http://api.jquery.com/category/selectors/">JQuery
-								selector</a>, but may also be a <a href="#fragshandler"><code>function</code></a>)
+								selectors</a>, or a <a href="#fragshandler"><code>function</code></a>
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -182,15 +171,13 @@
 							<code>destSiphon</code>
 						</div>
 						<div class="col-md-10">
-							either the DOM element(s), a <a
+							either the DOM element(s), one or more <a
 								href="http://api.jquery.com/category/selectors/">JQuery
-								selector</a> to the DOM element(s) where the fragment will be
-							placed, or
+								selectors</a> where the fragment will be placed, or
 							<code>undefined</code>
 							when the fragment is a
 							<code>script</code>
-							or a <b>destination siphon</b> was not defined in the <b>routing
-								attribute</b>.
+							or a <b>destination siphon</b> was not defined
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -198,7 +185,7 @@
 							<code>destScope</code>
 						</div>
 						<div class="col-md-10">
-							the DOM node(s) that were designated as the destination or the
+							the DOM node(s) that were designated as the destination, the
 							parent node when the fragment was not HTML content or outer HTML
 							string when the fragment was a
 							<code>script</code>
@@ -209,18 +196,17 @@
 							<code>agentSiphon</code>
 						</div>
 						<div class="col-md-10">
-							either the DOM element(s), a <a
+							either the DOM element(s), one or more <a
 								href="http://api.jquery.com/category/selectors/">JQuery
-								selector</a> to the DOM element(s) where any missing <b>routing
-								attribute</b>s were extracted, or
+								selectors</a> that designate the DOM element(s) where any missing <b>siphon
+								attribute</b>s were extracted or
 							<code>undefined</code>
-							when an <b>agent siphon</b> was not defined in the <b>routing
-								attribute</b>.
+							when an <b>agent siphon</b> was not defined
 						</div>
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
-							<code>routingStack</code>
+							<code>fragStack</code>
 						</div>
 						<div class="col-md-10">
 							an array of fragment objects in order from the current fragment
@@ -228,14 +214,10 @@
 							only one entry when the fragment is not nested within any other
 							fragments). Each entry will contain the following properties:
 							<ul>
-								<li><code>pathSiphon</code> - the <b>path siphon</b>
-									defined in the <b>routing attribute</b> of the fragment</li>
-								<li><code>resultSiphon</code> - the <b>result siphon</b>
-									defined in the <b>routing attribute</b> of the fragment</li>
-								<li><code>destSiphon</code> - the <b>destination siphon</b>
-									defined in the <b>routing attribute</b> of the fragment</li>
-								<li><code>destScope</code> - the fragment destination scope
-									of the fragment</li>
+								<li><code>pathSiphon</code> - the <b>path siphon</b></li>
+								<li><code>resultSiphon</code> - the <b>result siphon</b></li>
+								<li><code>destSiphon</code> - the <b>destination siphon</b></li>
+								<li><code>destScope</code> - the fragment destination scope</li>
 							</ul>
 						</div>
 					</div>
@@ -243,16 +225,18 @@
 						<div class="col-md-2">
 							<code>fragCount</code>
 						</div>
-						<div class="col-md-10">the number of total fragments load
-							attempts</div>
+						<div class="col-md-10">the number of total attempts made to
+							load child/nested fragments (including the current parent
+							fragment)</div>
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
 							<code>fragCurrTotal</code>
 						</div>
-						<div class="col-md-10">the current number of total
-							fragments that will or have had an attempt to load (may grow as
-							new script tags or nested fragments are discovered)</div>
+						<div class="col-md-10">the current number of total fragment
+							load attempts made for the current fargment and any child/nested
+							fragments (may grow as new script tags or nested fragments are
+							discovered)</div>
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
@@ -336,8 +320,8 @@
 							(typically this will be the
 							<code>html</code>
 							node during automatic fragment loading; during a
-							programmatically/user initiated fragment, the root node that
-							initiated the fragment load)
+							programmatically/user initiated fragment, it will contain the
+							root node that initiated the fragment load)
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -381,7 +365,7 @@
 			<p>
 				Similar to <a href="#frag">fragment events</a>, a <a
 					href="#fragsevent">fragments event</a> will be fired once an
-				attempt to process all <b>routing attribute</b>'s fragments/
+				attempt to process all the fragments/
 				<code>script</code>
 				/etc. has been made. One way to capture fragments events is to
 				supply a
@@ -390,7 +374,7 @@
 				<code>data-thx-onfrags</code>
 				on the <b>thymus.js</b> tag itself:
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text/javascript&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 		<span style="color: #000080; font-weight: bold">function</span> done(event) {
@@ -409,9 +393,8 @@
 				<code>function</code>
 				called <i>done</i> is defined as the
 				<code>data-thx-onfrags</code>
-				. Once an attempt is made to load all the defined <b>routing
-					attribute</b>'s fragments/scripts/nested fragments and a response is
-				returned for each of them the example <i>window.done</i>
+				. Once an attempt is made to load all the fragments/scripts/nested
+				fragments and a response is returned for each of them the example <i>window.done</i>
 				<code>function</code>
 				will be called with
 				<code>this</code>
@@ -428,7 +411,7 @@
 			</p>
 			<p id="fragsinjs">
 				Similarly, we could have <a href="#fragseventprog">programmatically</a>
-				listened for the event using the element(s) where the <b>routing
+				listened for the event using the element(s) where the <b>siphon
 					attribute</b>(s) are defined. A <a href="#fragsevent">fragments
 					event</a> contains the following properties:
 			</p>
@@ -456,14 +439,15 @@
 							<code>fragCancelCount</code>
 						</div>
 						<div class="col-md-10">the total number of fragments that
-							were cancelled during the action</div>
+							were cancelled during the course of the action</div>
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
 							<code>fragCount</code>
 						</div>
-						<div class="col-md-10">the total number of fragments that
-							were attempted to load (including nested fragments and scripts)</div>
+						<div class="col-md-10">the total number of attempts made to
+							load encompassing fragments (including child/nested fargments and
+							scripts)</div>
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
@@ -517,7 +501,7 @@
 				<code>function</code>
 				that will handle raw fragment results.
 			</p>
-<div style="overflow:auto;width:auto;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text/javascript&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text/javascript&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">function</span> handleFrag() {
 		<span style="color: #000080; font-weight: bold">var</span> handle = <span style="color: #000080; font-weight: bold">this</span>.handle;
 		<span style="color: #000080; font-weight: bold">var</span> newData = handle.data;
@@ -597,7 +581,7 @@
 						<div class="col-md-10">
 							a
 							<code>function</code>
-							that will process the <b>routing attribute</b>'s fragment result.
+							that will process the fragment result.
 							Arguments:
 							<ol>
 								<li>the result <b>data</b> (raw or node) that will be <i>included</i>,

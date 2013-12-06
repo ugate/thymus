@@ -23,6 +23,7 @@
 	this.BASE_PATH_ATTR = 'data-thx-base-path';
 	this.FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
 	this.FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
+	this.DFTL_RSLT_NAME = NS + '-results';
 	this.VARS_ATTR_TYPE = 'with';
 	this.DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest', VARS_ATTR_TYPE ];
 	this.DOM_ATTR_AGENT = 'agent';
@@ -306,6 +307,52 @@
 	}
 
 	/**
+	 * Creates a JQuery selector
+	 * 
+	 * @param a
+	 *            the of array of attributes to select on
+	 * @param v
+	 *            the optional attribute value to match for each item in the
+	 *            array
+	 * @param ed
+	 *            the optional equals designation that will prepended to the
+	 *            equals sign (when a valid attribute value is supplied)
+	 * @param tn
+	 *            the optional tag name to match the attributes against
+	 * @returns JQuery selector
+	 */
+	function genAttrSelect(a, v, ed, tn) {
+		var r = '';
+		var as = $.isArray(a) ? a : [ a ];
+		for (var i = 0; i < as.length; i++) {
+			r += (i > 0 ? ',' : '') + (tn ? tn : '') + '[' + as[i]
+					+ (v ? (ed ? ed : '') + '="' + v + '"' : '') + ']';
+		}
+		return r;
+	}
+
+	/**
+	 * Generates a JQuery selector based upon an element's attributes
+	 * 
+	 * @param $el
+	 *            the element to create the attribute selector from
+	 */
+	function genAttrSelByExample($el, $p) {
+		var as = '';
+		var tn = $el.prop('tagName');
+		$.each($el, function() {
+			var a = this.attributes;
+			for ( var k in a) {
+				if (a[k].nodeName && a[k].nodeValue !== undefined) {
+					as += (as.length > 0 ? ',' : '') + tn + '['
+							+ a[k].nodeName + '="' + a[k].nodeValue + '"]';
+				}
+			}
+		});
+		return as ? as : tn;
+	}
+
+	/**
 	 * Determines if a specified element is a top level DOM element
 	 * 
 	 * @param el
@@ -564,10 +611,8 @@
 	 * The &quot;directive&quot; regular expression will be used to determine
 	 * what will be used to extract values from the returned nodes from the
 	 * JQuery selector. Possible values are &quot;text&quot;, &quot;html&quot;
-	 * or an attribute name or when nothing is defined JQuery's serializeArray()
-	 * will be called on the node(s). When serializeArray() is empty an attempt
-	 * to call JQuery's val() function will be made to retrieve the replacement
-	 * value.
+	 * or an attribute name or when nothing is defined JQuery's val() function
+	 * will be called to retrieve the replacement value.
 	 * 
 	 * @param s
 	 *            the string that will contain just a JQuery selector or a
@@ -576,12 +621,11 @@
 	 *            (delimited by character(s) defined by the type regular
 	 *            expression)
 	 * @param drx
-	 *            the global directive regular expression that will be used to
-	 *            find the type of node value extraction (replace function is
-	 *            used so the passed parameters should be the match for the
-	 *            entire expression, the 2nd parameter should be the raw JQuery
-	 *            selector and the 3rd parameter should be the type- i.e.
-	 *            &quot;text&quot;, &quot;html&quot; or attribute name)
+	 *            the global directive regular expression dilimiter that will be
+	 *            used to <i>split</i> node values for extraction- first
+	 *            <i>split</i> value should be a valid JQuery selector while
+	 *            any additional <i>split</i> value(s) should be either
+	 *            &quot;text&quot;, &quot;html&quot; or an attribute name
 	 * @param d
 	 *            the delimiter to use when multiple results are returned from a
 	 *            JQuery selector
@@ -639,73 +683,13 @@
             return nv !== undefined && nv != null ? nv : s;
     	}
 	    if (s) {
-	        var x = s;
-	        var t = '';
-	        s.replace(drx, function(m, v1, v2) {
-	            x = v1;
-	            t = v2 ? v2 : '';
-	        });
-	        var $x = x ? el ? el.find(x) : $(x) : null;
-	        if ($x && $x.length > 0) {
-	        	return exNVs(t, $x);
-	        }
+			var xt = s ? s.split(drx) : null;
+			var $x = xt ? el ? el.find(xt[0]) : $(xt[0]) : null;
+			if ($x && $x.length > 0) {
+				return exNVs(xt && xt.length > 1 ? xt[1] : '', $x);
+			}
 	    }
 	    return '';
-	}
-
-	/**
-	 * Recursively replaces values found within a string with values found from
-	 * JQuery selector(s). Results from each JQuery string found will use the
-	 * &quot;directive&quot; regular expression to determine what will be used
-	 * to extract values from the returned nodes from the JQuery selector.
-	 * Possible values are &quot;text&quot;, &quot;html&quot; or an attribute
-	 * name or when nothing is defined JQuery's serializeArray() will be called
-	 * on the node(s). When serializeArray() is empty an attempt to call
-	 * JQuery's val() function will be made to retrieve the replacement value.
-	 * 
-	 * @param s
-	 *            the string to replace JQuery selectors in
-	 * @param ctx
-	 *            the context of the passed {Vars}
-	 * @param vars
-	 *            the {Vars} used for variable substitution
-	 * @param rx
-	 *            the global regular expression that will be used to find the
-	 *            JQuery selector(s) (replace function is used so the passed
-	 *            parameters should be the match for the entire expression and
-	 *            the 2nd parameter should be the raw JQuery selector- no other
-	 *            characters allowed)
-	 * @param drx
-	 *            the global directive regular expression that will be used to
-	 *            find the type of node value extraction (replace function is
-	 *            used so the passed parameters should be the match for the
-	 *            entire expression, the 2nd parameter should be the raw JQuery
-	 *            selector and the 3rd parameter should be the type- i.e.
-	 *            &quot;text&quot;, &quot;html&quot; or attribute name)
-	 * @param d
-	 *            the delimiter to use when multiple results are returned from a
-	 *            JQuery selector
-	 * @param attrNames
-	 *            array of attribute name(s) to use to extract keys from that
-	 *            will be sent along with the value(s) (separated by
-	 *            <code>=</code>); when not a valid array only value(s) will
-	 *            be used
-	 * @param el
-	 *            the DOM element that will be used to find siphoned values on
-	 *            (when omitted the current document will be queried)
-	 * @returns the siphoned string with replaced values returned from all/any
-	 *          found JQuery selector(s)
-	 */
-	function siphonValues(s, ctx, vars, rx, drx, d, attrNames, el) {
-		// siphon node values
-		function sVals(s, rx, drx, d, attrNames, el) {
-			return s.replace(rx, function(m, v) {
-				return sVals(extractValues(v, drx, d, attrNames, el), rx, drx,
-						d, attrNames, el);
-			});
-		}
-		// substitute variables and siphon node values
-		return s ? sVals(vars.rep(ctx, s), rx, drx, d, attrNames, el) : '';
 	}
 
 	/**
@@ -852,9 +836,9 @@
 		// load
 		var domAttrs = opts.getAttrs.concat(opts.postAttrs
 				.concat(opts.putAttrs.concat(opts.deleteAttrs)));
-		var fragSelector = getThxSel(includeReplaceAttrs, null, null);
+		var fragSelector = genAttrSelect(includeReplaceAttrs, null, null);
 		fragSelector = (fragSelector ? fragSelector + ',' : '')
-				+ getThxSel(domAttrs, 'load', '*');
+				+ genAttrSelect(domAttrs, 'load', '*');
 		var urlAttrs = genAttrQueries(opts.urlAttrs, 'GET', URL_ATTR,
 				opts.regexAttrRelUrlSuffix);
 		var getAttrs = genAttrQueries(opts.getAttrs, 'GET', TDFLT,
@@ -976,6 +960,50 @@
 		}
 
 		/**
+		 * Recursively replaces values found within a string with values found
+		 * from JQuery selector(s). Results from each JQuery string found will
+		 * use the &quot;directive&quot; regular expression to determine what
+		 * will be used to extract values from the returned nodes from the
+		 * JQuery selector. Possible values are &quot;text&quot;,
+		 * &quot;html&quot; or an attribute name or when nothing is defined an
+		 * attempt to call JQuery's val() function will be made to retrieve the
+		 * replacement value.
+		 * 
+		 * @param s
+		 *            the string to replace JQuery selectors in
+		 * @param m
+		 *            the HTTP method context of the passed {Vars}
+		 * @param vars
+		 *            the {Vars} used for variable substitution
+		 * @param d
+		 *            the delimiter to use when multiple results are returned
+		 *            from a JQuery selector
+		 * @param attrNames
+		 *            array of attribute name(s) to use to extract keys from
+		 *            that will be sent along with the value(s) (separated by
+		 *            <code>=</code>); when not a valid array only value(s)
+		 *            will be used
+		 * @param el
+		 *            the DOM element that will be used to find siphoned values
+		 *            on (when omitted the current document will be queried)
+		 * @returns the siphoned string with replaced values returned from
+		 *          all/any found JQuery selector(s)
+		 */
+		function siphonValues(s, m, vars, d, attrNames, el) {
+			// siphon node values
+			function sVals(s, d, attrNames, el) {
+				return s.replace(opts.regexSurrogateSiphon, function(m, v) {
+					return sVals(extractValues(v,
+							opts.regexOutboundDirectiveDelimiter, d, attrNames,
+							el), d, attrNames, el);
+				});
+			}
+			// substitute variables and siphon node values
+			return typeof s === 'string' ? sVals(vars.rep(m, s), d, attrNames,
+					el) : '';
+		}
+
+		/**
 		 * Adds DOM siphon attributes to an object based upon an array of
 		 * attribute names
 		 * 
@@ -1054,9 +1082,7 @@
 									agt = getOV($el, getAN(m, DOM_ATTR_AGENT), ei);
 									if (agt) {
 										// siphon possible selectors
-										agt = siphonValues(agt, m, vars, 
-												opts.regexSurrogateSiphon, 
-												opts.regexValTypeSiphon, 
+										agt = siphonValues(agt, m, vars,
 												opts.agentSelSep, null);
 									}
 									if (isAdd(agtn, o, ow)) {
@@ -1373,6 +1399,59 @@
 		}
 
 		/**
+		 * Resolver that can make selections based upon JQuery selectors and
+		 * directives that indicate how the selected node(s) will be used
+		 * 
+		 * @param s
+		 *            the string that will be used to contruct node resolvers
+		 *            from or a pre-selected JQuery node object
+		 * @param d
+		 *            the directive to use for the selection: possible values
+		 *            are &quot;text&quot;, &quot;html&quot; or an attribute
+		 *            name or when nothing is defined JQuery's val() function
+		 *            will be called to retrieve the replacement value
+		 */
+		function Resolver(s, d) {
+			this.selector = s instanceof jQuery ? s : s ? $.trim(s) : null;
+            this.directive = d ? $.trim(d) : '';
+            if (this.directive) {
+            	var ld = this.directive.toLowerCase();
+            	if (ld == DTEXT || ld == DHTML) {
+            		this.directive = ld;
+            	}
+            }
+			this.selectFrom = function($el, be) {
+				if (!s) {
+					return '';
+				}
+				var $p = $el ? $el : $('html');
+				var sbe = null;
+				var jqs = this.selector instanceof jQuery;
+				if (jqs && this.selector.is($p)) {
+					return $p;
+				}
+				var $r = $p.find(this.selector);
+				if ($r.length <= 0) {
+					if (jqs && be) {
+						sbe = genAttrSelByExample(this.selector);
+						$r = $p.find(sbe);
+					}
+					if ($r.length <= 0) {
+						$r = $p.filter(this.selector);
+						if (sbe && $r.length <= 0) {
+							$r = $p.filter(sbe);
+						}
+					}
+				}
+				return $r;
+			};
+			this.toString = function() {
+				return lbls('selector', this.selector, 'directive',
+						this.directive);
+			};
+		}
+
+		/**
 		 * Node resolvers captures one or more JQuery selectors along with any
 		 * directives (e.g. &quot;text&quot;, &quot;html&quot; or attribute
 		 * name)
@@ -1380,7 +1459,7 @@
 		 * @constructor
 		 * @param s
 		 *            the string that will be used to contruct node resolvers
-		 *            from
+		 *            from or a pre-selected JQuery node object
 		 * @param pa
 		 *            array of additional attributes to add resolvers for
 		 *            (optional and will be treated cumulatively as one single
@@ -1388,43 +1467,23 @@
 		 */
 		function NodeResolvers(s, pa) {
 			var rvs = [];
-			var gs = '';
-			function select(r, $el) {
-				var $r = $el.find(r.selector);
-				return $r.length <= 0 ? $el.filter(r.selector) : $r;
-			}
-			function add(s, d) {
+			function add(s) {
 				if (!s) {
 					return null;
 				}
-				var r = rvs[rvs.length] = {};
-				r.select = function($el) {
-					return select(r, $el);
-				};
-	            r.selector = $.trim(s);
-	            r.directive = d ? $.trim(d) : '';
-	            if (r.directive) {
-	            	var ld = r.directive.toLowerCase();
-	            	if (ld == DTEXT || ld == DHTML) {
-	            		r.directive = ld;
-	            	}
-	            }
-	            r.isForAttr = d && d != DTEXT && d != DHTML;
-	            gs += (gs.length > 0 ? ',' : '') + r.selector;
-	            return r;
+				var r = null;
+				if (s instanceof jQuery || typeof s === 'string') {
+					r = new Resolver(s);
+				} else {
+					r = new Resolver(s[0], s.length > 1 ? s[1] : '');
+				}
+				return rvs[rvs.length] = r;
 			}
 			function resolve(s) {
 				// regular expression must match entire expression
 				var nv = s.replace(opts.regexNodeSiphon, function(m, v) {
-					// regular expression must match entire string
-					var isr = false;
-			        v.replace(opts.regexValTypeSiphon, function(m, v1, v2) {
-			            add(v1, v2);
-			            isr = true;
-			        });
-			        if (!isr) {
-			        	add(v);
-			        }
+					add(v.split(opts.regexOutboundDirectiveDelimiter));
+					// replace expression now that add is done
 					return '';
 				});
 				return nv;
@@ -1435,16 +1494,59 @@
 					return $.each(rvs, fx);
 				}
 			};
-			this.getGlobalSel = function() {
-				return gs;
-			};
-			// add any remaining selectors that may not be wrapped in the
-			// regular expression
-			add(resolve(s));
-			if (pa && s && opts.regexFragName.test(s)) {
-				// add selection for predefined attributes
-				add(getThxSel(pa, s, null));
+			if (s instanceof jQuery) {
+				// already selected
+				add(s);
+			} else {
+				// evaluate any node resolvers within the string and add any
+				// remaining raw JQuery selectors that may not be wrapped in the
+				// regular expression
+				add(resolve(s));
+				if (pa && s && opts.regexFragName.test(s)) {
+					// add selection for any predefined attributes
+					add(genAttrSelect(pa, s, null));
+				}	
 			}
+		}
+
+		/**
+		 * Fragment path siphon
+		 * 
+		 * @constructor
+		 * @param t
+		 *            the {FragsTrack}
+		 * @param f
+		 *            the {Frag} the path siphon is for
+		 * @param rp
+		 *            the raw routing path siphon string
+		 * @param vars
+		 *            the associative array cache of names/values variables used
+		 *            for <b>surrogate siphon resolver</b>s
+		 */
+		function FragPathSiphon(t, f, rp, vars) {
+			var rpp = null;
+			this.pathSiphon = function(rpn) {
+				try {
+					rp = rpn ? rpn : rp;
+					if (!rpp || rpn) {
+						rpp = siphonValues(rp, f.method, vars, opts.pathSep,
+								null);
+						if (rpp
+								&& rpp.length > 0
+								&& rpp.toLowerCase() != opts.selfRef
+										.toLowerCase()) {
+							rpp = adjustPath(t.ctxPath, rpp, script ? script
+									.attr(opts.fragExtensionAttr) : '');
+						} else if (f.frs.resultSiphon()) {
+							rpp = opts.selfRef;
+						}
+					}
+					return rpp;
+				} catch (e) {
+					t.addError('Failed to capture path siphon on '
+							+ (rpn ? rpn : rpp ? rpp : rp), null, e);
+				}
+			};
 		}
 
 		/**
@@ -1508,7 +1610,7 @@
 						if (uj) {
 							// convert each item in the array to a key/value
 							// pair and add the array to the master object
-							var vm = $.map(v, function(ev){
+							var vm = $.map(v, function(ev) {
 								return kv({}, k, ev);
 							});
 							ps = kv(ps, k, vm);
@@ -1526,8 +1628,7 @@
 			function resolve(uj, psn) {
 				var psx = getNewPs(uj, psn);
 				if (psx) {
-					psp = siphonValues(psx, m, vars, opts.regexSurrogateSiphon,
-							opts.regexValTypeSiphon, opts.paramSep, null);
+					psp = siphonValues(psx, m, vars, opts.paramSep, null);
 					pnr = new NodeResolvers(psp);
 				}
 				return psx;
@@ -1555,7 +1656,7 @@
 						$ell = $elc;
 						var x = uj ? {} : '';
 						pnr.each(function(i, r) {
-							var $p = r.select($ell);
+							var $p = r.selectFrom($ell);
 							// avoiding JQuery serialize functions due to name
 							// only capture
 							// ps = add(r, $p, ps, uj);
@@ -1586,13 +1687,13 @@
 		 * @param m
 		 *            the HTTP method
 		 * @param rs
-		 *            the raw result siphon string
+		 *            the raw result siphon string or the pre-selected node(s)
 		 * @param vars
 		 *            the associative array cache of names/values variables used
 		 *            for <b>surrogate siphon resolver</b>s
 		 */
 		function FragResultSiphon(t, m, rs, vars) {
-			rs = rs ? $.trim(rs) : null;
+			rs = typeof rs === 'string' ? $.trim(rs) : rs ? rs : null;
 			var rsp = null;
 			var rsr = null;
 			var fx = null;
@@ -1604,13 +1705,18 @@
 				try {
 					rsp = rsn ? rsn : rsp;
 					if (!rsp || rsn || (el && el.nodeType && !el.is(cel))) {
-						rsp = siphonValues(rs, m, vars,
-								opts.regexSurrogateSiphon,
-								opts.regexValTypeSiphon, opts.resultSep, null,
-								el);
+						var iel = el instanceof jQuery;
+						rsp = siphonValues(rsp ? rsp : iel ? el : rs, m, vars,
+								opts.resultSep, null, el);
+						if (!rsp && iel) {
+							rsp = el;
+						}
 						// check if the result siphon is a function
 						fx = new Func(opts, rsp, null, true);
-						rsr = new NodeResolvers(rsp, opts.fragAttrs);
+						// default node resolver to either the siphoned string,
+						// the passed element or nothing
+						rsr = new NodeResolvers(!fx || !fx.isValid ? rsp ? rsp
+								: iel ? el : '' : '', opts.fragAttrs);
 						cel = el;
 					}
 					return rsp;
@@ -1623,62 +1729,163 @@
 				this.resultSiphon(el, rsn);
 				return rsr;
 			};
+			this.parse = function(rslt) {
+				var tn = opts.resultWrapperTagName || DFTL_RSLT_NAME;
+				return $('<' + tn + '>' + rslt + '</' + tn + '>');
+			};
 			this.getFuncOrResultSiphon = function() {
 				return fx && fx.isValid ? fx.getFuncString() : this
 						.resultSiphon();
 			};
-			this.getGlobalSel = function(el, rsn) {
-				var crsr = this.resolvers(el, rsn);
-				return crsr ? crsr.getGlobalSel() : '';
-			};
 		}
 
 		/**
-		 * Fragment result siphon
+		 * Fragment destination siphon
 		 * 
 		 * @constructor
-		 * @param m
-		 *            the HTTP method
+		 * @param t
+		 *            the {FragsTrack}
+		 * @param f
+		 *            the {Frag} the destination siphon is for
 		 * @param ds
-		 *            the raw destination siphon string (or element)
+		 *            the raw destination siphon string or the pre-selected
+		 *            node(s)
 		 * @param vars
 		 *            the associative array cache of names/values variables used
 		 *            for <b>surrogate siphon resolver</b>s
 		 */
-		function FragDestSiphon(m, ds, vars) {
-			var dsp = typeof ds === 'string' ? $.trim(ds) : ds ? ds : null;
+		function FragDestSiphon(t, f, ds, vars) {
+			ds = typeof ds === 'string' ? $.trim(ds) : ds ? ds : null;
+			var dsp = null;
+			var dsr = null;
+			function text(s) {
+				return s ? s.replace(opts.regexDestTextOrAttrVal, ' ') : '';
+			}
+			function attr(r, $x, x, ic) {
+				if (r.directive && r.directive != DTEXT && r.directive != DHTML) {
+					if (x) {
+						// append or replace attribute
+						var v = ic ? '' : $x.attr(r.directive);
+						v += x instanceof jQuery ? text(x.text()) : x;
+						return $x.attr(r.directive, v);
+					}
+					return $x.attr(r.directive);
+				}
+				return false;
+			}
+			function addTo(ia, ic, im, dr, $ds, rr, r) {
+				if (im) {
+					// TODO : handle model/data processing
+					return $ds;
+				}
+				var rIsJ = r instanceof jQuery;
+				// try to get the result as an attribute
+				var rslt = rr ? attr(rr, rIsJ ? r : $ds) : false;
+				// handle case where destination needs to use text
+				rslt = rslt === false ? rIsJ && rr && rr.directive == DTEXT ? text(x
+						.text())
+						: r
+						: rslt ? rslt : '';
+				// try to append or replace the destination attribute
+				var dst = dr ? attr(dr, $ds, rslt, ic) : false;
+				// clear out any existing data from the destination node(s)
+				if (ic && dst == false) {
+					if (ic instanceof NodeResolvers
+							&& (!rr.directive || rr.directive == DHTML)) {
+						// remove any existing prior result node(s) that may
+						// exist under the destination that match the result
+						// siphon (ic)
+						ic.each(function(i, rrc) {
+							var $c = rrc.selectFrom($ds, true);
+							$c.remove();
+						});
+					} else {
+						// remove any existing content that may exist
+						// under the destination
+						$ds.contents().remove();
+					}
+				}
+				// try to add the result to the destination node
+				if (rslt && dst == false) {
+					// handle case where destination needs to use html
+					//rslt = rslt instanceof jQuery ? rslt.html() : rslt;
+					return ia ? $ds.append(rslt) : $ds.replaceWith(rslt);
+				}
+			}
+			function appendDest(ic, im, dr, $d, rr, r) {
+				return addTo(true, ic, im, dr, $d, rr, r);
+			}
+			function replaceDest(ic, im, dr, $d, rr, r) {
+				return addTo(false, ic, im, dr, $d, rr, r);
+			};
 			this.destSiphon = function(dsn) {
 				dsp = dsn ? dsn : dsp;
 				if (!dsp || dsn) {
-					dsp = siphonValues(dsp, m, vars, opts.regexSurrogateSiphon,
-							opts.regexValTypeSiphon, opts.destSep, null);
+					dsp = siphonValues(dsp || ds, f.method, vars, opts.destSep,
+							null);
+					dsr = new NodeResolvers(dsp ? dsp
+							: ds instanceof jQuery ? ds : '', opts.fragAttrs);
 				}
 				return dsp;
 			};
-			
-		}
-
-		/**
-		 * Gets the fragment JQuery selector
-		 * 
-		 * @param a
-		 *            the of array of fragment attributes (matches any)
-		 * @param v
-		 *            the optional attribute value to match for each item in the
-		 *            array
-		 * @param ed
-		 *            the optional equals designation that will prepended to the
-		 *            equals sign (when a valid attribute value is supplied)
-		 * @returns JQuery selector
-		 */
-		function getThxSel(a, v, ed) {
-			var r = '';
-			var as = $.isArray(a) ? a : [ a ];
-			for (var i = 0; i < as.length; i++) {
-				r += (i > 0 ? ',' : '') + '[' + as[i]
-						+ (v ? (ed ? ed : '') + '="' + v + '"' : '') + ']';
-			}
-			return r;
+			this.destResolver = function(dsn) {
+				this.destSiphon(dsn);
+				return dsr;
+			};
+			this.add = function($p, r, rr, im, ts, xhr) {
+				var $xr = null;
+				this.destResolver().each(function(i, dr) {
+					try {
+						var $x = null;
+						var $ds = dr.selectFrom($p);
+						if ($ds.length <= 0) {
+							return true;
+						}
+						if (f.navOpts.type() === TREP) {
+							try {
+								$x = $(r);
+								replaceDest(false, im, dr, $ds, rr, $x);
+							} catch (e) {
+								// node may contain top level text nodes
+								$x = $ds.parent();
+								replaceDest(false, im, dr, $ds, rr, r);
+							}
+						} else if (f.navOpts.type() === TINC
+								|| f.navOpts.type() === TUPD) {
+							if (f.fds.destSiphon() || f.navOpts.type() === TUPD) {
+								if (f.fds.destSiphon()) {
+									// when updating remove any pre-exsisting results 
+									// from the destination that match the result siphon
+									$x = appendDest(f.navOpts.type() === TUPD ? 
+											f.frs.resolvers(r) : false, im, dr, $ds, rr, r);
+								} else {
+									// when updating remove everything in the destination
+									$x = appendDest(f.navOpts.type() === TUPD, im,
+											dr, $ds, rr, r);
+								}
+							} else {
+								$x = appendDest(false, im, dr, $ds, rr, r);
+							}
+						} else {
+							t.addError('Invalid destination type "' + f.navOpts.type()
+									+ '" for ' + f.toString(), f, null, ts, xhr);
+							return false;
+						}
+						// add the processed node(s) to the master collection
+						if ($xr) {
+							$xr.add($x);
+						} else if ($x) {
+							$xr = $x;
+						}
+					} catch (e) {
+						t.addError('Error while processing desitination "' 
+								+ dr
+								+ '" for ' + f.toString(), f, e, ts, xhr);
+						return true;
+					}
+				});
+				return $xr;
+			};
 		}
 
 		/**
@@ -1824,7 +2031,7 @@
 						|| type == opts.eventFragLoad
 						|| type == opts.eventFragsLoad) {
 					fire();
-				} else if (f && !f.rp()) {
+				} else if (f && !f.frp.pathSiphon()) {
 					t.addError('Invalid URL for ' + f.toString(), f, null,
 							null, null);
 					t.ccnt++;
@@ -1846,7 +2053,8 @@
 		 * @param s
 		 *            the scope element(s) of the tracking
 		 * @param siphon
-		 *            the template selection used for tracking
+		 *            the optional object that will contain siphon attribute
+		 *            overrides
 		 * @param isRoot
 		 *            true when the root frament selection is the actual
 		 *            template element
@@ -1943,7 +2151,7 @@
 			if (!t.isSelfSelect
 					&& (loadSiphon = genSiphonObj(opts.ajaxTypeDefault, 'load',
 							null, siphon.selector, this.el, t.siphon.vars, true)).isValid) {
-				// DOM routing attribute for a load event will take presedence
+				// DOM siphon attribute for a load event will take presedence
 				// over short-hand include/replace/etc.
 				loadSiphon.vars = t.siphon.vars;
 				siphon = loadSiphon;
@@ -1965,20 +2173,6 @@
 			// short-hand attrs may have path and result siphon
 			a = a ? a.split(opts.multiSep) : null;
 			this.event = siphon.eventSiphon;
-			var rp = !a ? siphon.pathSiphon : a && a.length > 0 ? $.trim(a[0])
-					: null;
-			var rs = !a ? siphon.resultSiphon : a && a.length > 1 ? $.trim(a[1])
-					: null;
-			var dsp = !a ? siphon.destSiphon : this.el;
-			this.ds = function(dsn) {
-				dsp = dsn ? dsn : dsp;
-				if (!dsp || dsn) {
-					dsp = siphonValues(dsp, this.method, siphon.vars,
-							opts.regexSurrogateSiphon, opts.regexValTypeSiphon,
-							opts.destSep, null);
-				}
-				return dsp;
-			};
 			this.method = siphon.method ? siphon.method
 					: opts.ajaxTypeDefault;
 			this.getVars = function() {
@@ -1989,24 +2183,16 @@
 				// add user variables
 				siphon.vars.add(this.method, this.ws);
 			}
-			var rpp = null;
-			this.rp = function(rpn) {
-				rp = rpn ? rpn : rp;
-				if (!rpp || rpn) {
-					rpp = siphonValues(rp, this.method, siphon.vars,
-							opts.regexSurrogateSiphon, opts.regexValTypeSiphon,
-							opts.pathSep, null);
-					if (rpp && rpp.length > 0
-							&& rpp.toLowerCase() != opts.selfRef.toLowerCase()) {
-						rpp = adjustPath(t.ctxPath, rpp, script ? script
-								.attr(opts.fragExtensionAttr) : '');
-					} else if (rs && rs.length > 0) {
-						rpp = opts.selfRef;
-					}
-				}
-				return rpp;
-			};
-			this.frs = new FragResultSiphon(t, this.method, rs, siphon.vars);
+			this.fps = new FragParamSiphon(t, this.method, siphon.paramsSiphon,
+					siphon.vars);
+			this.frs = new FragResultSiphon(t, this.method,
+					!a ? siphon.resultSiphon : a && a.length > 1 ? $.trim(a[1])
+							: null, siphon.vars);
+			this.frp = new FragPathSiphon(t, this, !a ? siphon.pathSiphon : a
+					&& a.length > 0 ? $.trim(a[0]) : null, siphon.vars);
+			this.fds = new FragDestSiphon(t, this,
+					!a && siphon.destSiphon ? siphon.destSiphon : this.el,
+					siphon.vars);
 			this.destScope = null;
 			this.e = null;
 			this.cancelled = false;
@@ -2025,10 +2211,8 @@
 				// increment child fragment count on parent fragment
 				this.pf.ccnt(true);
 			}
-			this.fps = new FragParamSiphon(t, this.method, siphon.paramsSiphon,
-					siphon.vars);
 			this.pseudoUrl = function(f) {
-				return this.rp() + '?' + this.fps.params();
+				return this.frp.pathSiphon() + '?' + this.fps.params();
 			};
 			this.as = siphon.agentSiphon;
 			this.done = function() {
@@ -2049,17 +2233,7 @@
 					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t, this);
 				}
 			};
-			function attrp($x, r, x) {
-				return r && r.isForAttr ? x ? $x.attr(r.directive, x) : $x
-						.attr(r.directive) : false;
-			}
-			function appendRepl(ia, $x, rr, x) {
-				var xIsJ = x instanceof jQuery;
-				var ra = attrp(xIsJ ? x : $x, rr);
-				ra = ra === false ? x instanceof jQuery && rr
-						&& rr.directive == DTEXT ? x.text() : x : ra ? ra : '';
-				return ia ? $x.append(ra) : $x.replaceWith(ra);
-			}
+			// handles processing of fragments
 			this.px = function(x, rr, xhr, ts, e) {
 				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, this);
 				if (this.cancelled) {
@@ -2076,56 +2250,27 @@
 				if (xIsJ && x.is('script')) {
 					if (xhr && xhr.status != 200) {
 						t.addError(xhr.status + ': ' + ts
-								+ ' path siphon="' + this.rp() + '"', this, e, ts, xhr);
+								+ ' path siphon="' + this.frp.pathSiphon() 
+								+ '"', this, e, ts, xhr);
 						this.domDone(true);
 						return;
-					} else if (!xhr && this.rp() && this.frs.resultSiphon()) {
-						var sdi = this.rp().indexOf('data:text/javascript,');
+					} else if (!xhr && this.frp.pathSiphon() && this.frs.resultSiphon()) {
+						var sdi = this.frp.pathSiphon().indexOf('data:text/javascript,');
 						var ss = x.prop('type');
 						$('<script' + (typeof ss === 'string' && ss.length > 0 ? 
 							' type="' + ss + '">' : '>') + (sdi > -1 ? 
-								this.rp().substr('data:text/javascript,'.length) : this.rp()) + 
+								this.frp.pathSiphon().substr('data:text/javascript,'.length) : 
+									this.frp.pathSiphon()) + 
 									'</script>').appendTo(this.frs.resultSiphon());
 					}
 				} else {
-					var im = this.isModel(xhr);
-					var $x = null;
-					if (this.navOpts.type() === TREP) {
-						var $d = this.ds() ? $(this.ds()) : this.el;
-						try {
-							$x = $(x);
-							appendRepl(false, $d, rr, $x);
-						} catch (e) {
-							// node may contain top level text nodes
-							$x = $d.parent();
-							appendRepl(false, $d, rr, x);
-						}
-					} else if (this.navOpts.type() === TINC || this.navOpts.type() === TUPD) {
-						if (this.ds() || this.navOpts.type() === TUPD) {
-							var $ds = this.ds() ? $(this.ds()) : null;
-							if ($ds) {
-								if (this.navOpts.type() === TUPD) {
-									// remove any existing fragments that may exist
-									// under the destination that match the fragment
-									// selection
-									$ds.find(this.frs.getGlobalSel(x)).remove();
-								}
-								$x = appendRepl(true, $ds, rr, x);
-							} else {
-								if (this.navOpts.type() === TUPD) {
-									// remove any existing content that may exist
-									// under the element
-									this.el.contents().remove();
-								}
-								$x = appendRepl(true, this.el, rr, x);
-							}
-						} else {
-							$x = appendRepl(true, this.el, rr, x);
-						}
-					} else {
-						t.addError('Invalid destination type "'
-								+ this.navOpts.type() + '" for '
-								+ this.toString(), this, null, ts, xhr);
+					// TODO : should there be an option to designate a parent
+					// node for which the destination selection will be made? if
+					// so, just pass it in as the 1st parameter for the
+					// destination siphon's add function:
+					var $x = this.fds.add(null, x, rr, this.isModel(xhr), ts,
+							xhr);
+					if (!$x) {
 						this.domDone(true);
 						return;
 					}
@@ -2144,8 +2289,9 @@
 					// for performance we'll build input strings versus nodes
 					// before we simulate the synchronous form submission/page
 					// transfer
-					var fd = $('<form style="display:none;" action="' + this.rp()
-							+ '" method="' + this.method + '" />');
+					var fd = $('<form style="display:none;" action="'
+							+ this.frp.pathSiphon() + '" method="'
+							+ this.method + '" />');
 					vars = this.fps.params(true);
 					var ips = '';
 					for (var i = 0; i < vars.length; i++) {
@@ -2157,7 +2303,7 @@
 					fd.submit();
 					return no.getWin();
 				} else {
-					var loc = this.rp();
+					var loc = this.frp.pathSiphon();
 					var vars = this.fps.params();
 					if (vars) {
 						loc += '?' + vars;
@@ -2181,9 +2327,9 @@
 				var cf = this;
 				do {
 					us[us.length] = {
-						pathSiphon : cf.rp(),
+						pathSiphon : cf.frp.pathSiphon(),
 						resultSiphon : cf.frs.getFuncOrResultSiphon(),
-						destSiphon : cf.ds(),
+						destSiphon : cf.fds.destSiphon(),
 						destScope : cf.destScope
 					};
 				} while ((cf = cf.pf));
@@ -2193,10 +2339,11 @@
 				return lbls('object', this.constructor.name, 'options',
 						this.navOpts.toString(), 'HTTP method', this.method,
 						'URL', (this.pseudoUrl()), 'parameter siphon', this.fps
-								.paramSiphon(), 'path siphon', this.rp(),
-						'result siphon', this.frs.getFuncOrResultSiphon(),
-						'destination siphon', this.ds(), 'agent siphon',
-						this.as, 'cancelled', this.cancelled, 'error',
+								.paramSiphon(), 'path siphon', this.frp
+								.pathSiphon(), 'result siphon', this.frs
+								.getFuncOrResultSiphon(), 'destination siphon',
+						this.fds.destSiphon(), 'agent siphon', this.as,
+						'cancelled', this.cancelled, 'error',
 						(this.e ? this.e.message : null));
 			};
 		}
@@ -2224,13 +2371,13 @@
 			o.fragWinTarget = f ? f.navOpts.target : undefined;
 			o.fragWinOptions = f ? f.navOpts.options : undefined;
 			o.fragWinHistoryFlag = f ? f.navOpts.history : undefined;
-			o.routingStack = f ? f.getStack() : undefined;
+			o.fragStack = f ? f.getStack() : undefined;
 			o.sourceEvent = f ? f.event : undefined;
 			o.paramsSiphon = f ? f.fps.paramSiphon() : undefined;
 			o.parameters = f ? f.fps.params() : undefined;
-			o.pathSiphon = f ? f.rp() : undefined;
+			o.pathSiphon = f ? f.frp.pathSiphon() : undefined;
 			o.resultSiphon = f ? f.frs.getFuncOrResultSiphon() : undefined;
-			o.destSiphon = f ? f.ds() : undefined;
+			o.destSiphon = f ? f.fds.destSiphon() : undefined;
 			o.agentSiphon = f ? f.as : undefined;
 			o.destScope = f ? f.destScope instanceof jQuery ? f.destScope
 					: f.el : undefined;
@@ -2414,7 +2561,7 @@
 				var sf = new Frag(f, $s, $x, t);
 				var path = hasu ? url : $x.text();
 				path = path ? path : $x.html();
-				sf.rp(path);
+				sf.frp.pathSiphon(path);
 				sf.frs.resultSiphon($t, $t);
 				if (!$t.is($x)) {
 					// scripts need to be removed from the fragment's DOM in
@@ -2483,16 +2630,14 @@
 						return;
 					}
 				}
-				// process non-head tags the normal JQuery way
-				// (links need to be converted via raw results to
-				// prevent warnings and undesired network traffic)
-				var $c = $('<results>' + htmlDataAdjust(t, f, r) + '</results>');
+				// capture results
+				var $c = f.frs.parse(htmlDataAdjust(t, f, r));
 				var rsvCnt = 0;
 				var $fss = null;
 				// loop through the resolvers separately in order to handle any
 				// directives that may be defined
 				f.frs.resolvers($c).each(function(i, rr) {
-					var $fs = rr.select($c);
+					var $fs = rr.selectFrom($c);
 					if ($fs.length <= 0) {
 						// nothing found
 						return true;
@@ -2533,7 +2678,7 @@
 						cb(null, f);
 						return;
 					}
-					if (f.rp() == opts.selfRef) {
+					if (f.frp.pathSiphon() == opts.selfRef) {
 						// fragment is within current page
 						lcont(f, cb, $('html').html(), opts.selfRef, null);
 						return;
@@ -2552,7 +2697,7 @@
 						}
 						// use ajax vs load w/content target for more granular control
 						$.ajax({
-							url: f.rp(),
+							url: f.frp.pathSiphon(),
 							type: f.method,
 							data: f.fps.params(),
 							async: f.ajaxAsync,
@@ -2710,14 +2855,17 @@
 			regexAbsPath : DFLT_ABS_PATH_REGEX,
 			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g,
 			regexFuncArgReplace : /['"]/g,
-			regexValTypeSiphon : /(^.*)(?:->)(.*$)/g,
+			regexInboundDirectiveDelimiter : /<-/g,
+			regexOutboundDirectiveDelimiter : /->/g,
 			regexSurrogateSiphon : /(?:\?{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexNodeSiphon : /(?:\|{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexVarSiphon : /(?:\${)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexVarNameVal : /((?:\\.|[^=,]+)*)=("(?:\\.|[^"\\]+)*"|(?:\\.|[^,"\\]+)*)/g,
 			regexParamCheckable : /^(?:checkbox|radio)$/i,
 			regexParamReplace : /\r?\n/g,
+			regexDestTextOrAttrVal : /[^\x21-\x7E]+/g,
 			paramReplaceWith : '\r\n',
+			resultWrapperTagName : DFTL_RSLT_NAME,
 			eventIsBroadcast : true,
 			eventFragChain : 'frag',
 			eventFragsChain : 'frags',

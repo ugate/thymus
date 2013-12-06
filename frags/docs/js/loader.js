@@ -40,7 +40,7 @@ function fragsListener(event) {
 	}
 	$('#loadThymus').css('display', 'none');
 	$('#fragTotal').text(event.fragCount);
-	initUI(event);
+	initUI(event.errors);
 }
 /**
  * Example that shows how to use a <b>result siphon</b> handler. Takes the read

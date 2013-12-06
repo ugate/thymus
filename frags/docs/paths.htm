@@ -22,7 +22,7 @@
 				synchronizes with the resources defined within the <b>path
 					siphon</b>. For example, a fragment that resides in <b>example.com/my-app/frags/nav.htm</b>
 				may also be included in <b>example.com/my-app/index.htm</b> as well
-				as <b>example.com/my-app/user/info.htm</b>. If the <b>routing
+				as <b>example.com/my-app/user/info.htm</b>. If the <b>siphon
 					attribute</b> is defined something like:
 			</p>
 <div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
@@ -34,7 +34,7 @@
 </pre></div>
 			<p>
 				And both <b>example.com/my-app/index.htm</b> and <b>example.com/my-app/user/info.htm</b>
-				contain a corresponding <b>routing attribute</b>:
+				contain a corresponding <b>siphon attribute</b>:
 			</p>
 <div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span
@@ -276,19 +276,54 @@
 				<li><code>?{}</code> (<b>surrogate siphon resolver</b>) - the
 					wrapped JQuery selector will be used to select the node(s) where
 					value(s) will be extracted and used to replace the expression
-					within the final siphon definition string (can be used within any <b>siphon
-						attribute</b>)</li>
+					within the final siphon definition string (see the <a
+					href="#resolvermatrix">compatibility matrix</a>)</li>
 				<li><code>|{}</code> (<b>node siphon resolver</b>) - the
 					wrapped JQuery selector will be used to select the node(s) used by
-					the siphon (<b>parameter siphon</b>s, <b>result siphon</b>s and <b>destination
-						siphon</b>s only)</li>
+					the siphon (see the <a href="#resolvermatrix">compatibility
+						matrix</a>)</li>
 			</ul>
+			<h4 id="resolvermatrix">Siphon Resolver Compatibility</h4>
+			<div class="table-responsive">
+				<table class="table thymus-matrix">
+					<tr>
+						<th class="lbl"></th>
+						<th><b class="app-tooltip-top hidden-sm hidden-xs"
+							title="?{}">surrogate siphon resolver</b> <code
+								class="visible-sm visible-xs" title="surrogate siphon resolver">?{}</code></th>
+						<th><b class="app-tooltip-top hidden-sm hidden-xs"
+							title="|{}">node siphon resolver</b> <code
+								class="visible-sm visible-xs" title="node siphon resolver">!{}</code></th>
+					</tr>
+					<tr>
+						<td class="lbl"><b>path</b></td>
+						<td><i class="fa fa-check fa-green"></i></td>
+						<td><i class="fa fa-times fa-red"></i></td>
+					</tr>
+					<tr>
+						<td class="lbl"><b>parameter</b></td>
+						<td><i class="fa fa-check fa-green"></i></td>
+						<td><i class="fa fa-check fa-green"></i></td>
+					</tr>
+					<tr>
+						<td class="lbl"><b>result</b></td>
+						<td><i class="fa fa-check fa-green"></i></td>
+						<td><i class="fa fa-check fa-green"></i></td>
+					</tr>
+					<tr>
+						<td class="lbl"><b>destination</b></td>
+						<td><i class="fa fa-check fa-green"></i></td>
+						<td><i class="fa fa-check fa-green"></i></td>
+					</tr>
+				</table>
+			</div>
 			<p>
 				Each <b>siphon resolver</b> can also be used with or without an
-				appended
+				appended directive that indicates how to insert/extract value(s)
+				from the selected node(s). A directive is preceeded by a single
+				JQuery selector followed by a directive delimiter (
 				<code>-&gt;</code>
-				directive that indicates how to insert/extract value(s) from the
-				selected node(s):
+				) and one of the following directives:
 			</p>
 			<ul>
 				<li><code>text</code> - will use <a
@@ -301,13 +336,13 @@
 					href="http://api.jquery.com/attr/">JQuery.attr()</a> to
 					insert/extract value(s) returned from the JQuery selected node(s)
 				</li>
-				<li>no directive - <b>surrogate siphon resolver</b>s will use
-					values from <a href="http://api.jquery.com/serializeArray/">JQuery.serializeArray()</a>
-					or value(s) from <a href="http://api.jquery.com/val/">JQuery.val()</a>
-					(when applicable) to insert/extract value(s) returned from the
-					JQuery selected node(s). <b>node siphon resolver</b>s will use the
-					default value insertion/extraction operation used by the siphon
-					it's defined within.
+				<li>no directive - <b>surrogate siphon resolver</b>s will use <a
+					href="http://api.jquery.com/val/">JQuery.val()</a> by default to
+					extract replacement value(s) from the selected JQuery node(s). By
+					default, <b>node siphon resolver</b>s will use <a
+					href="http://api.jquery.com/val/">JQuery.val()</a> for <b>parameter
+						siphon</b>s and <a href="http://api.jquery.com/html/">JQuery.html()</a>
+					for <b>result siphon</b>s and <b>destination siphon</b>s.
 				</li>
 			</ul>
 			<h4 id="fragpathsub">Fragment Path Substitutions</h4>
@@ -507,7 +542,7 @@
 			</p>
 			<h4 id="fragresultchain">Chaining Result Selectors</h4>
 			<p>
-				A <b>result siphon</b> works slightly different that most other
+				A <b>result siphon</b> works slightly different than most other
 				siphons. Instead of using the current document when making JQuery
 				node selections, it uses the incoming document. If the results have
 				a content-type other than HTML or XML the <b>result siphon</b>
@@ -708,6 +743,65 @@
 	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
+			<h4 id="fragdestchain">Chaining Destination Selectors</h4>
+			<p>
+				A <b>destination siphon</b> can contain a single raw JQuery selector
+				or one or more <b>surrogate siphon resolver</b>s and/or <b>node
+					siphon resolver</b>s. Each JQuery selector will funnel incoming <b>result
+					siphon</b> results into the selected destination node(s). Like other <b>siphon
+					attribute</b>s, <b>node siphon resolver</b>s will use directives to
+				determine how the results will be added. When a <b>destination
+					siphon</b> is not defined the <b>destination siphon</b> will select the
+				node where the <b>event siphon</b> is defined by default. Lets take
+				a look at a few scenarios:
+			</p>
+<!-- assume the following button -->
+<!-- <button data-thx-get="click" data-thx-get-path="frags/user/user1" data-thx-get-type="async|update"  -->
+<!-- 	data-thx-get-dest="|{.one} |{#two->text} |{.three->value} ?{select[name=&quot;fourSel&quot;]}">Get Resource</button> -->
+<!-- <h4>1-1</h4> -->
+<!-- <div class="one"></div> -->
+<!-- <h4>1-2</h4> -->
+<!-- <div class="one"></div> -->
+<!-- <h4>2</h4> -->
+<!-- <div id="two"></div> -->
+<!-- <h4>3-1</h4> -->
+<!-- <input class="three" value="" /> -->
+<!-- <h4>3-2</h4> -->
+<!-- <input class="three" value="" /> -->
+<!-- <h4>Select</h4> -->
+<!-- <select name="fourSel"> -->
+<!-- 	<option value="|{.four-1->value}">Parameter Option 1</option> -->
+<!-- 	<option value="|{.four-2->value}" selected="selected">Parameter Option 2</option> -->
+<!-- </select> -->
+<!-- <h4>4-1</h4> -->
+<!-- <input class="four-1" value="" /> -->
+<!-- <h4>4-2</h4> -->
+<!-- <input class="four-2" value="" /> -->
+
+<!-- when the button is clicked would result in: -->
+<!-- <button data-thx-get="click" data-thx-get-path="/path/to/resource" -->
+<!-- 	data-thx-get-dest="|{.one} |{#two->text} |{.three->value} ?{select[name=&quot;fourSel&quot;]}">Get Resource</button> -->
+<!-- <div class="one"> -->
+<!-- 	<div> -->
+<!-- 		... -->
+<!-- 	</div> -->
+<!-- </div> -->
+<!-- <div class="one"> -->
+<!-- 	<div> -->
+<!-- 		... -->
+<!-- 	</div> -->
+<!-- </div> -->
+<!-- <div id="two"> -->
+<!-- 	... -->
+<!-- </div> -->
+<!-- <input class="three" value="..." /> -->
+<!-- <input class="three" value="..." /> -->
+<!-- <select name="fourSel"> -->
+<!-- 	<option value="|{.four-1->value}">Parameter Option 1</option> -->
+<!-- 	<option value="|{.four-2->value}" selected="selected">Parameter Option 2</option> -->
+<!-- </select> -->
+<!-- <input class="four-1" value="" /> -->
+<!-- <input class="four-2" value="..." /> -->
 			<div class="alert alert-info">
 				<strong>Note:</strong> Even though some siphons can simultaneously
 				contain raw JQuery selectors as well as <b>node siphon resolver</b>s

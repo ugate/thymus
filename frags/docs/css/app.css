@@ -134,6 +134,18 @@ div.app-scroll .scroll-spy {
 	padding: 0;
 }
 
+table.thymus-matrix td, table.thymus-matrix th {
+	text-align: center;
+}
+
+table.thymus-matrix .lbl {
+	width: 150px;
+}
+
+table.thymus-matrix .fa {
+	font-size: 2em;
+}
+
 .fa-green {
 	color: #00ff00 !important;
 }
@@ -397,5 +409,11 @@ section,.form-signin {
 	div.app-scroll>.app-scroll-nav li>a {
 		padding-left: 5px;
 		padding-right: 5px;
+	}
+	table.thymus-matrix .lbl {
+		width: 100px;
+	}
+	table.thymus-matrix {
+		font-size: .75em;
 	}
 }

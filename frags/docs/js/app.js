@@ -1,10 +1,19 @@
-function initUI() {
+function initUI(errors) {
 	// add some flare to the demo by adding a background splash
 	flickr('thymus vulgaris', 'body');
 	// initialize bootstrap components
 	initScrollSpy('.scroll-spy');
 	initTipsPops('app-tooltip');
 	initTipsPops('app-popover');
+	// show errors
+	if (errors) {
+		for (var i=0; i<errors.length; i++) {
+			var e = errors[i];
+			setTimeout(function() {
+				throw e;
+			}, 10);
+		}
+	}
 }
 function updateUI() {
 	initScrollSpy('.scroll-spy');
