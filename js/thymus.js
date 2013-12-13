@@ -16,14 +16,17 @@
 (function() {
 	this.NS = this.displayName = 'thymus';
 	this.DFLT_PATH_SEP = '/';
-	this.DFLT_ABS_PATH_REGEX = /^\/|(\/[^\/]*|[^\/]+)$/g;
+	this.REGEX_ABS_PATH = /^\/|(\/[^\/]*|[^\/]+)$/g;
+	this.REGEX_CDATA = /<!\[CDATA\[(?:.|\r\n|\n|\r)*?\]\]>/ig;
+	this.DATA_JS = 'data:text/javascript,';
 	this.JQUERY_URL_ATTR = 'data-thx-jquery-url';
-	this.JQUERY_DEFAULT_URL = 'http://code.jquery.com/jquery.min.js';
+	this.JQUERY_DEFAULT_URL = 'http://code.jquery.com/jquery.js';
 	this.FRAGS_LOAD_DEFERRED_LOAD_ATTR = 'data-thx-deferred-load';
 	this.BASE_PATH_ATTR = 'data-thx-base-path';
 	this.FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
 	this.FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
 	this.DFTL_RSLT_NAME = NS + '-results';
+	this.DFLT_ATTR_NAME = NS + '-attr';
 	this.VARS_ATTR_TYPE = 'with';
 	this.DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest', VARS_ATTR_TYPE ];
 	this.DOM_ATTR_AGENT = 'agent';
@@ -179,6 +182,168 @@
 	function getEventName(n, u) {
 		return n && n.toLowerCase().indexOf('on') == 0 ? u ? n : n.substr(2)
 				: u ? 'on' + n : n;
+	}
+
+	/**
+	 * JQuery node cache that utilizes <code>JQuery.add</code> with
+	 * <code>null</code> handling
+	 * 
+	 * @constructor
+	 * @param c
+	 *            the optional initial cache element
+	 */
+	function JqCache(c) {
+		var $c = c;
+		this.cache = function($x) {
+			if ($x instanceof jQuery) {
+				if ($c instanceof jQuery) {
+					$c = $c.add($x);
+				} else {
+					$c = $x;
+				}	
+			}
+			return $c;
+		};
+		this.clear = function(n) {
+			$c = null;
+			return n ? this : null;
+		};
+	}
+
+	/**
+	 * A {JqCache} variant used for <code>JQuery.append</code>,
+	 * <code>JQuery.replace</code> or any other manipulation operation
+	 * 
+	 * @constructor
+	 * @param $dc
+	 *            the optional initial destination cache element
+	 * @param r
+	 *            the optional initial origin/result cache element or text
+	 */
+	function ManipCache($dc, r) {
+		var dc = new JqCache($dc);
+		var rc = new JqCache(r);
+		//function hasText
+		this.cache = function($dc, r) {
+			dc.cache($dc);
+			return rc.cache(r instanceof jQuery ? r
+					: typeof r === 'object' ? $(r) : r);
+		};
+		this.manip = function(ia) {
+			if (dc.cache() && rc.cache()) {
+				if (typeof ia === 'function') {
+					ia(dc.cache(), rc.cache());
+				} else if (ia) {
+					dc.cache().append(rc.cache());
+				} else {
+					dc.cache().replaceWith(rc.cache());
+				}
+				return rc.cache();
+			}
+			return null;
+		};
+		this.clear = function(n) {
+			dc = dc.clear(n);
+			rc = rc.clear(n);
+			return n ? this : null;
+		};
+	}
+
+// TODO : cache
+	/**
+	 * A {ManipCache} variant used for <code>JQuery.append</code> or
+	 * <code>JQuery.replaceWith</code> caching that span separate <b>node</b>
+	 * and <b>attribute</b> scopes
+	 * 
+	 * @constructor
+	 * @param ia
+	 *            true for append, false for replace
+	 * @param atn
+	 *            the optional attribute tag name to use as a placeholder
+	 *            wrapper for attribute injection (will never be present in the
+	 *            DOM)
+	 * @param ndc
+	 *            the optional node destination cache
+	 * @param nrc
+	 *            the optional node origin/result cache
+	 * @param adc
+	 *            the optional attribute destination cache
+	 * @param arc
+	 *            the optional attribute origin/result cache
+	 */
+	function ManipsCache(ia, atn, ndc, nrc, adc, arc) {
+		atn = atn ? atn : DFLT_ATTR_NAME;
+		var nc = new ManipCache(ndc, nrc);
+		var ac = new ManipCache(adc, arc);
+		var rc = null;
+		this.nodeCache = function($dc, rc) {
+			return nc.cache($dc, rc);
+		};
+		this.attrCache = function($dc, rc, an) {
+			// wrap attribute in placeholder tag so that the attribute name can
+			// be retrieved for later use
+			var $w = $('<' + atn + ' ' + atn + '="' + an + '">');
+			$w.append(rc);
+			return ac.cache($dc, $w);
+		};
+		this.manips = function(n) {
+			// append result nodes and return a commulative result JQuery object
+			rc = rc ? rc : new JqCache();
+			var $r = rc.cache(nc.manip(ia));
+			ac.manip(function($d, $r) {
+				var as = [];
+				$r.each(function(i, rn) {
+					// results are cumulative 
+					var $rn = $(rn);
+					var a = $rn.attr(atn);
+					as[a] = (as[a] ? as[a] : '') + $rn.text();
+				});
+				for ( var a in as) {
+					$d.attr(a, as[a]);
+				}
+			});
+			rc = rc.clear(n);
+			this.clear(n);
+			return $r;
+		};
+		this.clear = function(n) {
+			nc = nc ? nc.clear(n) : n ? new ManipCache() : null;
+			ac = ac ? ac.clear(n) : n ? new ManipCache() : null;
+			rc = rc ? rc.clear(n) : n ? new ManipCache() : null;
+			return n ? this : null;
+		};
+	}
+
+	/**
+	 * A {ManipsCache} variant used for <code>JQuery.append</code> and
+	 * <code>JQuery.replaceWith</code> operations caching
+	 * 
+	 * @constructor
+	 * @param atn
+	 *            the optional attribute tag name to use as a placeholder
+	 *            wrapper for attribute injection (will never be present in the
+	 *            DOM)
+	 */
+	function AppReplCache(atn) {
+		var ach = new ManipsCache(true, atn);
+		var rch = new ManipsCache(false, atn);
+		this.nodeCache = function(ia, $dc, rc) {
+			return (ia ? ach : rch).nodeCache($dc, rc);
+		};
+		this.attrCache = function(ia, $dc, rc, an) {
+			return (ia ? ach : rch).attrCache($dc, rc, an);
+		};
+		this.appendReplace = function(n) {
+			var $r = ach.manips(n);
+			$r = $r ? $r.add(rch.manips(n)) : rch.manips(n);
+			this.clear(n);
+			return $r;
+		};
+		this.clear = function(n) {
+			ach = ach ? ach.clear(n) : n ? new ManipsCache(true) : null;
+			rch = rch ? rch.clear(n) : n ? new ManipsCache(false) : null;
+			return n ? this : null;
+		};
 	}
 
 	/**
@@ -994,7 +1159,7 @@
 			function sVals(s, d, attrNames, el) {
 				return s.replace(opts.regexSurrogateSiphon, function(m, v) {
 					return sVals(extractValues(v,
-							opts.regexOutboundDirectiveDelimiter, d, attrNames,
+							opts.regexDirectiveDelimiter, d, attrNames,
 							el), d, attrNames, el);
 				});
 			}
@@ -1195,15 +1360,15 @@
 					// load events are picked up by normal fragment loading
 					return;
 				}
-				var r = genSiphonObj(a.method, ev, opts.actionNavInvoke, null,
+				var so = genSiphonObj(a.method, ev, opts.actionNavInvoke, null,
 						null, t.siphon.vars, false);
-				if (r.isValid) {
-					r.eventAttrs = a.items;
-					r.typeSiphon = a.type;
-					var rtn = addOrUpdateEventFunc(ctx, r.action, r.method,
-							f.pel, el, r.eventSiphon, function(pel, ib) {
+				if (so.isValid) {
+					so.eventAttrs = a.items;
+					so.typeSiphon = a.type;
+					var rtn = addOrUpdateEventFunc(ctx, so.action, so.method,
+							f.pel, el, so.eventSiphon, function(pel, ib) {
 								var $ib = $(ib);
-								if (!r.captureAttrs($ib, t.siphon.vars, false, true)) {
+								if (!so.captureAttrs($ib, t.siphon.vars, false, true)) {
 									// the event is no longer valid because the
 									// method/event attribute has removed the
 									// event since its registration- thus we
@@ -1211,17 +1376,17 @@
 									// listener by returning true
 									return true;
 								}
-								r.selector = ib;
-								ctx.exec(r, pel, ib);
+								so.selector = ib;
+								ctx.exec(so, pel, ib);
 								return false;
 							});
-					r.onEvent = rtn.eventAttrValue;
-					r.eventSiphon = rtn.eventName;
-					rs[rs.length] = r;
+					so.onEvent = rtn.eventAttrValue;
+					so.eventSiphon = rtn.eventName;
+					rs[rs.length] = so;
 				} else {
 					t.addError('Expected an event for action "'
 							+ opts.actionNavInvoke + '" and method "'
-							+ r.method + '"', f, null, null, null);
+							+ so.method + '"', f, null, null, null);
 				}
 			});
 			return rs;
@@ -1482,7 +1647,7 @@
 			function resolve(s) {
 				// regular expression must match entire expression
 				var nv = s.replace(opts.regexNodeSiphon, function(m, v) {
-					add(v.split(opts.regexOutboundDirectiveDelimiter));
+					add(v.split(opts.regexDirectiveDelimiter));
 					// replace expression now that add is done
 					return '';
 				});
@@ -1493,6 +1658,9 @@
 				if (typeof fx === 'function') {
 					return $.each(rvs, fx);
 				}
+			};
+			this.size = function() {
+				return rvs.length;
 			};
 			if (s instanceof jQuery) {
 				// already selected
@@ -1534,7 +1702,8 @@
 						if (rpp
 								&& rpp.length > 0
 								&& rpp.toLowerCase() != opts.selfRef
-										.toLowerCase()) {
+										.toLowerCase()
+								&& !REGEX_CDATA.test(rpp)) {
 							rpp = adjustPath(t.ctxPath, rpp, script ? script
 									.attr(opts.fragExtensionAttr) : '');
 						} else if (f.frs.resultSiphon()) {
@@ -1684,15 +1853,15 @@
 		 * @constructor
 		 * @param t
 		 *            the {FragsTrack}
-		 * @param m
-		 *            the HTTP method
+		 * @param f
+		 *            the {Frag} the destination siphon is for
 		 * @param rs
 		 *            the raw result siphon string or the pre-selected node(s)
 		 * @param vars
 		 *            the associative array cache of names/values variables used
 		 *            for <b>surrogate siphon resolver</b>s
 		 */
-		function FragResultSiphon(t, m, rs, vars) {
+		function FragResultSiphon(t, f, rs, vars) {
 			rs = typeof rs === 'string' ? $.trim(rs) : rs ? rs : null;
 			var rsp = null;
 			var rsr = null;
@@ -1706,8 +1875,8 @@
 					rsp = rsn ? rsn : rsp;
 					if (!rsp || rsn || (el && el.nodeType && !el.is(cel))) {
 						var iel = el instanceof jQuery;
-						rsp = siphonValues(rsp ? rsp : iel ? el : rs, m, vars,
-								opts.resultSep, null, el);
+						rsp = siphonValues(rsp ? rsp : iel ? el : rs, f.method,
+								vars, opts.resultSep, null, el);
 						if (!rsp && iel) {
 							rsp = el;
 						}
@@ -1725,13 +1894,20 @@
 							null, e);
 				}
 			};
-			this.resolvers = function(el, rsn) {
+			this.each = function(el, rsn, efx) {
 				this.resultSiphon(el, rsn);
-				return rsr;
+				if (rsr && rsr.size() > 0) {
+					rsr.each(efx);
+					return f.pxComplete();
+				}
+				return null;
 			};
 			this.parse = function(rslt) {
 				var tn = opts.resultWrapperTagName || DFTL_RSLT_NAME;
 				return $('<' + tn + '>' + rslt + '</' + tn + '>');
+			};
+			this.result = function(el) {
+				return $(el).add(this.parse(''));
 			};
 			this.getFuncOrResultSiphon = function() {
 				return fx && fx.isValid ? fx.getFuncString() : this
@@ -1758,65 +1934,71 @@
 			ds = typeof ds === 'string' ? $.trim(ds) : ds ? ds : null;
 			var dsp = null;
 			var dsr = null;
+			var arc = new AppReplCache(opts.attrWrapperTagName);
 			function text(s) {
 				return s ? s.replace(opts.regexDestTextOrAttrVal, ' ') : '';
 			}
-			function attr(r, $x, x, ic) {
-				if (r.directive && r.directive != DTEXT && r.directive != DHTML) {
-					if (x) {
-						// append or replace attribute
-						var v = ic ? '' : $x.attr(r.directive);
-						v += x instanceof jQuery ? text(x.text()) : x;
-						return $x.attr(r.directive, v);
-					}
-					return $x.attr(r.directive);
-				}
-				return false;
+			function isAttr(r) {
+				return r && r.directive && r.directive != DTEXT
+						&& r.directive != DHTML;
 			}
-			function addTo(ia, ic, im, dr, $ds, rr, r) {
+			function addTo(ia, iu, im, dr, $ds, rr, r, altr) {
 				if (im) {
 					// TODO : handle model/data processing
 					return $ds;
 				}
 				var rIsJ = r instanceof jQuery;
-				// try to get the result as an attribute
-				var rslt = rr ? attr(rr, rIsJ ? r : $ds) : false;
-				// handle case where destination needs to use text
-				rslt = rslt === false ? rIsJ && rr && rr.directive == DTEXT ? text(x
-						.text())
-						: r
-						: rslt ? rslt : '';
-				// try to append or replace the destination attribute
-				var dst = dr ? attr(dr, $ds, rslt, ic) : false;
+				var rslt = null;
+				if (isAttr(rr)) {
+					// try to get the result as an attribute
+					rslt = (rIsJ ? r : $ds).attr(rr.directive);
+				} else {
+					// handle case where destination needs to use text
+					rslt = rIsJ
+							&& ((rr && rr.directive == DTEXT) || dr.directive == DTEXT) ? text(r
+							.text())
+							: r ? r : '';
+				}
 				// clear out any existing data from the destination node(s)
-				if (ic && dst == false) {
-					if (ic instanceof NodeResolvers
-							&& (!rr.directive || rr.directive == DHTML)) {
+				if (iu) {
+					if (isAttr(dr)) {
+						$ds.attr(dr.directive, '');
+					} else if (!dr.directive || dr.directive == DHTML) {
 						// remove any existing prior result node(s) that may
 						// exist under the destination that match the result
 						// siphon (ic)
-						ic.each(function(i, rrc) {
-							var $c = rrc.selectFrom($ds, true);
-							$c.remove();
-						});
+						var $c = rr.selectFrom($ds, true);
+						$c.remove();
 					} else {
 						// remove any existing content that may exist
 						// under the destination
 						$ds.contents().remove();
 					}
 				}
-				// try to add the result to the destination node
-				if (rslt && dst == false) {
-					// handle case where destination needs to use html
-					//rslt = rslt instanceof jQuery ? rslt.html() : rslt;
-					return ia ? $ds.append(rslt) : $ds.replaceWith(rslt);
+				if (rslt) {
+					//rslt = rslt instanceof jQuery ? rslt : altr ? altr : rslt;
+					if (typeof rslt === 'string' && !opts.regexTags.test(rslt)) {
+						// prepare the non-HTML result string for DOM insertion
+						rslt = $(document.createTextNode(rslt));
+					} else if (!(rslt instanceof jQuery)) {
+						rslt = $(rslt);
+					}
+					// cache the destination/result for DOM insertion after all
+					// other destination/results have also been cached (prevents
+					// multiple result resolver overwrites and improves
+					// performance)
+					if (isAttr(dr)) {
+						arc.attrCache(ia, $ds, rslt, dr.directive);
+					} else {
+						arc.nodeCache(ia, $ds, rslt);
+					}
 				}
 			}
-			function appendDest(ic, im, dr, $d, rr, r) {
-				return addTo(true, ic, im, dr, $d, rr, r);
+			function appendTo(iu, im, dr, $d, rr, r, altr) {
+				return addTo(true, iu, im, dr, $d, rr, r, altr);
 			}
-			function replaceDest(ic, im, dr, $d, rr, r) {
-				return addTo(false, ic, im, dr, $d, rr, r);
+			function replaceTo(iu, im, dr, $d, rr, r, altr) {
+				return addTo(false, iu, im, dr, $d, rr, r, altr);
 			};
 			this.destSiphon = function(dsn) {
 				dsp = dsn ? dsn : dsp;
@@ -1833,7 +2015,6 @@
 				return dsr;
 			};
 			this.add = function($p, r, rr, im, ts, xhr) {
-				var $xr = null;
 				this.destResolver().each(function(i, dr) {
 					try {
 						var $x = null;
@@ -1844,11 +2025,11 @@
 						if (f.navOpts.type() === TREP) {
 							try {
 								$x = $(r);
-								replaceDest(false, im, dr, $ds, rr, $x);
+								replaceTo(false, im, dr, $ds, rr, $x);
 							} catch (e) {
 								// node may contain top level text nodes
 								$x = $ds.parent();
-								replaceDest(false, im, dr, $ds, rr, r);
+								replaceTo(false, im, dr, $ds, rr, r, $x);
 							}
 						} else if (f.navOpts.type() === TINC
 								|| f.navOpts.type() === TUPD) {
@@ -1856,35 +2037,35 @@
 								if (f.fds.destSiphon()) {
 									// when updating remove any pre-exsisting results 
 									// from the destination that match the result siphon
-									$x = appendDest(f.navOpts.type() === TUPD ? 
-											f.frs.resolvers(r) : false, im, dr, $ds, rr, r);
+									appendTo(f.navOpts.type() === TUPD, im, dr, 
+												$ds, rr, r);
 								} else {
 									// when updating remove everything in the destination
-									$x = appendDest(f.navOpts.type() === TUPD, im,
-											dr, $ds, rr, r);
+									appendTo(f.navOpts.type() === TUPD, im, dr, $ds, rr, 
+											r);
 								}
 							} else {
-								$x = appendDest(false, im, dr, $ds, rr, r);
+								appendTo(false, im, dr, $ds, rr, r);
 							}
 						} else {
 							t.addError('Invalid destination type "' + f.navOpts.type()
 									+ '" for ' + f.toString(), f, null, ts, xhr);
 							return false;
 						}
-						// add the processed node(s) to the master collection
-						if ($xr) {
-							$xr.add($x);
-						} else if ($x) {
-							$xr = $x;
-						}
 					} catch (e) {
 						t.addError('Error while processing desitination "' 
 								+ dr
 								+ '" for ' + f.toString(), f, e, ts, xhr);
-						return true;
 					}
 				});
-				return $xr;
+			};
+			this.addComplete = function(keepCache) {
+				try {
+					return arc.appendReplace(keepCache);
+				} catch (e) {
+					t.addError('Error while adding desitination results to the DOM ' 
+							+ ' for ' + f.toString(), f, e);
+				}
 			};
 		}
 
@@ -2185,7 +2366,7 @@
 			}
 			this.fps = new FragParamSiphon(t, this.method, siphon.paramsSiphon,
 					siphon.vars);
-			this.frs = new FragResultSiphon(t, this.method,
+			this.frs = new FragResultSiphon(t, this,
 					!a ? siphon.resultSiphon : a && a.length > 1 ? $.trim(a[1])
 							: null, siphon.vars);
 			this.frp = new FragPathSiphon(t, this, !a ? siphon.pathSiphon : a
@@ -2212,7 +2393,8 @@
 				this.pf.ccnt(true);
 			}
 			this.pseudoUrl = function(f) {
-				return this.frp.pathSiphon() + '?' + this.fps.params();
+				return (this.frp.pathSiphon() ? this.frp.pathSiphon() : '')
+						+ (this.fps.params() ? '?' + this.fps.params() : '');
 			};
 			this.as = siphon.agentSiphon;
 			this.done = function() {
@@ -2255,12 +2437,12 @@
 						this.domDone(true);
 						return;
 					} else if (!xhr && this.frp.pathSiphon() && this.frs.resultSiphon()) {
-						var sdi = this.frp.pathSiphon().indexOf('data:text/javascript,');
+						var sd = this.frp.pathSiphon().indexOf(DATA_JS);
+						sd = sd > -1 ? this.frp.pathSiphon().substr(
+								DATA_JS.length) : this.frp.pathSiphon();
 						var ss = x.prop('type');
 						$('<script' + (typeof ss === 'string' && ss.length > 0 ? 
-							' type="' + ss + '">' : '>') + (sdi > -1 ? 
-								this.frp.pathSiphon().substr('data:text/javascript,'.length) : 
-									this.frp.pathSiphon()) + 
+							' type="' + ss + '">' : '>') + sd + 
 									'</script>').appendTo(this.frs.resultSiphon());
 					}
 				} else {
@@ -2268,19 +2450,21 @@
 					// node for which the destination selection will be made? if
 					// so, just pass it in as the 1st parameter for the
 					// destination siphon's add function:
-					var $x = this.fds.add(null, x, rr, this.isModel(xhr), ts,
-							xhr);
-					if (!$x) {
-						this.domDone(true);
-						return;
-					}
-					// make post template DOM adjustments- no need for URL updates-
-					// they needed to be completed prior to placement in the DOM or
-					// URLs in some cases will be missed (like within the head)
-					htmlDomAdjust(t, ctx, $x, false);
-					this.destScope = jqAdd(this.destScope, $x);
+					this.fds.add(null, x, rr, this.isModel(xhr), ts, xhr);
 				}
 				this.domDone(false);
+			};
+			this.pxComplete = function() {
+				var $adds = this.fds.addComplete();
+				if (!$adds) {
+					this.domDone(true);
+					return;
+				}
+				// make post template DOM adjustments- no need for URL updates-
+				// they needed to be completed prior to placement in the DOM or
+				// URLs in some cases will be missed (like within the head)
+				htmlDomAdjust(t, ctx, $adds, false);
+				return this.destScope = jqAdd(this.destScope, $adds);
 			};
 			this.nav = function(no) {
 				no = no ? no : this.navOpts;
@@ -2338,13 +2522,13 @@
 			this.toString = function() {
 				return lbls('object', this.constructor.name, 'options',
 						this.navOpts.toString(), 'HTTP method', this.method,
-						'URL', (this.pseudoUrl()), 'parameter siphon', this.fps
+						'URL', this.pseudoUrl(), 'parameter siphon', this.fps
 								.paramSiphon(), 'path siphon', this.frp
 								.pathSiphon(), 'result siphon', this.frs
 								.getFuncOrResultSiphon(), 'destination siphon',
 						this.fds.destSiphon(), 'agent siphon', this.as,
 						'cancelled', this.cancelled, 'error',
-						(this.e ? this.e.message : null));
+						this.e ? this.e.message : null);
 			};
 		}
 
@@ -2556,7 +2740,7 @@
 				}
 				var url = $x.prop('src');
 				var hasu = url && url.length > 0;
-				var hasdu = hasu && url.indexOf('data:text/javascript,') >= 0;
+				var hasdu = hasu && url.indexOf(DATA_JS) >= 0;
 				t.len++;
 				var sf = new Frag(f, $s, $x, t);
 				var path = hasu ? url : $x.text();
@@ -2625,19 +2809,24 @@
 								hr = hr.replace(sc, '');
 							});
 						}
+						// head is special case that does not require multiple
+						// result/destination compilations
 						hf.px(hr);
+						hf.pxComplete();
 						cb($h, f);
 						return;
 					}
 				}
 				// capture results
-				var $c = f.frs.parse(htmlDataAdjust(t, f, r));
-				var rsvCnt = 0;
-				var $fss = null;
+				var rslt = htmlDataAdjust(t, f, r);
+				var $c = f.frs.parse(rslt);
 				// loop through the resolvers separately in order to handle any
 				// directives that may be defined
-				f.frs.resolvers($c).each(function(i, rr) {
-					var $fs = rr.selectFrom($c);
+				var $rslts = f.frs.each($c, null, function(i, rr) {
+					// need to re-parse result because any nodes that may be
+					// appended to a destination from a previous result resolver
+					// iteration will no longer be present in the result node
+					var $fs = rr.selectFrom(i == 0 ? $c : f.frs.parse(rslt));
 					if ($fs.length <= 0) {
 						// nothing found
 						return true;
@@ -2645,7 +2834,6 @@
 					// loop through the selected result nodes and handle DOM
 					// insertion
 					$fs.each(function() {
-						rsvCnt++;
 						var $cf = $(this);
 						var $cfs = $cf.find('script');
 						$cfs.each(function() {
@@ -2657,10 +2845,9 @@
 							f.px($cf, rr);
 						}
 					});
-					$fss = jqAdd($fss, $fs);
 				});
-				if (rsvCnt > 0) {
-					cb($fss, f);
+				if ($rslts && $rslts.length > 0) {
+					cb($rslts, f);
 				} else {
 					t.addError('No matching results for ' + f.toString()
 							+ ' in\n' + r, f, null, status, xhr);
@@ -2847,16 +3034,16 @@
 			regexFragName : /^[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*$/,
 			regexFunc : /^[_$a-zA-Z\xA0-\uFFFF].+?\(/i,
 			regexFileName : /[^\/?#]+(?=$|[?#])/,
+			regexTags : /<[a-z]+[^>]*>(?:[\S\s]*?)<\/(?:[\S\s]*?)[a-z]+>/i,
 			regexScriptTags : /<script[^>]*>([\\S\\s]*?)<\/script>/img,
 			regexAttrRelUrlSuffix : '\s*=\s*[\"|\\\'](?!(?:[a-z]+:)|/|#)(.*?)[\"|\\\']',
 			regexAttrAnyUrlSuffix : '\s*=\s*[\\"|\'](.*?)[\\"|\']',
 			regexIanaProtocol : /^(([a-z]+)?:|\/|#)/i,
 			regexFileTransForProtocolRelative : /^(file:?)/i,
-			regexAbsPath : DFLT_ABS_PATH_REGEX,
+			regexAbsPath : REGEX_ABS_PATH,
 			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g,
 			regexFuncArgReplace : /['"]/g,
-			regexInboundDirectiveDelimiter : /<-/g,
-			regexOutboundDirectiveDelimiter : /->/g,
+			regexDirectiveDelimiter : /->/g,
 			regexSurrogateSiphon : /(?:\?{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexNodeSiphon : /(?:\|{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexVarSiphon : /(?:\${)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
@@ -2866,6 +3053,7 @@
 			regexDestTextOrAttrVal : /[^\x21-\x7E]+/g,
 			paramReplaceWith : '\r\n',
 			resultWrapperTagName : DFTL_RSLT_NAME,
+			attrWrapperTagName : DFLT_ATTR_NAME,
 			eventIsBroadcast : true,
 			eventFragChain : 'frag',
 			eventFragsChain : 'frags',
@@ -2935,7 +3123,7 @@
 						.appendTo('head');
 			}
 			if (s) {
-				var su = getAppCtxRelPath(s, DFLT_ABS_PATH_REGEX, DFLT_PATH_SEP);
+				var su = getAppCtxRelPath(s, REGEX_ABS_PATH, DFLT_PATH_SEP);
 				$.getScript(su).done(function(data, ts, jqxhr) {
 					cb(su, data, ts, jqxhr, null);
 				}).fail(function(jqxhr, ts, e) {
