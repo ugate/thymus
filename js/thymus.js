@@ -223,22 +223,28 @@
 	function ManipCache($dc, r) {
 		var dc = new JqCache($dc);
 		var rc = new JqCache(r);
-		//function hasText
-		this.cache = function($dc, r) {
-			dc.cache($dc);
+		this.rsltCache = function(r) {
 			return rc.cache(r instanceof jQuery ? r
 					: typeof r === 'object' ? $(r) : r);
 		};
-		this.manip = function(ia) {
-			if (dc.cache() && rc.cache()) {
+		this.destCache = function($dc) {
+			return dc.cache($dc);
+		};
+		this.manip = function(ia, alt) {
+			var $d = dc.cache();
+			var $r = rc.cache();
+			if ($d && $r) {
+				var f = typeof alt === 'function' ? function(i, r) {
+					return alt($d, $r, i, this);
+				} : null;
 				if (typeof ia === 'function') {
-					ia(dc.cache(), rc.cache());
+					ia($d, $r);
 				} else if (ia) {
-					dc.cache().append(rc.cache());
+					$d.append(f ? f : alt ? alt : $r);
 				} else {
-					dc.cache().replaceWith(rc.cache());
+					$d.replaceWith(f ? f : alt ? alt : $r);
 				}
-				return rc.cache();
+				return $r;
 			}
 			return null;
 		};
@@ -249,7 +255,6 @@
 		};
 	}
 
-// TODO : cache
 	/**
 	 * A {ManipCache} variant used for <code>JQuery.append</code> or
 	 * <code>JQuery.replaceWith</code> caching that span separate <b>node</b>
@@ -275,33 +280,57 @@
 		atn = atn ? atn : DFLT_ATTR_NAME;
 		var nc = new ManipCache(ndc, nrc);
 		var ac = new ManipCache(adc, arc);
+		var altnc = [];
 		var rc = null;
-		this.nodeCache = function($dc, rc) {
-			return nc.cache($dc, rc);
+		function alt(arr, x, fx) {
+			if (arr, x && typeof fx === 'function') {
+				// result unique to destination
+				var uc = {
+					x : x, 
+					fx : fx
+				};
+				arr.push(uc);
+			}
+		}
+		function has(arr, x) {
+			if (x && x.length > 0) {
+				for ( var i = 0; i < arr.length; i++) {
+					var m = arr[i].x;
+					if (m.is(x)) {
+						return arr[i].fx;
+					}
+				}
+			}
+			return null;
+		}
+		this.rsltCache = function(rc) {
+			return nc.rsltCache(rc);
 		};
-		this.attrCache = function($dc, rc, an) {
-			// wrap attribute in placeholder tag so that the attribute name can
-			// be retrieved for later use
-			var $w = $('<' + atn + ' ' + atn + '="' + an + '">');
-			$w.append(rc);
-			return ac.cache($dc, $w);
+		this.destCache = function($dc, altr) {
+			alt(altnc, $dc, altr);
+			return nc.destCache($dc);
 		};
 		this.manips = function(n) {
-			// append result nodes and return a commulative result JQuery object
 			rc = rc ? rc : new JqCache();
-			var $r = rc.cache(nc.manip(ia));
-			ac.manip(function($d, $r) {
-				var as = [];
-				$r.each(function(i, rn) {
-					// results are cumulative 
-					var $rn = $(rn);
-					var a = $rn.attr(atn);
-					as[a] = (as[a] ? as[a] : '') + $rn.text();
-				});
-				for ( var a in as) {
-					$d.attr(a, as[a]);
+			// when there are no alternatives we can perform the normal
+			// append/replaceWith operations- otherwise, we need to handle the
+			// results individually in order to apply the destination specific
+			// results
+			var $r = rc.cache(nc.manip(ia, altnc.length > 0 ? function($ds,
+					$rs, i, d) {
+				var $d = $(d);
+				var fx = has(altnc, $d);
+				if (fx) {
+					// let the alternative function determine results
+					return fx($d, $rs);
+				} else {
+					// TODO : should be a way to tell JQuery append/replaceWith
+					// not to clone- we need to always clone nodes to prevent
+					// movement to other destinations (JQuery already does this
+					// with append/replaceWith, except for the last node)
+					return $rs.clone(true, true);
 				}
-			});
+			} : null));
 			rc = rc.clear(n);
 			this.clear(n);
 			return $r;
@@ -327,11 +356,11 @@
 	function AppReplCache(atn) {
 		var ach = new ManipsCache(true, atn);
 		var rch = new ManipsCache(false, atn);
-		this.nodeCache = function(ia, $dc, rc) {
-			return (ia ? ach : rch).nodeCache($dc, rc);
+		this.rsltCache = function(ia, rc) {
+			return (ia ? ach : rch).rsltCache(rc);
 		};
-		this.attrCache = function(ia, $dc, rc, an) {
-			return (ia ? ach : rch).attrCache($dc, rc, an);
+		this.destCache = function(ia, $dc, altr) {
+			return (ia ? ach : rch).destCache($dc, altr);
 		};
 		this.appendReplace = function(n) {
 			var $r = ach.manips(n);
@@ -1894,11 +1923,35 @@
 							null, e);
 				}
 			};
-			this.each = function(el, rsn, efx) {
+			this.add = function(arc, rr, r) {
+				var rIsJ = r instanceof jQuery;
+				var rslt = null;
+				if (rr && rr.directive && rr.directive != DTEXT
+						&& rr.directive != DHTML) {
+					// try to get the result as an attribute
+					rslt = rIsJ ? r.attr(rr.directive) : null;
+				} else {
+					// try to format result as text (if needed)
+					rslt = rIsJ && rr && rr.directive == DTEXT ? r
+							.text().replace(opts.regexDestTextOrAttrVal, ' ')
+							: r ? r : '';
+				}
+				if (typeof rslt === 'string' && !opts.regexTags.test(rslt)) {
+					// prepare the non-HTML result string for DOM insertion
+					rslt = $(document.createTextNode(rslt));
+				} else if (rslt && !(rslt instanceof jQuery)) {
+					rslt = $(rslt);
+				}
+				if (rslt) {
+					arc.rsltCache(f.navOpts.type() !== TREP, rslt);
+				}
+				return rslt;
+			};
+			this.each = function(el, rsn, xhr, efx) {
 				this.resultSiphon(el, rsn);
 				if (rsr && rsr.size() > 0) {
 					rsr.each(efx);
-					return f.pxComplete();
+					return f.dest();
 				}
 				return null;
 			};
@@ -1934,71 +1987,70 @@
 			ds = typeof ds === 'string' ? $.trim(ds) : ds ? ds : null;
 			var dsp = null;
 			var dsr = null;
-			var arc = new AppReplCache(opts.attrWrapperTagName);
-			function text(s) {
-				return s ? s.replace(opts.regexDestTextOrAttrVal, ' ') : '';
-			}
 			function isAttr(r) {
 				return r && r.directive && r.directive != DTEXT
 						&& r.directive != DHTML;
 			}
-			function addTo(ia, iu, im, dr, $ds, rr, r, altr) {
+			function addTo(arc, ia, iu, im, dr, $ds, rr, r, altds) {
 				if (im) {
 					// TODO : handle model/data processing
 					return $ds;
-				}
-				var rIsJ = r instanceof jQuery;
-				var rslt = null;
-				if (isAttr(rr)) {
-					// try to get the result as an attribute
-					rslt = (rIsJ ? r : $ds).attr(rr.directive);
-				} else {
-					// handle case where destination needs to use text
-					rslt = rIsJ
-							&& ((rr && rr.directive == DTEXT) || dr.directive == DTEXT) ? text(r
-							.text())
-							: r ? r : '';
 				}
 				// clear out any existing data from the destination node(s)
 				if (iu) {
 					if (isAttr(dr)) {
 						$ds.attr(dr.directive, '');
-					} else if (!dr.directive || dr.directive == DHTML) {
+					} else if (rr && (!dr.directive || dr.directive == DHTML)) {
 						// remove any existing prior result node(s) that may
 						// exist under the destination that match the result
 						// siphon (ic)
 						var $c = rr.selectFrom($ds, true);
-						$c.remove();
+						if ($c.length > 0) {
+							$c.remove();
+						} else {
+							// residual text should be removed
+							$ds.contents().filter(function() {
+								return this.nodeType === 3;
+							}).remove();
+						}
 					} else {
 						// remove any existing content that may exist
 						// under the destination
 						$ds.contents().remove();
 					}
 				}
-				if (rslt) {
-					//rslt = rslt instanceof jQuery ? rslt : altr ? altr : rslt;
-					if (typeof rslt === 'string' && !opts.regexTags.test(rslt)) {
-						// prepare the non-HTML result string for DOM insertion
-						rslt = $(document.createTextNode(rslt));
-					} else if (!(rslt instanceof jQuery)) {
-						rslt = $(rslt);
-					}
-					// cache the destination/result for DOM insertion after all
-					// other destination/results have also been cached (prevents
-					// multiple result resolver overwrites and improves
-					// performance)
-					if (isAttr(dr)) {
-						arc.attrCache(ia, $ds, rslt, dr.directive);
-					} else {
-						arc.nodeCache(ia, $ds, rslt);
-					}
+				var altr = null;
+				if (!r && rr && rr.directive && rr.directive != DTEXT
+						&& rr.directive != DHTML) {
+					// no result, but is directed for an attribute- must be
+					// self-referencing
+					altr = function($d, $r) {
+						return $d.attr(rr.directive);
+					};
+				} else if (isAttr(dr)) {
+					// result needs to be set on attribute
+					altr = function($d, $r) {
+						$d.attr(dr.directive, $r.text().replace(
+								opts.regexDestTextOrAttrVal, ''));
+					};
+				} else if (r instanceof jQuery && dr.directive == DTEXT) {
+					// result needs to be text
+					altr = function($d, $r) {
+						return $r.text().replace(opts.regexDestTextOrAttrVal, '');
+					};
+				}
+				if (r || altr) {
+					// cache the destination for DOM insertion after all other
+					// destinations have also been cached (prevents multiple
+					// result resolver overwrites and improves performance)
+					arc.destCache(ia, $ds, altr);
 				}
 			}
-			function appendTo(iu, im, dr, $d, rr, r, altr) {
-				return addTo(true, iu, im, dr, $d, rr, r, altr);
+			function appendTo(arc, iu, im, dr, $d, rr, r, altr) {
+				return addTo(arc, true, iu, im, dr, $d, rr, r, altr);
 			}
-			function replaceTo(iu, im, dr, $d, rr, r, altr) {
-				return addTo(false, iu, im, dr, $d, rr, r, altr);
+			function replaceTo(arc, iu, im, dr, $d, rr, r, altr) {
+				return addTo(arc, false, iu, im, dr, $d, rr, r, altr);
 			};
 			this.destSiphon = function(dsn) {
 				dsp = dsn ? dsn : dsp;
@@ -2014,7 +2066,7 @@
 				this.destSiphon(dsn);
 				return dsr;
 			};
-			this.add = function($p, r, rr, im, ts, xhr) {
+			this.add = function($p, arc, r, rr, im, ts, xhr) {
 				this.destResolver().each(function(i, dr) {
 					try {
 						var $x = null;
@@ -2025,11 +2077,11 @@
 						if (f.navOpts.type() === TREP) {
 							try {
 								$x = $(r);
-								replaceTo(false, im, dr, $ds, rr, $x);
+								replaceTo(arc, false, im, dr, $ds, rr, $x);
 							} catch (e) {
 								// node may contain top level text nodes
 								$x = $ds.parent();
-								replaceTo(false, im, dr, $ds, rr, r, $x);
+								replaceTo(arc, false, im, dr, $ds, rr, r, $x);
 							}
 						} else if (f.navOpts.type() === TINC
 								|| f.navOpts.type() === TUPD) {
@@ -2037,15 +2089,15 @@
 								if (f.fds.destSiphon()) {
 									// when updating remove any pre-exsisting results 
 									// from the destination that match the result siphon
-									appendTo(f.navOpts.type() === TUPD, im, dr, 
+									appendTo(arc, f.navOpts.type() === TUPD, im, dr, 
 												$ds, rr, r);
 								} else {
 									// when updating remove everything in the destination
-									appendTo(f.navOpts.type() === TUPD, im, dr, $ds, rr, 
-											r);
+									appendTo(arc, f.navOpts.type() === TUPD, im, dr, $ds, 
+											rr,	r);
 								}
 							} else {
-								appendTo(false, im, dr, $ds, rr, r);
+								appendTo(arc, false, im, dr, $ds, rr, r);
 							}
 						} else {
 							t.addError('Invalid destination type "' + f.navOpts.type()
@@ -2058,14 +2110,6 @@
 								+ '" for ' + f.toString(), f, e, ts, xhr);
 					}
 				});
-			};
-			this.addComplete = function(keepCache) {
-				try {
-					return arc.appendReplace(keepCache);
-				} catch (e) {
-					t.addError('Error while adding desitination results to the DOM ' 
-							+ ' for ' + f.toString(), f, e);
-				}
 			};
 		}
 
@@ -2415,8 +2459,9 @@
 					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t, this);
 				}
 			};
+			var arc = new AppReplCache(opts.attrWrapperTagName);
 			// handles processing of fragments
-			this.px = function(x, rr, xhr, ts, e) {
+			this.rslt = function(r, rr, xhr, ts, e) {
 				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, this);
 				if (this.cancelled) {
 					this.domDone(false);
@@ -2428,8 +2473,8 @@
 					this.domDone(true);
 					return;
 				}
-				var xIsJ = x instanceof jQuery;
-				if (xIsJ && x.is('script')) {
+				var xIsJ = r instanceof jQuery;
+				if (xIsJ && r.is('script')) {
 					if (xhr && xhr.status != 200) {
 						t.addError(xhr.status + ': ' + ts
 								+ ' path siphon="' + this.frp.pathSiphon() 
@@ -2440,7 +2485,7 @@
 						var sd = this.frp.pathSiphon().indexOf(DATA_JS);
 						sd = sd > -1 ? this.frp.pathSiphon().substr(
 								DATA_JS.length) : this.frp.pathSiphon();
-						var ss = x.prop('type');
+						var ss = r.prop('type');
 						$('<script' + (typeof ss === 'string' && ss.length > 0 ? 
 							' type="' + ss + '">' : '>') + sd + 
 									'</script>').appendTo(this.frs.resultSiphon());
@@ -2450,12 +2495,19 @@
 					// node for which the destination selection will be made? if
 					// so, just pass it in as the 1st parameter for the
 					// destination siphon's add function:
-					this.fds.add(null, x, rr, this.isModel(xhr), ts, xhr);
+					this.fds.add(null, arc, this.frs.add(arc, rr, r), rr, this
+							.isModel(xhr), ts, xhr);
 				}
 				this.domDone(false);
 			};
-			this.pxComplete = function() {
-				var $adds = this.fds.addComplete();
+			this.dest = function() {
+				var $adds = null;
+				try {
+					$adds = arc.appendReplace();
+				} catch (e) {
+					t.addError('Error while adding desitination results to the DOM ' 
+							+ ' for ' + this.toString(), this, e);
+				}
 				if (!$adds) {
 					this.domDone(true);
 					return;
@@ -2714,7 +2766,7 @@
 							fragSrc : addFragProps({}, t, f),
 							proceed : function(x) {
 								try {
-									f.px(x);
+									f.rslt(x);
 								} catch (e) {
 									t.addError('Error during handler proceed', f, e, 
 											status, xhr);
@@ -2735,7 +2787,7 @@
 				function sdone(sf, jqxhr, ts, e) {
 					// when there is no xhr, assume inline script that needs to
 					// be processed on the target
-					sf.px(sf.el, null, jqxhr, ts, e);
+					sf.rslt(sf.el, null, jqxhr, ts, e);
 					cb(jqxhr && (!ts || !e) ? $t : null, sf);
 				}
 				var url = $x.prop('src');
@@ -2774,7 +2826,7 @@
 					return;
 				}
 				if (f.isModel(xhr) || f.isSimpleView(xhr)) {
-					f.px(r, null, status, xhr, null);
+					f.rslt(r, null, status, xhr, null);
 					cb(null, f);
 					return;
 				}
@@ -2811,8 +2863,8 @@
 						}
 						// head is special case that does not require multiple
 						// result/destination compilations
-						hf.px(hr);
-						hf.pxComplete();
+						hf.rslt(hr);
+						hf.dest();
 						cb($h, f);
 						return;
 					}
@@ -2822,7 +2874,7 @@
 				var $c = f.frs.parse(rslt);
 				// loop through the resolvers separately in order to handle any
 				// directives that may be defined
-				var $rslts = f.frs.each($c, null, function(i, rr) {
+				var $rslts = f.frs.each($c, null, xhr, function(i, rr) {
 					// need to re-parse result because any nodes that may be
 					// appended to a destination from a previous result resolver
 					// iteration will no longer be present in the result node
@@ -2842,7 +2894,7 @@
 						if ($cf.is('script')) {
 							doScript(f, $cf, $cf, cb);
 						} else {
-							f.px($cf, rr);
+							f.rslt($cf, rr, xhr);
 						}
 					});
 				});
