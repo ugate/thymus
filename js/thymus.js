@@ -2822,6 +2822,7 @@
 							proceed : function(x) {
 								try {
 									f.rslt(x);
+									f.dest();
 								} catch (e) {
 									t.addError('Error during handler proceed', f, e, 
 											status, xhr);
