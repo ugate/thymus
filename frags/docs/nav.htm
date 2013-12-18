@@ -471,25 +471,40 @@
 				<div class="col-md-6">
 					<div class="list-group">
 						<div class="list-group-item">
-							<h4>Demo</h4>
-						</div>
-						<div class="list-group-item">
-							<button type="button" class="btn btn-primary"
-								data-thx-get="click" data-thx-get-path="frags/user/user1"
-								data-thx-get-result="[class^=&quot;thymus-user&quot;]">Include
-								User View</button>
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<button id="demoStds" type="button" class="btn btn-primary"
+										data-thx-get="click" data-thx-get-path="frags/user/user1"
+										data-thx-get-result="[class^=&quot;thymus-user&quot;]">Run</button>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
 				<div class="col-md-6">
 					<div class="list-group">
 						<div class="list-group-item">
-							<h4>Code</h4>
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=?{#demoStds->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
 						</div>
 <div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
-	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include
-	User View<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	Run<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
 					</div>
 				</div>
@@ -525,25 +540,41 @@
 				<div class="col-md-6">
 					<div class="list-group">
 						<div class="list-group-item">
-							<h4>Demo</h4>
-						</div>
-						<div class="list-group-item">
-							<button type="button" class="btn btn-primary"
-								data-thx-get="click" data-thx-get-path="frags/user/user1"
-								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-								data-thx-get-type="sync|replace">Replace User View</button>
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<button id="demoStdsr" type="button" class="btn btn-primary"
+										data-thx-get="click" data-thx-get-path="frags/user/user1"
+										data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+										data-thx-get-type="sync|replace">Run</button>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
 				<div class="col-md-6">
 					<div class="list-group">
 						<div class="list-group-item">
-							<h4>Code</h4>
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=frags/user/user1"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
 						</div>
 <div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
-	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;sync|replace&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Replace User View<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;sync|replace&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Run<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
 					</div>
 				</div>
@@ -605,14 +636,19 @@
 				<div class="col-md-6">
 					<div class="list-group">
 						<div class="list-group-item">
-							<h4>Demo</h4>
-						</div>
-						<div class="list-group-item">
-							<button type="button" class="btn btn-primary"
-								data-thx-get="click"
-								data-thx-get-path="frags/user/user1"
-								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-								data-thx-get-dest="#userDest2">Include User View</button>
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<button id="demoEdsi" type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="frags/user/user1"
+										data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+										data-thx-get-dest="#userDest2">Run</button>
+								</div>
+							</div>
 						</div>
 						<div class="list-group-item">
 							<div id="userDest2"></div>
@@ -622,13 +658,24 @@
 				<div class="col-md-6">
 					<div class="list-group">
 						<div class="list-group-item">
-							<h4>Code</h4>
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=?{#demoEdsi->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
 						</div>
 <div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
 	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
 	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
-	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Include User View<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Run<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 </pre></div>
 					</div>
 				</div>
@@ -652,18 +699,23 @@
 				<div class="col-md-6">
 					<div class="list-group">
 						<div class="list-group-item">
-							<h4>Demo</h4>
-						</div>
-						<div class="list-group-item">
-							<select id="demoDomUpdateSel" class="btn btn-primary"
-								data-thx-get="load :: change"
-								data-thx-get-path="frags/user/?{#demoDomUpdateSel}"
-								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-								data-thx-get-type="async|update" data-thx-get-dest="#userDest3">
-								<option value="user1">John Doe</option>
-								<option value="user2">Jane Wayne</option>
-								<option value="user3">Richard Roe</option>
-							</select>
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<select id="demoDomUpdateSel" class="btn btn-primary"
+										data-thx-get="load :: change"
+										data-thx-get-path="frags/user/?{#demoDomUpdateSel}"
+										data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+										data-thx-get-type="async|update" data-thx-get-dest="#userDest3">
+										<option value="user1">John Doe</option>
+										<option value="user2">Jane Wayne</option>
+										<option value="user3">Richard Roe</option>
+									</select>
+								</div>
+							</div>
 						</div>
 						<div class="list-group-item">
 							<div id="userDest3"></div>
@@ -673,7 +725,18 @@
 				<div class="col-md-6">
 					<div class="list-group">
 						<div class="list-group-item">
-							<h4>Code</h4>
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=?{#demoDomUpdateSel->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
 							<small> See <a href="#otherfragtargets">siphon
 									resolver</a>s and <a href="#multidomevents">multiple DOM events</a>
 								for further explaination:
@@ -718,15 +781,20 @@
 				<div class="col-md-6">
 					<div class="list-group">
 						<div class="list-group-item">
-							<h4>Demo</h4>
-						</div>
-						<div class="list-group-item">
-							<input type="text" data-thx-get="click :: keyup"
-								data-thx-get-path="frags/user/user1 :: frags/user/user2"
-								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-								data-thx-get-dest="#userMultiEvt1 :: #userMultiEvt2"
-								class="form-control thymus-green"
-								placeholder="Click or type anything here" />
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<input id="demoMultiDomEventSiphon" type="text" data-thx-get="click :: keyup"
+										data-thx-get-path="frags/user/user1 :: frags/user/user2"
+										data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+										data-thx-get-dest="#userMultiEvt1 :: #userMultiEvt2"
+										class="form-control thymus-green"
+										placeholder="Click or type anything here" />
+								</div>
+							</div>
 						</div>
 						<div class="list-group-item">
 							<h4>User 1:</h4>
@@ -741,7 +809,18 @@
 				<div class="col-md-6">
 					<div class="list-group">
 						<div class="list-group-item">
-							<h4>Code</h4>
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=?{#demoMultiDomEventSiphon->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
 						</div>
 <div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click :: keyup&quot;</span>
 	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1 :: frags/user/user2&quot;</span>
@@ -802,23 +881,28 @@
 				<div class="col-md-6">
 					<div class="list-group">
 						<div class="list-group-item">
-							<h4>Demo</h4>
-						</div>
-						<div class="list-group-item">
-							<div class="btn-group" id="userDest2Grp"
-								data-thx-get-path="frags/user/${userKey}"
-								data-thx-get-result="[class^=&quot;thymus-user&quot;]"
-								data-thx-get-dest="#userDestAgent"
-								data-thx-get-type="async|update">
-								<button type="button" class="btn btn-primary active"
-									data-thx-get="load :: click" data-thx-get-agent="#userDest2Grp"
-									data-thx-get-with="userKey=user1">Include User1</button>
-								<button type="button" class="btn btn-primary"
-									data-thx-get="click" data-thx-get-agent="#userDest2Grp"
-									data-thx-get-with="userKey=user2">Include User2</button>
-								<button type="button" class="btn btn-primary"
-									data-thx-get="click" data-thx-get-agent="#userDest2Grp"
-									data-thx-get-with="userKey=user3">Include User3</button>
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<div class="btn-group" id="userDest2Grp"
+										data-thx-get-path="frags/user/${userKey}"
+										data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+										data-thx-get-dest="#userDestAgent"
+										data-thx-get-type="async|update">
+										<button type="button" class="btn btn-primary active"
+											data-thx-get="load :: click" data-thx-get-agent="#userDest2Grp"
+											data-thx-get-with="userKey=user1">Include User1</button>
+										<button type="button" class="btn btn-primary"
+											data-thx-get="click" data-thx-get-agent="#userDest2Grp"
+											data-thx-get-with="userKey=user2">Include User2</button>
+										<button type="button" class="btn btn-primary"
+											data-thx-get="click" data-thx-get-agent="#userDest2Grp"
+											data-thx-get-with="userKey=user3">Include User3</button>
+									</div>
+								</div>
 							</div>
 						</div>
 						<div class="list-group-item">
@@ -829,7 +913,18 @@
 				<div class="col-md-6">
 					<div class="list-group">
 						<div class="list-group-item">
-							<h4>Code</h4>
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=?{#userDest2Grp .active->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
 							<small> See <a href="#otherfragtargets">siphon
 									resolver</a>s for further explaination:
 							</small>

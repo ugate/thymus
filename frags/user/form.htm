@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!-- All relative href/src URLs should be relative to the application's context defined on the Thymus script  -->
+<body>
+	<div id="user" data-src="/src/path/">
+		<div class="form-group">
+			<strong class="user-name">jdoe</strong>
+		</div>
+		<div class="radio">
+			<label>
+				<input type="radio" value="Radio1" /> Radio 1
+			</label>
+		</div>
+		<div class="radio">
+			<label>
+				<input type="radio" value="Radio2" 
+						checked="checked" /> Radio 2
+			</label>
+		</div>
+		<div class="checkbox">
+			<label>
+				<input type="checkbox" value="Check1" 
+						checked="checked" /> Checkbox 1
+			</label>
+		</div>
+		<div class="checkbox">
+			<label>
+				<input type="checkbox" value="Check1" /> Checkbox 1
+			</label>
+		</div>
+		<div class="form-group">
+			<label for="exampleInputEmail1">Email address</label>
+			<select>
+				<option value="Opt1">Opt 1</option>
+				<option value="Opt2" selected="selected">Opt 2</option>
+			</select>
+		</div>
+		<div class="form-group">
+			<label>Comment</label> <input type="text" value="Comment" />
+		</div>
+		<button class="btn btn-default user-btn">Go</button>
+	</div>
+</body>
+</html>

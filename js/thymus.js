@@ -16,7 +16,8 @@
 (function() {
 	this.NS = this.displayName = 'thymus';
 	this.DFLT_PATH_SEP = '/';
-	this.REGEX_ABS_PATH = /^\/|(\/[^\/]*|[^\/]+)$/g;
+	this.REGEX_ABS_PATH = /([^:]\/|\\)(?:\/|\\)+/;
+	this.REGEX_ABS_SPLIT = /\?|#/;
 	this.REGEX_CDATA = /<!\[CDATA\[(?:.|\r\n|\n|\r)*?\]\]>/ig;
 	this.DATA_JS = 'data:text/javascript,';
 	this.JQUERY_URL_ATTR = 'data-thx-jquery-url';
@@ -26,9 +27,9 @@
 	this.FRAGS_PRE_LOAD_CSS_ATTR = 'data-thx-preload-css';
 	this.FRAGS_PRE_LOAD_JS_ATTR = 'data-thx-preload-js';
 	this.DFTL_RSLT_NAME = NS + '-results';
-	this.DFLT_ATTR_NAME = NS + '-attr';
 	this.VARS_ATTR_TYPE = 'with';
-	this.DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest', VARS_ATTR_TYPE ];
+	this.DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest',
+			'target', VARS_ATTR_TYPE ];
 	this.DOM_ATTR_AGENT = 'agent';
 	this.HTTP_METHODS = [ 'GET', 'POST', 'DELETE', 'PUT' ];
 	this.DTEXT = 'text';
@@ -263,10 +264,6 @@
 	 * @constructor
 	 * @param ia
 	 *            true for append, false for replace
-	 * @param atn
-	 *            the optional attribute tag name to use as a placeholder
-	 *            wrapper for attribute injection (will never be present in the
-	 *            DOM)
 	 * @param ndc
 	 *            the optional node destination cache
 	 * @param nrc
@@ -276,8 +273,7 @@
 	 * @param arc
 	 *            the optional attribute origin/result cache
 	 */
-	function ManipsCache(ia, atn, ndc, nrc, adc, arc) {
-		atn = atn ? atn : DFLT_ATTR_NAME;
+	function ManipsCache(ia, ndc, nrc, adc, arc) {
 		var nc = new ManipCache(ndc, nrc);
 		var ac = new ManipCache(adc, arc);
 		var altnc = [];
@@ -348,14 +344,10 @@
 	 * <code>JQuery.replaceWith</code> operations caching
 	 * 
 	 * @constructor
-	 * @param atn
-	 *            the optional attribute tag name to use as a placeholder
-	 *            wrapper for attribute injection (will never be present in the
-	 *            DOM)
 	 */
-	function AppReplCache(atn) {
-		var ach = new ManipsCache(true, atn);
-		var rch = new ManipsCache(false, atn);
+	function AppReplCache() {
+		var ach = new ManipsCache(true);
+		var rch = new ManipsCache(false);
 		this.rsltCache = function(ia, rc) {
 			return (ia ? ach : rch).rsltCache(rc);
 		};
@@ -626,6 +618,7 @@
 	 *          when it's really an absolute path)
 	 */
 	function absolutePath(relPath, absPath, rxAbsPath, pathSep, bypassFunc) {
+		// TODO : combine multiple regular expressions
 		var absStack, relStack, i, d;
 		relPath = relPath || '';
 		if (typeof bypassFunc === 'function') {
@@ -634,12 +627,19 @@
 				return vp;
 			}
 		}
-		absPath = absPath ? absPath.replace(rxAbsPath, '') : '';
+		// remove query parameters, hashes and duplicate slashes
+		absPath = absPath ? absPath.split(REGEX_ABS_SPLIT)[0].replace(
+				rxAbsPath, '$1') : '';
 		absStack = absPath ? absPath.split(pathSep) : [];
+		if (absStack.length > 0
+				&& absStack[absStack.length - 1].indexOf('.') > -1) {
+			// remove file name
+			absStack.pop();
+		}
 		relStack = relPath.split(pathSep);
 		for (i = 0; i < relStack.length; i++) {
 			d = relStack[i];
-			if (d == '.') {
+			if (!d || d == '.') {
 				continue;
 			}
 			if (d == '..') {
@@ -650,7 +650,8 @@
 				absStack.push(d);
 			}
 		}
-		return absStack.join(pathSep);
+		absPath = absStack.join(pathSep);
+		return absPath ? absPath.replace(rxAbsPath, '$1') : absPath;
 	}
 
 	/**
@@ -1593,6 +1594,50 @@
 		}
 
 		/**
+		 * Checks whether or not the passed element should be admitted for value
+		 * inclusion
+		 * 
+		 * @param $el
+		 *            the element to check for a exclusion on
+		 * @returns true when the element is disabled or is deemed checkable,
+		 *          but is not checked
+		 */
+		function isExcludedVal($el) {
+			return $el.is(':disabled')
+					|| (!$el.is(':checked')
+							&& $el.prop('nodeName').toLowerCase() == 'input' && opts.regexParamCheckable
+							.test($el.prop('type')));
+		}
+
+		/**
+		 * Extracts a cumulative string of input value(s) and/or text of the
+		 * containing elements
+		 * 
+		 * @param $el
+		 *            the element(s) to get the value(s) and/or text
+		 * @param d
+		 *            the optional delimiter that will separate each value/text
+		 * @returns cumulative string of input value(s) and/or text
+		 */
+		function getTextVals($el, d) {
+			var t = '';
+			var e = null;
+			var v = null;
+			if ($el instanceof jQuery) {
+				$el.each(function(i, r) {
+					e = $(r);
+					if (e.is(':input')) {
+						v = !isExcludedVal(e) ? e.val() : '';
+					} else {
+						v = e.text().replace(opts.regexDestTextOrAttrVal, '');
+					}
+					t += (t && d ? d : '') + (v ? v : '');
+				});
+			}
+			return t;
+		}
+
+		/**
 		 * Resolver that can make selections based upon JQuery selectors and
 		 * directives that indicate how the selected node(s) will be used
 		 * 
@@ -1789,10 +1834,7 @@
 				}
 			}
 			function add(r, $p, ps, uj) {
-				if ($p.is(':disabled')
-						|| (!$p.is(':checked')
-								&& $p.prop('tagName').toLowerCase() == 'input' && opts.regexParamCheckable
-								.test($p.prop('type')))) {
+				if (isExcludedVal($p)) {
 					return ps;
 				}
 				// iterate over the attributes that will be used as keys
@@ -1932,8 +1974,7 @@
 					rslt = rIsJ ? r.attr(rr.directive) : null;
 				} else {
 					// try to format result as text (if needed)
-					rslt = rIsJ && rr && rr.directive == DTEXT ? r
-							.text().replace(opts.regexDestTextOrAttrVal, ' ')
+					rslt = rIsJ && rr && rr.directive == DTEXT ? getTextVals(r)
 							: r ? r : '';
 				}
 				if (typeof rslt === 'string' && !opts.regexTags.test(rslt)) {
@@ -1991,7 +2032,7 @@
 				return r && r.directive && r.directive != DTEXT
 						&& r.directive != DHTML;
 			}
-			function addTo(arc, ia, iu, im, dr, $ds, rr, r, altds) {
+			function addTo(arc, ia, iu, im, dr, $ds, rr, r, $altr) {
 				if (im) {
 					// TODO : handle model/data processing
 					return $ds;
@@ -2030,13 +2071,18 @@
 				} else if (isAttr(dr)) {
 					// result needs to be set on attribute
 					altr = function($d, $r) {
-						$d.attr(dr.directive, $r.text().replace(
-								opts.regexDestTextOrAttrVal, ''));
+						var v = ia && !iu ? $d.attr(dr.directive) : null;
+						$d.attr(dr.directive, (v ? v : '') + getTextVals($r));
 					};
 				} else if (r instanceof jQuery && dr.directive == DTEXT) {
 					// result needs to be text
 					altr = function($d, $r) {
-						return $r.text().replace(opts.regexDestTextOrAttrVal, '');
+						return getTextVals($r);
+					};
+				} else if ($altr instanceof jQuery) {
+					// alternative result node provided
+					altr = function($d, $r) {
+						return $altr;
 					};
 				}
 				if (r || altr) {
@@ -2203,11 +2249,14 @@
 				var sfc = script && evt.chain === opts.eventFragChain ? script
 						.attr(opts.fragListenerAttr)
 						: null;
+				var sfbsc = script && evt.chain === opts.eventFragsBeforeChain ? script
+						.attr(opts.fragsBeforeListenerAttr)
+						: null;
 				var sfsc = script && evt.chain === opts.eventFragsChain ? script
 						.attr(opts.fragsListenerAttr)
 						: null;
-				if (sfc || sfsc) {
-					var fs = sfc ? sfc : sfsc;
+				if (sfc || sfbsc || sfsc) {
+					var fs = sfc ? sfc : sfbsc ? sfbsc : sfsc;
 					if (fs) {
 						try {
 							var f = new Func(opts, fs, evt);
@@ -2249,12 +2298,15 @@
 			function fire() {
 				return broadcastFragEvent(chain == opts.eventFragChain ? genFragEvent(
 						type, t, f)
-						: genFragsEvent(type, t));
+						: genFragsEvent(chain, type, t));
 			}
-			if (chain == opts.eventFragChain || chain == opts.eventFragsChain) {
+			if (chain == opts.eventFragChain
+					|| chain == opts.eventFragsBeforeChain
+					|| chain == opts.eventFragsChain) {
 				if (type == opts.eventFragAfterDom
 						|| type == opts.eventFragLoad
-						|| type == opts.eventFragsLoad) {
+						|| type == opts.eventFragsLoad
+						|| type == opts.eventFragsBeforeLoad) {
 					fire();
 				} else if (f && !f.frp.pathSiphon()) {
 					t.addError('Invalid URL for ' + f.toString(), f, null,
@@ -2459,7 +2511,7 @@
 					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t, this);
 				}
 			};
-			var arc = new AppReplCache(opts.attrWrapperTagName);
+			var arc = new AppReplCache();
 			// handles processing of fragments
 			this.rslt = function(r, rr, xhr, ts, e) {
 				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, this);
@@ -2658,15 +2710,17 @@
 		/**
 		 * Generates a fragments JQuery event
 		 * 
+		 * @param chain
+		 *            the chaining designation for the event
 		 * @param type
 		 *            the type of fragments event
 		 * @param t
 		 *            the {FragsTrack} used
 		 * @returns a fragments JQuery event
 		 */
-		function genFragsEvent(type, t) {
+		function genFragsEvent(chain, type, t) {
 			var e = $.Event(type);
-			e.chain = opts.eventFragsChain;
+			e.chain = chain;
 			e.fragCancelCount = t.ccnt;
 			e.fragCount = t.cnt;
 			e.scope = t.scope;
@@ -2732,6 +2786,7 @@
 				selector : siphon
 			};
 			var t = new FragsTrack($s, so, nav);
+			broadcast(opts.eventFragsBeforeChain, opts.eventFragsBeforeLoad, t);
 			function done(pf, t, f) {
 				if (t.cnt > t.len) {
 					t.addError('Expected ' + t.len
@@ -3081,6 +3136,7 @@
 			fragExtensionAttr : 'data-thx-frag-extension',
 			fragListenerAttr : 'data-thx-onfrag',
 			fragsListenerAttr : 'data-thx-onfrags',
+			fragsBeforeListenerAttr : 'data-thx-onbeforefrags',
 			fragHeadAttr : 'data-thx-head-frag',
 			paramNameAttrs : [ 'name', 'id' ],
 			regexFragName : /^[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*$/,
@@ -3105,14 +3161,15 @@
 			regexDestTextOrAttrVal : /[^\x21-\x7E]+/g,
 			paramReplaceWith : '\r\n',
 			resultWrapperTagName : DFTL_RSLT_NAME,
-			attrWrapperTagName : DFLT_ATTR_NAME,
 			eventIsBroadcast : true,
 			eventFragChain : 'frag',
+			eventFragsBeforeChain : 'fragsBefore',
 			eventFragsChain : 'frags',
 			eventFragBeforeHttp : 'beforehttp.thx.frag',
 			eventFragBeforeDom : 'beforedom.thx.frag',
 			eventFragAfterDom : 'afterdom.thx.frag',
 			eventFragLoad : 'load.thx.frag',
+			eventFragsBeforeLoad : 'beforeload.thx.frags',
 			eventFragsLoad : 'load.thx.frags',
 			actionLoadFrags : 'frags.load',
 			actionNavRegister : 'nav.register',
