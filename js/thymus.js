@@ -279,7 +279,7 @@
 		var altnc = [];
 		var rc = null;
 		function alt(arr, x, fx) {
-			if (arr, x && typeof fx === 'function') {
+			if (arr && x && typeof fx === 'function') {
 				// result unique to destination
 				var uc = {
 					x : x, 
@@ -801,13 +801,13 @@
 
 	/**
 	 * Extracts value(s) from node(s) returned from the supplied JQuery
-	 * selector. The JQuery selector can also contain a type that will determine
-	 * how value(s) are captured from node(s) returned from the JQuery selector.
-	 * The &quot;directive&quot; regular expression will be used to determine
-	 * what will be used to extract values from the returned nodes from the
-	 * JQuery selector. Possible values are &quot;text&quot;, &quot;html&quot;
-	 * or an attribute name or when nothing is defined JQuery's val() function
-	 * will be called to retrieve the replacement value.
+	 * selector. The JQuery selector can also contain a &quot;directive&quot;
+	 * that will determine how value(s) are captured from node(s) returned from
+	 * the JQuery selector. The &quot;directive&quot; regular expression will be
+	 * used to determine what will be used to extract values from the returned
+	 * nodes from the JQuery selector. Possible values are &quot;text&quot;,
+	 * &quot;html&quot; or an attribute name or when nothing is defined JQuery's
+	 * val() function will be called to retrieve the replacement value.
 	 * 
 	 * @param s
 	 *            the string that will contain just a JQuery selector or a
@@ -832,18 +832,23 @@
 	 * @param el
 	 *            the DOM element that will be used to find siphoned values on
 	 *            (when omitted the current document will be queried)
+	 * @param fx
+	 *            an optional function that will be called when a directive is
+	 *            found, but a value cannot be extracted (passes: element, name
+	 *            and directive)
 	 * @returns the siphoned string with replaced values returned from all/any
 	 *          found JQuery selector(s)
 	 */
-	function extractValues(s, drx, d, attrNames, el) {
+	function extractValues(s, drx, dl, attrNames, el, fx) {
 		function getEV(nv, n, v, d) {
 			return (d && nv.length > 0 ? d : '') + (n ? n + '=' : '')
 					+ v;
 		}
-    	function exNVs(t, $x) {
+		// captures node value(s) using an optional directive
+    	function exNVs(d, $x) {
             var nv = '';
             var ci = '';
-            if (!t) {
+            if (!d) {
             	// it would be nice if we could check if has
 				// val(), but an empty string may be
 				// returned by val() so serialize array is
@@ -860,24 +865,34 @@
 					var nva = nv;
 					nv = '';
 					$.each(nva, function() {
-						nv += getEV(nv, null, this.value, d);
+						nv += getEV(nv, null, this.value, dl);
 					});
 				}
             } else {
-				var ist = t.toLowerCase() == DTEXT;
-				var ish = t.toLowerCase() == DHTML;
+				var ist = d.toLowerCase() == DTEXT;
+				var ish = d.toLowerCase() == DHTML;
 				var n = '';
 				$x.each(function() {
 					ci = $(this);
 					n = attrNames ? getOptsAttrVal(ci, null, attrNames, true)
 							: null;
-					nv += getEV(nv, n, ist ? ci.text() : ish ? ci.html() : ci
-							.attr(t), d);
+					var civ = ist ? ci.text() : ish ? ci.html() : undefined;
+					if (civ === undefined && ci.is('[' + d + ']')) {
+						civ = ci.attr(d);
+					}
+					if (!civ && fx) {
+						// no value can be found- try passed fx
+						civ = fx(ci, n, d);
+					}
+					if (civ) {
+						nv += getEV(nv, n, civ, dl);
+					}
 				});
             }
             return nv !== undefined && nv != null ? nv : s;
     	}
 	    if (s) {
+	    	// capture JQuery selector/directive and return the node value(s)
 			var xt = s ? s.split(drx) : null;
 			var $x = xt ? el ? el.find(xt[0]) : $(xt[0]) : null;
 			if ($x && $x.length > 0) {
@@ -1072,7 +1087,7 @@
 					log('No path specified for ' + a.action, 1);
 					return;
 				}
-				a.method = a.method ? a.method : 'GET';
+				a.method = a.method ? a.method : opts.ajaxTypeDefault;
 				var no = new NavOptions(a.typeSiphon, opts.typeSep,
 						a.targetSiphon, opts.targetSep);
 				if (!no.isFullPageSync()) {
@@ -1096,12 +1111,13 @@
 		};
 
 		/**
-		 * Generates a siphon object
+		 * Object that represents all encompassing siphon attributes
 		 * 
+		 * @constructor
 		 * @param m
 		 *            the HTTP method used by the siphon
 		 * @param evt
-		 *            the event name of the siphon
+		 *            the optional event name of the siphon
 		 * @param a
 		 *            the optional action that the siphon will execute (valid
 		 *            for DOM siphons only)
@@ -1115,43 +1131,40 @@
 		 * @param ml
 		 *            true to look for each HTTP method verbs when the method
 		 *            supplied is not found on the supplied DOM element
-		 * @returns the siphon object
 		 */
-		function genSiphonObj(m, evt, a, s, el, vars, ml) {
-			var so = {
-				selector : s ? s : '',
-				method : m ? m : opts.ajaxTypeDefault,
-				eventSiphon : evt,
-				paramsSiphon : '',
-				pathSiphon : '',
-				resultSiphon : '',
-				destSiphon : '',
-				typeSiphon : '',
-				targetSiphon : '',
-				agentSiphon : '',
-				withSiphon : '',
-				funcName : '',
-				isValid : evt && evt.length > 0
-			};
-			so.captureAttrs = function(el, vars, ml, ow) {
-				if (so.isValid && el) {
-					so.isValid = addSiphonAttrVals(el, so.method,
-							so.eventSiphon, so, DOM_ATTR_TYPES, vars, ml, ow);
-					return so.isValid;
+		function SiphonAttrs(m, evt, a, s, el, vars, ml) {
+			this.selector = s ? s : '';
+			this.method = m ? m : opts.ajaxTypeDefault;
+			this.eventSiphon = evt;
+			this.paramsSiphon = '';
+			this.pathSiphon = '';
+			this.resultSiphon = '';
+			this.destSiphon = '';
+			this.typeSiphon = '';
+			this.targetSiphon = '';
+			this.agentSiphon = '';
+			this.withSiphon = '';
+			this.funcName = '';
+			this.isValid = evt && evt.length > 0;
+			this.captureAttrs = function(el, vars, ml, ow) {
+				if (this.isValid && el) {
+					this.isValid = addSiphonAttrVals(el, this.method,
+							this.eventSiphon, this, DOM_ATTR_TYPES, vars, ml,
+							ow);
+					return this.isValid;
 				}
 				return false;
 			};
-			if (so.isValid) {
+			if (this.isValid) {
 				if (a) {
-					so.selector = '';
-					so.action = a;
-					so.onEvent = '';
+					this.selector = '';
+					this.action = a;
+					this.onEvent = '';
 				}
 				if (el) {
-					so.captureAttrs(el, vars, ml, true);
+					this.captureAttrs(el, vars, ml, true);
 				}
 			}
-			return so;
 		}
 
 		/**
@@ -1170,7 +1183,7 @@
 		 *            the HTTP method context of the passed {Vars}
 		 * @param vars
 		 *            the {Vars} used for variable substitution
-		 * @param d
+		 * @param del
 		 *            the delimiter to use when multiple results are returned
 		 *            from a JQuery selector
 		 * @param attrNames
@@ -1184,17 +1197,21 @@
 		 * @returns the siphoned string with replaced values returned from
 		 *          all/any found JQuery selector(s)
 		 */
-		function siphonValues(s, m, vars, d, attrNames, el) {
+		function siphonValues(s, m, vars, del, attrNames, el) {
 			// siphon node values
-			function sVals(s, d, attrNames, el) {
-				return s.replace(opts.regexSurrogateSiphon, function(m, v) {
-					return sVals(extractValues(v,
-							opts.regexDirectiveDelimiter, d, attrNames,
-							el), d, attrNames, el);
+			function sVals(s, del, attrNames, el) {
+				return s.replace(opts.regexSurrogateSiphon, function(mch, v) {
+					var evs = extractValues(v, opts.regexDirectiveDelimiter,
+							del, attrNames, el, function($i, n, d) {
+						// TODO : when no value is found try agents
+						// addSiphonAttrVals($i, m, null, {}, ns, vars, ml, ow);
+						return '';
+					});
+					return sVals(evs, del, attrNames, el);
 				});
 			}
 			// substitute variables and siphon node values
-			return typeof s === 'string' ? sVals(vars.rep(m, s), d, attrNames,
+			return typeof s === 'string' ? sVals(vars.rep(m, s), del, attrNames,
 					el) : '';
 		}
 
@@ -1207,14 +1224,18 @@
 		 * @param m
 		 *            the HTTP method context
 		 * @param evt
-		 *            the event name
+		 *            the event name used to determine the index of the
+		 *            attributes (when ommitted the first indexed siphoned
+		 *            attribute value will be used)
 		 * @param o
 		 *            the object where the siphon attribute values will be added
 		 *            to
 		 * @param ns
-		 *            the array of attribute names to look for
+		 *            the array of attribute names that will be looked up and
+		 *            added
 		 * @param vars
-		 *            the associative array cache of names/values variables
+		 *            the associative array cache of user set names/values
+		 *            variables
 		 * @param ml
 		 *            true to look for each HTTP method verbs when the method
 		 *            supplied is not found on the supplied DOM element
@@ -1225,17 +1246,20 @@
 		 *          siphon attributes have been added
 		 */
 		function addSiphonAttrVals($el, m, evt, o, ns, vars, ml, ow) {
-			if ($el && m && o && evt && $.isArray(ns)) {
+			if ($el && m && o && $.isArray(ns)) {
+				// get attribute name
 				function getAN(m, n) {
 					var an = n.charAt(0).toUpperCase() + n.substr(1).toLowerCase();
 					an = m + (m == n ? '' : an) + 'Attrs';
 					return an;
 				}
+				// get event index (siphon attributes can have multiple events)
 				function getEI($el, m) {
 					var ens = getOptsAttrVal($el, getAN(m, m), opts);
 					ens = ens ? splitWithTrim(ens, opts.multiSep) : null;
-					return ens ? $.inArray(evt, ens) : -1;
+					return ens ? evt ? $.inArray(evt, ens) : 0 : -1;
 				}
+				// get plugin option value for a given attribute name
 				function getOV($el, an, ei) {
 					var ov = getOptsAttrVal($el, an, opts);
 					ov = ov ? splitWithTrim(ov, opts.multiSep) : null;
@@ -1243,12 +1267,15 @@
 							: ov ? ov[ei] : undefined;
 					return ov;
 				}
+				// only add when a value doesn't already exist or overwrite is flagged
 				function isAdd(n, o, ow) {
 					return o[n] !== undefined && (ow || o[n] == null || o[n].length <= 0);
 				}
+				// get siphon attribute name
 				function getSAN(m, n) {
 					return (m == n ? 'event' : n) + 'Siphon';
 				}
+				// capture siphon attribute
 				function captureSA($el, m, ei, o, ow) {
 					var an = null;
 					var n = null;
@@ -1286,7 +1313,7 @@
 									if (agt) {
 										// capture the agent's siphon attributes
 										$agt = $(agt);
-										agt = genSiphonObj(m, evt, null,
+										agt = new SiphonAttrs(m, evt, null,
 												$agt.selector, null, vars,
 												false);
 										$agt.each(function() {
@@ -1312,6 +1339,7 @@
 					}
 					return o;
 				}
+				// capture all siphon attributes for the current methods event
 				function capture($el, m, o, re, ml, ow) {
 					m = m.toLowerCase();
 					var ei = getEI($el, m);
@@ -1390,7 +1418,7 @@
 					// load events are picked up by normal fragment loading
 					return;
 				}
-				var so = genSiphonObj(a.method, ev, opts.actionNavInvoke, null,
+				var so = new SiphonAttrs(a.method, ev, opts.actionNavInvoke, null,
 						null, t.siphon.vars, false);
 				if (so.isValid) {
 					so.eventAttrs = a.items;
@@ -1659,6 +1687,8 @@
             		this.directive = ld;
             	}
             }
+            // selects node(s) from an element using the internal
+			// selector either as a self-selection, a find or filter
 			this.selectFrom = function($el, be) {
 				if (!s) {
 					return '';
@@ -2426,7 +2456,7 @@
 			// scope select will identify if fragment details will come from the
 			// passed tracking siphon or extracted by fragment attributes
 			if (!t.isSelfSelect
-					&& (loadSiphon = genSiphonObj(opts.ajaxTypeDefault, 'load',
+					&& (loadSiphon = new SiphonAttrs(opts.ajaxTypeDefault, 'load',
 							null, siphon.selector, this.el, t.siphon.vars, true)).isValid) {
 				// DOM siphon attribute for a load event will take presedence
 				// over short-hand include/replace/etc.
