@@ -427,27 +427,74 @@
 	}
 
 	/**
+	 * @returns a label/value to-string representation of the specified
+	 *          arguments
+	 */
+	function lbls() {
+		var s = '[';
+		var l = '';
+		for (var i = 0; i < arguments.length; i++) {
+			if (l) {
+				s += arguments[i] ? l + arguments[i] : '';
+				l = '';
+			} else {
+				l = (s.length > 1 ? ', ' : '') + arguments[i] + ': ';
+			}
+		}
+		return s + ']';
+	}
+
+	/**
 	 * When available, logs a message to the console
 	 * 
 	 * @param m
 	 *            the message to log
 	 * @param l
-	 *            the logging level (i.e. <code>1</code> is <code>error</code>,
+	 *            the logging level (i.e. <code>1</code> (or an
+	 *            <code>Error</code> object) is <code>error</code>,
 	 *            <code>2</code> is <code>warn</code>, <code>3</code> is
 	 *            <code>log</code> (default))
+	 * @param o
+	 *            the optional object that the log is for (will iterate over
+	 *            properties and print name/values to the console)
 	 */
-	function log(m, l) {
-		if (m && typeof window.console !== 'undefined'
+	function log(m, l, o) {
+		function iem(m, o) {
+			if (o) {
+				var a = []; 
+				for (var n in o) {
+					if (this[n] && typeof this[n] !== 'function'
+							&& o.hasOwnPropery(n)) {
+						a.push(n);
+						a.push(this[n]);
+					}
+				}
+				return m + (a.length > 0 ? '\nFor:\n' + lbls.apply(o, a) : '');
+			}
+			return m;
+		}
+		m = m ? m : '';
+		m = ieVersion <= 0 || ieVersion > ieVersionCompliant ? m
+				: typeof m.toFormattedString === 'function' ? m
+						.toFormattedString() : iem(m, o);
+		if (typeof window.console !== 'undefined'
 				&& typeof window.console.log !== 'undefined') {
-			var nm = ieVersion <= 0 || ieVersion > ieVersionCompliant ? m
-					: typeof m.toFormattedString === 'function' ? m
-							.toFormattedString() : m;
-			if (l == 1 && window.console.error) {
-				window.console.error(nm);
+			var ie = l instanceof Error;
+			if ((ie || l == 1) && window.console.error) {
+				if (m) {
+					window.console.error(m + (ie ? ' Cause: ' + l.message : ''));
+				}
 			} else if (l == 2 && window.console.warn) {
-				window.console.warn(nm);
+				if (m) {
+					window.console.warn(m);
+				}
 			} else {
-				window.console.log(nm);
+				if (m) {
+					window.console.log(m);
+				}
+			}
+			if (o) {
+				window.console.log(o);
 			}
 		}
 	}
@@ -567,24 +614,6 @@
 			return ao ? o.add(ao) : o;
 		}
 		return ao ? $(o).add(ao) : $(o);
-	}
-
-	/**
-	 * @returns a label/value to-string representation of the specified
-	 *          arguments
-	 */
-	function lbls() {
-		var s = '[';
-		var l = '';
-		for (var i = 0; i < arguments.length; i++) {
-			if (l) {
-				s += arguments[i] ? l + arguments[i] : '';
-				l = '';
-			} else {
-				l = (s.length > 1 ? ', ' : '') + arguments[i] + ': ';
-			}
-		}
-		return s + ']';
 	}
 
 	/**
@@ -721,7 +750,11 @@
 	 */
 	function Vars(arx, rrx) {
 		var cache = [];
+		function adjCtx(ctx) {
+			return typeof ctx === 'string' ? ctx.toLowerCase() : '';
+		}
 		function add(ctx, nvs) {
+			ctx = adjCtx(ctx);
 			return nvs ? nvs.replace(arx, function(m, n, v) {
 				if (!cache[ctx]) {
 					cache[ctx] = [];
@@ -731,6 +764,7 @@
 			}) : '';
 		}
 		function rep(ctx, s) {
+			ctx = adjCtx(ctx);
 			return s ? s.replace(rrx, function(m, n) {
 				if (cache[ctx]) {
 					return cache[ctx][n];
@@ -741,6 +775,7 @@
 		this.add = add;
 		this.rep = rep;
 		this.get = function(ctx, n) {
+			ctx = adjCtx(ctx);
 			return ctx ? cache[ctx] ? n ? cache[ctx][n] : cache[ctx].slice(0)
 					: cache.slice(0) : undefined;
 		};
@@ -776,7 +811,7 @@
 	 * @param emptyChk
 	 *            true to validate the attribute value is not empty before
 	 *            returning the value
-	 * @returns the first valid attribute value occurrence (if any)
+	 * @returns the first valid attribute object (attr, val) occurrence (if any)
 	 */
 	function getOptsAttrVal($el, n, opts, emptyChk) {
 		if ((!n && !opts) || !$el) {
@@ -788,12 +823,18 @@
 				for (var i = 0; i < o.length; i++) {
 					a = $el.attr(o[i]);
 					if ((!emptyChk && a !== undefined) || (emptyChk && a)) {
-						return a;
+						return {
+							attr : o[i],
+							val : a
+						};
 					}
 				}
 			} else if (typeof o === 'string') {
 				a = $el.attr(o);
-				return a !== undefined ? a : null;
+				return a !== undefined ? {
+					attr : o,
+					val : a
+				} : null;
 			}
 		}
 		return null;
@@ -832,20 +873,20 @@
 	 * @param el
 	 *            the DOM element that will be used to find siphoned values on
 	 *            (when omitted the current document will be queried)
-	 * @param fx
-	 *            an optional function that will be called when a directive is
-	 *            found, but a value cannot be extracted (passes: element, name
-	 *            and directive)
+	 * @param edfx
+	 *            an optional function that will be called when an attribute
+	 *            directive is found with a preceeding event directive (passes:
+	 *            element, name, event name and event attribute)
 	 * @returns the siphoned string with replaced values returned from all/any
 	 *          found JQuery selector(s)
 	 */
-	function extractValues(s, drx, dl, attrNames, el, fx) {
+	function extractValues(s, drx, dl, attrNames, el, edfx) {
 		function getEV(nv, n, v, d) {
-			return (d && nv.length > 0 ? d : '') + (n ? n + '=' : '')
-					+ v;
+			return (d && nv.length > 0 ? d : '')
+					+ (n && n.val ? n.val + '=' : '') + v;
 		}
 		// captures node value(s) using an optional directive
-    	function exNVs(d, $x) {
+    	function exNVs(evt, d, $x) {
             var nv = '';
             var ci = '';
             if (!d) {
@@ -876,13 +917,19 @@
 					ci = $(this);
 					n = attrNames ? getOptsAttrVal(ci, null, attrNames, true)
 							: null;
+					n = n ? n.val : null;
 					var civ = ist ? ci.text() : ish ? ci.html() : undefined;
-					if (civ === undefined && ci.is('[' + d + ']')) {
-						civ = ci.attr(d);
-					}
-					if (!civ && fx) {
-						// no value can be found- try passed fx
-						civ = fx(ci, n, d);
+					if (civ === undefined && d) {
+						if (evt && edfx) {
+							// let function handle event attribute directive
+							// values
+							civ = edfx(ci, n, evt, d);
+						}
+						if (!civ && ci.is('[' + d + ']')) {
+							// not an event directive or event directive is
+							// invalid
+							civ = ci.attr(d);
+						}
 					}
 					if (civ) {
 						nv += getEV(nv, n, civ, dl);
@@ -896,7 +943,16 @@
 			var xt = s ? s.split(drx) : null;
 			var $x = xt ? el ? el.find(xt[0]) : $(xt[0]) : null;
 			if ($x && $x.length > 0) {
-				return exNVs(xt && xt.length > 1 ? xt[1] : '', $x);
+				// directive may be have an event/attribute directive
+				var evt = '';
+				var dir = '';
+				if (xt && xt.length > 2) {
+					evt = xt[1];
+					dir = xt[2];
+				} else if (xt && xt.length > 1) {
+					dir = xt[1];
+				}
+				return exNVs(evt, dir, $x);
 			}
 	    }
 	    return '';
@@ -1007,7 +1063,7 @@
 				return this.isValid ? f.toString() : '';
 			};
 		} catch (e) {
-			log('Error in ' + fs + ' ' + amts(am) + ': ' + e, 1);
+			log('Error in ' + fs + ' ' + amts(am), e);
 		}
 	}
 
@@ -1131,11 +1187,19 @@
 		 * @param ml
 		 *            true to look for each HTTP method verbs when the method
 		 *            supplied is not found on the supplied DOM element
+		 * @param ma
+		 *            an optional attribute that will be used to match the
+		 *            plugins attribute options- if a match is found the match
+		 *            value property will be populated with the found siphon
+		 *            value (no other siphon attributes will be captured when
+		 *            present)
 		 */
-		function SiphonAttrs(m, evt, a, s, el, vars, ml) {
+		function SiphonAttrs(m, evt, a, s, el, vars, ml, ma) {
 			this.selector = s ? s : '';
 			this.method = m ? m : opts.ajaxTypeDefault;
 			this.eventSiphon = evt;
+			this.matchAttr = ma;
+			this.matchVal = '';
 			this.paramsSiphon = '';
 			this.pathSiphon = '';
 			this.resultSiphon = '';
@@ -1145,12 +1209,17 @@
 			this.agentSiphon = '';
 			this.withSiphon = '';
 			this.funcName = '';
-			this.isValid = evt && evt.length > 0;
+			this.isValid = ma || evt;
 			this.captureAttrs = function(el, vars, ml, ow) {
 				if (this.isValid && el) {
-					this.isValid = addSiphonAttrVals(el, this.method,
-							this.eventSiphon, this, DOM_ATTR_TYPES, vars, ml,
-							ow);
+					try {
+						this.isValid = addSiphonAttrVals(el, this.method,
+								this.eventSiphon, this, DOM_ATTR_TYPES, vars,
+								ml, ow);
+					} catch (e) {
+						log('Unable to capture siphons', e, this);
+						this.isValid = false;
+					}
 					return this.isValid;
 				}
 				return false;
@@ -1202,10 +1271,14 @@
 			function sVals(s, del, attrNames, el) {
 				return s.replace(opts.regexSurrogateSiphon, function(mch, v) {
 					var evs = extractValues(v, opts.regexDirectiveDelimiter,
-							del, attrNames, el, function($i, n, d) {
-						// TODO : when no value is found try agents
-						// addSiphonAttrVals($i, m, null, {}, ns, vars, ml, ow);
-						return '';
+							del, attrNames, el, function($i, n, evt, attr) {
+						// TODO : handle event directives
+						if (evt && attr) {
+							// event attribute directives need to  
+							var sa = new SiphonAttrs(m, evt, null, null, $i, 
+										vars, false, attr);
+							return vars.rep(m, sa.matchVal);
+						}
 					});
 					return sVals(evs, del, attrNames, el);
 				});
@@ -1247,7 +1320,13 @@
 		 */
 		function addSiphonAttrVals($el, m, evt, o, ns, vars, ml, ow) {
 			if ($el && m && o && $.isArray(ns)) {
-				// get attribute name
+				function Agent() {
+					this.run = true;
+					this.attr = null;
+					this.val = null;
+					this.el = null;
+				}
+				// get attribute name from plug-in options
 				function getAN(m, n) {
 					var an = n.charAt(0).toUpperCase() + n.substr(1).toLowerCase();
 					an = m + (m == n ? '' : an) + 'Attrs';
@@ -1255,87 +1334,110 @@
 				}
 				// get event index (siphon attributes can have multiple events)
 				function getEI($el, m) {
+					// when a siphon attribute corresponds to an event at the
+					// same index we use the attribute value at that index-
+					// otherwise, we just use the attribute at the last
+					// available index
 					var ens = getOptsAttrVal($el, getAN(m, m), opts);
-					ens = ens ? splitWithTrim(ens, opts.multiSep) : null;
-					return ens ? evt ? $.inArray(evt, ens) : 0 : -1;
+					ens = ens && ens.val ? splitWithTrim(ens.val, opts.multiSep)
+							: null;
+					return ens ? $.inArray(evt, ens) : -1;
 				}
 				// get plugin option value for a given attribute name
 				function getOV($el, an, ei) {
 					var ov = getOptsAttrVal($el, an, opts);
-					ov = ov ? splitWithTrim(ov, opts.multiSep) : null;
-					ov = ov && ei >= ov.length ? ov[ov.length - 1]
-							: ov ? ov[ei] : undefined;
+					if (ov && ov.val) {
+						var nv = splitWithTrim(ov.val, opts.multiSep);
+						nv = nv && ei >= nv.length ? nv[nv.length - 1]
+								: nv ? nv[ei] : undefined;
+						ov.val = nv;
+					}
 					return ov;
 				}
 				// only add when a value doesn't already exist or overwrite is flagged
 				function isAdd(n, o, ow) {
-					return o[n] !== undefined && (ow || o[n] == null || o[n].length <= 0);
+					return o[n] !== undefined
+							&& (ow || o[n] == null || o[n].length <= 0);
 				}
 				// get siphon attribute name
 				function getSAN(m, n) {
 					return (m == n ? 'event' : n) + 'Siphon';
 				}
+				function addVal($el, m, ei, o, ow, n, an, agent) {
+					// only add values for attributes that exist on the
+					// passed object and have not yet been set
+					if (isAdd(n, o, ow)) {
+						var ov = getOV($el, an, ei);
+						if (o.matchAttr && ov && o.matchAttr == ov.attr) {
+							// match attribute found
+							o.matchVal = ov.val;
+						}
+						if (!ov || !ov.val) {
+							// try to lookup an agent that has the attribute (if any)
+							if (agent.run) {
+								agent.run = false;
+								agent.attr = getSAN(m, DOM_ATTR_AGENT);
+								agent.val = getOV($el, getAN(m, DOM_ATTR_AGENT), ei);
+								if (agent.val) {
+									// siphon possible selectors
+									agent.val = siphonValues(agent.val.val, m, vars,
+											opts.agentSelSep, null);
+								}
+								if (isAdd(agent.attr, o, ow)) {
+									o[agent.attr] = agent.val;
+								}
+								if (agent.val) {
+									// capture the agent's siphon attributes
+									agent.el = $(agent.val);
+									agent.val = new SiphonAttrs(m, evt, null,
+											agent.el.selector, null, vars,
+											false, o.matchAttr);
+									agent.el.each(function() {
+										// 1st come, 1st serve- don't
+										// overwrite attributes that have
+										// already been set by a previous
+										// agent element
+										if (!capture(agent.el, m, agent.val,
+												false, false, false)) {
+											agent.val = null;
+										}
+									});
+								}
+							}
+							if (agent.val && typeof agent.val === 'object'
+									&& agent.val[n]) {
+								o[n] = agent.val[n];
+								vars.add(this.method, this.ws);
+								if (!o.matchVal) {
+									// ensure the agents match value gets set
+									o.matchVal = agent.val.matchVal;
+								}
+								if (!o.withSiphon) {
+									// ensure the agents with siphon gets set
+									o.withSiphon = agent.val.withSiphon;
+								}
+							} else {
+								o[n] = ov ? ov.val : null;
+							}
+						} else {
+							o[n] = ov.val;
+						}
+					}
+				}
 				// capture siphon attribute
 				function captureSA($el, m, ei, o, ow) {
 					var an = null;
 					var n = null;
-					var ov = null;
-					var agtt = false;
-					var agtn = null;
-					var agt = null;
-					var $agt = null;
+					var agent = new Agent();
 					for (var i=0; i<ns.length; i++) {
 						n = ns[i].toLowerCase();
 						an = getAN(m, n);
 						n = getSAN(m, n);
-						// only add values for attributes that exist on the
-						// passed object and have not yet been set
-						if (isAdd(n, o, ow)) {
-							// when a siphon attribute corresponds to an event at
-							// the same index we use the attribute value at that
-							// index- otherwise, we just use the attribute at the
-							// last available index
-							ov = getOV($el, an, ei);
-							if (!ov) {
-								// try to lookup an agent that has the attribute (if any)
-								if (!agtt) {
-									agtt = true;
-									agtn = getSAN(m, DOM_ATTR_AGENT);
-									agt = getOV($el, getAN(m, DOM_ATTR_AGENT), ei);
-									if (agt) {
-										// siphon possible selectors
-										agt = siphonValues(agt, m, vars,
-												opts.agentSelSep, null);
-									}
-									if (isAdd(agtn, o, ow)) {
-										o[agtn] = agt;
-									}
-									if (agt) {
-										// capture the agent's siphon attributes
-										$agt = $(agt);
-										agt = new SiphonAttrs(m, evt, null,
-												$agt.selector, null, vars,
-												false);
-										$agt.each(function() {
-											// 1st come, 1st serve- don't
-											// overwrite attributes that have
-											// already been set by a previous
-											// agent element
-											if (!capture($agt, m, agt, false, false, false)) {
-												agt = null;
-											}
-										});
-									}
-								}
-								if (agt && typeof agt === 'object' && agt[n]) {
-									o[n] = agt[n];
-								} else {
-									o[n] = ov;
-								}
-							} else {
-								o[n] = ov;
-							}
-						}
+						addVal($el, m, ei, o, ow, n, an, agent);
+					}
+					// ensure user defined variables get set
+					if (vars && o.withSiphon) {
+						vars.add(m, o.withSiphon);
 					}
 					return o;
 				}
@@ -1869,7 +1971,7 @@
 				}
 				// iterate over the attributes that will be used as keys
 				var k = getOptsAttrVal($p, null, opts.paramNameAttrs, true);
-				if (!k) {
+				if (!k || !k.val) {
 					return ps;
 				}
 				var v = !r.directive ? $p.val() : r.directive == DTEXT ? $p
@@ -2298,13 +2400,13 @@
 								}
 							}
 						} catch (e) {
-							log('Error in ' + fs + ' ' + (evt ? evt : '') + ': ' + e, 1);
+							log('Error in ' + fs + ' ' + (evt ? evt : ''), e);
 						}
 					}
 				}
 				return evt.isDefaultPrevented();
 			} catch (e) {
-				log('Error in ' + evt.type + ' ' + (evt ? evt : '') + ': ' + e, 1);
+				log('Error in ' + evt.type + ' ' + (evt ? evt : ''), e);
 			}
 			return false;
 		}
@@ -2704,8 +2806,8 @@
 			o.chain = opts.eventFragChain;
 			o.variables = f ? f.getVars() : t.siphon ? t.siphon.vars.get()
 					: undefined;
-			o.log = function(l) {
-				log(o, l);
+			o.log = function(m, l) {
+				log(m ? m : '', l, this);
 			};
 			o.toFormattedString = function() {
 				return lbls('event chain', o.chain, 'fragCount', o.fragCount,
@@ -2756,8 +2858,8 @@
 			e.scope = t.scope;
 			e.errors = t.getErrors();
 			e.loadTime = t.elapsedTime(e.timeStamp);
-			e.log = function(l) {
-				log(this, l);
+			e.log = function(m, l) {
+				log(m ? m : '', l, this);
 			};
 			e.toFormattedString = function() {
 				return lbls('event chain', e.chain, 'fragCancelCount',
@@ -3243,7 +3345,7 @@
 			}
 			ieVersion = t.id > 5 ? +t.id : 0;
 		} catch (e) {
-			log('Unable to detect IE version: ' + e, 1);
+			log('Unable to detect IE version: ', e);
 		}
 
 		/**
