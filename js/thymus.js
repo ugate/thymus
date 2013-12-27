@@ -1756,7 +1756,7 @@
 			if ($el instanceof jQuery) {
 				$el.each(function(i, r) {
 					e = $(r);
-					if (e.is(':input')) {
+					if (e.is(':input') && !e.is(':button')) {
 						v = !isExcludedVal(e) ? e.val() : '';
 					} else {
 						v = e.text().replace(opts.regexDestTextOrAttrVal, '');
@@ -2171,6 +2171,7 @@
 				}
 				// clear out any existing data from the destination node(s)
 				if (iu) {
+					var tq = 0;
 					if (isAttr(dr)) {
 						$ds.attr(dr.directive, '');
 					} else if (rr && (!dr.directive || dr.directive == DHTML)) {
@@ -2181,15 +2182,17 @@
 						if ($c.length > 0) {
 							$c.remove();
 						} else {
-							// residual text should be removed
-							$ds.contents().filter(function() {
-								return this.nodeType === 3;
-							}).remove();
+							tq = 1;
 						}
 					} else {
-						// remove any existing content that may exist
-						// under the destination
-						$ds.contents().remove();
+						tq = 1;
+					}
+					if (tq == 1) {
+						// remove any existing text content that may exist under
+						// the destination
+						$ds.contents().filter(function() {
+							return this.nodeType === 3;
+						}).remove();
 					}
 				}
 				var altr = null;
