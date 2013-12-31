@@ -1153,8 +1153,7 @@
 					// full page transfer
 					var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), a);
 					var f = new Frag(null, t.scope, t.scope, t);
-					broadcast(opts.eventFragChain, opts.eventFragBeforeHttp, t, f);
-					f.nav(no);
+					f.nav(no, true);
 				}
 			} else if (a.action === opts.actionNavRegister) {
 				// convert URLs (if needed) and register event driven templating
@@ -2384,14 +2383,11 @@
 				var sfc = script && evt.chain === opts.eventFragChain ? script
 						.attr(opts.fragListenerAttr)
 						: null;
-				var sfbsc = script && evt.chain === opts.eventFragsBeforeChain ? script
-						.attr(opts.fragsBeforeListenerAttr)
-						: null;
 				var sfsc = script && evt.chain === opts.eventFragsChain ? script
 						.attr(opts.fragsListenerAttr)
 						: null;
-				if (sfc || sfbsc || sfsc) {
-					var fs = sfc ? sfc : sfbsc ? sfbsc : sfsc;
+				if (sfc || sfsc) {
+					var fs = sfc ? sfc : sfsc;
 					if (fs) {
 						try {
 							var f = new Func(opts, fs, evt);
@@ -2436,13 +2432,16 @@
 						: genFragsEvent(chain, type, t));
 			}
 			if (chain == opts.eventFragChain
-					|| chain == opts.eventFragsBeforeChain
 					|| chain == opts.eventFragsChain) {
 				if (type == opts.eventFragAfterDom
 						|| type == opts.eventFragLoad
 						|| type == opts.eventFragsLoad
-						|| type == opts.eventFragsBeforeLoad) {
-					fire();
+						|| type == opts.eventFragsBeforeHttp) {
+					if (type == opts.eventFragsBeforeHttp) {
+						t.cancelled = fire();
+					} else {
+						fire();
+					}
 				} else if (f && !f.frp.pathSiphon()) {
 					t.addError('Invalid URL for ' + f.toString(), f, null,
 							null, null);
@@ -2482,6 +2481,7 @@
 			this.siphon.vars = this.siphon.vars ? this.siphon.vars : new Vars(
 					opts.regexVarNameVal, opts.regexVarSiphon);
 			this.navOpts = navOpts;
+			this.cancelled = false;
 			this.ccnt = 0;
 			this.cnt = 0;
 			this.len = 0;
@@ -2705,7 +2705,22 @@
 				htmlDomAdjust(t, ctx, $adds, false);
 				return this.destScope = jqAdd(this.destScope, $adds);
 			};
-			this.nav = function(no) {
+			this.nav = function(no, be) {
+				var rtn = null;
+				if (be) {
+					t.len++;
+					t.cnt++;
+					broadcast(opts.eventFragsChain, opts.eventFragsBeforeHttp,
+							t);
+					if (t.cancelled) {
+						return;
+					}
+					broadcast(opts.eventFragChain, opts.eventFragBeforeHttp, t,
+							this);
+					if (this.cancelled) {
+						return;
+					}
+				}
 				no = no ? no : this.navOpts;
 				var vars = null;
 				if (this.method.toLowerCase() != 'get') {
@@ -2724,15 +2739,22 @@
 					fd.append(ips);
 					no.getWin().$('body').append(fd);
 					fd.submit();
-					return no.getWin();
+					rtn = no.getWin();
 				} else {
 					var loc = this.frp.pathSiphon();
 					var vars = this.fps.params();
 					if (vars) {
 						loc += '?' + vars;
 					}
-					return no.getWin(loc);
+					rtn = no.getWin(loc);
 				}
+				if (be) {
+					broadcast(opts.eventFragChain, opts.eventFragLoad, t, this);
+					broadcast(opts.eventFragsChain, opts.eventFragsLoad, t,
+							this);
+					t.cnt--;
+				}
+				return rtn;
 			};
 			this.isModel = function(xhr) {
 				var mt = xhr ? xhr.getResponseHeader('Content-Type') : null;
@@ -2921,7 +2943,10 @@
 				selector : siphon
 			};
 			var t = new FragsTrack($s, so, nav);
-			broadcast(opts.eventFragsBeforeChain, opts.eventFragsBeforeLoad, t);
+			broadcast(opts.eventFragsChain, opts.eventFragsBeforeHttp, t);
+			if (t.cancelled) {
+				return;
+			}
 			function done(pf, t, f) {
 				if (t.cnt > t.len) {
 					t.addError('Expected ' + t.len
@@ -3272,7 +3297,6 @@
 			fragExtensionAttr : 'data-thx-frag-extension',
 			fragListenerAttr : 'data-thx-onfrag',
 			fragsListenerAttr : 'data-thx-onfrags',
-			fragsBeforeListenerAttr : 'data-thx-onbeforefrags',
 			fragHeadAttr : 'data-thx-head-frag',
 			paramNameAttrs : [ 'name', 'id' ],
 			regexFragName : /^[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*$/,
@@ -3299,13 +3323,12 @@
 			resultWrapperTagName : DFTL_RSLT_NAME,
 			eventIsBroadcast : true,
 			eventFragChain : 'frag',
-			eventFragsBeforeChain : 'fragsBefore',
 			eventFragsChain : 'frags',
 			eventFragBeforeHttp : 'beforehttp.thx.frag',
 			eventFragBeforeDom : 'beforedom.thx.frag',
 			eventFragAfterDom : 'afterdom.thx.frag',
 			eventFragLoad : 'load.thx.frag',
-			eventFragsBeforeLoad : 'beforeload.thx.frags',
+			eventFragsBeforeHttp : 'beforehttp.thx.frags',
 			eventFragsLoad : 'load.thx.frags',
 			actionLoadFrags : 'frags.load',
 			actionNavRegister : 'nav.register',

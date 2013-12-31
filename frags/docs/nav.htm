@@ -892,15 +892,15 @@
 										data-thx-get-result="[class^=&quot;thymus-user&quot;]"
 										data-thx-get-dest="#userDestAgent"
 										data-thx-get-type="async|update">
-										<button type="button" class="btn btn-primary active"
+										<a type="button" class="btn btn-primary active"
 											data-thx-get="load :: click" data-thx-get-agent="#userDest2Grp"
-											data-thx-get-with="userKey=user1">Include User1</button>
-										<button type="button" class="btn btn-primary"
+											data-thx-get-with="userKey=user1">Include User1</a>
+										<a type="button" class="btn btn-primary"
 											data-thx-get="click" data-thx-get-agent="#userDest2Grp"
-											data-thx-get-with="userKey=user2">Include User2</button>
-										<button type="button" class="btn btn-primary"
+											data-thx-get-with="userKey=user2">Include User2</a>
+										<a type="button" class="btn btn-primary"
 											data-thx-get="click" data-thx-get-agent="#userDest2Grp"
-											data-thx-get-with="userKey=user3">Include User3</button>
+											data-thx-get-with="userKey=user3">Include User3</a>
 									</div>
 								</div>
 							</div>
@@ -921,7 +921,7 @@
 								<div class="col-md-10">
 									<button type="button" class="btn btn-primary"
 										data-thx-get="click"
-										data-thx-get-path="user/example?page=?{#userDest2Grp .active->click->data-thx-get-path}"
+										data-thx-get-path="user/example?page=?{#userDest2Grp :active->click->data-thx-get-path}"
 										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
 								</div>
 							</div>

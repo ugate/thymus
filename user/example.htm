@@ -6,7 +6,10 @@
 <script type="text/javascript">
 	//<![CDATA[
 	var urls = null;
-	function beforeLoad() {
+	function handleFrags(event) {
+		if (event.type == 'load') {
+			return;
+		}
 		var ps = location.search.substring(1).split('&');
 		var $v = $('#view');
 		for (var i = 0; i < ps.length; i++) {
@@ -74,7 +77,7 @@
 <script th:remove="all" src="../js/thymus.js" id="thymus"
 	data-thx-base-path="../" data-thx-frag-extension=".htm"
 	data-thx-head-frag="th:include=frags/head :: header"
-	data-thx-onbeforefrags="beforeLoad()"></script>
+	data-thx-onfrags="handleFrags()"></script>
 </head>
 <body>
 	<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">

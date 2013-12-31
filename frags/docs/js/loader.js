@@ -28,6 +28,9 @@ function fragListener(event) {
 	$pi.css('width', p);
 }
 function fragsListener(event) {
+	if (event.type != 'load') {
+		return;
+	}
 	loaded = true;
 	event.log();
 	if ($pt) {

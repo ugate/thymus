@@ -32,7 +32,7 @@
 			<span style="color: #008800; font-style: italic">// &quot;this&quot; will reference the element that loaded the fragment</span>
 			<span style="color: #000080; font-weight: bold">var</span> template = <span style="color: #000080; font-weight: bold">this</span>;
 			<span style="color: #000080; font-weight: bold">switch</span> (event.type) {
-			<span style="color: #000080; font-weight: bold">case</span> <span style="color: #0000FF">&#39;beforeload&#39;</span>:
+			<span style="color: #000080; font-weight: bold">case</span> <span style="color: #0000FF">&#39;beforehttp&#39;</span>:
 				<span style="color: #008800; font-style: italic">// handle event</span>
 				<span style="color: #000080; font-weight: bold">break</span>;
 			<span style="color: #000080; font-weight: bold">case</span> <span style="color: #0000FF">&#39;load&#39;</span>:
@@ -377,15 +377,19 @@
 <div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text/javascript&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">function</span> done(event) {
-			<span style="color: #008800; font-style: italic">// &quot;this&quot; will reference the element that loaded the fragments</span>
-			<span style="color: #008800; font-style: italic">// (the HTML element when auto-loaded)</span>
+		<span style="color: #000080; font-weight: bold">function</span> handleFrags(event) {
+			<span style="color: #008800; font-style: italic">// &quot;this&quot; will reference the element that will load or has already </span>
+			<span style="color: #008800; font-style: italic">// loaded the fragments (the HTML element when auto-loaded)</span>
 			<span style="color: #000080; font-weight: bold">var</span> template = <span style="color: #000080; font-weight: bold">this</span>;
-			<span style="color: #008800; font-style: italic">// handle event</span>
+			<span style="color: #000080; font-weight: bold">if</span> (event.type == <span style="color: #0000FF">&#39;beforehttp&#39;</span>) {
+				<span style="color: #008800; font-style: italic">// handle pre load event</span>
+			} <span style="color: #000080; font-weight: bold">else</span> <span style="color: #000080; font-weight: bold">if</span> (event.type == <span style="color: #0000FF">&#39;load&#39;</span>) {
+				<span style="color: #008800; font-style: italic">// handle load event</span>
+			}
 		}
 	<span style="color: #000080; font-weight: bold">&lt;/script&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> <span style="color: #FF0000">data-thx-context-path=</span><span style="color: #0000FF">&quot;.&quot;</span>
-		<span style="color: #FF0000">data-thx-onfrags=</span><span style="color: #0000FF">&quot;done()&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+		<span style="color: #FF0000">data-thx-onfrags=</span><span style="color: #0000FF">&quot;handleFrags()&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
 </pre></div>
 			<p>
@@ -428,10 +432,23 @@
 							<code>type</code>
 						</div>
 						<div class="col-md-10">
-							the type of event (defaults to
-							<code>load.thx.frags</code>
-							which is used when <a href="#fragsinjs">programatically
-								registering a listener for the event</a>)
+							one of the event types below
+							<ul>
+								<li><code>beforehttp.thx.frags</code> - before
+									submission/retrieval of any fragments (when the <a
+									href="http://api.jquery.com/event.isDefaultPrevented/">event.isDefaultPrevented()</a>
+									returns <b>true</b> the submission/retrieval process for all
+									underlying fragments will be cancelled)</li>
+								<li><code>load.thx.frags</code> - after
+									submission/retrieval of all fragments has taken place, the DOM
+									has been updated and all fragments have been
+									loaded/cancelled/etc.</li>
+							</ul>
+							Any of the above event types can be used when
+							<a href="#fragsinjs">programatically registering a listener
+								for the event</a>). See <a
+								href="http://api.jquery.com/on/#event-names">JQuery event
+								naming</a> for namespace convention details.
 						</div>
 					</div>
 					<div class="row row-thymus">
