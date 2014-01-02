@@ -1998,12 +1998,13 @@
 			function kv(ps, k, v) {
 				var ev = encodeURIComponent(v.replace(opts.regexParamReplace,
 						opts.paramReplaceWith));
+				var rk = typeof k === 'string' ? k : k.val;
 				if (typeof ps === 'string') {
-					return ps + (ps.length > 0 ? opts.paramSep : '') + k + '='
+					return ps + (ps.length > 0 ? opts.paramSep : '') + rk + '='
 							+ ev;
 				} else {
 					var o = {};
-					o[k] = ev;
+					o[rk] = ev;
 					$.extend(ps, o);
 					return ps;
 				}
