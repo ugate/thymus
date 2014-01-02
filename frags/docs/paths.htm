@@ -773,7 +773,7 @@
 									<button id="msr" data-thx-get="click"
 										data-thx-get-path="frags/user/form"
 										data-thx-get-type="async|update" class="btn btn-primary"
-										data-thx-get-result="|{.user-btn} |{.user->data-src} |{.user-name} |{:input:not(:button)}"
+										data-thx-get-result="|{.user-btn} |{#user->data-src} |{.user-name} |{:input:not(:button)}"
 										data-thx-get-dest="|{.msr-1} |{.msr-2} |{#msr-3->text} |{.msr-4->value} ?{#msr-5}">Run</button>
 								</div>
 							</div>
@@ -832,7 +832,7 @@
 						</div>
 <div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/form&quot;</span>
 	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;async|update&quot;</span>
-	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;|{.user-btn} |{.user-&gt;data-src} |{.user-name} |{:input:not(:button)}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;|{.user-btn} |{#user-&gt;data-src} |{.user-name} |{:input:not(:button)}&quot;</span>
 	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;|{.msr-1} |{.msr-2} |{#msr-3-&gt;text} |{.msr-4-&gt;value} ?{#msr-5}&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	Run<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr-1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
@@ -848,15 +848,197 @@
 	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>msr-3:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>msr-4:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr-4 form-control&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr-4 form-control&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr-4&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr-4&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>msr-5:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;msr-5&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;|{.msr-5-1-&gt;value}&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Input 1<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;|{.msr-5-2-&gt;value}&quot;</span> <span style="color: #FF0000">selected=</span><span style="color: #0000FF">&quot;selected&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Input 2<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr-5-1 form-control&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr-5-2 form-control&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr-5-1&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr-5-2&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+</pre></div>
+					</div>
+				</div>
+			</div>
+			<p id="rsltDir">
+				In the preceding example each of the <b>node siphon resolver</b>s
+				defined within the <b>result siphon</b> capture their corresponding
+				node data. Captured data is combined to form the final result. The
+				cumlative result is then set on each of the nodes found for each of
+				the <b>node siphon resolver</b>s specified within the <b>destination
+					siphon</b>. While this type of behavior may be desired in some use
+				cases, a more finite control may be more desirable. In such cases a
+				<b>result siphon</b> can contain special <b>node siphon resolver</b>(s)
+				that have a built-in destination. The result and destination JQuery
+				selectors are separated by using a
+				<code>=&gt;</code>
+				<b>result directive</b> (as well as an optional <a
+					href="#domdestinationtype">destination type</a>). Consider the
+				following:
+			</p>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<button id="msr2" data-thx-get="click"
+										data-thx-get-path="frags/user/form"
+										data-thx-get-type="async|update" class="btn btn-primary"
+										data-thx-get-result="|{.user-btn=>.msr2-1=>include} |{#user->data-src} |{.user-name} |{:input:not(:button)}"
+										data-thx-get-dest="|{.msr2-2} |{#msr2-3->text} |{.msr2-4->value} ?{#msr2-5}">Run</button>
+								</div>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<div class="msr2-1">
+								<strong>msr2-1:</strong><br/>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<div class="msr2-1">
+								<strong>msr2-1:</strong><br/>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<div class="msr2-2">
+								<strong>msr2-2:</strong><br/>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<div id="msr2-3">
+								<strong>msr2-3:</strong><br/>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<strong>msr2-4:</strong>
+							<input class="msr2-4 form-control" value="" />
+							<input class="msr2-4 form-control" value="" />
+						</div>
+						<div class="list-group-item">
+							<strong>msr2-5:</strong>
+							<select id="msr2-5">
+								<option value="|{.msr2-5-1->value}">Input 1</option>
+								<option value="|{.msr2-5-2->value}" selected="selected">Input 2</option>
+							</select>
+							<input class="msr2-5-1 form-control" value="" />
+							<input class="msr2-5-2 form-control" value="" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=?{#msr2->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/form&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;async|update&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;|{.user-btn=&gt;.msr2-1=&gt;include} |{#user-&gt;data-src} |{.user-name} |{:input:not(:button)}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;|{.msr2-2} |{#msr2-3-&gt;text} |{.msr2-4-&gt;value} ?{#msr2-5}&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Run<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr2-1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>msr2-1:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr2-1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>msr2-1:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr2-2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>msr2-2:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr2-3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>msr2-3:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>msr2-4:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr2-4&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr2-4&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>msr2-5:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;msr2-5&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;|{.msr2-5-1-&gt;value}&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Input 1<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;|{.msr2-5-2-&gt;value}&quot;</span> <span style="color: #FF0000">selected=</span><span style="color: #0000FF">&quot;selected&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Input 2<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr2-5-1&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr2-5-2&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+</pre></div>
+					</div>
+				</div>
+			</div>
+			<p>
+				Instead of using
+				<code>|{.msr-1}</code>
+				within the <b>destination siphon</b> it has been defined using a <b>result
+					directive</b> using
+				<code>|{.user-btn=&gt;.msr2-1=&gt;include}</code>
+				. The selector for
+				<code>.user-btn</code>
+				is no longer part of the cumulative result because it has it's own
+				destination designation. Also, the result will not be <i>updated</i>,
+				but rather <i>included</i> due to the override designation. 
+			</p>
+			<p>
+				When using <i>only</i> <b>node siphon resolver</b>s that contain <b>result
+					directive</b>s the <b>destination siphon</b> can be omitted:
+			</p>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<button id="msr3" data-thx-get="click"
+										data-thx-get-path="frags/user/form"
+										data-thx-get-type="async|update" class="btn btn-primary"
+										data-thx-get-result="|{#user->data-src=>.msr3-1}">Run</button>
+								</div>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<div class="msr3-1">
+								<strong>msr3-1:</strong><br/>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=?{#msr3->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/form&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;async|update&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;|{.user-&gt;data-src=&gt;.msr3-1}&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Run<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr3-1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>msr3-1:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 </pre></div>
 					</div>
 				</div>

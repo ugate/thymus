@@ -348,21 +348,46 @@
 	function AppReplCache() {
 		var ach = new ManipsCache(true);
 		var rch = new ManipsCache(false);
-		this.rsltCache = function(ia, rc) {
-			return (ia ? ach : rch).rsltCache(rc);
+		var ich = [];
+		function manips($r, c, n) {
+			return $r ? $r.add(c.manips(n)) : c.manips(n);
+		}
+		this.rsltCache = function(ia, rc, solo) {
+			if (solo) {
+				// the result is destination specific
+				var rdc = new ManipsCache(ia);
+				rdc.rsltCache(rc);
+				ich[ich.length] = rdc;
+				return rdc.rsltCache();
+			} else {
+				return (ia ? ach : rch).rsltCache(rc);
+			}
 		};
-		this.destCache = function(ia, $dc, altr) {
-			return (ia ? ach : rch).destCache($dc, altr);
+		this.destCache = function(ia, $dc, altr, rc) {
+			if (rc) {
+				for (var i=0; i<ich.length; i++) {
+					if (rc.is(ich[i].rsltCache())) {
+						return ich[i].destCache($dc, altr);
+					}
+				}
+			} else {
+				return (ia ? ach : rch).destCache($dc, altr);
+			}
 		};
-		this.appendReplace = function(n) {
-			var $r = ach.manips(n);
-			$r = $r ? $r.add(rch.manips(n)) : rch.manips(n);
+		this.appendReplaceAll = function(n) {
+			var $r = null;
+			for (var i=0; i<ich.length; i++) {
+				$r = manips($r, ich[i], n);
+			}
+			$r = manips($r, ach, n);
+			$r = manips($r, rch, n);
 			this.clear(n);
 			return $r;
 		};
 		this.clear = function(n) {
 			ach = ach ? ach.clear(n) : n ? new ManipsCache(true) : null;
 			rch = rch ? rch.clear(n) : n ? new ManipsCache(false) : null;
+			ich = n ? [] : null;
 			return n ? this : null;
 		};
 	}
@@ -1778,8 +1803,12 @@
 		 *            are &quot;text&quot;, &quot;html&quot; or an attribute
 		 *            name or when nothing is defined JQuery's val() function
 		 *            will be called to retrieve the replacement value
+		 * @param cr
+		 *            an optional child {Resolver} of the current {Resolver}
+		 * @param t
+		 *            an optional {Resolver} type
 		 */
-		function Resolver(s, d) {
+		function Resolver(s, d, cr, t) {
 			this.selector = s instanceof jQuery ? s : s ? $.trim(s) : null;
             this.directive = d ? $.trim(d) : '';
             if (this.directive) {
@@ -1815,6 +1844,10 @@
 				}
 				return $r;
 			};
+			this.child = cr;
+			this.type = function() {
+				return t;
+			};
 			this.toString = function() {
 				return lbls('selector', this.selector, 'directive',
 						this.directive);
@@ -1837,22 +1870,33 @@
 		 */
 		function NodeResolvers(s, pa) {
 			var rvs = [];
-			function add(s) {
+			function add(s, c, t) {
 				if (!s) {
 					return null;
 				}
 				var r = null;
+				var cr = c ? new Resolver(c[0], c.length > 1 ? c[1] : '', t) : null;
 				if (s instanceof jQuery || typeof s === 'string') {
-					r = new Resolver(s);
+					r = new Resolver(s, cr, t);
 				} else {
-					r = new Resolver(s[0], s.length > 1 ? s[1] : '');
+					r = new Resolver(s[0], s.length > 1 ? s[1] : '', cr, t);
 				}
 				return rvs[rvs.length] = r;
 			}
 			function resolve(s) {
 				// regular expression must match entire expression
 				var nv = s.replace(opts.regexNodeSiphon, function(m, v) {
-					add(v.split(opts.regexDirectiveDelimiter));
+					var pc = v.split(opts.regexParentChildDelimiter);
+					// add resolver, optional child resolver and optional resolver type
+					var child = pc.length > 1 ? pc[1] : null;
+					var type = pc.length > 2 ? pc[2] : null;
+					if (child && TYPES_PPU.indexOf(child.toLowerCase()) >= 0) {
+						type = child;
+						child = null;
+					} else if (child) {
+						child = child.split(opts.regexDirectiveDelimiter);
+					}
+					add(pc[0].split(opts.regexDirectiveDelimiter), child, type);
 					// replace expression now that add is done
 					return '';
 				});
@@ -1878,7 +1922,7 @@
 				if (pa && s && opts.regexFragName.test(s)) {
 					// add selection for any predefined attributes
 					add(genAttrSelect(pa, s, null));
-				}	
+				}
 			}
 		}
 
@@ -2115,7 +2159,8 @@
 					rslt = $(rslt);
 				}
 				if (rslt) {
-					arc.rsltCache(f.navOpts.type() !== TREP, rslt);
+					arc.rsltCache(f.navOpts.type() !== TREP, rslt, rr
+							&& rr.child);
 				}
 				return rslt;
 			};
@@ -2206,7 +2251,7 @@
 					// result needs to be set on attribute
 					altr = function($d, $r) {
 						var v = ia && !iu ? $d.attr(dr.directive) : null;
-						$d.attr(dr.directive, (v ? v : '') + getTextVals($r));
+						$d.prop(dr.directive, (v ? v : '') + getTextVals($r));
 					};
 				} else if (r instanceof jQuery && dr.directive == DTEXT) {
 					// result needs to be text
@@ -2223,7 +2268,7 @@
 					// cache the destination for DOM insertion after all other
 					// destinations have also been cached (prevents multiple
 					// result resolver overwrites and improves performance)
-					arc.destCache(ia, $ds, altr);
+					arc.destCache(ia, $ds, altr, rr && rr.child ? r : null);
 				}
 			}
 			function appendTo(arc, iu, im, dr, $d, rr, r, altr) {
@@ -2247,14 +2292,15 @@
 				return dsr;
 			};
 			this.add = function($p, arc, r, rr, im, ts, xhr) {
-				this.destResolver().each(function(i, dr) {
+				var addType = f.navOpts.type();
+				function addDest(i, dr) {
 					try {
 						var $x = null;
 						var $ds = dr.selectFrom($p);
 						if ($ds.length <= 0) {
 							return true;
 						}
-						if (f.navOpts.type() === TREP) {
+						if (addType === TREP) {
 							try {
 								$x = $(r);
 								replaceTo(arc, false, im, dr, $ds, rr, $x);
@@ -2263,24 +2309,23 @@
 								$x = $ds.parent();
 								replaceTo(arc, false, im, dr, $ds, rr, r, $x);
 							}
-						} else if (f.navOpts.type() === TINC
-								|| f.navOpts.type() === TUPD) {
-							if (f.fds.destSiphon() || f.navOpts.type() === TUPD) {
+						} else if (addType === TINC || addType === TUPD) {
+							if (f.fds.destSiphon() || addType === TUPD) {
 								if (f.fds.destSiphon()) {
 									// when updating remove any pre-exsisting results 
 									// from the destination that match the result siphon
-									appendTo(arc, f.navOpts.type() === TUPD, im, dr, 
-												$ds, rr, r);
+									appendTo(arc, addType === TUPD, im, dr,
+											$ds, rr, r);
 								} else {
 									// when updating remove everything in the destination
-									appendTo(arc, f.navOpts.type() === TUPD, im, dr, $ds, 
-											rr,	r);
+									appendTo(arc, addType === TUPD, im, dr,
+											$ds, rr, r);
 								}
 							} else {
 								appendTo(arc, false, im, dr, $ds, rr, r);
 							}
 						} else {
-							t.addError('Invalid destination type "' + f.navOpts.type()
+							t.addError('Invalid destination type "' + addType
 									+ '" for ' + f.toString(), f, null, ts, xhr);
 							return false;
 						}
@@ -2289,7 +2334,15 @@
 								+ dr
 								+ '" for ' + f.toString(), f, e, ts, xhr);
 					}
-				});
+				}
+				if (rr && rr.child) {
+					// result resolver already has predefined destination
+					addType = rr.type() ? rr.type() : addType;
+					addDest(-1, rr.child);
+				} else {
+					// add the result to each of the destinations
+					this.destResolver().each(addDest);
+				}
 			};
 		}
 
@@ -2569,8 +2622,6 @@
 				siphon = loadSiphon;
 			} else if (!t.isSelfSelect) {
 				a = getFragAttr($fl, opts.includeAttrs);
-			} else {
-				a = null;
 			}
 			this.ajaxAsync = true;
 			this.navOpts = t.navOpts && t.navOpts.reuse() ? t.navOpts
@@ -2690,7 +2741,7 @@
 			this.dest = function() {
 				var $adds = null;
 				try {
-					$adds = arc.appendReplace();
+					$adds = arc.appendReplaceAll();
 				} catch (e) {
 					t.addError('Error while adding desitination results to the DOM ' 
 							+ ' for ' + this.toString(), this, e);
@@ -3312,6 +3363,7 @@
 			regexFuncArgs : /(('|").*?('|")|[^('|"),\s]+)(?=\s*,|\s*$)/g,
 			regexFuncArgReplace : /['"]/g,
 			regexDirectiveDelimiter : /->/g,
+			regexParentChildDelimiter : /=>/g,
 			regexSurrogateSiphon : /(?:\?{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexNodeSiphon : /(?:\|{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
 			regexVarSiphon : /(?:\${)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
