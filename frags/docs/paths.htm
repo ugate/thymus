@@ -1043,6 +1043,108 @@
 					</div>
 				</div>
 			</div>
+			<p>
+				There may be instances where a <b>surrogate siphon resolver</b> may
+				need to extract a <b>siphon attribute</b> from another node that has
+				<a href="#multidomevents">multiple events</a>. Of course the entire
+				siphon attribute value can be extracted, but would require some
+				additional steps to be undertaken to match which value goes with
+				which event. To avoid this requirement a <b>surrogate siphon
+					resolver</b> can contain an intermediary directive that will designate
+				the event that will be used to extract the <b>siphon attribute</b>.
+				Consider the following demo:
+			</p>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<video id="msr4" controls="controls"
+										data-thx-get="play :: pause :: ended"
+										data-thx-get-path="frags/user/user1 :: frags/user/user2 :: frags/user/user3"
+										data-thx-get-result="[class^=thymus-user]"
+										data-thx-get-dest=".msr4-1 :: .msr4-2 :: .msr4-3">
+										<source src="http://www.w3schools.com/tags/mov_bbb.mp4" type="video/mp4">
+										<source src="http://www.w3schools.com/tags/mov_bbb.ogg" type="video/ogg">
+										<ins>Your browser does not support HTML5 video.</ins>
+									</video>
+								</div>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<div class="msr4-1">
+								<strong>From Video Start:</strong><br/>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<div class="msr4-2">
+								<strong>From Video Pause:</strong><br/>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<div class="msr4-3">
+								<strong>From Video Ended:</strong><br/>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<select id="msr4Sel" class="btn btn-primary"
+										data-thx-get="change" 
+										data-thx-get-path="user/example?page=?{#msr4->?{#msr4Sel}->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">
+										<option selected="selected" disabled="disabled">Select Fragment...</option>
+										<option value="play">Play Fragment</option>
+										<option value="pause">Pause Fragment</option>
+										<option value="ended">Ended Fragment</option>
+									</select>
+								</div>
+							</div>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;video</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;msr4&quot;</span> <span style="color: #FF0000">controls=</span><span style="color: #0000FF">&quot;controls&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;play :: pause :: ended&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1 :: frags/user/user2 :: frags/user/user3&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=thymus-user]&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;.msr4-1 :: .msr4-2 :: .msr4-3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;source</span> <span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;http://www.w3schools.com/tags/mov_bbb.mp4&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;video/mp4&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;source</span> <span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;http://www.w3schools.com/tags/mov_bbb.ogg&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;video/ogg&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;ins&gt;</span>Your browser does not support HTML5 video.<span style="color: #000080; font-weight: bold">&lt;/ins&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/video&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr4-1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>From Video Start:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;&lt;br/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr4-2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>From Video Pause:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;&lt;br/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr4-3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>From Video Ended:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;&lt;br/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;msr4Sel&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;change&quot;</span> 
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;user/example?page=?{#msr4-&gt;?{#msr4Sel}-&gt;data-thx-get-path}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;sync|transfer&quot;</span> <span style="color: #FF0000">data-thx-get-target=</span><span style="color: #0000FF">&quot;_blank&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">selected=</span><span style="color: #0000FF">&quot;selected&quot;</span> <span style="color: #FF0000">disabled=</span><span style="color: #0000FF">&quot;disabled&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Select event...<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;play&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Play Fragment<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;pause&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Pause Fragment<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;ended&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Ended Fragment<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
+</pre></div>
+					</div>
+				</div>
+			</div>
 			<div class="alert alert-info">
 				<strong>Note:</strong> Even though some siphons can simultaneously
 				contain raw JQuery selectors as well as <b>node siphon resolver</b>s
@@ -1055,12 +1157,13 @@
 				).
 			</div>
 			<div class="alert alert-info">
-				<strong>Note:</strong> Although nesting different types of <b>siphon
-					resolver</b>s is discouraged for readability sake, <b>node siphon
-					resolver</b>s can contain any number of nested <b>surrogate siphon
-					resolver</b>s within them (e.g.
+				<strong>Note:</strong> Although <b>surrogate siphon resolver</b>s
+				can be nested (e.g.
+				<code>user/example?page=?{#msr4-&gt;?{#msr4Sel}-&gt;data-thx-get-path}</code>
+				) and <b>node siphon resolver</b>s can contain any number of nested
+				<b>surrogate siphon resolver</b>s within them (e.g.
 				<code>|{?{.my-class}-&gt;text}</code>
-				), but <b>surrogate siphon resolver</b>s should <strong>never</strong>
+				), <b>surrogate siphon resolver</b>s should <strong>never</strong>
 				contain <b>node siphon resolver</b>s (e.g.
 				<code>?{|{.my-class-&gt;text}}</code>
 				). Also,<b>node siphon resolver</b>s will not evaluate any <b>siphon

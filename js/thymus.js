@@ -790,12 +790,13 @@
 		}
 		function rep(ctx, s) {
 			ctx = adjCtx(ctx);
-			return s ? s.replace(rrx, function(m, n) {
+			function rpl(mch, v) {
 				if (cache[ctx]) {
-					return cache[ctx][n];
+					return cache[ctx][v];
 				}
 				return undefined;
-			}) : '';
+			}
+			return s ? siphonReplace(s, rrx, rpl) : '';
 		}
 		this.add = add;
 		this.rep = rep;
@@ -804,6 +805,48 @@
 			return ctx ? cache[ctx] ? n ? cache[ctx][n] : cache[ctx].slice(0)
 					: cache.slice(0) : undefined;
 		};
+	}
+
+	/**
+	 * Recursively replaces values found within a string with values found from
+	 * JQuery selector(s). Results from each JQuery string found will use the
+	 * passed regular expression function to retrieve the replacement value.
+	 * 
+	 * @param s
+	 *            the string to replace JQuery selectors in
+	 * @param rx
+	 *            the regular expression that will be used to match the siphon
+	 *            pattern (should match the innermost pattern and should be
+	 *            escaped for single and double quotes)
+	 * @param rfx
+	 *            the function that will be passed to the replace function
+	 *            (along with the passed regular expression)
+	 * @param m
+	 *            the optional HTTP method context of the passed {Vars}
+	 * @param vars
+	 *            the optional {Vars} used for variable substitution
+	 * @returns the siphoned string with replaced values returned from all/any
+	 *          found JQuery selector(s)
+	 */
+	function siphonReplace(s, rx, rfx, m, vars) {
+		// siphon strings
+		function rStr(s) {
+			var ck = false;
+			var ns = s;
+			do {
+				ck = false;
+				ns = ns.replace(rx, function(mch, v) {
+					// TODO : remove leading bracket siphon removal check
+					v = v.indexOf(0) == '{' == 0 ? v.substr(1) : v;
+					var evs = rfx(mch, v);
+					ck = true;
+					return rStr(evs);
+				});
+			} while (ck);
+			return ns;
+		}
+		// substitute variables and siphon values
+		return typeof s === 'string' ? rStr(vars ? vars.rep(m, s) : s) : '';
 	}
 
 	/**
@@ -898,14 +941,14 @@
 	 * @param el
 	 *            the DOM element that will be used to find siphoned values on
 	 *            (when omitted the current document will be queried)
-	 * @param edfx
+	 * @param adfx
 	 *            an optional function that will be called when an attribute
-	 *            directive is found with a preceeding event directive (passes:
-	 *            element, name, event name and event attribute)
+	 *            directive is found, but no data/value can be extracted
+	 *            (passes: element, name, event name and event attribute)
 	 * @returns the siphoned string with replaced values returned from all/any
 	 *          found JQuery selector(s)
 	 */
-	function extractValues(s, drx, dl, attrNames, el, edfx) {
+	function extractValues(s, drx, dl, attrNames, el, adfx) {
 		function getEV(nv, n, v, d) {
 			return (d && nv.length > 0 ? d : '')
 					+ (n && n.val ? n.val + '=' : '') + v;
@@ -945,10 +988,10 @@
 					n = n ? n.val : null;
 					var civ = ist ? ci.text() : ish ? ci.html() : undefined;
 					if (civ === undefined && d) {
-						if (evt && edfx) {
-							// let function handle event attribute directive
-							// values
-							civ = edfx(ci, n, evt, d);
+						if (adfx) {
+							// let function handle attribute directives that
+							// have no value
+							civ = adfx(ci, n, evt, d);
 						}
 						if (!civ && ci.is('[' + d + ']')) {
 							// not an event directive or event directive is
@@ -1292,24 +1335,19 @@
 		 */
 		function siphonValues(s, m, vars, del, attrNames, el) {
 			// siphon node values
-			function sVals(s, del, attrNames, el) {
-				return s.replace(opts.regexSurrogateSiphon, function(mch, v) {
-					var evs = extractValues(v, opts.regexDirectiveDelimiter,
-							del, attrNames, el, function($i, n, evt, attr) {
-						// TODO : handle event directives
-						if (evt && attr) {
-							// event attribute directives need to  
-							var sa = new SiphonAttrs(m, evt, null, null, $i, 
-										vars, false, attr);
-							return vars.rep(m, sa.matchVal);
-						}
-					});
-					return sVals(evs, del, attrNames, el);
-				});
+			function rpl(mch, v) {
+				return extractValues(v, opts.regexDirectiveDelimiter, del,
+						attrNames, el, function($i, n, evt, attr) {
+							if (attr) {
+								// when an attribute value is not found check
+								// for it on an agent
+								var sa = new SiphonAttrs(m, evt, null, null,
+										$i, vars, false, attr);
+								return vars.rep(m, sa.matchVal);
+							}
+						});
 			}
-			// substitute variables and siphon node values
-			return typeof s === 'string' ? sVals(vars.rep(m, s), del, attrNames,
-					el) : '';
+			return siphonReplace(s, opts.regexSurrogateSiphon, rpl, m, vars);
 		}
 
 		/**
@@ -1322,8 +1360,8 @@
 		 *            the HTTP method context
 		 * @param evt
 		 *            the event name used to determine the index of the
-		 *            attributes (when ommitted the first indexed siphoned
-		 *            attribute value will be used)
+		 *            attributes (when ommitted the entire siphon attribute for
+		 *            all containing events will be used)
 		 * @param o
 		 *            the object where the siphon attribute values will be added
 		 *            to
@@ -1362,6 +1400,9 @@
 					// same index we use the attribute value at that index-
 					// otherwise, we just use the attribute at the last
 					// available index
+					if (!evt) {
+						return -2;
+					}
 					var ens = getOptsAttrVal($el, getAN(m, m), opts);
 					ens = ens && ens.val ? splitWithTrim(ens.val, opts.multiSep)
 							: null;
@@ -1370,7 +1411,7 @@
 				// get plugin option value for a given attribute name
 				function getOV($el, an, ei) {
 					var ov = getOptsAttrVal($el, an, opts);
-					if (ov && ov.val) {
+					if (ov && ov.val && ei != -2) {
 						var nv = splitWithTrim(ov.val, opts.multiSep);
 						nv = nv && ei >= nv.length ? nv[nv.length - 1]
 								: nv ? nv[ei] : undefined;
@@ -1469,7 +1510,7 @@
 				function capture($el, m, o, re, ml, ow) {
 					m = m.toLowerCase();
 					var ei = getEI($el, m);
-					if (ei < 0) {
+					if (ei < 0 && ei > -2) {
 						// event is not in the attributes
 						if (ml) {
 							$.each(HTTP_METHODS, function() {
@@ -1885,7 +1926,7 @@
 			}
 			function resolve(s) {
 				// regular expression must match entire expression
-				var nv = s.replace(opts.regexNodeSiphon, function(m, v) {
+				function rpl(mch, v) {
 					var pc = v.split(opts.regexParentChildDelimiter);
 					// add resolver, optional child resolver and optional resolver type
 					var child = pc.length > 1 ? pc[1] : null;
@@ -1899,8 +1940,8 @@
 					add(pc[0].split(opts.regexDirectiveDelimiter), child, type);
 					// replace expression now that add is done
 					return '';
-				});
-				return nv;
+				}
+				return siphonReplace(s, opts.regexNodeSiphon, rpl);
 			}
 			this.siphon = s;
 			this.each = function(fx) {
@@ -2433,6 +2474,10 @@
 		function broadcastFragEvent(evt) {
 			try {
 				var el = evt.source ? evt.source : evt.scope;
+				// TODO : audio/video custom event trigger will cause media to refresh
+				if (el.is('video') || el.is('audio')) {
+					el = el.parent();
+				}
 				el.trigger(evt);
 				var sfc = script && evt.chain === opts.eventFragChain ? script
 						.attr(opts.fragListenerAttr)
@@ -3365,9 +3410,9 @@
 			regexFuncArgReplace : /['"]/g,
 			regexDirectiveDelimiter : /->/g,
 			regexParentChildDelimiter : /=>/g,
-			regexSurrogateSiphon : /(?:\?{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
-			regexNodeSiphon : /(?:\|{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
-			regexVarSiphon : /(?:\${)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
+			regexSurrogateSiphon : /\?([^\?"']+?(?:(?:"|')[^"']*(?:"|')[^\?{}"']*)*)}/g, // /(?:\?{)((?:(?:\\.)?|(?:(?!}).))+)(?:})/g,
+			regexNodeSiphon : /\|([^\|"']+?(?:(?:"|')[^"']*(?:"|')[^\|{}"']*)*)}/g,
+			regexVarSiphon : /\$([^\$"']+?(?:(?:"|')[^"']*(?:"|')[^\${}"']*)*)}/g,
 			regexVarNameVal : /((?:\\.|[^=,]+)*)=("(?:\\.|[^"\\]+)*"|(?:\\.|[^,"\\]+)*)/g,
 			regexParamCheckable : /^(?:checkbox|radio)$/i,
 			regexParamReplace : /\r?\n/g,
