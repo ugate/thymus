@@ -1065,7 +1065,7 @@
 								</div>
 								<div class="col-md-10">
 									<video id="msr4" controls="controls"
-										data-thx-get="play :: pause :: ended"
+										data-thx-get="play :: seeked :: ended"
 										data-thx-get-path="frags/user/user1 :: frags/user/user2 :: frags/user/user3"
 										data-thx-get-result="[class^=thymus-user]"
 										data-thx-get-dest=".msr4-1 :: .msr4-2 :: .msr4-3">
@@ -1078,12 +1078,12 @@
 						</div>
 						<div class="list-group-item">
 							<div class="msr4-1">
-								<strong>From Video Start:</strong><br/>
+								<strong>From Video Play:</strong><br/>
 							</div>
 						</div>
 						<div class="list-group-item">
 							<div class="msr4-2">
-								<strong>From Video Pause:</strong><br/>
+								<strong>From Video Seeked:</strong><br/>
 							</div>
 						</div>
 						<div class="list-group-item">
@@ -1108,14 +1108,14 @@
 										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">
 										<option selected="selected" disabled="disabled">Select Fragment...</option>
 										<option value="play">Play Fragment</option>
-										<option value="pause">Pause Fragment</option>
+										<option value="seeked">Seeked Fragment</option>
 										<option value="ended">Ended Fragment</option>
 									</select>
 								</div>
 							</div>
 						</div>
 <div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;video</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;msr4&quot;</span> <span style="color: #FF0000">controls=</span><span style="color: #0000FF">&quot;controls&quot;</span>
-	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;play :: pause :: ended&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;play :: seeked :: ended&quot;</span>
 	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1 :: frags/user/user2 :: frags/user/user3&quot;</span>
 	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=thymus-user]&quot;</span>
 	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;.msr4-1 :: .msr4-2 :: .msr4-3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
@@ -1124,10 +1124,10 @@
 	<span style="color: #000080; font-weight: bold">&lt;ins&gt;</span>Your browser does not support HTML5 video.<span style="color: #000080; font-weight: bold">&lt;/ins&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/video&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr4-1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>From Video Start:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;&lt;br/&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>From Video Play:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;&lt;br/&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr4-2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>From Video Pause:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;&lt;br/&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>From Video Seeked:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;&lt;br/&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr4-3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>From Video Ended:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;&lt;br/&gt;</span>
@@ -1138,7 +1138,7 @@
 	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;sync|transfer&quot;</span> <span style="color: #FF0000">data-thx-get-target=</span><span style="color: #0000FF">&quot;_blank&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">selected=</span><span style="color: #0000FF">&quot;selected&quot;</span> <span style="color: #FF0000">disabled=</span><span style="color: #0000FF">&quot;disabled&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Select event...<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;play&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Play Fragment<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;pause&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Pause Fragment<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;seeked&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Seeked Fragment<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
 	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;ended&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Ended Fragment<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
 </pre></div>
