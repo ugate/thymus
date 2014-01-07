@@ -1145,6 +1145,76 @@
 					</div>
 				</div>
 			</div>
+			<h4 id="bindsim">
+				<del>Binding</del> <ins>Simulations</ins>
+			</h4>
+			<p>
+				Most frameworks hold references to bound elements in order to <i>bind</i>
+				data between other elements, but in light of potential issues
+				surrounding that technique <b>thymus.js</b> simply uses JQuery
+				selectors as the binding source. So, instead trying to keep track of
+				what element is bound to other elements, <a href="#httpmethods"><b>siphon
+						attribute</b>s</a> are used in a similar fashion to how they are used
+				while retrieving fragments. The difference is that instead of using
+				an actual path the <b>path siphon</b> uses
+				<code>this</code>
+				. Consider the following:
+			</p>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<input id="msr5" type="text" placeholder="What's your name?"
+										data-thx-get="keyup" data-thx-get-path="this"
+										data-thx-get-type="async|update"
+										data-thx-get-result="|{#msr5->value}"
+										data-thx-get-dest="|{.msr5-1} |{.msr5-2->value}"
+										class="form-control thymus-green" />
+								</div>
+							</div>
+						</div>
+						<div class="list-group-item">
+							Hello <b class="msr5-1"></b>! Welcome to <b>thymus.js</b>!
+						</div>
+						<div class="list-group-item">
+							<strong>Nickname:</strong> <input type="text"
+								class="form-control msr5-2" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+							</div>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;msr5&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">placeholder=</span><span style="color: #0000FF">&quot;What&#39;s your name?&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;keyup&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;this&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;async|update&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;|{#msr5-&gt;value}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;|{.msr5-1} |{.msr5-2-&gt;value}&quot;</span>
+	<span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;form-control thymus-green&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	Hello <span style="color: #000080; font-weight: bold">&lt;b</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr5-1&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/b&gt;</span>! Welcome to <span style="color: #000080; font-weight: bold">&lt;b&gt;</span>thymus.js<span style="color: #000080; font-weight: bold">&lt;/b&gt;</span>!
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Nickname:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span> <span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span>
+		<span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;msr5-2&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
+					</div>
+				</div>
+			</div>
 			<div class="alert alert-info">
 				<strong>Note:</strong> Even though some siphons can simultaneously
 				contain raw JQuery selectors as well as <b>node siphon resolver</b>s

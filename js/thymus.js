@@ -186,6 +186,34 @@
 	}
 
 	/**
+	 * Attempts to retrieve a property or attribute from an element (reasons why
+	 * JQuery separates the two does not apply within this plug-in)
+	 * 
+	 * @param $el
+	 *            the element
+	 * @param n
+	 *            the name of the property or attribute
+	 * @param v
+	 *            the optional value to set
+	 * @returns the property or attribute
+	 */
+	function propAttr($el, n, v) {
+		var pa = '';
+		if ($el && n) {
+			if (typeof v !== 'undefined') {
+				$el.prop(n, v);
+				//$el.attr(n, v);
+				return $el;
+			}
+			pa = $el.prop(n);
+			if (typeof pa === 'undefined' || pa instanceof jQuery) {
+				pa = $el.attr(n);
+			}
+		}
+		return pa;
+	}
+
+	/**
 	 * JQuery node cache that utilizes <code>JQuery.add</code> with
 	 * <code>null</code> handling
 	 * 
@@ -597,7 +625,7 @@
 	 */
 	function genAttrSelByExample($el, $p) {
 		var as = '';
-		var tn = $el.prop('tagName');
+		var tn = propAttr($el, 'tagName');
 		$.each($el, function() {
 			var a = this.attributes;
 			for ( var k in a) {
@@ -621,7 +649,7 @@
 		if (!el) {
 			return false;
 		}
-		var tn = el.prop('tagName');
+		var tn = propAttr(el, 'tagName');
 		tn = tn ? tn.toLowerCase() : null;
 		return tn === 'html' || tn === 'head';
 	}
@@ -856,7 +884,7 @@
 		// iterate over the attributes that will be used as keys
 		var k = null;
 		$.each(opts.paramNameAttrs, function(i, v) {
-			k = $p.attr(v);
+			k = propAttr($p, v);
 			if (k) {
 				return false;
 			}
@@ -889,7 +917,7 @@
 			var a = null;
 			if (opts && $.isArray(o = !n ? opts : opts[n])) {
 				for (var i = 0; i < o.length; i++) {
-					a = $el.attr(o[i]);
+					a = propAttr($el, o[i]);
 					if ((!emptyChk && a !== undefined) || (emptyChk && a)) {
 						return {
 							attr : o[i],
@@ -898,7 +926,7 @@
 					}
 				}
 			} else if (typeof o === 'string') {
-				a = $el.attr(o);
+				a = propAttr($el, o);
 				return a !== undefined ? {
 					attr : o,
 					val : a
@@ -996,7 +1024,7 @@
 						if (!civ && ci.is('[' + d + ']')) {
 							// not an event directive or event directive is
 							// invalid
-							civ = ci.attr(d);
+							civ = propAttr(ci, d);
 						}
 					}
 					if (civ) {
@@ -1569,8 +1597,8 @@
 			if (a.type === URL_ATTR) {
 				if (el) {
 					if (!script.is(el)) {
-						el.attr(a.items[ai].name, absoluteUrl(el
-								.attr(a.items[ai].name), t.ctxPath));
+						var nm = propAttr(el, a.items[ai].name);
+						propAttr(el, nm, absoluteUrl(nm, t.ctxPath));
 					}
 					return '';
 				} else {
@@ -1648,7 +1676,7 @@
 				s.find(a.sel).each(function() {
 					var $c = $(this);
 					for ( var i = 0; i < a.items.length; i++) {
-						v = $c.attr(a.items[i].name);
+						v = propAttr($c, a.items[i].name);
 						if (v) {
 							r = updateNav(t, f, a, i, v, $c);
 						}
@@ -1725,7 +1753,7 @@
 							return a2;
 						}
 					} else {
-						fa = $f.attr(a2);
+						fa = propAttr($f, a2);
 						if (typeof fa !== 'undefined') {
 							return fa;
 						}
@@ -1733,11 +1761,11 @@
 				}
 				return null;
 			}
-			if ($f.prop('id') == NS) {
+			if (propAttr($f, 'id') == NS) {
 				// when the attribute is used on the current script tag then pull the
 				// attribute off the script and extract the
 				// fragment/include/replacement
-				var fa = $f.attr(opts.fragHeadAttr);
+				var fa = propAttr($f, opts.fragHeadAttr);
 				if (fa) {
 					var fas = fa.split('=');
 					if (fas.length == 2) {
@@ -1800,8 +1828,8 @@
 		function isExcludedVal($el) {
 			return $el.is(':disabled')
 					|| (!$el.is(':checked')
-							&& $el.prop('nodeName').toLowerCase() == 'input' && opts.regexParamCheckable
-							.test($el.prop('type')));
+							&& propAttr($el, 'nodeName').toLowerCase() == 'input' && opts.regexParamCheckable
+							.test(propAttr($el, 'type')));
 		}
 
 		/**
@@ -1994,8 +2022,8 @@
 								&& rpp.toLowerCase() != opts.selfRef
 										.toLowerCase()
 								&& !REGEX_CDATA.test(rpp)) {
-							rpp = adjustPath(t.ctxPath, rpp, script ? script
-									.attr(opts.fragExtensionAttr) : '');
+							rpp = adjustPath(t.ctxPath, rpp, script ? propAttr(
+									script, opts.fragExtensionAttr) : '');
 						} else if (f.frs.resultSiphon()) {
 							rpp = opts.selfRef;
 						}
@@ -2060,8 +2088,8 @@
 					return ps;
 				}
 				var v = !r.directive ? $p.val() : r.directive == DTEXT ? $p
-						.text() : r.directive == DHTML ? $p.html() : $p
-						.attr(r.directive);
+						.text() : r.directive == DHTML ? $p.html() : propAttr(
+						$p, r.directive);
 				if (v !== undefined && v !== null) {
 					if ($.isArray(v)) {
 						if (uj) {
@@ -2188,7 +2216,7 @@
 				if (rr && rr.directive && rr.directive != DTEXT
 						&& rr.directive != DHTML) {
 					// try to get the result as an attribute
-					rslt = rIsJ ? r.attr(rr.directive) : null;
+					rslt = rIsJ ? propAttr(r, rr.directive) : null;
 				} else {
 					// try to format result as text (if needed)
 					rslt = rIsJ && rr && rr.directive == DTEXT ? getTextVals(r)
@@ -2259,7 +2287,7 @@
 				if (iu) {
 					var tq = 0;
 					if (isAttr(dr)) {
-						$ds.attr(dr.directive, '');
+						propAttr($ds, dr.directive, '');
 					} else if (rr && (!dr.directive || dr.directive == DHTML)) {
 						// remove any existing prior result node(s) that may
 						// exist under the destination that match the result
@@ -2287,13 +2315,13 @@
 					// no result, but is directed for an attribute- must be
 					// self-referencing
 					altr = function($d, $r) {
-						return $d.attr(rr.directive);
+						return propAttr($d, rr.directive);
 					};
 				} else if (isAttr(dr)) {
 					// result needs to be set on attribute
 					altr = function($d, $r) {
-						var v = ia && !iu ? $d.attr(dr.directive) : null;
-						$d.prop(dr.directive, (v ? v : '') + getTextVals($r));
+						var v = ia && !iu ? propAttr($d, dr.directive) : null;
+						propAttr($d, dr.directive, (v ? v : '') + getTextVals($r));
 					};
 				} else if (r instanceof jQuery && dr.directive == DTEXT) {
 					// result needs to be text
@@ -2457,7 +2485,7 @@
 			}
 			var $s = script;
 			if ($s && $s.length > 0) {
-				return $s.attr(attr);
+				return propAttr($s, attr);
 			}
 		}
 
@@ -2479,11 +2507,11 @@
 					el = el.parent();
 				}
 				el.trigger(evt);
-				var sfc = script && evt.chain === opts.eventFragChain ? script
-						.attr(opts.fragListenerAttr)
+				var sfc = script && evt.chain === opts.eventFragChain ? propAttr(
+						script, opts.fragListenerAttr)
 						: null;
-				var sfsc = script && evt.chain === opts.eventFragsChain ? script
-						.attr(opts.fragsListenerAttr)
+				var sfsc = script && evt.chain === opts.eventFragsChain ? propAttr(
+						script, opts.fragsListenerAttr)
 						: null;
 				if (sfc || sfsc) {
 					var fs = sfc ? sfc : sfsc;
@@ -2769,7 +2797,7 @@
 						var sd = this.frp.pathSiphon().indexOf(DATA_JS);
 						sd = sd > -1 ? this.frp.pathSiphon().substr(
 								DATA_JS.length) : this.frp.pathSiphon();
-						var ss = r.prop('type');
+						var ss = propAttr(r, 'type');
 						$('<script' + (typeof ss === 'string' && ss.length > 0 ? 
 							' type="' + ss + '">' : '>') + sd + 
 									'</script>').appendTo(this.frs.resultSiphon());
@@ -3103,7 +3131,7 @@
 					sf.rslt(sf.el, null, jqxhr, ts, e);
 					cb(jqxhr && (!ts || !e) ? $t : null, sf);
 				}
-				var url = $x.prop('src');
+				var url = propAttr($x, 'src');
 				var hasu = url && url.length > 0;
 				var hasdu = hasu && url.indexOf(DATA_JS) >= 0;
 				t.len++;
@@ -3151,47 +3179,52 @@
 				// TITLE/BASE/META and some strip out KEYGEN/PROGRESS/SOURCE. so, we
 				// can't use the typical JQuery/browser parsing on the result for
 				// those tags.
-				var hs = '<head ';
-				var he = '</head>';
-				var his = r.indexOf(hs);
-				if (his > -1) {
-					var hie = r.indexOf(he);
-					var hr = '<div ' + r.substring(his + hs.length, hie) + '</div>';
-					hr = hr.substring(0, hr.indexOf('>') + 1);
-					var $hr = $(hr + '</div>');
-					var ha = getFragAttr($hr, opts.fragAttrs);
-					if (ha && ha == f.frs.resultSiphon($hr)) {
-						hr = hr.replace(/div/g, 'head');
-						hr = r.substring(r.indexOf(hr) + hr.length, r.indexOf(he));
-						var $h = $('head');
-						hr = htmlDataAdjust(t, f, hr);
-						var hf = new Frag(null, $s, $h, t);
-						// prevent script from auto loading
-						var scs = hr.match(opts.regexScriptTags);
-						if (scs) {
-							$.each(scs, function(i, sc) {
-								doScript(hf, $h, $(sc), cb);
-								hr = hr.replace(sc, '');
-							});
+				var ris = typeof r === 'string';
+				if (ris) {
+					var hs = '<head ';
+					var he = '</head>';
+					var his = r.indexOf(hs);
+					if (his > -1) {
+						var hie = r.indexOf(he);
+						var hr = '<div ' + r.substring(his + hs.length, hie)
+								+ '</div>';
+						hr = hr.substring(0, hr.indexOf('>') + 1);
+						var $hr = $(hr + '</div>');
+						var ha = getFragAttr($hr, opts.fragAttrs);
+						if (ha && ha == f.frs.resultSiphon($hr)) {
+							hr = hr.replace(/div/g, 'head');
+							hr = r.substring(r.indexOf(hr) + hr.length, r
+									.indexOf(he));
+							var $h = $('head');
+							hr = htmlDataAdjust(t, f, hr);
+							var hf = new Frag(null, $s, $h, t);
+							// prevent script from auto loading
+							var scs = hr.match(opts.regexScriptTags);
+							if (scs) {
+								$.each(scs, function(i, sc) {
+									doScript(hf, $h, $(sc), cb);
+									hr = hr.replace(sc, '');
+								});
+							}
+							// head is special case that does not require
+							// multiple result/destination compilations
+							hf.rslt(hr);
+							hf.dest();
+							cb($h, f);
+							return;
 						}
-						// head is special case that does not require multiple
-						// result/destination compilations
-						hf.rslt(hr);
-						hf.dest();
-						cb($h, f);
-						return;
 					}
 				}
 				// capture results
-				var rslt = htmlDataAdjust(t, f, r);
-				var $c = f.frs.parse(rslt);
+				var rslt = ris ? htmlDataAdjust(t, f, r) : r;
+				var $c = ris ? f.frs.parse(rslt) : rslt;
 				// loop through the resolvers separately in order to handle any
 				// directives that may be defined
 				var $rslts = f.frs.each($c, null, xhr, function(i, rr) {
 					// need to re-parse result because any nodes that may be
 					// appended to a destination from a previous result resolver
 					// iteration will no longer be present in the result node
-					var $fs = rr.selectFrom(i == 0 ? $c : f.frs.parse(rslt));
+					var $fs = rr.selectFrom(i == 0 || !ris ? $c : f.frs.parse(rslt));
 					if ($fs.length <= 0) {
 						// nothing found
 						return true;
@@ -3232,7 +3265,7 @@
 					}
 					if (f.frp.pathSiphon() == opts.selfRef) {
 						// fragment is within current page
-						lcont(f, cb, $('html').html(), opts.selfRef, null);
+						lcont(f, cb, $('html'), opts.selfRef, null);
 						return;
 					}
 					// when the fragment path is the 1st one in the queue retrieve it
@@ -3416,7 +3449,7 @@
 			regexVarNameVal : /((?:\\.|[^=,]+)*)=("(?:\\.|[^"\\]+)*"|(?:\\.|[^,"\\]+)*)/g,
 			regexParamCheckable : /^(?:checkbox|radio)$/i,
 			regexParamReplace : /\r?\n/g,
-			regexDestTextOrAttrVal : /[^\x21-\x7E]+/g,
+			regexDestTextOrAttrVal : /[^\x21-\x7E\s]+/g,
 			paramReplaceWith : '\r\n',
 			resultWrapperTagName : DFTL_RSLT_NAME,
 			eventIsBroadcast : true,
@@ -3499,8 +3532,8 @@
 				cb(null, null, null, null);
 			}
 		}
-		preloadResources(script.attr(FRAGS_PRE_LOAD_CSS_ATTR), script
-				.attr(FRAGS_PRE_LOAD_JS_ATTR), function (s, d, ts, jqxhr, e) {
+		preloadResources(propAttr(script, FRAGS_PRE_LOAD_CSS_ATTR), propAttr(script,
+				FRAGS_PRE_LOAD_JS_ATTR), function (s, d, ts, jqxhr, e) {
 			if (e) {
 				var ne = 'Unable to load "' + s + '" ' + e + ', status: ' + ts
 						+ ', data: ' + d;
