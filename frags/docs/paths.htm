@@ -12,13 +12,13 @@
 				Because <b>thymus.js</b> runs on the client it's not inherently
 				application context aware. Therefore, <b>thymus.js</b> uses a
 				configurable
-				<code>data-thx-context-path</code>
+				<code>data-thx-base-path</code>
 				attribute on the <b>thymus.js</b> script tag. It's value establishes
 				the path to the root context of the application that will be
 				resolved along with the fragment's <b>path siphon</b>. <b>path
 					siphon</b>s can point to resources with different path levels. So, it's
 				important that the
-				<code>data-thx-context-path</code>
+				<code>data-thx-base-path</code>
 				synchronizes with the resources defined within the <b>path
 					siphon</b>. For example, a fragment that resides in <b>example.com/my-app/frags/nav.htm</b>
 				may also be included in <b>example.com/my-app/index.htm</b> as well
@@ -56,7 +56,7 @@
 <span style="color: #000080; font-weight: bold">&lt;script </span><span
 						style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span
 						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> <span
-						style="color: #FF0000">data-thx-context-path=</span><span
+						style="color: #FF0000">data-thx-base-path=</span><span
 						style="color: #0000FF">&quot;.&quot;</span><span
 						style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
@@ -71,14 +71,14 @@
 <span style="color: #000080; font-weight: bold">&lt;script </span><span
 						style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span
 						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span><span
-						style="color: #FF0000">data-thx-context-path=</span><span
+						style="color: #FF0000">data-thx-base-path=</span><span
 						style="color: #0000FF">&quot;../&quot;</span> <span
 						style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
 </pre></div>
 			<p>
 				Notice that in both resources the
-				<code>data-thx-context-path</code>
+				<code>data-thx-base-path</code>
 				points to <b>example.com/my-app</b> with <b>my-app</b> being the
 				root context (<b>example.com/my-app/index.htm</b> uses <b>"."</b>
 				which infers the current path; which would be <b>example.com/my-app/</b>
@@ -113,7 +113,7 @@
 <span style="color: #000080; font-weight: bold">&lt;script </span><span
 						style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span
 						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
-	<span style="color: #FF0000">data-thx-context-path=</span><span
+	<span style="color: #FF0000">data-thx-base-path=</span><span
 						style="color: #0000FF">&quot;.&quot;</span> <span
 						style="color: #FF0000">data-thx-frag-extension=</span><span
 						style="color: #0000FF">&quot;.htm&quot;</span><span
@@ -149,7 +149,7 @@
 <span style="color: #000080; font-weight: bold">&lt;script </span><span
 						style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span
 						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
-	<span style="color: #FF0000">data-thx-context-path=</span><span
+	<span style="color: #FF0000">data-thx-base-path=</span><span
 						style="color: #0000FF">&quot;.&quot;</span> <span
 						style="color: #FF0000">data-thx-frag-extension=</span><span
 						style="color: #0000FF">&quot;inherit&quot;</span><span
@@ -185,7 +185,7 @@
 <span style="color: #000080; font-weight: bold">&lt;script </span><span
 						style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;../js/thymus.js&quot;</span> <span
 						style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span>
-	<span style="color: #FF0000">data-thx-context-path=</span><span
+	<span style="color: #FF0000">data-thx-base-path=</span><span
 						style="color: #0000FF">&quot;.&quot;</span><span
 						style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
 <span style="color: #008800; font-style: italic">&lt;!-- and the following includes/replacements --&gt;</span>
