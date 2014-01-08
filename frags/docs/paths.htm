@@ -1152,11 +1152,17 @@
 				Most frameworks hold references to bound elements in order to <i>bind</i>
 				data between other elements, but in light of potential issues
 				surrounding that technique <b>thymus.js</b> simply uses JQuery
-				selectors as the binding source. So, instead trying to keep track of
-				what element is bound to other elements, <a href="#httpmethods"><b>siphon
-						attribute</b>s</a> are used in a similar fashion to how they are used
-				while retrieving fragments. The difference is that instead of using
-				an actual path the <b>path siphon</b> uses
+				selectors as the binding source. So, there is no need trying to keep
+				track of what element is bound to other elements, register multiple
+				event listeners or duplicate efforts by maintaining model
+				definitions within clients via JS. The selector(s) will perform data
+				compisition by pushing/pulling state to/from their corresponding
+				elements. In a sense, this dynamically constructs and/or consumes an
+				application's model schema. <a href="#httpmethods"><b>siphon
+						attribute</b>s</a> are used to fulfill this function and are defined in a
+				similar fashion to how they are used while retrieving fragments from
+				a server. The difference is that instead of using an actual path the
+				<b>path siphon</b> uses
 				<code>this</code>
 				. Consider the following:
 			</p>
