@@ -2,9 +2,13 @@
 var $lt = null, $pt = null, $pi = null, loaded = false;
 function fragListener(event) {
 	// var $source = $(this);
-	if (event.type != 'load') {
-		if (event.type == 'beforehttp'
-				&& event.pathSiphon.indexOf('frags/cancel') >= 0) {
+	var isl = event.type != 'load';
+	var isb = isl || event.type != 'beforehttp';
+	if (!isl && !isb) {
+		return;
+	}
+	if (isl) {
+		if (isb && event.pathSiphon.indexOf('frags/cancel') >= 0) {
 			// example that shows how to prevent a fragment from showing
 			event.preventDefault();
 		}

@@ -2612,6 +2612,7 @@
 			this.ccnt = 0;
 			this.cnt = 0;
 			this.len = 0;
+			var done = false;
 			var c = [];
 			this.addFrag = function(f) {
 				var url = f.pseudoUrl();
@@ -2658,6 +2659,10 @@
 			};
 			this.elapsedTime = function(t) {
 				return (t ? t : (new Date()).getTime()) - start.getTime();
+			};
+			this.hasJustCompleted = function() {
+				return !done && this.cnt >= this.len ? (done = true)
+						: false;
 			};
 		}
 
@@ -3081,7 +3086,7 @@
 				if (f) {
 					f.done();
 				}
-				if (t.cnt >= t.len) {
+				if (t.hasJustCompleted()) {
 					if (typeof func === 'function') {
 						func(t.scope, t.cnt, t.getErrors());
 					}
