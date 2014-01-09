@@ -30,12 +30,12 @@
 				<li><a th:title="#{navcontrol}" class="app-tooltip-bottom"
 					title="Fragment Routing and Transition Control" href="#navcontrol"><i
 						class="fa fa-compass"></i></a></li>
-				<li><a th:title="#{usage}"
-					class="app-tooltip-bottom" title="Transclusion" href="#usage"><i
-						class="fa fa-code"></i></a></li>
 				<li><a th:title="#{paths}"
 					class="app-tooltip-bottom" title="Path/Siphon Resolution" href="#paths"><i
 						class="fa fa-link"></i></a></li>
+				<li><a th:title="#{usage}"
+					class="app-tooltip-bottom" title="Transclusion" href="#usage"><i
+						class="fa fa-code"></i></a></li>
 				<li><a th:title="#{advusage}" class="app-tooltip-bottom"
 					title="Events, Handlers and Programmatic Usage" href="#advusage"><i
 						class="fa fa-eye"></i></a></li>
@@ -230,8 +230,8 @@
 				</div>
 			</div>
 			<div th:replace="frags/docs/nav :: #navcontrol"></div>
-			<div th:replace="frags/docs/usage :: #usage"></div>
 			<div th:replace="frags/docs/paths :: #paths"></div>
+			<div th:replace="frags/docs/usage :: #usage"></div>
 			<div th:replace="frags/docs/adv :: #advusage"></div>
 			<div th:replace="frags/docs/server :: #thymeleaf"></div>
 		</div>

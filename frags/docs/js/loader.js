@@ -38,8 +38,9 @@ function fragsListener(event) {
 	loaded = true;
 	event.log();
 	if ($pt) {
-		$pt.html($pt.html() + ' of ' + event.fragCount + ' fragment(s) @ ' 
-				+ (event.loadTime / 1000) + ' sec');
+		$pt.html($pt.html() + ' of ' + event.fragCount + ' frags &amp; '
+				+ (event.fragAdjustments ? event.fragAdjustments.length : 0)
+				+ ' adjustments @ ' + (event.loadTime / 1000) + ' sec');
 	}
 	if (event.scope.prop('tagName').toLowerCase() !== 'html') {
 		updateUI(event);

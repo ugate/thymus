@@ -263,6 +263,8 @@
 			var $d = dc.cache();
 			var $r = rc.cache();
 			if ($d && $r) {
+				// don't use wrapper in destinations
+				$r = $r.is(DFTL_RSLT_NAME) ? $r.contents() : $r;
 				var f = typeof alt === 'function' ? function(i, r) {
 					return alt($d, $r, i, this);
 				} : null;
@@ -1598,12 +1600,17 @@
 				if (el) {
 					if (!script.is(el)) {
 						var nm = propAttr(el, a.items[ai].name);
-						propAttr(el, nm, absoluteUrl(nm, t.ctxPath));
+						ov = propAttr(el, nm);
+						nv = absoluteUrl(nm, t.ctxPath);
+						propAttr(el, nm, nv);
+						f.addAdjustments(el, ov, nv, a.items[ai].name);
 					}
 					return '';
 				} else {
-					return ' ' + a.items[ai].name + '="'
-							+ absoluteUrl(v, t.ctxPath) + '"';
+					var nm = a.items[ai].name;
+					var nv = absoluteUrl(v, t.ctxPath);
+					f.addAdjustments(el || f.el, v, nv, a.items[ai].name);
+					return ' ' + nm + '="' + nv + '"';
 				}
 			}
 			var evts = splitWithTrim(v, opts.multiSep);
@@ -1635,6 +1642,8 @@
 							});
 					so.onEvent = rtn.eventAttrValue;
 					so.eventSiphon = rtn.eventName;
+					f.addAdjustments(el || f.el, null, so.eventSiphon,
+							a.items[ai].name);
 					rs[rs.length] = so;
 				} else {
 					t.addError('Expected an event for action "'
@@ -1673,9 +1682,11 @@
 				}
 			} else {
 				var v = '';
+				// TODO should see about removing URL attributes from selection
+				// because they are pre-processed
 				s.find(a.sel).each(function() {
 					var $c = $(this);
-					for ( var i = 0; i < a.items.length; i++) {
+					for (var i = 0; i < a.items.length; i++) {
 						v = propAttr($c, a.items[i].name);
 						if (v) {
 							r = updateNav(t, f, a, i, v, $c);
@@ -1889,27 +1900,32 @@
             // selects node(s) from an element using the internal
 			// selector either as a self-selection, a find or filter
 			this.selectFrom = function($el, be) {
-				if (!s) {
-					return '';
-				}
-				var $p = $el ? $el : $('html');
-				var sbe = null;
-				var jqs = this.selector instanceof jQuery;
-				if (jqs && this.selector.is($p)) {
-					return $p;
-				}
-				var $r = $p.find(this.selector);
-				if ($r.length <= 0) {
-					if (jqs && be) {
-						sbe = genAttrSelByExample(this.selector);
-						$r = $p.find(sbe);
+				var $r = null;
+				if (s && this.selector) {
+					var $p = $el ? $el : $('html');
+					var sbe = null;
+					var jqs = this.selector instanceof jQuery;
+					if (jqs && this.selector.is($p)) {
+						return $p;
+					} else if (jqs && this.selector.is(DFTL_RSLT_NAME)) {
+						// don't use wrapper for selections
+						return $p.contents();
 					}
+					$r = $p.find(this.selector);
 					if ($r.length <= 0) {
-						$r = $p.filter(this.selector);
-						if (sbe && $r.length <= 0) {
-							$r = $p.filter(sbe);
+						if (jqs && be) {
+							sbe = genAttrSelByExample(this.selector);
+							$r = $p.find(sbe);
+						}
+						if ($r.length <= 0) {
+							$r = $p.filter(this.selector);
+							if (sbe && $r.length <= 0) {
+								$r = $p.filter(sbe);
+							}
 						}
 					}
+				} else {
+					$r = $();
 				}
 				return $r;
 			};
@@ -2042,15 +2058,15 @@
 		 * @constructor
 		 * @param t
 		 *            the {FragsTrack}
-		 * @param m
-		 *            the HTTP method
+		 * @param f
+		 *            the {Frag}
 		 * @param ps
 		 *            the raw parameter siphon string
 		 * @param vars
 		 *            the associative array cache of names/values variables used
 		 *            for <b>surrogate siphon resolver</b>s
 		 */
-		function FragParamSiphon(t, m, ps, vars) {
+		function FragParamSiphon(t, f, ps, vars) {
 			var pnr = null;
 			var psp = null;
 			var pspp = null;
@@ -2113,7 +2129,7 @@
 			function resolve(uj, psn) {
 				var psx = getNewPs(uj, psn);
 				if (psx) {
-					psp = siphonValues(psx, m, vars, opts.paramSep, null);
+					psp = siphonValues(psx, f.method, vars, opts.paramSep, null);
 					pnr = new NodeResolvers(psp);
 				}
 				return psx;
@@ -2602,11 +2618,6 @@
 			this.isTopLevel = isTopLevelEl(s);
 			this.ctxPath = getAppCtxPath(opts.regexAbsPath, opts.pathSep,
 					bypassPath);
-			this.isSelfSelect = siphon && s.is(siphon.selector);
-			this.scope = s;
-			this.siphon = siphon ? siphon : {};
-			this.siphon.vars = this.siphon.vars ? this.siphon.vars : new Vars(
-					opts.regexVarNameVal, opts.regexVarSiphon);
 			this.navOpts = navOpts;
 			this.cancelled = false;
 			this.ccnt = 0;
@@ -2614,6 +2625,21 @@
 			this.len = 0;
 			var done = false;
 			var c = [];
+			this.resetSiphon = function(ns, scope, ss, rv) {
+				if (scope) {
+					this.scope = scope;
+				}
+				this.siphon = typeof ns === 'object' ? ns : {
+					selector : ns
+				};
+				this.isSelfSelect = typeof ss !== 'undefined' ? ss : this.scope
+						.is(this.siphon.selector);
+				if (rv || !this.siphon.vars) {
+					this.siphon.vars = new Vars(opts.regexVarNameVal,
+							opts.regexVarSiphon);
+				}
+			};
+			this.resetSiphon(siphon, s);
 			this.addFrag = function(f) {
 				var url = f.pseudoUrl();
 				if (c[url]) {
@@ -2664,6 +2690,7 @@
 				return !done && this.cnt >= this.len ? (done = true)
 						: false;
 			};
+			this.adjustments = null;
 		}
 
 		/**
@@ -2910,6 +2937,23 @@
 				} while ((cf = cf.pf));
 				return us;
 			};
+			this.adjustments = null;
+			this.addAdjustments = function(el, ov, nv, an) {
+				var c = {
+					scope : el,
+					oldValue : ov,
+					newValue : nv,
+					attrName : an
+				};
+				if (!this.adjustments) {
+					this.adjustments = [];
+				}
+				if (!t.adjustments) {
+					t.adjustments = [];
+				}
+				this.adjustments[this.adjustments.length] = c;
+				t.adjustments[t.adjustments.length] = c;
+			};
 			this.toString = function() {
 				return lbls('object', this.constructor.name, 'options',
 						this.navOpts.toString(), 'HTTP method', this.method,
@@ -2947,6 +2991,7 @@
 			o.fragWinOptions = f ? f.navOpts.options : undefined;
 			o.fragWinHistoryFlag = f ? f.navOpts.history : undefined;
 			o.fragStack = f ? f.getStack() : undefined;
+			o.fragAdjustments = f ? f.adjustments : undefined;
 			o.sourceEvent = f ? f.event : undefined;
 			o.paramsSiphon = f ? f.fps.paramSiphon() : undefined;
 			o.parameters = f ? f.fps.params() : undefined;
@@ -3008,6 +3053,7 @@
 		function genFragsEvent(chain, type, t) {
 			var e = $.Event(type);
 			e.chain = chain;
+			e.fragAdjustments = t.adjustments;
 			e.fragCancelCount = t.ccnt;
 			e.fragCount = t.cnt;
 			e.scope = t.scope;
@@ -3069,10 +3115,7 @@
 		 */
 		function loadFragments(scopeSel, siphon, nav, func) {
 			var $s = $(scopeSel);
-			var so = typeof siphon === 'object' ? siphon : {
-				selector : siphon
-			};
-			var t = new FragsTrack($s, so, nav);
+			var t = new FragsTrack($s, siphon, nav);
 			broadcast(opts.eventFragsChain, opts.eventFragsBeforeHttp, t);
 			if (t.cancelled) {
 				return;
@@ -3321,10 +3364,19 @@
 				lfg(pf, $fl, function($cf, f) {
 					// process any nested fragments
 					if ($cf) {
-						lfi($cf, f);
-					} else {
-						done(pf, t, f);
+						var nf = false;
+						if (t.siphon.selector instanceof jQuery) {
+							// need to check destination(s) for nested fragments
+							var fsr = new Resolver(fragSelector);
+							$cf = fsr.selectFrom($cf);
+							// scope needs to revert to the default fragment
+							// selector (not self select)
+							t.resetSiphon(fragSelector, $cf, false);
+							nf = true;
+						}
+						lfi($cf, f, nf);
 					}
+					done(pf, t, f);
 				});
 			}
 			// IE strips any attributes in the HEAD tag so we use the thymus script
@@ -3343,8 +3395,9 @@
 				}
 			}
 			// recursivly process all the includes/replacements
-			function lfi($f, f) {
-				var $fs = t.isSelfSelect && $f.is(t.scope) ? $f : $f.find(so.selector);
+			function lfi($f, f, nf) {
+				var $fs = nf || (t.isSelfSelect && $f.is(t.scope)) ? $f : $f
+						.find(t.siphon.selector);
 				t.len += $fs.length;
 				$fs.each(function() {
 					lfc(f, $(this));

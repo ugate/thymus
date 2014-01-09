@@ -240,6 +240,26 @@
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
+							<code>fragAdjustments</code>
+						</div>
+						<div class="col-md-10">
+							an array of objects that represent adjustments made to the DOM
+							during transclusion (null when no adjustments were made). Each
+							item will have the following properties:
+							<ul>
+								<li><code>scope</code> - the node in which the adjustment
+									was made within</li>
+								<li><code>oldValue</code> - the value before the adjustment
+									was made</li>
+								<li><code>newValue</code> - the value after the adjustment
+									was made</li>
+								<li><code>attrName</code> - the attribute that was adjusted
+									(if any)</li>
+							</ul>
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
 							<code>fragPendingPeerCount</code>
 						</div>
 						<div class="col-md-10">the number of child fragments that
@@ -465,6 +485,26 @@
 						<div class="col-md-10">the total number of attempts made to
 							load encompassing fragments (including child/nested fargments and
 							scripts)</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>fragAdjustments</code>
+						</div>
+						<div class="col-md-10">
+							an array of objects that represent adjustments made to the DOM
+							during transclusion (null when no adjustments were made). Each
+							item will have the following properties:
+							<ul>
+								<li><code>scope</code> - the node in which the adjustment
+									was made within</li>
+								<li><code>oldValue</code> - the value before the adjustment
+									was made</li>
+								<li><code>newValue</code> - the value after the adjustment
+									was made</li>
+								<li><code>attrName</code> - the attribute that was adjusted
+									(if any)</li>
+							</ul>
+						</div>
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">

@@ -15,7 +15,7 @@
 				to move model/view content to and from the DOM. There are a few
 				use cases that are worth mentioning that will provide insight into
 				how fragment resolution is impacted during the process. For
-				simplicity sake we will use short-hand version for the <b>routing
+				simplicity sake we will use short-hand version for the <b>siphon
 					attribute</b>s in the examples to follow.
 			</p>
 			<h3 id="nestedfrags">Multi-Level Nested Fragments</h3>
@@ -29,16 +29,17 @@
 				loaded and its content made available for any subsequent fragments
 				that are encountered that point to the same <b>path siphon</b>. It
 				also prevents unnecessary calls to fragment <b>path</b>s that might
-				be used in more than one <b>routing attribute</b> throughout the
-				fragment load action. For instance, when a <b>routing attribute</b>
-				is encountered that contains
+				be used in more than one <b>siphon attribute</b> throughout the
+				fragment load action. For instance, when a node is encountered that
+				contains
 				<code>frags/nav/nav</code>
 				as its <b>path siphon</b> and
 				<code>.topnav</code>
-				as its <b>result siphon</b> it may discover another <b>routing
-					attribute</b> within its own <b>path siphon</b>. Lets say the <b>routing
-					attribute</b> found within the fragment's <b>path siphon</b>/<b>result
-					siphon</b> is another
+				as its <b>result siphon</b> it may discover another node that has
+				its own <b>siphon attribute</b>s within the content from the initial
+				<b>path siphon</b>. Lets say the <b>siphon attribute</b> found
+				within the fragment's <b>path siphon</b>/<b>result siphon</b> is
+				another
 				<code>data-thx-replace</code>
 				that defines it's own <b>path siphon</b> as
 				<code>frags/user/user</code>
@@ -48,53 +49,71 @@
 				<code>frags/user/user</code>
 				, select
 				<code>.user</code>
-				and replace the defining DOM node with the <b>result siphon</b>/JQuery
-				selector content. To illustrate this concept consider the following:
+				and replace the defining DOM node with the node(s) selected from its
+				<b>result siphon</b>. To illustrate this concept consider the
+				following:
 			</p>
-<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
-<span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">class=</span><span
-								style="color: #0000FF">&quot;topnav&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-replace=</span><span
-								style="color: #0000FF">&quot;frags/user/user :: .user&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-		...
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- and assume a resource resides at &quot;frags/nav/user&quot; --&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">class=</span><span
-								style="color: #0000FF">&quot;user&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-	...
-<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- and the current page contains --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">data-thx-replace=</span><span
-								style="color: #0000FF">&quot;frags/nav/nav :: .topnav&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
-<span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">class=</span><span
-								style="color: #0000FF">&quot;topnav&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-		<span style="color: #000080; font-weight: bold">&lt;div</span> <span
-								style="color: #FF0000">class=</span><span
-								style="color: #0000FF">&quot;user&quot;</span><span
-								style="color: #000080; font-weight: bold">&gt;</span>
-			...
-		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
-<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<button id="tsr1" class="btn btn-primary" data-thx-get="click"
+										data-thx-get-type="async|update" data-thx-result="|{}"
+										data-thx-get-path="frags/user/form" 
+										data-thx-get-dest=".tsr1-1">Run</button>
+								</div>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<strong>Nested Fragments:</strong>
+						</div>
+						<div class="list-group-item">
+							<div class="tsr1-1"></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button id="msr4Sel" class="btn btn-primary"
+										data-thx-get="click" 
+										data-thx-get-path="user/example?page=?{#tsr1->?{#tsr1->data-thx-get}->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">
+										Fragments</button>
+								</div>
+							</div>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;tsr1&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;async|update&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/form&quot;</span> 
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;.tsr1-1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Run<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Nested Fragments:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;tsr1-1&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
 </pre></div>
+					</div>
+				</div>
+			</div>
+			<div class="alert alert-warning">
+				<strong>Warning:</strong> Keep in mind that any fragments loaded via
+				an <strong>update</strong> that have nested fragments that use <strong>replace</strong>
+				will not be removed from destination(s) prior to consecutive
+				transclusions. Therefore, those elements will behave like includes.
+				The only exception to this rule is <a href="#explicitupdatewarn">when
+					a <b>result siphon</b> has not been defined
+				</a>.
+			</div>
 			<h3 id="headfrags">Head Fragments</h3>
 			<p>
 				Almost every browser removes
@@ -135,8 +154,8 @@
 			<p>
 				<code>script</code>
 				tags will be inserted individually in the order they are defined
-				within a <b>routing attribute</b>'s <b>result siphon</b>. Just like
-				any other <b>result siphon</b>s for <i>view</i>s,
+				within a <b>result siphon</b>. Just like any other <b>result
+					siphon</b>s for <i>view</i>s,
 				<code>script</code>
 				tags found within a <b>result siphon</b> will also fire a <a
 					href="#frag">fragment event</a> for each script that is loaded
@@ -235,8 +254,8 @@
 			</ul>
 			<p>
 				Because there is no <b>result siphon</b> assocaited with the
-				returned data it can be ommitted from the <b>routing attribute</b>.
-				So, only a <b>path</b> will remain. Similar to the following:
+				returned data it can be ommitted. So, only a <b>path</b> will
+				remain. Similar to the following:
 			</p>
 <div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- the the following replacement --&gt;</span>
 <span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
