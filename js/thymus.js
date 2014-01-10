@@ -79,10 +79,10 @@
 		var $pel = $(pel);
 		var func = fx;
 		var event = en;
-		function on() {
-			var rtn = func($pel, $(this));
+		function on(evt) {
+			var rtn = func($pel, $(this), evt);
 			if (typeof rfx === 'function') {
-				rfx(rtn);
+				rfx(rtn, evt);
 			}
 		}
 		this.update = function(pel, en, fx, add) {
@@ -1306,6 +1306,7 @@
 			this.agentSiphon = '';
 			this.withSiphon = '';
 			this.funcName = '';
+			this.sourceEvent = null;
 			this.isValid = ma || evt;
 			this.captureAttrs = function(el, vars, ml, ow) {
 				if (this.isValid && el) {
@@ -1626,7 +1627,7 @@
 					so.eventAttrs = a.items;
 					so.typeSiphon = a.type;
 					var rtn = addOrUpdateEventFunc(ctx, so.action, so.method,
-							f.pel, el, so.eventSiphon, function(pel, ib) {
+							f.pel, el, so.eventSiphon, function(pel, ib, sevt) {
 								var $ib = $(ib);
 								if (!so.captureAttrs($ib, t.siphon.vars, false, true)) {
 									// the event is no longer valid because the
@@ -1636,6 +1637,7 @@
 									// listener by returning true
 									return true;
 								}
+								so.sourceEvent = sevt;
 								so.selector = ib;
 								ctx.exec(so, pel, ib);
 								return false;
@@ -2517,7 +2519,9 @@
 		 */
 		function broadcastFragEvent(evt) {
 			try {
-				var el = evt.source ? evt.source : evt.scope;
+				var el = evt.sourceEvent ? $(evt.sourceEvent.target)
+						: evt.source ? evt.source : evt.target ? evt.target
+								: evt.scope;
 				// TODO : audio/video custom event trigger will cause media to refresh
 				if (el.is('video') || el.is('audio')) {
 					el = el.parent();
@@ -2626,12 +2630,18 @@
 			var done = false;
 			var c = [];
 			this.resetSiphon = function(ns, scope, ss, rv) {
-				if (scope) {
+				if (scope instanceof jQuery && scope.length > 0) {
 					this.scope = scope;
 				}
-				this.siphon = typeof ns === 'object' ? ns : {
-					selector : ns
-				};
+				if (typeof ns === 'object') {
+					this.siphon = ns;
+				} else if (this.siphon) {
+					this.siphon.selector = ns;
+				} else {
+					this.siphon = {
+						selector : ns
+					};
+				}
 				this.isSelfSelect = typeof ss !== 'undefined' ? ss : this.scope
 						.is(this.siphon.selector);
 				if (rv || !this.siphon.vars) {
@@ -2741,7 +2751,7 @@
 			}
 			// short-hand attrs may have path and result siphon
 			a = a ? a.split(opts.multiSep) : null;
-			this.event = siphon.eventSiphon;
+			this.eventSiphon = siphon.eventSiphon;
 			this.method = siphon.method ? siphon.method
 					: opts.ajaxTypeDefault;
 			this.getVars = function() {
@@ -2992,7 +3002,8 @@
 			o.fragWinHistoryFlag = f ? f.navOpts.history : undefined;
 			o.fragStack = f ? f.getStack() : undefined;
 			o.fragAdjustments = f ? f.adjustments : undefined;
-			o.sourceEvent = f ? f.event : undefined;
+			o.sourceEvent = t.siphon.sourceEvent;
+			o.eventSiphon = f ? f.eventSiphon : undefined;
 			o.paramsSiphon = f ? f.fps.paramSiphon() : undefined;
 			o.parameters = f ? f.fps.params() : undefined;
 			o.pathSiphon = f ? f.frp.pathSiphon() : undefined;
@@ -3002,7 +3013,7 @@
 			o.destScope = f ? f.destScope instanceof jQuery ? f.destScope
 					: f.el : undefined;
 			o.error = f ? f.e : undefined;
-			o.scope = t.scope;
+			o.scope = f ? f.el : t.scope;
 			o.chain = opts.eventFragChain;
 			o.variables = f ? f.getVars() : t.siphon ? t.siphon.vars.get()
 					: undefined;
@@ -3053,6 +3064,7 @@
 		function genFragsEvent(chain, type, t) {
 			var e = $.Event(type);
 			e.chain = chain;
+			e.sourceEvent = t.siphon.sourceEvent;
 			e.fragAdjustments = t.adjustments;
 			e.fragCancelCount = t.ccnt;
 			e.fragCount = t.cnt;
