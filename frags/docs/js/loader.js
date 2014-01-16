@@ -35,6 +35,7 @@ function fragsListener(event) {
 	if (event.type != 'load') {
 		return;
 	}
+	var firstLoad = !loaded;
 	loaded = true;
 	event.log();
 	if ($pt) {
@@ -42,13 +43,13 @@ function fragsListener(event) {
 				+ (event.fragAdjustments ? event.fragAdjustments.length : 0)
 				+ ' adjustments @ ' + (event.loadTime / 1000) + ' sec');
 	}
-	if (event.scope.prop('tagName').toLowerCase() !== 'html') {
+	if (event.actionScope.prop('tagName').toLowerCase() !== 'html') {
 		updateUI(event);
 		return;
 	}
 	$('#loadThymus').css('display', 'none');
 	$('#fragTotal').text(event.fragCount);
-	initUI(event.errors);
+	initUI(event.errors, firstLoad);
 }
 /**
  * Example that shows how to use a <b>result siphon</b> handler. Takes the read

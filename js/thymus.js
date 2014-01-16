@@ -1039,7 +1039,8 @@
 	    if (s) {
 	    	// capture JQuery selector/directive and return the node value(s)
 			var xt = s ? s.split(drx) : null;
-			var $x = xt ? el ? el.find(xt[0]) : $(xt[0]) : null;
+			var $x = xt ? typeof el === 'function' ? el(xt[0])
+					: el instanceof jQuery ? el.find(xt[0]) : $(xt[0]) : null;
 			if ($x && $x.length > 0) {
 				// directive may be have an event/attribute directive
 				var evt = '';
@@ -1227,6 +1228,20 @@
 		 *            present the parent element will be used)
 		 */
 		this.exec = function(a, p, c) {
+			// validate/set action scope properties
+			function scp(a, sel) {
+				sc(a, 'selector', sel);
+				sc(a, 'searchScope');
+				sc(a, 'destScope');
+			}
+			// validate/set action scope property
+			function sc(a, p, alt) {
+				a[p] = a[p] ? a[p] instanceof jQuery && a[p].length > 0 ? a[p]
+						: $(a[p]) : $(alt);
+				if (a[p].length <= 0) {
+					a[p] = null;
+				}
+			}
 			a = typeof a === 'object' ? a : {
 				action : a
 			};
@@ -1235,7 +1250,12 @@
 				// directly invoke action as a function
 				hf.f(p, c);
 			} else if (a.action === opts.actionLoadFrags) {
-				loadFragments(p, fragSelector, null, null);
+				// force selector to the parent in order to ensure plugin
+				// selection scope
+				a.selector = p;
+				scp(a, p);
+				loadFragments(a.selector, a.searchScope, a.destScope,
+						fragSelector, null, null);
 			} else if (a.action === opts.actionNavInvoke) {
 				if (!a.pathSiphon) {
 					log('No path specified for ' + a.action, 1);
@@ -1246,18 +1266,25 @@
 						a.targetSiphon, opts.targetSep);
 				if (!no.isFullPageSync()) {
 					// partial page update
-					loadFragments(c ? c : p, a, no, null);
+					a.selector = c;
+					scp(a, p);
+					loadFragments(a.selector, a.searchScope, a.destScope, a,
+							no, null);
 				} else {
 					// full page transfer
-					var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), a);
-					var f = new Frag(null, t.scope, t.scope, t);
+					scp(a, p);
+					var t = new FragsTrack(a.selector, a.searchScope,
+							a.destScope, a);
+					var f = new Frag(null, t.actionScope, t);
 					f.nav(no, true);
 				}
 			} else if (a.action === opts.actionNavRegister) {
 				// convert URLs (if needed) and register event driven templating
-				var t = new FragsTrack(a.selector ? $(a.selector) : $(selector), {});
-				var f = new Frag(null, t.scope, t.scope, t);
-				htmlDomAdjust(t, f, t.scope, true);
+				scp(a, p);
+				var t = new FragsTrack(a.selector, a.searchScope, a.destScope,
+						{});
+				var f = new Frag(null, t.actionScope, t);
+				htmlDomAdjust(t, f, t.actionScope, true);
 			} else {
 				throw new Error('Invalid action: ' + a.action);
 			}
@@ -1284,6 +1311,8 @@
 		 * @param ml
 		 *            true to look for each HTTP method verbs when the method
 		 *            supplied is not found on the supplied DOM element
+		 * @param scope
+		 *            the optional scope used to lookup possible agents
 		 * @param ma
 		 *            an optional attribute that will be used to match the
 		 *            plugins attribute options- if a match is found the match
@@ -1291,7 +1320,7 @@
 		 *            value (no other siphon attributes will be captured when
 		 *            present)
 		 */
-		function SiphonAttrs(m, evt, a, s, el, vars, ml, ma) {
+		function SiphonAttrs(m, evt, a, s, el, vars, ml, scope, ma) {
 			this.selector = s ? s : '';
 			this.method = m ? m : opts.ajaxTypeDefault;
 			this.eventSiphon = evt;
@@ -1313,7 +1342,7 @@
 					try {
 						this.isValid = addSiphonAttrVals(el, this.method,
 								this.eventSiphon, this, DOM_ATTR_TYPES, vars,
-								ml, ow);
+								ml, scope, ow);
 					} catch (e) {
 						log('Unable to capture siphons', e, this);
 						this.isValid = false;
@@ -1365,7 +1394,6 @@
 		 *          all/any found JQuery selector(s)
 		 */
 		function siphonValues(s, m, vars, del, attrNames, el) {
-			// siphon node values
 			function rpl(mch, v) {
 				return extractValues(v, opts.regexDirectiveDelimiter, del,
 						attrNames, el, function($i, n, evt, attr) {
@@ -1373,7 +1401,7 @@
 								// when an attribute value is not found check
 								// for it on an agent
 								var sa = new SiphonAttrs(m, evt, null, null,
-										$i, vars, false, attr);
+										$i, vars, false, el, attr);
 								return vars.rep(m, sa.matchVal);
 							}
 						});
@@ -1405,13 +1433,16 @@
 		 * @param ml
 		 *            true to look for each HTTP method verbs when the method
 		 *            supplied is not found on the supplied DOM element
+		 * @param scope
+		 *            the scope of which to select agents from (defaults to the
+		 *            current document's HTML element)
 		 * @param ow
 		 *            true to overwrite object properties that already have a
 		 *            non-null or empty value
 		 * @returns true when the event exists for the given method and the
 		 *          siphon attributes have been added
 		 */
-		function addSiphonAttrVals($el, m, evt, o, ns, vars, ml, ow) {
+		function addSiphonAttrVals($el, m, evt, o, ns, vars, ml, scope, ow) {
 			if ($el && m && o && $.isArray(ns)) {
 				function Agent() {
 					this.run = true;
@@ -1477,7 +1508,7 @@
 								if (agent.val) {
 									// siphon possible selectors
 									agent.val = siphonValues(agent.val.val, m, vars,
-											opts.agentSelSep, null);
+											opts.agentSelSep, null, scope);
 								}
 								if (isAdd(agent.attr, o, ow)) {
 									o[agent.attr] = agent.val;
@@ -1487,7 +1518,7 @@
 									agent.el = $(agent.val);
 									agent.val = new SiphonAttrs(m, evt, null,
 											agent.el.selector, null, vars,
-											false, o.matchAttr);
+											false, scope, o.matchAttr);
 									agent.el.each(function() {
 										// 1st come, 1st serve- don't
 										// overwrite attributes that have
@@ -1622,7 +1653,7 @@
 					return;
 				}
 				var so = new SiphonAttrs(a.method, ev, opts.actionNavInvoke, null,
-						null, t.siphon.vars, false);
+						null, t.siphon.vars, false, t.searchScope);
 				if (so.isValid) {
 					so.eventAttrs = a.items;
 					so.typeSiphon = a.type;
@@ -1686,7 +1717,12 @@
 				var v = '';
 				// TODO should see about removing URL attributes from selection
 				// because they are pre-processed
-				s.find(a.sel).each(function() {
+				var sr = new Resolver(a.sel);
+				var sel = sr.selectFrom(s);
+				if (!sel || sel.length <= 0) {
+					return s;
+				}
+				sel.each(function() {
 					var $c = $(this);
 					for (var i = 0; i < a.items.length; i++) {
 						v = propAttr($c, a.items[i].name);
@@ -2034,7 +2070,7 @@
 					rp = rpn ? rpn : rp;
 					if (!rpp || rpn) {
 						rpp = siphonValues(rp, f.method, vars, opts.pathSep,
-								null);
+								null, t.searchScope);
 						if (rpp
 								&& rpp.length > 0
 								&& rpp.toLowerCase() != opts.selfRef
@@ -2131,7 +2167,8 @@
 			function resolve(uj, psn) {
 				var psx = getNewPs(uj, psn);
 				if (psx) {
-					psp = siphonValues(psx, f.method, vars, opts.paramSep, null);
+					psp = siphonValues(psx, f.method, vars, opts.paramSep,
+							null, t.searchScope);
 					pnr = new NodeResolvers(psp);
 				}
 				return psx;
@@ -2210,7 +2247,7 @@
 					if (!rsp || rsn || (el && el.nodeType && !el.is(cel))) {
 						var iel = el instanceof jQuery;
 						rsp = siphonValues(rsp ? rsp : iel ? el : rs, f.method,
-								vars, opts.resultSep, null, el);
+								vars, opts.resultSep, null, el || t.searchScope);
 						if (!rsp && iel) {
 							rsp = el;
 						}
@@ -2369,7 +2406,7 @@
 				dsp = dsn ? dsn : dsp;
 				if (!dsp || dsn) {
 					dsp = siphonValues(dsp || ds, f.method, vars, opts.destSep,
-							null);
+							null, t.destScope);
 					dsr = new NodeResolvers(dsp ? dsp
 							: ds instanceof jQuery ? ds : '', opts.fragAttrs);
 				}
@@ -2521,7 +2558,7 @@
 			try {
 				var el = evt.sourceEvent ? $(evt.sourceEvent.target)
 						: evt.source ? evt.source : evt.target ? evt.target
-								: evt.scope;
+								: evt.actionScope;
 				// TODO : audio/video custom event trigger will cause media to refresh
 				if (el.is('video') || el.is('audio')) {
 					el = el.parent();
@@ -2608,18 +2645,23 @@
 		 * 
 		 * @constructor
 		 * 
-		 * @param s
-		 *            the scope element(s) of the tracking
+		 * @param actionScope
+		 *            the scope element(s) where selections will be made to find
+		 *            fragments to load
+		 * @param searchScope
+		 *            the scope element(s) used for element selections
+		 * @param destScope
+		 *            the scope element(s) used for destination selection
+		 *            (defaults to the current document's HTML element)
 		 * @param siphon
 		 *            the optional object that will contain siphon attribute
 		 *            overrides
-		 * @param isRoot
-		 *            true when the root frament selection is the actual
-		 *            template element
+		 * @param navOpts
+		 *            the {NavOptions}
 		 */
-		function FragsTrack(s, siphon, navOpts) {
+		function FragsTrack(actionScope, searchScope, destScope, siphon, navOpts) {
 			var start = new Date();
-			this.isTopLevel = isTopLevelEl(s);
+			var $$ = this;
 			this.ctxPath = getAppCtxPath(opts.regexAbsPath, opts.pathSep,
 					bypassPath);
 			this.navOpts = navOpts;
@@ -2629,27 +2671,35 @@
 			this.len = 0;
 			var done = false;
 			var c = [];
-			this.resetSiphon = function(ns, scope, ss, rv) {
-				if (scope instanceof jQuery && scope.length > 0) {
-					this.scope = scope;
+			function setScope(p, s) {
+				if (s instanceof jQuery && s.length > 0) {
+					$$[p] = s;
+				} else if (typeof $$[p] === 'undefined') {
+					$$[p] = $('html');
 				}
+			}
+			this.resetSiphon = function(ns, as, ss, ds, self, rv) {
+				setScope('actionScope', as);
+				setScope('searchScope', ss);
+				setScope('destScope', ds);
+				$$.isTopLevel = isTopLevelEl($$.actionScope);
 				if (typeof ns === 'object') {
-					this.siphon = ns;
-				} else if (this.siphon) {
-					this.siphon.selector = ns;
+					$$.siphon = ns;
+				} else if ($$.siphon) {
+					$$.siphon.selector = ns;
 				} else {
-					this.siphon = {
+					$$.siphon = {
 						selector : ns
 					};
 				}
-				this.isSelfSelect = typeof ss !== 'undefined' ? ss : this.scope
-						.is(this.siphon.selector);
-				if (rv || !this.siphon.vars) {
-					this.siphon.vars = new Vars(opts.regexVarNameVal,
+				$$.isSelfSelect = typeof self !== 'undefined' ? self
+						: $$.actionScope.is($$.siphon.selector);
+				if (rv || !$$.siphon.vars) {
+					$$.siphon.vars = new Vars(opts.regexVarNameVal,
 							opts.regexVarSiphon);
 				}
 			};
-			this.resetSiphon(siphon, s);
+			this.resetSiphon(siphon, actionScope, searchScope, destScope);
 			this.addFrag = function(f) {
 				var url = f.pseudoUrl();
 				if (c[url]) {
@@ -2678,7 +2728,7 @@
 							statusCode : xhr ? xhr.status : null
 						};
 					if (f) {
-						o.fragSrc = addFragProps({}, this, f);
+						o.fragSrc = addFragProps({}, $$, f);
 					}
 					$.extend(e, o);
 					return e;
@@ -2697,7 +2747,7 @@
 				return (t ? t : (new Date()).getTime()) - start.getTime();
 			};
 			this.hasJustCompleted = function() {
-				return !done && this.cnt >= this.len ? (done = true)
+				return !done && $$.cnt >= $$.len ? (done = true)
 						: false;
 			};
 			this.adjustments = null;
@@ -2709,19 +2759,16 @@
 		 * @constructor
 		 * @param pf
 		 *            the parent fragment (if any)
-		 * @param $pel
-		 *            the parent element that initiated the creation of the
-		 *            fragment
 		 * @param $fl
 		 *            the fragment loaded from source DOM element
 		 * @param t
 		 *            the optional template selector
 		 */
-		function Frag(pf, $pel, $fl, t) {
+		function Frag(pf, $fl, t) {
 			var ctx = this;
 			//var isHead = $fl instanceof jQuery ? $fl.is('head') : false;
 			this.pf = pf;
-			this.pel = $pel;
+			this.pel = t.actionScope;
 			this.el = $fl;
 			var siphon = t.siphon;
 			var loadSiphon = null;
@@ -2730,8 +2777,9 @@
 			// scope select will identify if fragment details will come from the
 			// passed tracking siphon or extracted by fragment attributes
 			if (!t.isSelfSelect
-					&& (loadSiphon = new SiphonAttrs(opts.ajaxTypeDefault, 'load',
-							null, siphon.selector, this.el, t.siphon.vars, true)).isValid) {
+					&& (loadSiphon = new SiphonAttrs(opts.ajaxTypeDefault,
+							'load', null, siphon.selector, this.el,
+							t.siphon.vars, true, t.searchScope)).isValid) {
 				// DOM siphon attribute for a load event will take presedence
 				// over short-hand include/replace/etc.
 				loadSiphon.vars = t.siphon.vars;
@@ -2772,7 +2820,7 @@
 			this.fds = new FragDestSiphon(t, this,
 					!a && siphon.destSiphon ? siphon.destSiphon : this.el,
 					siphon.vars);
-			this.destScope = null;
+			this.destResults = null;
 			this.e = null;
 			this.cancelled = false;
 			var wcnt = 1;
@@ -2845,12 +2893,9 @@
 									'</script>').appendTo(this.frs.resultSiphon());
 					}
 				} else {
-					// TODO : should there be an option to designate a parent
-					// node for which the destination selection will be made? if
-					// so, just pass it in as the 1st parameter for the
-					// destination siphon's add function:
-					this.fds.add(null, arc, this.frs.add(arc, rr, r), rr, this
-							.isModel(xhr), ts, xhr);
+					// add the result(s) to the destination(s)
+					this.fds.add(t.destScope, arc, this.frs.add(arc, rr, r),
+							rr, this.isModel(xhr), ts, xhr);
 				}
 				this.domDone(false);
 			};
@@ -2870,7 +2915,7 @@
 				// they needed to be completed prior to placement in the DOM or
 				// URLs in some cases will be missed (like within the head)
 				htmlDomAdjust(t, ctx, $adds, false);
-				return this.destScope = jqAdd(this.destScope, $adds);
+				return this.destResults = jqAdd(this.destResults, $adds);
 			};
 			this.nav = function(no, be) {
 				var rtn = null;
@@ -2942,7 +2987,7 @@
 						pathSiphon : cf.frp.pathSiphon(),
 						resultSiphon : cf.frs.getFuncOrResultSiphon(),
 						destSiphon : cf.fds.destSiphon(),
-						destScope : cf.destScope
+						destResults : cf.destResults
 					};
 				} while ((cf = cf.pf));
 				return us;
@@ -3010,10 +3055,12 @@
 			o.resultSiphon = f ? f.frs.getFuncOrResultSiphon() : undefined;
 			o.destSiphon = f ? f.fds.destSiphon() : undefined;
 			o.agentSiphon = f ? f.as : undefined;
-			o.destScope = f ? f.destScope instanceof jQuery ? f.destScope
+			o.destResults = f ? f.destResults instanceof jQuery ? f.destResults
 					: f.el : undefined;
 			o.error = f ? f.e : undefined;
-			o.scope = f ? f.el : t.scope;
+			o.actionScope = f ? f.el : t.actionScope;
+			o.searchScope = t.searchScope;
+			o.destScope = t.destScope;
 			o.chain = opts.eventFragChain;
 			o.variables = f ? f.getVars() : t.siphon ? t.siphon.vars.get()
 					: undefined;
@@ -3027,7 +3074,8 @@
 						'paramsSiphon', o.paramsSiphon, 'pathSiphon',
 						o.pathSiphon, 'resultSiphon', o.resultSiphon,
 						'destSiphon', o.destSiphon, 'element', o.element,
-						'error', o.error);
+						'actionScope', o.actionScope, 'searchScope', o.searchScope,
+						'destScope', o.destScope, 'error', o.error);
 			};
 			return o;
 		}
@@ -3068,7 +3116,9 @@
 			e.fragAdjustments = t.adjustments;
 			e.fragCancelCount = t.ccnt;
 			e.fragCount = t.cnt;
-			e.scope = t.scope;
+			e.actionScope = t.actionScope;
+			e.searchScope = t.searchScope;
+			e.destScope = t.destScope;
 			e.errors = t.getErrors();
 			e.loadTime = t.elapsedTime(e.timeStamp);
 			e.log = function(m, l) {
@@ -3076,8 +3126,10 @@
 			};
 			e.toFormattedString = function() {
 				return lbls('event chain', e.chain, 'fragCancelCount',
-						e.fragCancelCount, 'fragCount', e.fragCount, 'scope',
-						e.scope, 'errors', e.errors, 'loadTime', e.loadTime);
+						e.fragCancelCount, 'fragCount', e.fragCount,
+						'actionScope', e.actionScope, 'searchScope', e.searchScope,
+						'destScope', e.destScope, 'errors', e.errors,
+						'loadTime', e.loadTime);
 			};
 			return e;
 		}
@@ -3110,24 +3162,30 @@
 		 * &lt;/div&gt;
 		 * </pre>
 		 * 
-		 * @param scopeSel
-		 *            the selector to the root element where fragments will be
-		 *            looked for
+		 * @param scopeAction
+		 *            the selector to the root element(s) where load attributes
+		 *            will be searched
+		 * @param scopeSearch
+		 *            the selector to the root element(s) where fragments will
+		 *            be searched
+		 * @param scopeDest
+		 *            the selector to the root element(s) where destination
+		 *            elements will be searched (defaults to the current
+		 *            document's HTML element)
 		 * @param siphon
 		 *            the siphon/selector to the templates that will be
 		 *            included/replaced
 		 * @param nav
-		 *            a {NavOptions} reference that will be used (otherwise, one will
-		 *            be created dynamically for each fragment encountered)
+		 *            a {NavOptions} reference that will be used (otherwise, one
+		 *            will be created dynamically for each fragment encountered)
 		 * @param func
 		 *            the callback function that will be called when all
 		 *            fragments have been loaded (parameters: the original root
 		 *            element, the number of fragments processed and an array of
 		 *            error objects- if any)
 		 */
-		function loadFragments(scopeSel, siphon, nav, func) {
-			var $s = $(scopeSel);
-			var t = new FragsTrack($s, siphon, nav);
+		function loadFragments(scopeAction, scopeSearch, scopeDest, siphon, nav, func) {
+			var t = new FragsTrack(scopeAction, scopeSearch, scopeDest, siphon, nav);
 			broadcast(opts.eventFragsChain, opts.eventFragsBeforeHttp, t);
 			if (t.cancelled) {
 				return;
@@ -3143,7 +3201,7 @@
 				}
 				if (t.hasJustCompleted()) {
 					if (typeof func === 'function') {
-						func(t.scope, t.cnt, t.getErrors());
+						func(t.actionScope, t.cnt, t.getErrors());
 					}
 					if (firstRun) {
 						firstRun = false;
@@ -3195,7 +3253,7 @@
 				var hasu = url && url.length > 0;
 				var hasdu = hasu && url.indexOf(DATA_JS) >= 0;
 				t.len++;
-				var sf = new Frag(f, $s, $x, t);
+				var sf = new Frag(f, $x, t);
 				var path = hasu ? url : $x.text();
 				path = path ? path : $x.html();
 				sf.frp.pathSiphon(path);
@@ -3257,7 +3315,7 @@
 									.indexOf(he));
 							var $h = $('head');
 							hr = htmlDataAdjust(t, f, hr);
-							var hf = new Frag(null, $s, $h, t);
+							var hf = new Frag(null, $h, t);
 							// prevent script from auto loading
 							var scs = hr.match(opts.regexScriptTags);
 							if (scs) {
@@ -3315,7 +3373,7 @@
 			function lfg(pf, $fl, cb) {
 				var f = null;
 				try {
-					f = new Frag(pf, $s, $fl, t);
+					f = new Frag(pf, $fl, t);
 					cb = typeof cb === 'function' ? cb : function(){};
 					broadcast(opts.eventFragChain, opts.eventFragBeforeHttp, t,
 							f);
@@ -3383,7 +3441,7 @@
 							$cf = fsr.selectFrom($cf);
 							// scope needs to revert to the default fragment
 							// selector (not self select)
-							t.resetSiphon(fragSelector, $cf, false);
+							t.resetSiphon(fragSelector, $cf, null, null, false);
 							nf = true;
 						}
 						lfi($cf, f, nf);
@@ -3408,7 +3466,7 @@
 			}
 			// recursivly process all the includes/replacements
 			function lfi($f, f, nf) {
-				var $fs = nf || (t.isSelfSelect && $f.is(t.scope)) ? $f : $f
+				var $fs = nf || (t.isSelfSelect && $f.is(t.actionScope)) ? $f : $f
 						.find(t.siphon.selector);
 				t.len += $fs.length;
 				$fs.each(function() {
@@ -3419,7 +3477,7 @@
 				}
 			}
 			// make initial call
-			lfi(t.scope, null);
+			lfi(t.actionScope, null);
 		}
 	}
 

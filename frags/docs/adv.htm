@@ -191,13 +191,50 @@
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
-							<code>destScope</code>
+							<code>destResults</code>
 						</div>
 						<div class="col-md-10">
 							the DOM node(s) that were designated as the destination, the
 							parent node when the fragment was not HTML content or outer HTML
 							string when the fragment was a
 							<code>script</code>
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>actionScope</code>
+						</div>
+						<div class="col-md-10">
+							the element(s) used to select elements from for <b>thymus.js</b>
+							action processing. (typically this will be the
+							<code>html</code>
+							node unless called programatically from a different node or group
+							of nodes)
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>searchScope</code>
+						</div>
+						<div class="col-md-10">
+							the element(s) used to select elements that are <strong>not</strong>
+							for <b>destination siphon</b> selections. (typically this will be
+							the
+							<code>html</code>
+							node unless called programatically from a different node or group
+							of nodes)
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>destScope</code>
+						</div>
+						<div class="col-md-10">
+							the element(s) used to select elements for <b>destination
+								siphon</b>s. (typically this will be the
+							<code>html</code>
+							node unless called programatically from a different node or group
+							of nodes that's not part of the current document's DOM)
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -338,19 +375,6 @@
 							<code>window.open</code>
 							when full page navigation is performed using the HTTP <i>GET</i>
 							verb
-						</div>
-					</div>
-					<div class="row row-thymus">
-						<div class="col-md-2">
-							<code>scope</code>
-						</div>
-						<div class="col-md-10">
-							the DOM node(s) for which the fragment was loaded under
-							(typically this will be the
-							<code>html</code>
-							node during automatic fragment loading; during a
-							programmatically/user initiated fragment, it will contain the
-							root node that initiated the fragment load)
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -534,14 +558,39 @@
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
-							<code>scope</code>
+							<code>actionScope</code>
 						</div>
 						<div class="col-md-10">
-							the DOM node for which the fragments were loaded under
-							(typically this will be the
+							the element(s) used to select elements from for <b>thymus.js</b>
+							action processing. (typically this will be the
 							<code>html</code>
-							node unless the fragments have been loaded manually via a
-							different node)
+							node unless called programatically from a different node or group
+							of nodes)
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>searchScope</code>
+						</div>
+						<div class="col-md-10">
+							the element(s) used to select elements that are <strong>not</strong>
+							for <b>destination siphon</b> selections. (typically this will be
+							the
+							<code>html</code>
+							node unless called programatically from a different node or group
+							of nodes)
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
+							<code>destScope</code>
+						</div>
+						<div class="col-md-10">
+							the element(s) used to select elements for <b>destination
+								siphon</b>s. (typically this will be the
+							<code>html</code>
+							node unless called programatically from a different node or group
+							of nodes that's not part of the current document's DOM)
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -700,10 +749,11 @@
 					template attributes on DOM elements under the element that
 					initiated the <b>thymus.js</b> plug-in call and loads any
 					fragments/nested fragments, performs any <a href="#actionnavreg">navigation
-						registrations</a> needed within returned fragments and</li>
+						registrations</a> needed within returned fragments and <a
+					href="#attrpaths">adjusts any relative URLs</a> (if needed)</li>
 				<li id="actionnavreg"><code>nav.register</code> - registers (or
-					re-registers) any <a href="#httpmethods"><b>siphon attribute</b>s</a>
-					on DOM elements under the element that initiated the <b>thymus.js</b>
+					re-registers) any <a href="#httpmethods"><b>siphon
+							attribute</b>s</a> on DOM elements under the element that initiated the <b>thymus.js</b>
 					plug-in call</li>
 			</ul>
 			<p>

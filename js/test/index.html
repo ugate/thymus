@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>thymus plugin test suite</title>
+<!-- jquery -->
+<script src="http://code.jquery.com/jquery.js"></script>
+<!-- qunit -->
+<link rel="stylesheet"
+	href="http://code.jquery.com/qunit/qunit-1.13.0.css" media="screen">
+<script src="http://code.jquery.com/qunit/qunit-1.13.0.js"></script>
+
+<!--  plugin sources -->
+<script src="../thymus.js" id="thymus" data-thx-base-path="../../"
+	data-thx-frag-extension=".htm" data-thx-deferred-load="true"></script>
+
+<!-- test harness -->
+<script src="harness.js"></script>
+
+<!-- unit tests -->
+<script src="unit/nav.js"></script>
+
+</head>
+<body>
+	<div>
+		<h1 id="qunit-header">thymus plugin test suite</h1>
+		<h2 id="qunit-banner"></h2>
+		<div id="qunit-testrunner-toolbar"></div>
+		<h2 id="qunit-userAgent"></h2>
+		<ol id="qunit-tests"></ol>
+		<div id="qunit-fixture"></div>
+	</div>
+</body>
+</html>
