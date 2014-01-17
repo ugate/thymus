@@ -1,68 +1,191 @@
 /**
- * Test harness
+ * Harness for test module use
  */
 var Harness = {
 
 	ACTION_NAV_REG : 'nav.register',
-	EVT_FRAG_BHTTP : 'beforehttp',
+	EVT_FRAGS_BHTTP : 'beforehttp.thx.frags',
+	EVT_FRAG_BHTTP : 'beforehttp.thx.frag',
 	EVT_FRAG_BDOM : 'beforedom.thx.frag',
+	EVT_FRAG_ADOM : 'afterdom.thx.frag',
 	EVT_FRAG_LOAD : 'load.thx.frag',
+	EVT_FRAGS_LOAD : 'load.thx.frags',
 	TEST_CSS_CLASS : 'qunit',
+	TEST_FIXTURE_SEL : '#qunit-fixture',
 
 	/**
-	 * Registers and optionally executes navigational tests
+	 * A convenience construct for framework/test related tasks
 	 * 
-	 * @param html
-	 *            the HTML to test
-	 * @param fx
-	 *            the listener for the test event
-	 * @param uevt
-	 *            the user event to trigger
-	 * @param tevt
-	 *            the test event to listen for
-	 * @param noInvoke
-	 *            true to prevent invocation of user event trigger
+	 * @constructor
 	 */
-	asyncNavRegister : function(html, fx, uevt, tevt, noInvoke) {
-		var p = $(html);
-		var n = p.length == 1 && p.hasClass(Harness.TEST_CSS_CLASS) ? p
-				: p.length > 1 ? p.filter('.' + Harness.TEST_CSS_CLASS) : p
-						.find('.' + Harness.TEST_CSS_CLASS);
-		if (n.length <= 0) {
-			Harness.ok(false, 'Unable to find .' + Harness.TEST_CSS_CLASS);
-			start();
-			return n;
+	Test : function() {
+		var $$ = this;
+		$$.eventCount = 0;
+
+		/**
+		 * Creates a descriptive representation of the specified event
+		 * 
+		 * @param evt
+		 *            the event object
+		 * @param act
+		 *            the alternative action to use when the event does not have
+		 *            an action property
+		 * @returns the description
+		 */
+		function desc(evt, act) {
+			var ea = act ? act : evt.action;
+			return (typeof evt === 'string' ? evt : evt.type
+					+ (evt.namespace ? '.' + evt.namespace : ''))
+					+ (ea ? ' (for action ' + ea + ')' : '');
 		}
-		p.thymus(Harness.ACTION_NAV_REG, {
-			actionScope : p,
-			searchScope : p,
-			destScope : p
-		});
-		Harness.ok(true, Harness.ACTION_NAV_REG, 'action');
-		if (uevt) {
-			if (typeof fx === 'function') {
-				tevt = tevt ? tevt : uevt;
-				n.on(tevt, function(event) {
-					Harness.ok(true, tevt, 'discovered');
-					if (event.error) {
-						Harness.ok(false, event.error);
-					} else {
+
+		/**
+		 * Listens for the specified events, logs them to the UI and prevents
+		 * further processing when an event contains an error
+		 * 
+		 * @param n
+		 *            the node(s) the event will be listened on
+		 * @param evt
+		 *            the event name to listen for with regards to the callback
+		 *            function
+		 * @param cb
+		 *            the callback function that will be called when an event is
+		 *            received
+		 */
+		function listen(n, evt, cb) {
+			n.on(evt, function(event) {
+				Harness.ok(true, desc(event), '#' + ++$$.eventCount
+						+ 'Event received');
+				if ((typeof cb === 'undefined' || cb != true) && event.error) {
+					Harness.ok(false, event.error);
+					start();
+				} else if (typeof cb === 'function') {
+					cb(event);
+				}
+			});
+		}
+
+		/**
+		 * Listens for all incoming framework events, logs them to the UI and
+		 * prevents further processing when an event contains an error
+		 * 
+		 * @param n
+		 *            the node(s) the event will be listened on
+		 * @param evt
+		 *            the event name to listen for with regards to the callback
+		 *            function
+		 * @param cb
+		 *            the callback function that will be called when an event is
+		 *            received
+		 */
+		function listenAll(n, evt, cb) {
+			var ihe = false;
+			var ucb = false;
+			for (var i = 0; i < Harness.EVTS.length; i++) {
+				ucb = Harness.EVTS[i] == evt;
+				if (!ihe) {
+					ihe = ucb;
+				}
+				listen(n, Harness.EVTS[i], ucb ? cb : i == 0 ? true : false);
+			}
+			if (!ihe) {
+				listen(n, evt, null, cb);
+			}
+		}
+
+		/**
+		 * Registers and optionally executes navigational tests
+		 * 
+		 * @param html
+		 *            the HTML or DOM element(s) to test
+		 * @param fx
+		 *            the listener for the test event
+		 * @param uevt
+		 *            the user event to trigger
+		 * @param tevt
+		 *            the test event to listen for
+		 * @param iframeId
+		 *            when present, an in-line frame will be created using the
+		 *            supplied ID and the specified HTML will be appended to
+		 *            it's body
+		 * @param noInvoke
+		 *            true to prevent invocation of user event trigger
+		 */
+		$$.asyncNavRegister = function(html, fx, uevt, tevt, iframeId, noInvoke) {
+			var p = $(html);
+			var doc = iframeId ? Harness.addIframe(iframeId, p).contents()
+					: document;
+			var n = Harness.testSelect(p, '.' + Harness.TEST_CSS_CLASS);
+			if (n.length <= 0) {
+				Harness.ok(false, 'Unable to find .' + Harness.TEST_CSS_CLASS);
+				start();
+				return n;
+			}
+			// need to pass scope for elements that are not attached to the DOM
+			var a = $.contains(document, p[0]) ? Harness.ACTION_NAV_REG : {
+				action : Harness.ACTION_NAV_REG,
+				actionScope : p,
+				searchScope : p,
+				destScope : p
+			};
+			p.thymus(a);
+			Harness.ok(true, Harness.ACTION_NAV_REG, 'Action executed');
+			if (uevt) {
+				if (typeof fx === 'function') {
+					tevt = tevt ? tevt : uevt;
+					listenAll(n, tevt, function(event) {
 						try {
-							fx(event);
+							fx(event, doc);
 						} catch (e) {
 							Harness.ok(false, e);
 						}
-					}
-					start();
-				});
+						start();
+					});
+				}
+				if (!noInvoke) {
+					n.trigger(uevt);
+					Harness.ok(true, uevt, 'Event triggered');
+				}
 			}
-			if (!noInvoke) {
-				n.trigger(uevt);
-				Harness.ok(true, uevt, ' triggered');
+			return n;
+		};
+		$$.destroy = function() {
+			if ($$.eventCount != Harness.EVTS.length) {
+				Harness.ok(false, 'Expected "' + Harness.EVTS.length
+						+ '" framework events, but received "' + $$.eventCount
+						+ '"');
 			}
-		}
-		return n;
+		};
 	},
+
+	/**
+	 * Creates a test selection that will find or filter in one step
+	 * 
+	 * @param el
+	 *            the node to select from
+	 * @param sel
+	 *            the selector to use
+	 * @returns the selection
+	 */
+	testSelect : function(el, sel) {
+		return el.length == 1 && el.hasClass(Harness.TEST_CSS_CLASS) ? el
+				: el.length > 1 ? el.filter(sel) : el.find(sel);
+	},
+
+	/**
+	 * An extension to the QUnit counterpart that takes additional formatting
+	 * options as well as takes into account if HTML contents should be shown
+	 * 
+	 * @param state
+	 *            the assertion state
+	 * @param msg
+	 *            the message passed to the assertion
+	 * @param pp
+	 *            an optional prepender text
+	 * @param el
+	 *            an optional element to show HTML for (when global option is
+	 *            turned on)
+	 */
 	ok : function(state, msg, pp, el) {
 		var ise = msg instanceof Error && msg.stack;
 		var nm = null;
@@ -79,7 +202,52 @@ var Harness = {
 		}
 		ok(ise ? false : state, nm);
 	},
+
+	/**
+	 * Adds an in-line frame to the test fixture
+	 * 
+	 * @param id
+	 *            the ID applied to the in-line frame
+	 * @param html
+	 *            optional HTML content or node(s) to append to the created
+	 *            in-line frame document
+	 * @returns the in-line frame
+	 */
+	addIframe : function(id, html) {
+		var $i = $('<iframe id="'
+				+ id
+				+ '" name="'
+				+ id
+				+ '" width="100%" height="215" frameborder="0" scrolling="yes" '
+				+ 'marginheight="0" marginwidth="0" src="about:blank"> </iframe>');
+		var $win = null;
+		function wr() {
+			var $w = $(this).contents();
+			$w[0]
+					.write('<!doctype html><html><head></head><body></body></html>');
+			if (html) {
+				$w.find('body').append(html);
+			}
+			$win = $win ? $win.add($w) : $w;
+		}
+		$i.appendTo('body').each(wr);
+		return $win;
+	},
+
+	/**
+	 * @returns a randomly generated in-line frame ID
+	 */
+	generateIframeId : function() {
+		return 'qunitFrame' + Math.floor((Math.random() * 10000) + 1);
+	},
+
+	/**
+	 * Initializes the test harness
+	 */
 	init : function() {
+		Harness.EVTS = [ Harness.EVT_FRAGS_BHTTP, Harness.EVT_FRAG_BHTTP,
+				Harness.EVT_FRAG_BDOM, Harness.EVT_FRAG_ADOM,
+				Harness.EVT_FRAG_LOAD, Harness.EVT_FRAGS_LOAD ];
 		// See
 		// https://github.com/axemclion/grunt-saucelabs#test-result-details-with-qunit
 		QUnit.done(function(results) {

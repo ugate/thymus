@@ -137,7 +137,8 @@
 		if (el) {
 			// prevent duplicating event listeners
 			for ( var k in eventFuncs) {
-				if (eventFuncs[k].isMatch(m, el) && eventFuncs[k].getEvent() == en) {
+				if (eventFuncs[k].isMatch(m, el)
+						&& eventFuncs[k].getEvent() == en) {
 					eventFuncs[k].update(pel, null, fx, null);
 					return true;
 				}
@@ -202,7 +203,7 @@
 		if ($el && n) {
 			if (typeof v !== 'undefined') {
 				$el.prop(n, v);
-				//$el.attr(n, v);
+				// $el.attr(n, v);
 				return $el;
 			}
 			pa = $el.prop(n);
@@ -229,7 +230,7 @@
 					$c = $c.add($x);
 				} else {
 					$c = $x;
-				}	
+				}
 			}
 			return $c;
 		};
@@ -312,7 +313,7 @@
 			if (arr && x && typeof fx === 'function') {
 				// result unique to destination
 				var uc = {
-					x : x, 
+					x : x,
 					fx : fx
 				};
 				arr.push(uc);
@@ -320,7 +321,7 @@
 		}
 		function has(arr, x) {
 			if (x && x.length > 0) {
-				for ( var i = 0; i < arr.length; i++) {
+				for (var i = 0; i < arr.length; i++) {
 					var m = arr[i].x;
 					if (m.is(x)) {
 						return arr[i].fx;
@@ -395,7 +396,7 @@
 		};
 		this.destCache = function(ia, $dc, altr, rc) {
 			if (rc) {
-				for (var i=0; i<ich.length; i++) {
+				for (var i = 0; i < ich.length; i++) {
 					if (rc.is(ich[i].rsltCache())) {
 						return ich[i].destCache($dc, altr);
 					}
@@ -406,7 +407,7 @@
 		};
 		this.appendReplaceAll = function(n) {
 			var $r = null;
-			for (var i=0; i<ich.length; i++) {
+			for (var i = 0; i < ich.length; i++) {
 				$r = manips($r, ich[i], n);
 			}
 			$r = manips($r, ach, n);
@@ -426,13 +427,16 @@
 	 * Navigation options
 	 * 
 	 * @constructor
-	 * @param s
-	 *            the string that will contain the name of the navigation and
-	 *            the options
-	 * @param tsep
-	 *            the separator to extract the type of navigation
-	 * @param osep
-	 *            the separator to extract the name from the options
+	 * @param type
+	 *            the navigation type {ASYNC} or {SYNC} delimited by the
+	 *            specified separator, with global inclusion type
+	 * @param typeSep
+	 *            the separator to extract the type of the navigation options
+	 * @param target
+	 *            the window target delimited by the specified separator, with
+	 *            the optional window options
+	 * @param targetSep
+	 *            the separator to extract the target of the navigation options
 	 */
 	function NavOptions(type, typeSep, target, targetSep) {
 		var win = null, rcnt = 0;
@@ -443,7 +447,7 @@
 		this.target = target ? splitWithTrim(target, targetSep) : [ '_self' ];
 		this.options = this.target.length > 1 ? this.target[1] : undefined;
 		this.history = this.target.length > 2 ? this.target[2] : undefined;
-		this.target = this.target[0].toLowerCase();
+		this.target = this.target[0];
 		this.reuseMax = 1;
 		this.reuse = function() {
 			return rcnt < this.reuseMax ? ++rcnt : 0;
@@ -458,19 +462,22 @@
 			return ptype;
 		};
 		this.getWin = function(loc) {
-			if (loc) {
-				return window
-						.open(loc, this.target, this.options, this.history);
-			}
-			if (!win && this.type == '_blank') {
+			if (!win && this.type == '_blank' && !loc) {
 				win = window.open('about:blank', this.target, this.options,
 						this.history);
 				win.document.write('<html><body></body></html>');
+				return win;
 			} else if (!win) {
-				win = this.target != '_self' ? window[this.target.charAt(0) == '_' ? this.target
-						.substring(1)
-						: this.target]
-						: window;
+				win = window;
+				if (this.target != '_self') {
+					var tn = this.target.charAt(0) == '_' ? this.target
+							.substring(1) : this.target;
+					win = window[tn];
+				}
+			}
+			if (loc) {
+				return window
+						.open(loc, this.target, this.options, this.history);
 			}
 			return win;
 		};
@@ -516,8 +523,8 @@
 	function log(m, l, o) {
 		function iem(m, o) {
 			if (o) {
-				var a = []; 
-				for (var n in o) {
+				var a = [];
+				for ( var n in o) {
 					if (this[n] && typeof this[n] !== 'function'
 							&& o.hasOwnPropery(n)) {
 						a.push(n);
@@ -528,29 +535,34 @@
 			}
 			return m;
 		}
-		m = m ? m : '';
-		m = ieVersion <= 0 || ieVersion > ieVersionCompliant ? m
-				: typeof m.toFormattedString === 'function' ? m
-						.toFormattedString() : iem(m, o);
-		if (typeof window.console !== 'undefined'
-				&& typeof window.console.log !== 'undefined') {
-			var ie = l instanceof Error;
-			if ((ie || l == 1) && window.console.error) {
-				if (m) {
-					window.console.error(m + (ie ? ' Cause: ' + l.message : ''));
+		try {
+			m = m ? m : '';
+			m = ieVersion <= 0 || ieVersion > ieVersionCompliant ? m
+					: typeof m.toFormattedString === 'function' ? m
+							.toFormattedString() : iem(m, o);
+			if (typeof window.console !== 'undefined'
+					&& typeof window.console.log !== 'undefined') {
+				var ie = l instanceof Error;
+				if ((ie || l == 1) && window.console.error) {
+					if (m) {
+						window.console.error(m
+								+ (ie ? ' Cause: ' + l.message : ''));
+					}
+				} else if (l == 2 && window.console.warn) {
+					if (m) {
+						window.console.warn(m);
+					}
+				} else {
+					if (m) {
+						window.console.log(m);
+					}
 				}
-			} else if (l == 2 && window.console.warn) {
-				if (m) {
-					window.console.warn(m);
-				}
-			} else {
-				if (m) {
-					window.console.log(m);
+				if (o) {
+					window.console.log(o);
 				}
 			}
-			if (o) {
-				window.console.log(o);
-			}
+		} catch (e) {
+			// consume
 		}
 	}
 
@@ -581,13 +593,12 @@
 		var y = '';
 		var x = $.isArray(a) ? a : a && typeof a === 'string' ? a.split(',')
 				: [];
-		for ( var i = 0; i < x.length; i++) {
+		for (var i = 0; i < x.length; i++) {
 			y = '[' + x[i] + ']';
 			ra.items.push({
 				name : x[i],
 				sel : y,
-				regExp : new RegExp('\\s' + x[i] + rxs,
-						'ig')
+				regExp : new RegExp('\\s' + x[i] + rxs, 'ig')
 			});
 			ra.sel += ra.sel.length > 0 ? ',' + y : y;
 		}
@@ -632,8 +643,8 @@
 			var a = this.attributes;
 			for ( var k in a) {
 				if (a[k].nodeName && a[k].nodeValue !== undefined) {
-					as += (as.length > 0 ? ',' : '') + tn + '['
-							+ a[k].nodeName + '="' + a[k].nodeValue + '"]';
+					as += (as.length > 0 ? ',' : '') + tn + '[' + a[k].nodeName
+							+ '="' + a[k].nodeValue + '"]';
 				}
 			}
 		});
@@ -880,7 +891,7 @@
 	}
 
 	/**
-	 * Extracts a key from 
+	 * Extracts a key from
 	 */
 	function extractKey($p, attrs) {
 		// iterate over the attributes that will be used as keys
@@ -970,7 +981,8 @@
 	 *            be used
 	 * @param el
 	 *            the DOM element that will be used to find siphoned values on
-	 *            (when omitted the current document will be queried)
+	 *            (can also be a callback function that will pass the selector;
+	 *            when omitted the current document will be queried)
 	 * @param adfx
 	 *            an optional function that will be called when an attribute
 	 *            directive is found, but no data/value can be extracted
@@ -984,17 +996,17 @@
 					+ (n && n.val ? n.val + '=' : '') + v;
 		}
 		// captures node value(s) using an optional directive
-    	function exNVs(evt, d, $x) {
-            var nv = '';
-            var ci = '';
-            if (!d) {
-            	// it would be nice if we could check if has
+		function exNVs(evt, d, $x) {
+			var nv = '';
+			var ci = '';
+			if (!d) {
+				// it would be nice if we could check if has
 				// val(), but an empty string may be
 				// returned by val() so serialize array is
 				// checked instead
 				nv = attrNames ? $x.serialize() : $x.serializeArray();
-                if (!nv || nv.length <= 0) {
-                	nv = '';
+				if (!nv || nv.length <= 0) {
+					nv = '';
 					$x.each(function() {
 						ci = $(this);
 						nv += getEV(nv, attrNames ? getOptsAttrVal(ci, null,
@@ -1007,7 +1019,7 @@
 						nv += getEV(nv, null, this.value, dl);
 					});
 				}
-            } else {
+			} else {
 				var ist = d.toLowerCase() == DTEXT;
 				var ish = d.toLowerCase() == DHTML;
 				var n = '';
@@ -1033,11 +1045,11 @@
 						nv += getEV(nv, n, civ, dl);
 					}
 				});
-            }
-            return nv !== undefined && nv != null ? nv : s;
-    	}
-	    if (s) {
-	    	// capture JQuery selector/directive and return the node value(s)
+			}
+			return nv !== undefined && nv != null ? nv : s;
+		}
+		if (s) {
+			// capture JQuery selector/directive and return the node value(s)
 			var xt = s ? s.split(drx) : null;
 			var $x = xt ? typeof el === 'function' ? el(xt[0])
 					: el instanceof jQuery ? el.find(xt[0]) : $(xt[0]) : null;
@@ -1053,8 +1065,8 @@
 				}
 				return exNVs(evt, dir, $x);
 			}
-	    }
-	    return '';
+		}
+		return '';
 	}
 
 	/**
@@ -1082,16 +1094,16 @@
 	 */
 	function Func(opts, fs, am, nn) {
 		try {
-			var f = !nn && typeof window[fs] === 'function' ? window[fn] : undefined;
+			var f = !nn && typeof window[fs] === 'function' ? window[fn]
+					: undefined;
 			var a = null;
 			this.isValid = typeof f === 'function';
 			this.setArgs = function(nam) {
 				if (this.isValid) {
 					if ($.isArray(a) && a.length > 0) {
 						var ia = nam && $.isArray(nam);
-						for (var i=0; i<a.length; i++) {
-							a[i] = a[i].replace(opts.regexFuncArgReplace,
-									'');
+						for (var i = 0; i < a.length; i++) {
+							a[i] = a[i].replace(opts.regexFuncArgReplace, '');
 							if (a[i] == 'event' && !ia) {
 								a[i] = nam;
 							} else if (ia && nam[a[i]]) {
@@ -1130,7 +1142,8 @@
 						x += k + '=' + am[k] + ',';
 					}
 				}
-				return x.length > 1 ? '[' + x.substring(0, x.length - 2) + ']' : '';
+				return x.length > 1 ? '[' + x.substring(0, x.length - 2) + ']'
+						: '';
 			}
 			this.run = function(thisArg, nam) {
 				var rr = {
@@ -1199,8 +1212,8 @@
 				.test(location.protocol) ? 'http:' : null;
 		// construct the JQuery selector that will identify what fragments to
 		// load
-		var domAttrs = opts.getAttrs.concat(opts.postAttrs
-				.concat(opts.putAttrs.concat(opts.deleteAttrs)));
+		var domAttrs = opts.getAttrs.concat(opts.postAttrs.concat(opts.putAttrs
+				.concat(opts.deleteAttrs)));
 		var fragSelector = genAttrSelect(includeReplaceAttrs, null, null);
 		fragSelector = (fragSelector ? fragSelector + ',' : '')
 				+ genAttrSelect(domAttrs, 'load', '*');
@@ -1221,13 +1234,11 @@
 		 * @param a
 		 *            the action object (or string defining the action name)
 		 *            that will be executed
-		 * @param p
-		 *            the parent element that initiated the execution
-		 * @param c
-		 *            the c element that initiated the the execution (when not
+		 * @param el
+		 *            the element that initiated the the execution (when not
 		 *            present the parent element will be used)
 		 */
-		this.exec = function(a, p, c) {
+		this.exec = function(a, el) {
 			// validate/set action scope properties
 			function scp(a, sel) {
 				sc(a, 'selector', sel);
@@ -1248,13 +1259,13 @@
 			var hf = eventFuncs[a.action];
 			if (hf && typeof hf.f === 'function') {
 				// directly invoke action as a function
-				hf.f(p, c);
+				hf.f(el);
 			} else if (a.action === opts.actionLoadFrags) {
 				// force selector to the parent in order to ensure plugin
 				// selection scope
-				a.selector = p;
-				scp(a, p);
-				loadFragments(a.selector, a.searchScope, a.destScope,
+				a.selector = el;
+				scp(a, el);
+				loadFragments(a.action, a.selector, a.searchScope, a.destScope,
 						fragSelector, null, null);
 			} else if (a.action === opts.actionNavInvoke) {
 				if (!a.pathSiphon) {
@@ -1266,23 +1277,22 @@
 						a.targetSiphon, opts.targetSep);
 				if (!no.isFullPageSync()) {
 					// partial page update
-					a.selector = c;
-					scp(a, p);
-					loadFragments(a.selector, a.searchScope, a.destScope, a,
-							no, null);
+					scp(a, el);
+					loadFragments(a.action, a.selector, a.searchScope,
+							a.destScope, a, no, null);
 				} else {
 					// full page transfer
-					scp(a, p);
-					var t = new FragsTrack(a.selector, a.searchScope,
+					scp(a, el);
+					var t = new FragsTrack(a.action, a.selector, a.searchScope,
 							a.destScope, a);
 					var f = new Frag(null, t.actionScope, t);
 					f.nav(no, true);
 				}
 			} else if (a.action === opts.actionNavRegister) {
 				// convert URLs (if needed) and register event driven templating
-				scp(a, p);
-				var t = new FragsTrack(a.selector, a.searchScope, a.destScope,
-						{});
+				scp(a, el);
+				var t = new FragsTrack(a.action, a.selector, a.searchScope,
+						a.destScope, {});
 				var f = new Frag(null, t.actionScope, t);
 				htmlDomAdjust(t, f, t.actionScope, true);
 			} else {
@@ -1394,9 +1404,12 @@
 		 *          all/any found JQuery selector(s)
 		 */
 		function siphonValues(s, m, vars, del, attrNames, el) {
+			function resolve(sel) {
+				return new Resolver(sel).selectFrom(el);
+			}
 			function rpl(mch, v) {
 				return extractValues(v, opts.regexDirectiveDelimiter, del,
-						attrNames, el, function($i, n, evt, attr) {
+						attrNames, resolve, function($i, n, evt, attr) {
 							if (attr) {
 								// when an attribute value is not found check
 								// for it on an agent
@@ -1452,7 +1465,8 @@
 				}
 				// get attribute name from plug-in options
 				function getAN(m, n) {
-					var an = n.charAt(0).toUpperCase() + n.substr(1).toLowerCase();
+					var an = n.charAt(0).toUpperCase()
+							+ n.substr(1).toLowerCase();
 					an = m + (m == n ? '' : an) + 'Attrs';
 					return an;
 				}
@@ -1481,7 +1495,8 @@
 					}
 					return ov;
 				}
-				// only add when a value doesn't already exist or overwrite is flagged
+				// only add when a value doesn't already exist or overwrite is
+				// flagged
 				function isAdd(n, o, ow) {
 					return o[n] !== undefined
 							&& (ow || o[n] == null || o[n].length <= 0);
@@ -1500,15 +1515,17 @@
 							o.matchVal = ov.val;
 						}
 						if (!ov || !ov.val) {
-							// try to lookup an agent that has the attribute (if any)
+							// try to lookup an agent that has the attribute (if
+							// any)
 							if (agent.run) {
 								agent.run = false;
 								agent.attr = getSAN(m, DOM_ATTR_AGENT);
-								agent.val = getOV($el, getAN(m, DOM_ATTR_AGENT), ei);
+								agent.val = getOV($el,
+										getAN(m, DOM_ATTR_AGENT), ei);
 								if (agent.val) {
 									// siphon possible selectors
-									agent.val = siphonValues(agent.val.val, m, vars,
-											opts.agentSelSep, null, scope);
+									agent.val = siphonValues(agent.val.val, m,
+											vars, opts.agentSelSep, null, scope);
 								}
 								if (isAdd(agent.attr, o, ow)) {
 									o[agent.attr] = agent.val;
@@ -1556,7 +1573,7 @@
 					var an = null;
 					var n = null;
 					var agent = new Agent();
-					for (var i=0; i<ns.length; i++) {
+					for (var i = 0; i < ns.length; i++) {
 						n = ns[i].toLowerCase();
 						an = getAN(m, n);
 						n = getSAN(m, n);
@@ -1610,7 +1627,8 @@
 		 * Updates a navigation {Frag} for an array object returned from
 		 * <code>genAttrQueries</code>. Updates will be made to paths when
 		 * needed. Also, any DOM driven events will be registered that will
-		 * listen for incoming events that will trigger fragment loading/submission. When DOM driven events are previously processed
+		 * listen for incoming events that will trigger fragment
+		 * loading/submission. When DOM driven events are previously processed
 		 * 
 		 * @param t
 		 *            the {FragsTrack}
@@ -1652,15 +1670,16 @@
 					// load events are picked up by normal fragment loading
 					return;
 				}
-				var so = new SiphonAttrs(a.method, ev, opts.actionNavInvoke, null,
-						null, t.siphon.vars, false, t.searchScope);
+				var so = new SiphonAttrs(a.method, ev, opts.actionNavInvoke,
+						null, null, t.siphon.vars, false, t.searchScope);
 				if (so.isValid) {
 					so.eventAttrs = a.items;
 					so.typeSiphon = a.type;
 					var rtn = addOrUpdateEventFunc(ctx, so.action, so.method,
 							f.pel, el, so.eventSiphon, function(pel, ib, sevt) {
 								var $ib = $(ib);
-								if (!so.captureAttrs($ib, t.siphon.vars, false, true)) {
+								if (!so.captureAttrs($ib, t.siphon.vars, false,
+										true)) {
 									// the event is no longer valid because the
 									// method/event attribute has removed the
 									// event since its registration- thus we
@@ -1670,7 +1689,9 @@
 								}
 								so.sourceEvent = sevt;
 								so.selector = ib;
-								ctx.exec(so, pel, ib);
+								so.searchScope = t.searchScope;
+								so.destScope = t.destScope;
+								ctx.exec(so, pel);
 								return false;
 							});
 					so.onEvent = rtn.eventAttrValue;
@@ -1706,7 +1727,7 @@
 			var r = '';
 			s = typeof s === 'string' ? s : $(s);
 			if (typeof s === 'string') {
-				for ( var i = 0; i < a.items.length; i++) {
+				for (var i = 0; i < a.items.length; i++) {
 					s = s.replace(a.items[i].regExp, function(m, v) {
 						r = updateNav(t, f, a, i, v, null);
 						return typeof r === 'string' ? r
@@ -1749,7 +1770,9 @@
 		 * @returns content adjusted data content string
 		 */
 		function htmlDataAdjust(t, f, s) {
-			//s = s.replace(/\<(\?xml|(\!DOCTYPE[^\>\[]+(\[[^\]]+)?))+[^>]+\>/g, '');
+			// s =
+			// s.replace(/\<(\?xml|(\!DOCTYPE[^\>\[]+(\[[^\]]+)?))+[^>]+\>/g,
+			// '');
 			if (updateUrls) {
 				s = updateNavAttrs(t, f, urlAttrs, s);
 			}
@@ -1781,10 +1804,10 @@
 		}
 
 		/**
-		 * Extracts a fragment/include/replacement attribute from a given element. When
-		 * the element is the thymus script then an attempt will be made to pull
-		 * the <code>opts.fragHeadAttr</code> attribute off the script and
-		 * extract the specified attribute from that value.
+		 * Extracts a fragment/include/replacement attribute from a given
+		 * element. When the element is the thymus script then an attempt will
+		 * be made to pull the <code>opts.fragHeadAttr</code> attribute off
+		 * the script and extract the specified attribute from that value.
 		 * 
 		 * @param $f
 		 *            the element to extract the attribute from
@@ -1795,7 +1818,7 @@
 			function ga(a) {
 				var fa = undefined;
 				var a2 = undefined;
-				for ( var i = 0; i < attrs.length; i++) {
+				for (var i = 0; i < attrs.length; i++) {
 					a2 = attrs[i].replace('\\', '');
 					if (a) {
 						if (a == a2) {
@@ -1811,7 +1834,8 @@
 				return null;
 			}
 			if (propAttr($f, 'id') == NS) {
-				// when the attribute is used on the current script tag then pull the
+				// when the attribute is used on the current script tag then
+				// pull the
 				// attribute off the script and extract the
 				// fragment/include/replacement
 				var fa = propAttr($f, opts.fragHeadAttr);
@@ -1820,9 +1844,9 @@
 					if (fas.length == 2) {
 						return ga(fas[0]) ? fas[1] : null;
 					} else {
-						throw new Error(NS + ' has invalid atrtribute ' + 
-								opts.fragHeadAttr + '="' + 
-								fa + '" for ' + attr);
+						throw new Error(NS + ' has invalid atrtribute '
+								+ opts.fragHeadAttr + '="' + fa + '" for '
+								+ attr);
 					}
 				}
 			} else {
@@ -1852,7 +1876,8 @@
 		 * 
 		 * @param url
 		 *            the URL to get the file file name from
-		 * @returns the file name for the supplied URL (or empty when not present)
+		 * @returns the file name for the supplied URL (or empty when not
+		 *          present)
 		 */
 		function getFile(url) {
 			var f = '';
@@ -1928,14 +1953,14 @@
 		 */
 		function Resolver(s, d, cr, t) {
 			this.selector = s instanceof jQuery ? s : s ? $.trim(s) : null;
-            this.directive = d ? $.trim(d) : '';
-            if (this.directive) {
-            	var ld = this.directive.toLowerCase();
-            	if (ld == DTEXT || ld == DHTML) {
-            		this.directive = ld;
-            	}
-            }
-            // selects node(s) from an element using the internal
+			this.directive = d ? $.trim(d) : '';
+			if (this.directive) {
+				var ld = this.directive.toLowerCase();
+				if (ld == DTEXT || ld == DHTML) {
+					this.directive = ld;
+				}
+			}
+			// selects node(s) from an element using the internal
 			// selector either as a self-selection, a find or filter
 			this.selectFrom = function($el, be) {
 				var $r = null;
@@ -1998,7 +2023,8 @@
 					return null;
 				}
 				var r = null;
-				var cr = c ? new Resolver(c[0], c.length > 1 ? c[1] : '', t) : null;
+				var cr = c ? new Resolver(c[0], c.length > 1 ? c[1] : '', t)
+						: null;
 				if (s instanceof jQuery || typeof s === 'string') {
 					r = new Resolver(s, cr, t);
 				} else {
@@ -2010,7 +2036,8 @@
 				// regular expression must match entire expression
 				function rpl(mch, v) {
 					var pc = v.split(opts.regexParentChildDelimiter);
-					// add resolver, optional child resolver and optional resolver type
+					// add resolver, optional child resolver and optional
+					// resolver type
 					var child = pc.length > 1 ? pc[1] : null;
 					var type = pc.length > 2 ? pc[2] : null;
 					if (child && TYPES_PPU.indexOf(child.toLowerCase()) >= 0) {
@@ -2376,7 +2403,8 @@
 					// result needs to be set on attribute
 					altr = function($d, $r) {
 						var v = ia && !iu ? propAttr($d, dr.directive) : null;
-						propAttr($d, dr.directive, (v ? v : '') + getTextVals($r));
+						propAttr($d, dr.directive, (v ? v : '')
+								+ getTextVals($r));
 					};
 				} else if (r instanceof jQuery && dr.directive == DTEXT) {
 					// result needs to be text
@@ -2401,7 +2429,8 @@
 			}
 			function replaceTo(arc, iu, im, dr, $d, rr, r, altr) {
 				return addTo(arc, false, iu, im, dr, $d, rr, r, altr);
-			};
+			}
+			;
 			this.destSiphon = function(dsn) {
 				dsp = dsn ? dsn : dsp;
 				if (!dsp || dsn) {
@@ -2437,12 +2466,15 @@
 						} else if (addType === TINC || addType === TUPD) {
 							if (f.fds.destSiphon() || addType === TUPD) {
 								if (f.fds.destSiphon()) {
-									// when updating remove any pre-exsisting results 
-									// from the destination that match the result siphon
+									// when updating remove any pre-exsisting
+									// results
+									// from the destination that match the
+									// result siphon
 									appendTo(arc, addType === TUPD, im, dr,
 											$ds, rr, r);
 								} else {
-									// when updating remove everything in the destination
+									// when updating remove everything in the
+									// destination
 									appendTo(arc, addType === TUPD, im, dr,
 											$ds, rr, r);
 								}
@@ -2450,13 +2482,16 @@
 								appendTo(arc, false, im, dr, $ds, rr, r);
 							}
 						} else {
-							t.addError('Invalid destination type "' + addType
-									+ '" for ' + f.toString(), f, null, ts, xhr);
+							t
+									.addError(
+											'Invalid destination type "'
+													+ addType + '" for '
+													+ f.toString(), f, null,
+											ts, xhr);
 							return false;
 						}
 					} catch (e) {
-						t.addError('Error while processing desitination "' 
-								+ dr
+						t.addError('Error while processing desitination "' + dr
 								+ '" for ' + f.toString(), f, e, ts, xhr);
 					}
 				}
@@ -2484,8 +2519,8 @@
 		 *            the file extension to apply
 		 */
 		function adjustPath(c, p, x) {
-			x = x && p.lastIndexOf(opts.pathSep) != (p.length - 1) ? 
-					x.toLowerCase() == opts.inheritRef ? getFileExt(location.href)
+			x = x && p.lastIndexOf(opts.pathSep) != (p.length - 1) ? x
+					.toLowerCase() == opts.inheritRef ? getFileExt(location.href)
 					: getFileExt(p) ? '' : x
 					: '';
 			if (x) {
@@ -2507,9 +2542,9 @@
 		 *            the relative path to convert
 		 * @param absPath
 		 *            the absolute path to do the conversion from
-		 * @returns the absolute path version of the relative path in relation to
-		 *          the provided absolute path (or just the supplied relative path
-		 *          when it's really an absolute path)
+		 * @returns the absolute path version of the relative path in relation
+		 *          to the provided absolute path (or just the supplied relative
+		 *          path when it's really an absolute path)
 		 */
 		function absoluteUrl(relPath, absPath) {
 			return absolutePath(relPath, absPath, opts.regexAbsPath,
@@ -2559,11 +2594,17 @@
 				var el = evt.sourceEvent ? $(evt.sourceEvent.target)
 						: evt.source ? evt.source : evt.target ? evt.target
 								: evt.actionScope;
-				// TODO : audio/video custom event trigger will cause media to refresh
+				// TODO : audio/video custom event trigger will cause media to
+				// refresh
 				if (el.is('video') || el.is('audio')) {
 					el = el.parent();
 				}
-				el.trigger(evt);
+				try {
+					el.trigger(evt);
+				} catch (e) {
+					log('Error triggering '
+							+ (evt ? evt.type + ' ' + evt : 'unknown event'), e);
+				}
 				var sfc = script && evt.chain === opts.eventFragChain ? propAttr(
 						script, opts.fragListenerAttr)
 						: null;
@@ -2589,7 +2630,8 @@
 				}
 				return evt.isDefaultPrevented();
 			} catch (e) {
-				log('Error in ' + evt.type + ' ' + (evt ? evt : ''), e);
+				log('Error in '
+						+ (evt ? evt.type + ' ' + evt : 'unknown event'), e);
 			}
 			return false;
 		}
@@ -2615,27 +2657,27 @@
 						type, t, f)
 						: genFragsEvent(chain, type, t));
 			}
-			if (chain == opts.eventFragChain
-					|| chain == opts.eventFragsChain) {
-				if (type == opts.eventFragAfterDom
-						|| type == opts.eventFragLoad
-						|| type == opts.eventFragsLoad
-						|| type == opts.eventFragsBeforeHttp) {
-					if (type == opts.eventFragsBeforeHttp) {
-						t.cancelled = fire();
-					} else {
-						fire();
+			if (chain == opts.eventFragChain || chain == opts.eventFragsChain) {
+				var bhttp = type == opts.eventFragsBeforeHttp
+						|| type == opts.eventFragBeforeHttp;
+				if (f) {
+					if (!f.frp.pathSiphon()) {
+						t.addError('Invalid URL for ' + f.toString(), f, null,
+								null, null);
+						f.cancelled = true;
+						if (bhttp) {
+							fire();
+						}
+					} else if (f) {
+						f.cancelled = fire();
 					}
-				} else if (f && !f.frp.pathSiphon()) {
-					t.addError('Invalid URL for ' + f.toString(), f, null,
-							null, null);
-					t.ccnt++;
-					f.cancelled = true;
-				} else if (f) {
-					f.cancelled = fire();
 					if (f.cancelled) {
 						t.ccnt++;
 					}
+				} else if (bhttp) {
+					t.cancelled = fire();
+				} else {
+					fire();
 				}
 			}
 		}
@@ -2645,6 +2687,8 @@
 		 * 
 		 * @constructor
 		 * 
+		 * @param action
+		 *            the name of the action that initiated the tracking
 		 * @param actionScope
 		 *            the scope element(s) where selections will be made to find
 		 *            fragments to load
@@ -2659,16 +2703,18 @@
 		 * @param navOpts
 		 *            the {NavOptions}
 		 */
-		function FragsTrack(actionScope, searchScope, destScope, siphon, navOpts) {
+		function FragsTrack(action, actionScope, searchScope, destScope,
+				siphon, navOpts) {
 			var start = new Date();
 			var $$ = this;
-			this.ctxPath = getAppCtxPath(opts.regexAbsPath, opts.pathSep,
+			$$.action = action;
+			$$.ctxPath = getAppCtxPath(opts.regexAbsPath, opts.pathSep,
 					bypassPath);
-			this.navOpts = navOpts;
-			this.cancelled = false;
-			this.ccnt = 0;
-			this.cnt = 0;
-			this.len = 0;
+			$$.navOpts = navOpts;
+			$$.cancelled = false;
+			$$.ccnt = 0;
+			$$.cnt = 0;
+			$$.len = 0;
 			var done = false;
 			var c = [];
 			function setScope(p, s) {
@@ -2678,7 +2724,7 @@
 					$$[p] = $('html');
 				}
 			}
-			this.resetSiphon = function(ns, as, ss, ds, self, rv) {
+			$$.resetSiphon = function(ns, as, ss, ds, sh, rv) {
 				setScope('actionScope', as);
 				setScope('searchScope', ss);
 				setScope('destScope', ds);
@@ -2692,15 +2738,15 @@
 						selector : ns
 					};
 				}
-				$$.isSelfSelect = typeof self !== 'undefined' ? self
+				$$.isShortHand = typeof sh !== 'undefined' ? sh
 						: $$.actionScope.is($$.siphon.selector);
 				if (rv || !$$.siphon.vars) {
 					$$.siphon.vars = new Vars(opts.regexVarNameVal,
 							opts.regexVarSiphon);
 				}
 			};
-			this.resetSiphon(siphon, actionScope, searchScope, destScope);
-			this.addFrag = function(f) {
+			$$.resetSiphon(siphon, actionScope, searchScope, destScope);
+			$$.addFrag = function(f) {
 				var url = f.pseudoUrl();
 				if (c[url]) {
 					c[url].frags[c[url].frags.length] = f;
@@ -2715,18 +2761,18 @@
 				}
 				return true;
 			};
-			this.getFrags = function(f) {
+			$$.getFrags = function(f) {
 				return c[f.pseudoUrl()];
 			};
 			var e = [];
-			this.addError = function(em, f, oc, hs, xhr) {
+			$$.addError = function(em, f, oc, hs, xhr) {
 				function newError(f) {
 					var e = new Error(em + (oc ? '. Cause: ' + oc.message : ''));
 					var o = {
-							cause : oc,
-							status : hs,
-							statusCode : xhr ? xhr.status : null
-						};
+						cause : oc,
+						status : hs,
+						statusCode : xhr ? xhr.status : null
+					};
 					if (f) {
 						o.fragSrc = addFragProps({}, $$, f);
 					}
@@ -2740,17 +2786,16 @@
 					e[e.length] = newError();
 				}
 			};
-			this.getErrors = function() {
+			$$.getErrors = function() {
 				return e;
 			};
-			this.elapsedTime = function(t) {
+			$$.elapsedTime = function(t) {
 				return (t ? t : (new Date()).getTime()) - start.getTime();
 			};
-			this.hasJustCompleted = function() {
-				return !done && $$.cnt >= $$.len ? (done = true)
-						: false;
+			$$.hasJustCompleted = function() {
+				return !done && $$.cnt >= $$.len ? (done = true) : false;
 			};
-			this.adjustments = null;
+			$$.adjustments = null;
 		}
 
 		/**
@@ -2766,7 +2811,7 @@
 		 */
 		function Frag(pf, $fl, t) {
 			var ctx = this;
-			//var isHead = $fl instanceof jQuery ? $fl.is('head') : false;
+			// var isHead = $fl instanceof jQuery ? $fl.is('head') : false;
 			this.pf = pf;
 			this.pel = t.actionScope;
 			this.el = $fl;
@@ -2776,7 +2821,7 @@
 			var a = null;
 			// scope select will identify if fragment details will come from the
 			// passed tracking siphon or extracted by fragment attributes
-			if (!t.isSelfSelect
+			if (!t.isShortHand
 					&& (loadSiphon = new SiphonAttrs(opts.ajaxTypeDefault,
 							'load', null, siphon.selector, this.el,
 							t.siphon.vars, true, t.searchScope)).isValid) {
@@ -2784,14 +2829,14 @@
 				// over short-hand include/replace/etc.
 				loadSiphon.vars = t.siphon.vars;
 				siphon = loadSiphon;
-			} else if (!t.isSelfSelect) {
+			} else if (!t.isShortHand) {
 				a = getFragAttr($fl, opts.includeAttrs);
 			}
 			this.ajaxAsync = true;
 			this.navOpts = t.navOpts && t.navOpts.reuse() ? t.navOpts
 					: new NavOptions(siphon.typeSiphon, opts.typeSep,
 							siphon.targetSiphon, opts.targetSep);
-			if (!a && !t.isSelfSelect) {
+			if (!a && !t.isShortHand) {
 				a = getFragAttr($fl, opts.replaceAttrs);
 				this.navOpts.type(TREP);
 			} else {
@@ -2800,8 +2845,7 @@
 			// short-hand attrs may have path and result siphon
 			a = a ? a.split(opts.multiSep) : null;
 			this.eventSiphon = siphon.eventSiphon;
-			this.method = siphon.method ? siphon.method
-					: opts.ajaxTypeDefault;
+			this.method = siphon.method ? siphon.method : opts.ajaxTypeDefault;
 			this.getVars = function() {
 				return siphon.vars ? siphon.vars.get(this.method) : null;
 			};
@@ -2812,9 +2856,8 @@
 			}
 			this.fps = new FragParamSiphon(t, this.method, siphon.paramsSiphon,
 					siphon.vars);
-			this.frs = new FragResultSiphon(t, this,
-					!a ? siphon.resultSiphon : a && a.length > 1 ? $.trim(a[1])
-							: null, siphon.vars);
+			this.frs = new FragResultSiphon(t, this, !a ? siphon.resultSiphon
+					: a && a.length > 1 ? $.trim(a[1]) : null, siphon.vars);
 			this.frp = new FragPathSiphon(t, this, !a ? siphon.pathSiphon : a
 					&& a.length > 0 ? $.trim(a[0]) : null, siphon.vars);
 			this.fds = new FragDestSiphon(t, this,
@@ -2828,7 +2871,8 @@
 				if (a) {
 					wcnt++;
 				} else if (a == false && --wcnt == 0) {
-					// no longer waiting for any more child fragments to complete
+					// no longer waiting for any more child fragments to
+					// complete
 					t.cnt++;
 					broadcast(opts.eventFragChain, opts.eventFragLoad, t, this);
 				}
@@ -2858,7 +2902,8 @@
 			this.domDone = function(hasErrors) {
 				// DOM done, but child fragments may exist
 				if (!this.cancelled && !hasErrors) {
-					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t, this);
+					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t,
+							this);
 				}
 			};
 			var arc = new AppReplCache();
@@ -2878,19 +2923,26 @@
 				var xIsJ = r instanceof jQuery;
 				if (xIsJ && r.is('script')) {
 					if (xhr && xhr.status != 200) {
-						t.addError(xhr.status + ': ' + ts
-								+ ' path siphon="' + this.frp.pathSiphon() 
-								+ '"', this, e, ts, xhr);
+						t
+								.addError(xhr.status + ': ' + ts
+										+ ' path siphon="'
+										+ this.frp.pathSiphon() + '"', this, e,
+										ts, xhr);
 						this.domDone(true);
 						return;
-					} else if (!xhr && this.frp.pathSiphon() && this.frs.resultSiphon()) {
+					} else if (!xhr && this.frp.pathSiphon()
+							&& this.frs.resultSiphon()) {
 						var sd = this.frp.pathSiphon().indexOf(DATA_JS);
 						sd = sd > -1 ? this.frp.pathSiphon().substr(
 								DATA_JS.length) : this.frp.pathSiphon();
 						var ss = propAttr(r, 'type');
-						$('<script' + (typeof ss === 'string' && ss.length > 0 ? 
-							' type="' + ss + '">' : '>') + sd + 
-									'</script>').appendTo(this.frs.resultSiphon());
+						$(
+								'<script'
+										+ (typeof ss === 'string'
+												&& ss.length > 0 ? ' type="'
+												+ ss + '">' : '>') + sd
+										+ '</script>').appendTo(
+								this.frs.resultSiphon());
 					}
 				} else {
 					// add the result(s) to the destination(s)
@@ -2904,8 +2956,9 @@
 				try {
 					$adds = arc.appendReplaceAll();
 				} catch (e) {
-					t.addError('Error while adding desitination results to the DOM ' 
-							+ ' for ' + this.toString(), this, e);
+					t.addError(
+							'Error while adding desitination results to the DOM '
+									+ ' for ' + this.toString(), this, e);
 				}
 				if (!$adds) {
 					this.domDone(true);
@@ -2919,6 +2972,7 @@
 			};
 			this.nav = function(no, be) {
 				var rtn = null;
+				var loc = null;
 				if (be) {
 					t.len++;
 					t.cnt++;
@@ -2932,6 +2986,8 @@
 					if (this.cancelled) {
 						return;
 					}
+					broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t,
+							this);
 				}
 				no = no ? no : this.navOpts;
 				var vars = null;
@@ -2949,7 +3005,7 @@
 								+ vars[i].value + '" />';
 					}
 					fd.append(ips);
-					no.getWin().$('body').append(fd);
+					$('body', no.getWin()).append(fd);
 					fd.submit();
 					rtn = no.getWin();
 				} else {
@@ -2961,6 +3017,8 @@
 					rtn = no.getWin(loc);
 				}
 				if (be) {
+					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t,
+							this);
 					broadcast(opts.eventFragChain, opts.eventFragLoad, t, this);
 					broadcast(opts.eventFragsChain, opts.eventFragsLoad, t,
 							this);
@@ -2970,11 +3028,14 @@
 			};
 			this.isModel = function(xhr) {
 				var mt = xhr ? xhr.getResponseHeader('Content-Type') : null;
-				return mt && (mt.indexOf('json') >= 0 || mt.indexOf('xml') >= 0);
+				return mt
+						&& (mt.indexOf('json') >= 0 || mt.indexOf('xml') >= 0);
 			};
 			this.isSimpleView = function(xhr) {
 				var mt = xhr ? xhr.getResponseHeader('Content-Type') : null;
-				return mt && (mt.indexOf('text/plain') >= 0 || mt.indexOf('octet-stream') >= 0);
+				return mt
+						&& (mt.indexOf('text/plain') >= 0 || mt
+								.indexOf('octet-stream') >= 0);
 			};
 			this.isFullView = function(xhr) {
 				return !this.isModel(xhr) && !this.isSimpleView(xhr);
@@ -3047,6 +3108,7 @@
 			o.fragWinHistoryFlag = f ? f.navOpts.history : undefined;
 			o.fragStack = f ? f.getStack() : undefined;
 			o.fragAdjustments = f ? f.adjustments : undefined;
+			o.action = t.action;
 			o.sourceEvent = t.siphon.sourceEvent;
 			o.eventSiphon = f ? f.eventSiphon : undefined;
 			o.paramsSiphon = f ? f.fps.paramSiphon() : undefined;
@@ -3069,13 +3131,14 @@
 			};
 			o.toFormattedString = function() {
 				return lbls('event chain', o.chain, 'fragCount', o.fragCount,
-						'fragCurrTotal', o.fragCurrTotal, 'sourceEvent',
-						o.sourceEvent, 'parameters', o.parameters,
-						'paramsSiphon', o.paramsSiphon, 'pathSiphon',
-						o.pathSiphon, 'resultSiphon', o.resultSiphon,
-						'destSiphon', o.destSiphon, 'element', o.element,
-						'actionScope', o.actionScope, 'searchScope', o.searchScope,
-						'destScope', o.destScope, 'error', o.error);
+						'fragCurrTotal', o.fragCurrTotal, 'action', o.action,
+						'sourceEvent', o.sourceEvent, 'parameters',
+						o.parameters, 'paramsSiphon', o.paramsSiphon,
+						'pathSiphon', o.pathSiphon, 'resultSiphon',
+						o.resultSiphon, 'destSiphon', o.destSiphon, 'element',
+						o.element, 'actionScope', o.actionScope, 'searchScope',
+						o.searchScope, 'destScope', o.destScope, 'error',
+						o.error);
 			};
 			return o;
 		}
@@ -3113,6 +3176,7 @@
 			var e = $.Event(type);
 			e.chain = chain;
 			e.sourceEvent = t.siphon.sourceEvent;
+			e.action = t.action;
 			e.fragAdjustments = t.adjustments;
 			e.fragCancelCount = t.ccnt;
 			e.fragCount = t.cnt;
@@ -3125,11 +3189,12 @@
 				log(m ? m : '', l, this);
 			};
 			e.toFormattedString = function() {
-				return lbls('event chain', e.chain, 'fragCancelCount',
+				return lbls('event chain', e.chain, 'sourceEvent',
+						e.sourceEvent, 'action', e.action, 'fragCancelCount',
 						e.fragCancelCount, 'fragCount', e.fragCount,
-						'actionScope', e.actionScope, 'searchScope', e.searchScope,
-						'destScope', e.destScope, 'errors', e.errors,
-						'loadTime', e.loadTime);
+						'actionScope', e.actionScope, 'searchScope',
+						e.searchScope, 'destScope', e.destScope, 'errors',
+						e.errors, 'loadTime', e.loadTime);
 			};
 			return e;
 		}
@@ -3162,6 +3227,8 @@
 		 * &lt;/div&gt;
 		 * </pre>
 		 * 
+		 * @param action
+		 *            the action name that initiated loading
 		 * @param scopeAction
 		 *            the selector to the root element(s) where load attributes
 		 *            will be searched
@@ -3184,8 +3251,10 @@
 		 *            element, the number of fragments processed and an array of
 		 *            error objects- if any)
 		 */
-		function loadFragments(scopeAction, scopeSearch, scopeDest, siphon, nav, func) {
-			var t = new FragsTrack(scopeAction, scopeSearch, scopeDest, siphon, nav);
+		function loadFragments(action, scopeAction, scopeSearch, scopeDest,
+				siphon, nav, func) {
+			var t = new FragsTrack(action, scopeAction, scopeSearch, scopeDest,
+					siphon, nav);
 			broadcast(opts.eventFragsChain, opts.eventFragsBeforeHttp, t);
 			if (t.cancelled) {
 				return;
@@ -3214,25 +3283,31 @@
 			}
 			function hndlFunc(f, cb, r, status, xhr) {
 				if (f.frs.getFunc() && f.frs.getFunc().isValid) {
-					var rr = f.frs.getFunc().run({
-						handle : {
-							type : f.navOpts.type(),
-							target : f.navOpts.target,
-							data : r,
-							status : status,
-							xhr : xhr,
-							fragSrc : addFragProps({}, t, f),
-							proceed : function(x) {
-								try {
-									f.rslt(x);
-									f.dest();
-								} catch (e) {
-									t.addError('Error during handler proceed', f, e, 
-											status, xhr);
-								}
-							}
-						}
-					});
+					var rr = f.frs
+							.getFunc()
+							.run(
+									{
+										handle : {
+											type : f.navOpts.type(),
+											target : f.navOpts.target,
+											data : r,
+											status : status,
+											xhr : xhr,
+											fragSrc : addFragProps({}, t, f),
+											proceed : function(x) {
+												try {
+													f.rslt(x);
+													f.dest();
+												} catch (e) {
+													t
+															.addError(
+																	'Error during handler proceed',
+																	f, e,
+																	status, xhr);
+												}
+											}
+										}
+									});
 					if (rr.errorMessage) {
 						t.addError(rr.errorMessage, f, rr.errorCause, status,
 								xhr);
@@ -3264,8 +3339,7 @@
 					// inserted into the page's DOM
 					$x.remove();
 				}
-				broadcast(opts.eventFragChain,
-						opts.eventFragBeforeHttp, t, sf);
+				broadcast(opts.eventFragChain, opts.eventFragBeforeHttp, t, sf);
 				if (sf.cancelled) {
 					cb(null, sf);
 					return;
@@ -3294,8 +3368,10 @@
 
 				// just about every browser strips out BODY/HEAD when parsing an
 				// HTML DOM, all but Opera strip out HTML, many strip out
-				// TITLE/BASE/META and some strip out KEYGEN/PROGRESS/SOURCE. so, we
-				// can't use the typical JQuery/browser parsing on the result for
+				// TITLE/BASE/META and some strip out KEYGEN/PROGRESS/SOURCE.
+				// so, we
+				// can't use the typical JQuery/browser parsing on the result
+				// for
 				// those tags.
 				var ris = typeof r === 'string';
 				if (ris) {
@@ -3342,7 +3418,8 @@
 					// need to re-parse result because any nodes that may be
 					// appended to a destination from a previous result resolver
 					// iteration will no longer be present in the result node
-					var $fs = rr.selectFrom(i == 0 || !ris ? $c : f.frs.parse(rslt));
+					var $fs = rr.selectFrom(i == 0 || !ris ? $c : f.frs
+							.parse(rslt));
 					if ($fs.length <= 0) {
 						// nothing found
 						return true;
@@ -3374,7 +3451,8 @@
 				var f = null;
 				try {
 					f = new Frag(pf, $fl, t);
-					cb = typeof cb === 'function' ? cb : function(){};
+					cb = typeof cb === 'function' ? cb : function() {
+					};
 					broadcast(opts.eventFragChain, opts.eventFragBeforeHttp, t,
 							f);
 					if (f.cancelled) {
@@ -3386,36 +3464,43 @@
 						lcont(f, cb, $('html'), opts.selfRef, null);
 						return;
 					}
-					// when the fragment path is the 1st one in the queue retrieve it
-					// the queue will prevent duplicate calls to the same fragment path
+					// when the fragment path is the 1st one in the queue
+					// retrieve it
+					// the queue will prevent duplicate calls to the same
+					// fragment path
 					if (t.addFrag(f)) {
 						function adone(r, status, xhr) {
 							var tf = t.getFrags(f);
 							tf.result = r;
 							tf.status = status;
 							tf.xhr = xhr;
-							for (var i=0; i<tf.frags.length; i++) {
+							for (var i = 0; i < tf.frags.length; i++) {
 								lcont(tf.frags[i], cb, r, status, xhr);
 							}
 						}
-						// use ajax vs load w/content target for more granular control
+						// use ajax vs load w/content target for more granular
+						// control
 						$.ajax({
-							url: f.frp.pathSiphon(),
-							type: f.method,
-							data: f.fps.params(),
-							async: f.ajaxAsync,
-							cache: opts.ajaxCache,
-							crossDomain: opts.ajaxCrossDomain
-						}).done(adone).fail(function(xhr, ts, e) {
-							var tf = t.getFrags(f);
-							for (var i = 0; i < tf.frags.length; i++) {
-								t.addError('Error at ' + tf.frags[i].toString() + ': '
-										+ ts + '- ' + e, tf.frags[i], e, ts, xhr);
-								if (!hndlFunc(tf.frags[i], cb, null, ts, xhr)) {
-									cb(null, tf.frags[i]);
-								}
-							}
-						});
+							url : f.frp.pathSiphon(),
+							type : f.method,
+							data : f.fps.params(),
+							async : f.ajaxAsync,
+							cache : opts.ajaxCache,
+							crossDomain : opts.ajaxCrossDomain
+						}).done(adone).fail(
+								function(xhr, ts, e) {
+									var tf = t.getFrags(f);
+									for (var i = 0; i < tf.frags.length; i++) {
+										t.addError('Error at '
+												+ tf.frags[i].toString() + ': '
+												+ ts + '- ' + e, tf.frags[i],
+												e, ts, xhr);
+										if (!hndlFunc(tf.frags[i], cb, null,
+												ts, xhr)) {
+											cb(null, tf.frags[i]);
+										}
+									}
+								});
 					} else {
 						var tf = t.getFrags(f);
 						if (tf.result) {
@@ -3431,25 +3516,31 @@
 				}
 			}
 			function lfc(pf, $fl) {
-				lfg(pf, $fl, function($cf, f) {
-					// process any nested fragments
-					if ($cf) {
-						var nf = false;
-						if (t.siphon.selector instanceof jQuery) {
-							// need to check destination(s) for nested fragments
-							var fsr = new Resolver(fragSelector);
-							$cf = fsr.selectFrom($cf);
-							// scope needs to revert to the default fragment
-							// selector (not self select)
-							t.resetSiphon(fragSelector, $cf, null, null, false);
-							nf = true;
-						}
-						lfi($cf, f, nf);
-					}
-					done(pf, t, f);
-				});
+				lfg(pf, $fl,
+						function($cf, f) {
+							// process any nested fragments
+							if ($cf) {
+								var nf = false;
+								if (t.siphon.selector instanceof jQuery) {
+									// need to check destination(s) for nested
+									// fragments
+									var fsr = new Resolver(fragSelector);
+									$cf = fsr.selectFrom($cf);
+									// scope needs to revert to the default
+									// fragment
+									// selector, action scope and non short hand
+									// frag
+									t.resetSiphon(fragSelector, $cf, null,
+											null, false);
+									nf = true;
+								}
+								lfi($cf, f, nf);
+							}
+							done(pf, t, f);
+						});
 			}
-			// IE strips any attributes in the HEAD tag so we use the thymus script
+			// IE strips any attributes in the HEAD tag so we use the thymus
+			// script
 			// attribute to capture HEAD includes/replacements (if defined)
 			if (t.isTopLevel) {
 				var $head = $('head');
@@ -3466,8 +3557,8 @@
 			}
 			// recursivly process all the includes/replacements
 			function lfi($f, f, nf) {
-				var $fs = nf || (t.isSelfSelect && $f.is(t.actionScope)) ? $f : $f
-						.find(t.siphon.selector);
+				var $fs = nf || (t.isShortHand && $f.is(t.actionScope)) ? $f
+						: $f.find(t.siphon.selector);
 				t.len += $fs.length;
 				$fs.each(function() {
 					lfc(f, $(this));
@@ -3509,9 +3600,12 @@
 			typeSep : '|',
 			targetSep : '|',
 			multiSep : '::',
-			fragAttrs : [ 'data-thx-fragment', 'th\\:fragment', 'data-th-fragment' ],
-			includeAttrs : [ 'data-thx-include', 'th\\:include', 'data-th-include' ],
-			replaceAttrs : [ 'data-thx-replace', 'th\\:replace', 'data-th-replace' ],
+			fragAttrs : [ 'data-thx-fragment', 'th\\:fragment',
+					'data-th-fragment' ],
+			includeAttrs : [ 'data-thx-include', 'th\\:include',
+					'data-th-include' ],
+			replaceAttrs : [ 'data-thx-replace', 'th\\:replace',
+					'data-th-replace' ],
 			urlAttrs : [ 'action', 'archive', 'background', 'cite', 'classid',
 					'codebase', 'data', 'dynsrc', 'formaction', 'href', 'icon',
 					'longdesc', 'lowsrc', 'manifest', 'poster', 'profile',
@@ -3598,27 +3692,25 @@
 		 * 
 		 * @param a
 		 *            the action object (or action string)
-		 * @param altEl
-		 *            the alternative initiating element
 		 * @parma the options (relative to the context of the element(s) for
 		 *        which the plug-in is being called from)
 		 */
-		$.fn[NS] = function(a, altEl, opts) {
+		$.fn[NS] = function(a, opts) {
 			var o = $.extend({}, defs, opts);
-			if (firstRun && rootRun) {
-				// make sure the root document has navigation capabilities
-				rootRun = false;
-				$('html')[NS](o.actionNavRegister);
-			}
 			var x = null, xl = null;
 			var s = this.selector;
 			return this.each(function() {
+				if (firstRun && rootRun && $.contains(document, this[0])) {
+					// make sure the root document has navigation capabilities
+					rootRun = false;
+					$('html')[NS](o.actionNavRegister);
+				}
 				xl = $.data(this, NS);
 				if (opts || !xl) {
 					xl = x ? x : (x = new FragCtx(s, script, o));
 					$.data(this, NS, xl);
 				}
-				xl.exec(a, this, altEl);
+				xl.exec(a, this);
 			});
 		};
 		$.fn[NS].defaults = defs;
@@ -3660,8 +3752,8 @@
 				cb(null, null, null, null);
 			}
 		}
-		preloadResources(propAttr(script, FRAGS_PRE_LOAD_CSS_ATTR), propAttr(script,
-				FRAGS_PRE_LOAD_JS_ATTR), function (s, d, ts, jqxhr, e) {
+		preloadResources(propAttr(script, FRAGS_PRE_LOAD_CSS_ATTR), propAttr(
+				script, FRAGS_PRE_LOAD_JS_ATTR), function(s, d, ts, jqxhr, e) {
 			if (e) {
 				var ne = 'Unable to load "' + s + '" ' + e + ', status: ' + ts
 						+ ', data: ' + d;
@@ -3731,7 +3823,7 @@
 	function preInit() {
 		updateUrls = true;
 		basePath = preLoadAttr(BASE_PATH_ATTR);
-		//var body = document.getElementsByTagName('body')[0];
+		// var body = document.getElementsByTagName('body')[0];
 		var base = document.getElementsByTagName('base')[0];
 		var bp = base ? preLoadAttr('href', null, base) : null;
 		var bpu = bp && basePath && bp.toLowerCase() != basePath.toLowerCase();
@@ -3744,7 +3836,7 @@
 					+ '". Relative URLs will be updated via JQuery and may '
 					+ 'not reflect the base tag href', 2);
 			// update base href
-			//preLoadAttr('href', null, base, basePath);
+			// preLoadAttr('href', null, base, basePath);
 			// write base href
 			// document.write('<base href="' + urlAdjust(basePath) + '" />');
 		} else if (!basePath && !fbpu) {
@@ -3783,7 +3875,7 @@
 		s.src = su;
 		document.getElementsByTagName('head')[0].appendChild(s);
 	}
-	
+
 	// start thymus.js
 	preInit();
 })();
