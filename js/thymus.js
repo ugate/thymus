@@ -624,13 +624,16 @@
 	}
 
 	/**
-	 * Waits for a window's ready state to be loaded and executes a function
-	 * when loaded
+	 * Waits for a predetermined amount of time before executing a function
+	 * multiple times until the function returns true or until a timeout is
+	 * reached
 	 * 
 	 * @param delay
 	 *            the delay between checks in milliseconds
 	 * @param timeout
 	 *            the timeout in milliseconds
+	 * @param fx
+	 *            the function to call for each interval
 	 */
 	function wait(delay, timeout, fx) {
 		var limit = 0, timer = null;
