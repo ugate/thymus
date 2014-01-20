@@ -439,52 +439,109 @@
 	 *            the separator to extract the target of the navigation options
 	 */
 	function NavOptions(type, typeSep, target, targetSep) {
+		var $$ = this;
 		var win = null, rcnt = 0;
 		var ptype = type ? splitWithTrim(type, typeSep) : [ ASYNC ];
-		this.isAsync = ptype[0].toLowerCase() == SYNC ? false : true;
+		$$.isAsync = ptype[0].toLowerCase() == SYNC ? false : true;
 		var forceType = ptype.length > 1;
 		ptype = forceType ? ptype[1].toLowerCase() : TDFLT;
-		this.target = target ? splitWithTrim(target, targetSep) : [ '_self' ];
-		this.options = this.target.length > 1 ? this.target[1] : undefined;
-		this.history = this.target.length > 2 ? this.target[2] : undefined;
-		this.target = this.target[0];
-		this.reuseMax = 1;
-		this.reuse = function() {
-			return rcnt < this.reuseMax ? ++rcnt : 0;
+		$$.target = target ? splitWithTrim(target, targetSep) : [ '_self' ];
+		$$.options = $$.target.length > 1 ? $$.target[1] : undefined;
+		$$.history = $$.target.length > 2 ? $$.target[2] : undefined;
+		$$.target = $$.target[0];
+		$$.reuseMax = 1;
+		$$.reuse = function() {
+			return rcnt < $$.reuseMax ? ++rcnt : 0;
 		};
-		this.isFullPageSync = function() {
-			return !this.isAsync && ptype == TTRAN;
+		$$.isFullPageSync = function() {
+			return !$$.isAsync && ptype == TTRAN;
 		};
-		this.type = function(nt) {
+		$$.type = function(nt) {
 			if (!forceType && nt) {
 				ptype = nt;
 			}
 			return ptype;
 		};
-		this.getWin = function(loc) {
-			if (!win && this.type == '_blank' && !loc) {
-				win = window.open('about:blank', this.target, this.options,
-						this.history);
-				win.document.write('<html><body></body></html>');
-				return win;
-			} else if (!win) {
-				win = window;
-				if (this.target != '_self') {
-					var tn = this.target.charAt(0) == '_' ? this.target
-							.substring(1) : this.target;
-					win = window[tn];
+		$$.getWin = function(loc, el, delay, timeout, dfx, lfx) {
+			function opt(w) {
+				var $w = $(w), oe = null, ol = w.location.href, ohn = w.location.hostname;
+				var $b = $('body', w.document);
+				var $f = loc instanceof jQuery && loc.is('form') ? loc : null;
+				if (el) {
+					$b.append(el);
+				}
+				if (dfx) {
+					dfx.call($w);
+				}
+				if (lfx) {
+					oe = function() {
+						if ($f) {
+							$f.off('submit', oe);
+						} else {
+							$w.off('unload', oe);
+						}
+						// wait for location to change before registering load
+						// listener or it will never fire
+						wait(delay, timeout, function(cnt, e) {
+							if (ohn != w.location.hostname) {
+								// different host will not trigger load event-
+								// best effort exhausted
+								lfx.call($w, $f);
+								return true;
+							}
+							if (ol != w.location.href) {
+								oe = function() {
+									$w.off('load', oe);
+									lfx.call($w, $f);
+								};
+								$w.load(oe);
+								return true;
+							}
+						});
+					};
+					if ($f) {
+						$f.on('submit', oe);
+					} else {
+						$w.on('unload', oe);
+					}
+				}
+				if ($f) {
+					$f.submit();
 				}
 			}
-			if (loc) {
-				return window
-						.open(loc, this.target, this.options, this.history);
+			try {
+				if (!win && $$.type == '_blank' && !loc) {
+					win = window.open('about:blank', $$.target, $$.options,
+							$$.history);
+					win.document.write('<html><body></body></html>');
+					opt(win);
+					return win;
+				} else if (!win) {
+					win = window;
+					if ($$.target != '_self') {
+						var tn = $$.target.charAt(0) == '_' ? $$.target
+								.substring(1) : $$.target;
+						win = window[tn];
+					}
+				}
+				if (loc) {
+					if (typeof loc === 'string') {
+						win = window.open(loc, $$.target, $$.options,
+								$$.history);
+					}
+					opt(win);
+				}
+			} catch (e) {
+				if (lfx) {
+					lfx.call(win, null, e);
+				}
 			}
 			return win;
 		};
-		this.toString = function() {
-			return lbls('object', this.constructor.name, 'type', this.type(),
-					'forceType', forceType, 'target', this.target, 'options',
-					this.options, 'history', this.history);
+		$$.toString = function() {
+			return lbls('object', $$.constructor.name, 'type', $$.type(),
+					'forceType', forceType, 'target', $$.target, 'options',
+					$$.options, 'history', $$.history);
 		};
 	}
 
@@ -564,6 +621,34 @@
 		} catch (e) {
 			// consume
 		}
+	}
+
+	/**
+	 * Waits for a window's ready state to be loaded and executes a function
+	 * when loaded
+	 * 
+	 * @param delay
+	 *            the delay between checks in milliseconds
+	 * @param timeout
+	 *            the timeout in milliseconds
+	 */
+	function wait(delay, timeout, fx) {
+		var limit = 0, timer = null;
+		timer = setInterval(function() {
+			try {
+				if (limit >= timeout) {
+					clearInterval(timer);
+					fx(limit, new Error("Timmed out after "
+							+ (limit * timeout) + " milliseconds"));
+				} else if (fx(limit)) {
+					clearInterval(timer);
+				}
+				limit++;
+			} catch (e) {
+				clearInterval(timer);
+				fx(limit, e);
+			}
+		}, delay);
 	}
 
 	/**
@@ -2810,11 +2895,11 @@
 		 *            the optional template selector
 		 */
 		function Frag(pf, $fl, t) {
-			var ctx = this;
+			var $$ = this;
 			// var isHead = $fl instanceof jQuery ? $fl.is('head') : false;
-			this.pf = pf;
-			this.pel = t.actionScope;
-			this.el = $fl;
+			$$.pf = pf;
+			$$.pel = t.actionScope;
+			$$.el = $fl;
 			var siphon = t.siphon;
 			var loadSiphon = null;
 			// "a" will represent the short-hand attrs
@@ -2823,7 +2908,7 @@
 			// passed tracking siphon or extracted by fragment attributes
 			if (!t.isShortHand
 					&& (loadSiphon = new SiphonAttrs(opts.ajaxTypeDefault,
-							'load', null, siphon.selector, this.el,
+							'load', null, siphon.selector, $$.el,
 							t.siphon.vars, true, t.searchScope)).isValid) {
 				// DOM siphon attribute for a load event will take presedence
 				// over short-hand include/replace/etc.
@@ -2832,109 +2917,106 @@
 			} else if (!t.isShortHand) {
 				a = getFragAttr($fl, opts.includeAttrs);
 			}
-			this.ajaxAsync = true;
-			this.navOpts = t.navOpts && t.navOpts.reuse() ? t.navOpts
+			$$.ajaxAsync = true;
+			$$.navOpts = t.navOpts && t.navOpts.reuse() ? t.navOpts
 					: new NavOptions(siphon.typeSiphon, opts.typeSep,
 							siphon.targetSiphon, opts.targetSep);
 			if (!a && !t.isShortHand) {
 				a = getFragAttr($fl, opts.replaceAttrs);
-				this.navOpts.type(TREP);
+				$$.navOpts.type(TREP);
 			} else {
-				this.navOpts.type(TINC);
+				$$.navOpts.type(TINC);
 			}
 			// short-hand attrs may have path and result siphon
 			a = a ? a.split(opts.multiSep) : null;
-			this.eventSiphon = siphon.eventSiphon;
-			this.method = siphon.method ? siphon.method : opts.ajaxTypeDefault;
-			this.getVars = function() {
-				return siphon.vars ? siphon.vars.get(this.method) : null;
+			$$.eventSiphon = siphon.eventSiphon;
+			$$.method = siphon.method ? siphon.method : opts.ajaxTypeDefault;
+			$$.getVars = function() {
+				return siphon.vars ? siphon.vars.get($$.method) : null;
 			};
-			this.ws = siphon.withSiphon;
-			if (siphon.vars && this.ws) {
+			$$.ws = siphon.withSiphon;
+			if (siphon.vars && $$.ws) {
 				// add user variables
-				siphon.vars.add(this.method, this.ws);
+				siphon.vars.add($$.method, $$.ws);
 			}
-			this.fps = new FragParamSiphon(t, this.method, siphon.paramsSiphon,
+			$$.fps = new FragParamSiphon(t, $$.method, siphon.paramsSiphon,
 					siphon.vars);
-			this.frs = new FragResultSiphon(t, this, !a ? siphon.resultSiphon
+			$$.frs = new FragResultSiphon(t, $$, !a ? siphon.resultSiphon
 					: a && a.length > 1 ? $.trim(a[1]) : null, siphon.vars);
-			this.frp = new FragPathSiphon(t, this, !a ? siphon.pathSiphon : a
+			$$.frp = new FragPathSiphon(t, $$, !a ? siphon.pathSiphon : a
 					&& a.length > 0 ? $.trim(a[0]) : null, siphon.vars);
-			this.fds = new FragDestSiphon(t, this,
-					!a && siphon.destSiphon ? siphon.destSiphon : this.el,
+			$$.fds = new FragDestSiphon(t, $$,
+					!a && siphon.destSiphon ? siphon.destSiphon : $$.el,
 					siphon.vars);
-			this.destResults = null;
-			this.e = null;
-			this.cancelled = false;
+			$$.destResults = null;
+			$$.e = null;
+			$$.cancelled = false;
 			var wcnt = 1;
-			this.ccnt = function(a) {
+			$$.ccnt = function(a) {
 				if (a) {
 					wcnt++;
 				} else if (a == false && --wcnt == 0) {
 					// no longer waiting for any more child fragments to
 					// complete
 					t.cnt++;
-					broadcast(opts.eventFragChain, opts.eventFragLoad, t, this);
+					broadcast(opts.eventFragChain, opts.eventFragLoad, t, $$);
 				}
 				return wcnt;
 			};
-			if (this.pf) {
+			if ($$.pf) {
 				// increment child fragment count on parent fragment
-				this.pf.ccnt(true);
+				$$.pf.ccnt(true);
 			}
-			this.pseudoUrl = function(f) {
-				return (this.frp.pathSiphon() ? this.frp.pathSiphon() : '')
-						+ (this.fps.params() ? '?' + this.fps.params() : '');
+			$$.pseudoUrl = function(f) {
+				return ($$.frp.pathSiphon() ? $$.frp.pathSiphon() : '')
+						+ ($$.fps.params() ? '?' + $$.fps.params() : '');
 			};
-			this.as = siphon.agentSiphon;
-			this.done = function() {
-				if (!this.cancelled) {
-					this.ccnt(false);
+			$$.as = siphon.agentSiphon;
+			$$.done = function() {
+				if (!$$.cancelled) {
+					$$.ccnt(false);
 				} else {
 					t.cnt++;
 				}
 				// decrement parent fragments child count
-				var x = this;
+				var x = $$;
 				while (x = x.pf) {
 					x.ccnt(false);
 				}
 			};
-			this.domDone = function(hasErrors) {
+			$$.domDone = function(hasErrors) {
 				// DOM done, but child fragments may exist
-				if (!this.cancelled && !hasErrors) {
+				if (!$$.cancelled && !hasErrors) {
 					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t,
-							this);
+							$$);
 				}
 			};
 			var arc = new AppReplCache();
 			// handles processing of fragments
-			this.rslt = function(r, rr, xhr, ts, e) {
-				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, this);
-				if (this.cancelled) {
-					this.domDone(false);
+			$$.rslt = function(r, rr, xhr, ts, e) {
+				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, $$);
+				if ($$.cancelled) {
+					$$.domDone(false);
 					return;
 				}
 				if (ts || e) {
-					t.addError('Error at ' + this.toString() + ': ' + ts + '- '
-							+ e, this, e, ts, xhr);
-					this.domDone(true);
+					t.addError('Error at ' + $$.toString() + ': ' + ts + '- '
+							+ e, $$, e, ts, xhr);
+					$$.domDone(true);
 					return;
 				}
 				var xIsJ = r instanceof jQuery;
 				if (xIsJ && r.is('script')) {
 					if (xhr && xhr.status != 200) {
-						t
-								.addError(xhr.status + ': ' + ts
-										+ ' path siphon="'
-										+ this.frp.pathSiphon() + '"', this, e,
-										ts, xhr);
-						this.domDone(true);
+						t.addError(xhr.status + ': ' + ts + ' path siphon="'
+								+ $$.frp.pathSiphon() + '"', $$, e, ts, xhr);
+						$$.domDone(true);
 						return;
-					} else if (!xhr && this.frp.pathSiphon()
-							&& this.frs.resultSiphon()) {
-						var sd = this.frp.pathSiphon().indexOf(DATA_JS);
-						sd = sd > -1 ? this.frp.pathSiphon().substr(
-								DATA_JS.length) : this.frp.pathSiphon();
+					} else if (!xhr && $$.frp.pathSiphon()
+							&& $$.frs.resultSiphon()) {
+						var sd = $$.frp.pathSiphon().indexOf(DATA_JS);
+						sd = sd > -1 ? $$.frp.pathSiphon().substr(
+								DATA_JS.length) : $$.frp.pathSiphon();
 						var ss = propAttr(r, 'type');
 						$(
 								'<script'
@@ -2942,37 +3024,36 @@
 												&& ss.length > 0 ? ' type="'
 												+ ss + '">' : '>') + sd
 										+ '</script>').appendTo(
-								this.frs.resultSiphon());
+								$$.frs.resultSiphon());
 					}
 				} else {
 					// add the result(s) to the destination(s)
-					this.fds.add(t.destScope, arc, this.frs.add(arc, rr, r),
-							rr, this.isModel(xhr), ts, xhr);
+					$$.fds.add(t.destScope, arc, $$.frs.add(arc, rr, r), rr, $$
+							.isModel(xhr), ts, xhr);
 				}
-				this.domDone(false);
+				$$.domDone(false);
 			};
-			this.dest = function() {
+			$$.dest = function() {
 				var $adds = null;
 				try {
 					$adds = arc.appendReplaceAll();
 				} catch (e) {
 					t.addError(
 							'Error while adding desitination results to the DOM '
-									+ ' for ' + this.toString(), this, e);
+									+ ' for ' + $$.toString(), $$, e);
 				}
 				if (!$adds) {
-					this.domDone(true);
+					$$.domDone(true);
 					return;
 				}
 				// make post template DOM adjustments- no need for URL updates-
 				// they needed to be completed prior to placement in the DOM or
 				// URLs in some cases will be missed (like within the head)
-				htmlDomAdjust(t, ctx, $adds, false);
-				return this.destResults = jqAdd(this.destResults, $adds);
+				htmlDomAdjust(t, $$, $adds, false);
+				return $$.destResults = jqAdd($$.destResults, $adds);
 			};
-			this.nav = function(no, be) {
-				var rtn = null;
-				var loc = null;
+			$$.nav = function(no, be) {
+				var rtn = null, dcb = null, lcb = null;
 				if (be) {
 					t.len++;
 					t.cnt++;
@@ -2982,67 +3063,76 @@
 						return;
 					}
 					broadcast(opts.eventFragChain, opts.eventFragBeforeHttp, t,
-							this);
-					if (this.cancelled) {
+							$$);
+					if ($$.cancelled) {
 						return;
 					}
 					broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t,
-							this);
+							$$);
+					dcb = function() {
+						$$.domDone(false);
+					};
+					// wait for the window to complete, then fire events
+					lcb = function($frm, e) {
+						if (e) {
+							t.addError('Error while waiting for navigation '
+									+ 'window to complete loading', $$, e);
+						}
+						broadcast(opts.eventFragChain, opts.eventFragLoad, t,
+								$$);
+						broadcast(opts.eventFragsChain, opts.eventFragsLoad, t,
+								$$);
+						t.cnt--;
+					};
 				}
-				no = no ? no : this.navOpts;
+				no = no ? no : $$.navOpts;
 				var vars = null;
-				if (this.method.toLowerCase() != 'get') {
+				if ($$.method.toLowerCase() != 'get') {
 					// for performance we'll build input strings versus nodes
 					// before we simulate the synchronous form submission/page
 					// transfer
 					var fd = $('<form style="display:none;" action="'
-							+ this.frp.pathSiphon() + '" method="'
-							+ this.method + '" />');
-					vars = this.fps.params(true);
+							+ $$.frp.pathSiphon() + '" method="'
+							+ $$.method + '" />');
+					vars = $$.fps.params(true);
 					var ips = '';
 					for (var i = 0; i < vars.length; i++) {
 						ips += '<input name="' + vars[i].name + '" value="'
 								+ vars[i].value + '" />';
 					}
 					fd.append(ips);
-					$('body', no.getWin()).append(fd);
-					fd.submit();
-					rtn = no.getWin();
+					// submit form
+					rtn = no.getWin(null, fd, opts.readyStateDelay,
+							opts.readyStateTimeout, dcb, lcb);
 				} else {
-					var loc = this.frp.pathSiphon();
-					var vars = this.fps.params();
+					var loc = $$.frp.pathSiphon();
+					var vars = $$.fps.params();
 					if (vars) {
 						loc += '?' + vars;
 					}
-					rtn = no.getWin(loc);
-				}
-				if (be) {
-					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t,
-							this);
-					broadcast(opts.eventFragChain, opts.eventFragLoad, t, this);
-					broadcast(opts.eventFragsChain, opts.eventFragsLoad, t,
-							this);
-					t.cnt--;
+					// open window or change location
+					rtn = no.getWin(loc, null, opts.readyStateDelay,
+							opts.readyStateTimeout, dcb, lcb);
 				}
 				return rtn;
 			};
-			this.isModel = function(xhr) {
+			$$.isModel = function(xhr) {
 				var mt = xhr ? xhr.getResponseHeader('Content-Type') : null;
 				return mt
 						&& (mt.indexOf('json') >= 0 || mt.indexOf('xml') >= 0);
 			};
-			this.isSimpleView = function(xhr) {
+			$$.isSimpleView = function(xhr) {
 				var mt = xhr ? xhr.getResponseHeader('Content-Type') : null;
 				return mt
 						&& (mt.indexOf('text/plain') >= 0 || mt
 								.indexOf('octet-stream') >= 0);
 			};
-			this.isFullView = function(xhr) {
-				return !this.isModel(xhr) && !this.isSimpleView(xhr);
+			$$.isFullView = function(xhr) {
+				return !$$.isModel(xhr) && !$$.isSimpleView(xhr);
 			};
-			this.getStack = function() {
+			$$.getStack = function() {
 				var us = [];
-				var cf = this;
+				var cf = $$;
 				do {
 					us[us.length] = {
 						pathSiphon : cf.frp.pathSiphon(),
@@ -3053,33 +3143,33 @@
 				} while ((cf = cf.pf));
 				return us;
 			};
-			this.adjustments = null;
-			this.addAdjustments = function(el, ov, nv, an) {
+			$$.adjustments = null;
+			$$.addAdjustments = function(el, ov, nv, an) {
 				var c = {
 					scope : el,
 					oldValue : ov,
 					newValue : nv,
 					attrName : an
 				};
-				if (!this.adjustments) {
-					this.adjustments = [];
+				if (!$$.adjustments) {
+					$$.adjustments = [];
 				}
 				if (!t.adjustments) {
 					t.adjustments = [];
 				}
-				this.adjustments[this.adjustments.length] = c;
+				$$.adjustments[$$.adjustments.length] = c;
 				t.adjustments[t.adjustments.length] = c;
 			};
-			this.toString = function() {
-				return lbls('object', this.constructor.name, 'options',
-						this.navOpts.toString(), 'HTTP method', this.method,
-						'URL', this.pseudoUrl(), 'parameter siphon', this.fps
-								.paramSiphon(), 'path siphon', this.frp
-								.pathSiphon(), 'result siphon', this.frs
+			$$.toString = function() {
+				return lbls('object', $$.constructor.name, 'options',
+						$$.navOpts.toString(), 'HTTP method', $$.method, 'URL',
+						$$.pseudoUrl(), 'parameter siphon', $$.fps
+								.paramSiphon(), 'path siphon', $$.frp
+								.pathSiphon(), 'result siphon', $$.frs
 								.getFuncOrResultSiphon(), 'destination siphon',
-						this.fds.destSiphon(), 'agent siphon', this.as,
-						'cancelled', this.cancelled, 'error',
-						this.e ? this.e.message : null);
+						$$.fds.destSiphon(), 'agent siphon', $$.as,
+						'cancelled', $$.cancelled, 'error', $$.e ? $$.e.message
+								: null);
 			};
 		}
 
@@ -3651,6 +3741,8 @@
 			fragsListenerAttr : 'data-thx-onfrags',
 			fragHeadAttr : 'data-thx-head-frag',
 			paramNameAttrs : [ 'name', 'id' ],
+			readyStateDelay : 10,
+			readyStateTimeout : 30000,
 			regexFragName : /^[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*$/,
 			regexFunc : /^[_$a-zA-Z\xA0-\uFFFF].+?\(/i,
 			regexFileName : /[^\/?#]+(?=$|[?#])/,

@@ -230,7 +230,7 @@ var Harness = {
 			}
 			$win = $win ? $win.add($w) : $w;
 		}
-		$i.appendTo('body').each(wr);
+		$i.appendTo(Harness.TEST_FIXTURE_SEL).each(wr);
 		return $win;
 	},
 
