@@ -1383,6 +1383,8 @@
 						a.destScope, {});
 				var f = new Frag(null, t.actionScope, t);
 				htmlDomAdjust(t, f, t.actionScope, true);
+			} else if (a.action === opts.actionOptions) {
+				return opts;
 			} else {
 				throw new Error('Invalid action: ' + a.action);
 			}
@@ -2040,36 +2042,37 @@
 		 *            an optional {Resolver} type
 		 */
 		function Resolver(s, d, cr, t) {
-			this.selector = s instanceof jQuery ? s : s ? $.trim(s) : null;
-			this.directive = d ? $.trim(d) : '';
-			if (this.directive) {
-				var ld = this.directive.toLowerCase();
+			var $$ = this;
+			$$.selector = s instanceof jQuery ? s : s ? $.trim(s) : null;
+			$$.directive = d ? $.trim(d) : '';
+			if ($$.directive) {
+				var ld = $$.directive.toLowerCase();
 				if (ld == DTEXT || ld == DHTML) {
-					this.directive = ld;
+					$$.directive = ld;
 				}
 			}
 			// selects node(s) from an element using the internal
 			// selector either as a self-selection, a find or filter
-			this.selectFrom = function($el, be) {
+			$$.selectFrom = function($el, be) {
 				var $r = null;
-				if (s && this.selector) {
+				if (s && $$.selector) {
 					var $p = $el ? $el : $('html');
 					var sbe = null;
-					var jqs = this.selector instanceof jQuery;
-					if (jqs && this.selector.is($p)) {
+					var jqs = $$.selector instanceof jQuery;
+					if (jqs && $$.selector.is($p)) {
 						return $p;
-					} else if (jqs && this.selector.is(DFTL_RSLT_NAME)) {
+					} else if (jqs && $$.selector.is(DFTL_RSLT_NAME)) {
 						// don't use wrapper for selections
 						return $p.contents();
 					}
-					$r = $p.find(this.selector);
+					$r = $p.find($$.selector);
 					if ($r.length <= 0) {
 						if (jqs && be) {
-							sbe = genAttrSelByExample(this.selector);
+							sbe = genAttrSelByExample($$.selector);
 							$r = $p.find(sbe);
 						}
 						if ($r.length <= 0) {
-							$r = $p.filter(this.selector);
+							$r = $p.filter($$.selector);
 							if (sbe && $r.length <= 0) {
 								$r = $p.filter(sbe);
 							}
@@ -2304,7 +2307,7 @@
 			this.params = function($el, uj, psn) {
 				try {
 					var $elc = $el instanceof jQuery ? $el : $ell ? $ell
-							: $('html');
+							: t.searchScope ? t.searchScope : $('html');
 					// only trigger a capture when element has changed or a new
 					// parameter siphon has been requested
 					if (resolve(uj, psn) || (psp && (!$ell || !$ell.is($elc)))) {
@@ -3767,6 +3770,7 @@
 			regexParamCheckable : /^(?:checkbox|radio)$/i,
 			regexParamReplace : /\r?\n/g,
 			regexDestTextOrAttrVal : /[^\x21-\x7E\s]+/g,
+			regexFilterFindSplit : /\s+/,
 			paramReplaceWith : '\r\n',
 			resultWrapperTagName : DFTL_RSLT_NAME,
 			eventIsBroadcast : true,
@@ -3780,7 +3784,8 @@
 			eventFragsLoad : 'load.thx.frags',
 			actionLoadFrags : 'frags.load',
 			actionNavRegister : 'nav.register',
-			actionNavInvoke : 'nav.invoke'
+			actionNavInvoke : 'nav.invoke',
+			actionOptions : 'opts.get'
 		};
 		/**
 		 * thymus.js plug-in action execution

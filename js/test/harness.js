@@ -12,6 +12,7 @@ var Harness = {
 	EVT_FRAGS_LOAD : 'load.thx.frags',
 	TEST_CSS_CLASS : 'qunit',
 	TEST_FIXTURE_SEL : '#qunit-fixture',
+	REGEX_PARAMS_STR : /([^&=]+)=([^&]*)/g,
 
 	/**
 	 * A convenience construct for framework/test related tasks
@@ -159,20 +160,6 @@ var Harness = {
 	},
 
 	/**
-	 * Creates a test selection that will find or filter in one step
-	 * 
-	 * @param el
-	 *            the node to select from
-	 * @param sel
-	 *            the selector to use
-	 * @returns the selection
-	 */
-	testSelect : function(el, sel) {
-		return el.length == 1 && el.hasClass(Harness.TEST_CSS_CLASS) ? el
-				: el.length > 1 ? el.filter(sel) : el.find(sel);
-	},
-
-	/**
 	 * An extension to the QUnit counterpart that takes additional formatting
 	 * options as well as takes into account if HTML contents should be shown
 	 * 
@@ -193,14 +180,140 @@ var Harness = {
 			nm = msg.stack.replace(msg.message, '');
 			nm = msg.message + '\n' + nm;
 		} else if (pp) {
-			nm = pp + ': "' + msg + '"';
+			nm = pp + ': ' + msg;
 		} else {
 			nm = msg;
 		}
-		if (el instanceof jQuery && QUnit.urlParams.showRslts) {
-			nm += el.html();
+		if (el && QUnit.urlParams.showRslts) {
+			nm += '... ' + (el instanceof jQuery ? el.html() : el);
 		}
 		ok(ise ? false : state, nm);
+	},
+
+	/**
+	 * Creates a test selection that will find or filter in one step
+	 * 
+	 * @param el
+	 *            the node to select from
+	 * @param sel
+	 *            the selector to use
+	 * @returns the selection
+	 */
+	testSelect : function(el, sel) {
+		return el.length == 1 && el.hasClass(Harness.TEST_CSS_CLASS) ? el
+				: el.length > 1 ? el.filter(sel) : el.find(sel);
+	},
+
+	/**
+	 * Generates an associative array with key as the parameter name and values
+	 * as and array of found values
+	 * 
+	 * @param o
+	 *            either the URL encoded string of parameters or a window to get
+	 *            the search parameters (defaults to the current windows search
+	 *            parameters)
+	 * @returns an object that contains an associative array of parameters
+	 *          "params" and a count of found parameters "cnt"
+	 */
+	getParams : function(o) {
+		var s = typeof o === 'string' ? o
+				: typeof o === 'object' && o.document ? o.document.location.search
+						: window.location.search;
+		var t = s.indexOf('?');
+		if (t >= 0 && t < (s.length - 1)) {
+			s = s.substr(t + 1);
+		}
+		var ss = s.match(Harness.REGEX_PARAMS_STR);
+		var il = ss.length - 1, p = null, oa = [];
+		for (var i = 0; i <= il; i++) {
+			p = ss[i];
+			if (i == il) {
+				// remove possible hashes
+				t = p.split('#');
+				if (t > 1) {
+					p.pop();
+					p = p.join('#');
+				}
+			}
+			t = p.indexOf('=');
+			var k = decodeURIComponent(p.substr(0, t));
+			var v = decodeURIComponent((p.length - 1) == t ? '' : p
+					.substr(t + 1));
+			if (!oa[k]) {
+				oa[k] = {
+					vals : []
+				};
+			}
+			oa[k].vals.push(v);
+		}
+		return {
+			params : oa,
+			cnt : il + 1
+		};
+	},
+
+	/**
+	 * Data construct used for common testing tasks that simplify validation of
+	 * such things as passed parameters
+	 * 
+	 * @constructor
+	 * @param html
+	 *            initial HTML
+	 */
+	Data : function(html) {
+		var $$ = this;
+		$$.html = html;
+		var pp = 'Passed Parameters', outParams = [], cnt = 0, outParamsCnt = 0;
+		$$.keyVal = function(v, x, useLastKey, va, na) {
+			var k = 'param' + (useLastKey ? cnt : ++cnt);
+			if (!x) {
+				if (!useLastKey) {
+					outParamsCnt++;
+				}
+				if (!outParams[k]) {
+					outParams[k] = {
+						vals : []
+					};
+				}
+				if (v) {
+					outParams[k].vals.push(typeof v === 'string' ? v : v
+							.toString());
+				}
+				outParams[k].key = k;
+			}
+			return ' '
+					+ (k && !useLastKey ? (na ? na : 'name') + '="' + k + '" '
+							: '')
+					+ (v ? (va ? va == ' ' ? v : ' ' + va + '="' + v + '" '
+							: ' value="' + v + '" ') : '');
+		};
+		$$.validate = function(incomingParams) {
+			var ips = Harness.getParams(incomingParams);
+			if (ips.cnt != outParamsCnt) {
+				Harness.ok(false, 'Expected ' + outParamsCnt + ', but found '
+						+ ips.cnt, pp, incomingParams);
+			}
+			for ( var i in outParams) {
+				var op = outParams[i];
+				var ip = ips.params[op.key];
+				if (!ip) {
+					Harness.ok(false, 'Unable to find "' + op.key
+							+ '" with a value(s) "' + op.vals.join(',') + '"',
+							pp, incomingParams);
+				} else {
+					if ($(op.vals).not(ip.vals).length == 0
+							&& $(ip.vals).not(op.vals).length == 0) {
+						Harness.ok(true, 'Found "' + op.key
+								+ '" with a value(s) "' + ip.vals.join(',')
+								+ '"', pp, incomingParams);
+					} else {
+						Harness.ok(false, '"' + op.key + '" with a value(s) "'
+								+ op.vals.join(',') + '" does not match "'
+								+ ip.vals.join(',') + '"', pp, incomingParams);
+					}
+				}
+			}
+		};
 	},
 
 	/**
