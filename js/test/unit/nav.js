@@ -12,6 +12,7 @@ $(function () {
 
 	asyncTest('should perform full page transfer with parameters', function () {
 		// generate random in-line frame ID/name
+		var loadVerifySelector = '#username';
 		var iframeId = Harness.generateIframeId();
 		var d = new Harness.Data();
 		d.html = 
@@ -33,7 +34,7 @@ $(function () {
 						'<option selected="selected" ' + d.keyVal('select option 2', false, true) + '></option>' +
 					'</select>' +
 					'<input type="range" min="1" max="100" ' + d.keyVal(25) + '/>' +
-					'<textarea rows="4" cols="50" ' + d.keyVal() + '>' + d.keyVal('select option 2', false, true, ' ') + '</textarea>' +
+					'<textarea rows="4" cols="50" ' + d.keyVal() + '>' + d.keyVal('textarea value 1', false, true, ' ') + '</textarea>' +
 					'<input type="text" disabled="disabled" ' + d.keyVal('text value 2', true) + '/>' +
 					'<div><input type="text" ' + d.keyVal('nested text value 1') + '/></div>' +
 				'</div>' +
@@ -47,10 +48,10 @@ $(function () {
 					ok(false, 'loaded, but window[event.fragWinTarget] cannot be found');
 				}
 				// validate that the login page has been loaded by checking the presence of the user name element
-				var $u = $('#username', f.document);
+				var $u = $(loadVerifySelector, f.document);
 				var valid = $u.length > 0;
-				Harness.ok(valid, valid ? 'loaded and found "#username"' : 
-					'loaded, but cannot find "#username" in ', null, 
+				Harness.ok(valid, valid ? 'Found "' + loadVerifySelector + '"' : 
+					'Cannot find "' + loadVerifySelector + '" in loaded fragment', null, 
 					$('body', f.document));
 				// validate the parameters were passed
 				d.validate(event.parameters);

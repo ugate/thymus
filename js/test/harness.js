@@ -164,16 +164,21 @@ var Harness = {
 	 * options as well as takes into account if HTML contents should be shown
 	 * 
 	 * @param state
-	 *            the assertion state
+	 *            the assertion state (a value of <code>null</code> will only
+	 *            be asserted when the global option verbose is turned on)
 	 * @param msg
 	 *            the message passed to the assertion
 	 * @param pp
 	 *            an optional prepender text
 	 * @param el
-	 *            an optional element to show HTML for (when global option is
-	 *            turned on)
+	 *            an optional element to show HTML for (when global option
+	 *            verbose is turned on)
 	 */
 	ok : function(state, msg, pp, el) {
+		if (state == null && !QUnit.urlParams.verbose) {
+			return;
+		}
+		state = state == null ? true : state;
 		var ise = msg instanceof Error && msg.stack;
 		var nm = null;
 		if (ise) {
@@ -184,7 +189,7 @@ var Harness = {
 		} else {
 			nm = msg;
 		}
-		if (el && QUnit.urlParams.showRslts) {
+		if (el && QUnit.urlParams.verbose) {
 			nm += '... ' + (el instanceof jQuery ? el.html() : el);
 		}
 		ok(ise ? false : state, nm);
@@ -261,56 +266,104 @@ var Harness = {
 	 *            initial HTML
 	 */
 	Data : function(html) {
+		function Params() {
+			this.pa = [];
+			this.cnt = 0;
+		}
 		var $$ = this;
 		$$.html = html;
-		var pp = 'Passed Parameters', outParams = [], cnt = 0, outParamsCnt = 0;
+		var pp = 'HTTP Parameters', outParams = new Params(), noOutParams = new Params(), cnt = 0;
 		$$.keyVal = function(v, x, useLastKey, va, na) {
 			var k = 'param' + (useLastKey ? cnt : ++cnt);
-			if (!x) {
-				if (!useLastKey) {
-					outParamsCnt++;
-				}
-				if (!outParams[k]) {
-					outParams[k] = {
-						vals : []
-					};
-				}
-				if (v) {
-					outParams[k].vals.push(typeof v === 'string' ? v : v
-							.toString());
-				}
-				outParams[k].key = k;
+			var p = x ? noOutParams : outParams;
+			if (!useLastKey) {
+				p.cnt++;
 			}
-			return ' '
-					+ (k && !useLastKey ? (na ? na : 'name') + '="' + k + '" '
-							: '')
+			if (!p.pa[k]) {
+				p.pa[k] = {
+					vals : [],
+					hasSameVals : function(ovals) {
+						return $(this.vals).not(ovals).length == 0
+								&& $(ovals).not(this.vals).length == 0;
+					},
+					chkVals : function(ovals, exclude) {
+						if (!ovals || ovals.length <= 0) {
+							return exclude ? true : false;
+						}
+						var io = 0;
+						for (var i = 0; i < this.vals.length; i++) {
+							io = ovals.indexOf(this.vals[i]);
+							if ((!exclude && io == -1) || (exclude && io > -1)) {
+								return false;
+							}
+						}
+						return true;
+					}
+				};
+			}
+			if (v) {
+				p.pa[k].vals.push(typeof v === 'string' ? v : v.toString());
+			}
+			p.pa[k].key = k;
+			return (k && !useLastKey ? (na ? ' ' + na : ' name') + '="' + k
+					+ '" ' : '')
 					+ (v ? (va ? va == ' ' ? v : ' ' + va + '="' + v + '" '
 							: ' value="' + v + '" ') : '');
 		};
-		$$.validate = function(incomingParams) {
+		$$.validate = function(incomingParams, strict) {
+			Harness.ok(true, 'Validating incoming', pp, incomingParams);
 			var ips = Harness.getParams(incomingParams);
-			if (ips.cnt != outParamsCnt) {
-				Harness.ok(false, 'Expected ' + outParamsCnt + ', but found '
-						+ ips.cnt, pp, incomingParams);
+			// ensure we have the same amount of incoming parameters as we do
+			// parameters that were submitted
+			if ((strict && ips.cnt != outParams.cnt)
+					|| (!strict && ips.cnt < outParams.cnt)) {
+				Harness.ok(false, 'Expected ' + outParams.cnt + ', but found '
+						+ ips.cnt, pp);
 			}
-			for ( var i in outParams) {
-				var op = outParams[i];
-				var ip = ips.params[op.key];
+			var op = null, ip = null;
+			// verify parameters that should be present are indeed present
+			for ( var i in outParams.pa) {
+				op = outParams.pa[i];
+				ip = ips.params[op.key];
 				if (!ip) {
 					Harness.ok(false, 'Unable to find "' + op.key
 							+ '" with a value(s) "' + op.vals.join(',') + '"',
-							pp, incomingParams);
+							pp);
 				} else {
-					if ($(op.vals).not(ip.vals).length == 0
-							&& $(ip.vals).not(op.vals).length == 0) {
-						Harness.ok(true, 'Found "' + op.key
-								+ '" with a value(s) "' + ip.vals.join(',')
-								+ '"', pp, incomingParams);
+					if (op.chkVals(ip.vals)) {
+						Harness.ok(true, 'Incoming "' + op.key
+								+ '" found with a value(s) "'
+								+ ip.vals.join(',')
+								+ '" and contain all of the '
+								+ 'expected outgoing value(s) "'
+								+ op.vals.join(',') + '"', pp);
 					} else {
-						Harness.ok(false, '"' + op.key + '" with a value(s) "'
-								+ op.vals.join(',') + '" does not match "'
-								+ ip.vals.join(',') + '"', pp, incomingParams);
+						Harness.ok(false, 'Incoming "' + op.key
+								+ '" with a value(s) "' + ip.vals.join(',')
+								+ '" does not contain some/all '
+								+ 'of the expected outgoing value(s) "'
+								+ op.vals.join(',') + '"', pp);
 					}
+				}
+			}
+			// verify parameters that should have been excluded
+			for ( var i in noOutParams.pa) {
+				op = noOutParams.pa[i];
+				ip = ips.params[op.key];
+				// incoming parameter is present
+				if (ip && !op.chkVals(ip.vals, true)) {
+					Harness.ok(false, 'Incoming "' + op.key
+							+ '" found with a value(s) "' + ip.vals.join(',')
+							+ '", but should have been excluded '
+							+ 'from outgoing value(s) "' + op.vals.join(',')
+							+ '"', pp);
+				} else {
+					Harness.ok(true, (ip ? 'Incoming "' + op.key
+							+ '" with a value(s) "' + ip.vals.join(',')
+							: 'Outgoing "' + op.key)
+							+ '" verified not to contain the '
+							+ 'excluded value(s) "' + op.vals.join(',') + '"',
+							pp);
 				}
 			}
 		};
@@ -372,9 +425,9 @@ var Harness = {
 		 */
 		QUnit.config.urlConfig
 				.push({
-					id : 'showRslts',
-					label : 'Show HTML results',
-					tooltip : 'Show HTML result content for each individual test that supports this feature.'
+					id : 'verbose',
+					label : 'Verbose',
+					tooltip : 'Show extended information such as HTML result content for each individual test (that supports this feature).'
 				});
 	}
 };
