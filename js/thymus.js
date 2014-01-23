@@ -2573,12 +2573,9 @@
 								appendTo(arc, false, im, dr, $ds, rr, r);
 							}
 						} else {
-							t
-									.addError(
-											'Invalid destination type "'
-													+ addType + '" for '
-													+ f.toString(), f, null,
-											ts, xhr);
+							var em = 'Invalid destination type "' + addType
+									+ '" for ' + f.toString();
+							t.addError(em, f, null, ts, xhr);
 							return false;
 						}
 					} catch (e) {
@@ -2743,10 +2740,10 @@
 			if (!opts.eventIsBroadcast) {
 				return;
 			}
-			function fire() {
+			function fire(el) {
 				return broadcastFragEvent(chain == opts.eventFragChain ? genFragEvent(
 						type, t, f)
-						: genFragsEvent(chain, type, t));
+						: genFragsEvent(chain, type, t), el);
 			}
 			if (chain == opts.eventFragChain || chain == opts.eventFragsChain) {
 				var bhttp = type == opts.eventFragsBeforeHttp
@@ -2761,6 +2758,12 @@
 						}
 					} else if (f) {
 						f.cancelled = fire();
+						// TODO : self-replacements need to also broadcast load events
+//						if (type == opts.eventFragAfterDom && !f.fds.destSiphon()
+//								&& f.navOpts.type() == TREP) {
+//							broadcast(chain, opts.eventFragLoad, t, f);
+//							broadcast(opts.eventFragsChain, opts.eventFragsLoad, t, f);
+//						}
 					}
 					if (f.cancelled) {
 						t.ccnt++;

@@ -10,14 +10,14 @@ $(function () {
 		}
 	});
 
-	asyncTest('should perform full page transfer with parameters', function () {
+	asyncTest('should perform full page transfer in iframe with parameters', function () {
 		// generate random in-line frame ID/name
 		var loadVerifySelector = '#username';
 		var iframeId = Harness.generateIframeId();
 		var d = new Harness.Data();
 		d.html = 
 			'<div>' +
-				'<button type="button" class="qunit" ' +
+				'<button type="button" class="' + Harness.TEST_CSS_CLASS + '" ' +
 					'data-thx-get="click" data-thx-get-path="?{#globalLoginPath}" ' +
 					'data-thx-get-type="sync|transfer" ' +
 					'data-thx-get-target="' + iframeId + '" ' +

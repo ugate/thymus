@@ -52,13 +52,25 @@ var Harness = {
 		 * @param cb
 		 *            the callback function that will be called when an event is
 		 *            received
+		 * @param noIgnoreHttp405
+		 *            true to fail when an HTTP 405 (Method not supported) is
+		 *            received
 		 */
-		function listen(n, evt, cb) {
+		function listen(n, evt, cb, noIgnoreHttp405) {
 			n.on(evt, function(event) {
 				Harness.ok(true, desc(event), '#' + ++$$.eventCount
 						+ 'Event received');
 				if ((typeof cb === 'undefined' || cb != true) && event.error) {
-					Harness.ok(false, event.error);
+					if (event.error.statusCode == 405) {
+						if (!QUnit.config.current.evtWarns) {
+							QUnit.config.current.evtWarns = 1;
+						} else {
+							QUnit.config.current.evtWarns++;
+						}
+						Harness.ok('warn', event.error);
+					} else {
+						Harness.ok(false, event.error);
+					}
 					start();
 				} else if (typeof cb === 'function') {
 					cb(event);
@@ -78,8 +90,11 @@ var Harness = {
 		 * @param cb
 		 *            the callback function that will be called when an event is
 		 *            received
+		 * @param noIgnoreHttp405
+		 *            true to fail when an HTTP 405 (Method not supported) is
+		 *            received
 		 */
-		function listenAll(n, evt, cb) {
+		function listenAll(n, evt, cb, noIgnoreHttp405) {
 			var ihe = false;
 			var ucb = false;
 			for (var i = 0; i < Harness.EVTS.length; i++) {
@@ -87,10 +102,11 @@ var Harness = {
 				if (!ihe) {
 					ihe = ucb;
 				}
-				listen(n, Harness.EVTS[i], ucb ? cb : i == 0 ? true : false);
+				listen(n, Harness.EVTS[i], ucb ? cb : i == 0 ? true : false,
+						noIgnoreHttp405);
 			}
 			if (!ihe) {
-				listen(n, evt, null, cb);
+				listen(n, evt, null, cb, noIgnoreHttp405);
 			}
 		}
 
@@ -111,8 +127,12 @@ var Harness = {
 		 *            it's body
 		 * @param noInvoke
 		 *            true to prevent invocation of user event trigger
+		 * @param noIgnoreHttp405
+		 *            true to fail when an HTTP 405 (Method not supported) is
+		 *            received
 		 */
-		$$.asyncNavRegister = function(html, fx, uevt, tevt, iframeId, noInvoke) {
+		$$.asyncNavRegister = function(html, fx, uevt, tevt, iframeId,
+				noInvoke, noIgnoreHttp405) {
 			var p = $(html);
 			var doc = iframeId ? Harness.addIframe(iframeId, p).contents()
 					: document;
@@ -151,7 +171,8 @@ var Harness = {
 			return n;
 		};
 		$$.destroy = function() {
-			if ($$.eventCount != Harness.EVTS.length) {
+			if (!QUnit.config.current.evtWarns
+					&& $$.eventCount != Harness.EVTS.length) {
 				Harness.ok(false, 'Expected "' + Harness.EVTS.length
 						+ '" framework events, but received "' + $$.eventCount
 						+ '"');
@@ -178,12 +199,19 @@ var Harness = {
 		if (state == null && !QUnit.urlParams.verbose) {
 			return;
 		}
-		state = state == null ? true : state;
+		var isWarn = state == 'warn';
+		state = state == null ? true : isWarn ? true : state;
 		var ise = msg instanceof Error && msg.stack;
-		var nm = null;
+		var nm = null, wm = null;
 		if (ise) {
-			nm = msg.stack.replace(msg.message, '');
-			nm = msg.message + '\n' + nm;
+			if (isWarn) {
+				nm = msg.message;
+				wm = msg.stack.replace(msg.message, '');
+				wm = 'Warning: \n' + msg.message + '\n' + wm;
+			} else {
+				nm = msg.stack.replace(msg.message, '');
+				nm = msg.message + '\n' + nm;
+			}
 		} else if (pp) {
 			nm = pp + ': ' + msg;
 		} else {
@@ -192,7 +220,30 @@ var Harness = {
 		if (el && QUnit.urlParams.verbose) {
 			nm += '... ' + (el instanceof jQuery ? el.html() : el);
 		}
-		ok(ise ? false : state, nm);
+		ok(state, nm);
+		if (isWarn) {
+			var $wn = $('<pre style="color: #8a6d3b;background-color: #fcf8e3;border-color: #faebcc;">'
+					+ wm + '</pre>');
+			var id = QUnit.config.current.id;
+			var tnum = QUnit.config.current.testNumber;
+			var tname = QUnit.config.current.testName;
+			// testDone(function(details) {
+			testDone(function(details) {
+				if (details.name !== tname) {
+					return;
+				}
+				var $t = $('#' + id);
+				var $li = $t.find('.qunit-assert-list > li:nth-child(' + tnum
+						+ ')');
+				$li.attr('style', function(i, s) {
+					return s + 'border-left-color: #FFFF99 !important;';
+				});
+				$li.append($wn);
+				if (details.failed <= 0) {
+					$t.css('background-color', '#FFFF99');
+				}
+			});
+		}
 	},
 
 	/**
