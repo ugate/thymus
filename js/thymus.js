@@ -1374,7 +1374,7 @@
 					var t = new FragsTrack(a.action, a.selector, a.searchScope,
 							a.destScope, a);
 					var f = new Frag(null, t.actionScope, t);
-					f.nav(no, true);
+					f.nav(no);
 				}
 			} else if (a.action === opts.actionNavRegister) {
 				// convert URLs (if needed) and register event driven templating
@@ -2889,6 +2889,14 @@
 			$$.hasJustCompleted = function() {
 				return !done && $$.cnt >= $$.len ? (done = true) : false;
 			};
+			$$.done = function(cb) {
+				if ($$.hasJustCompleted()) {
+					if (cb) {
+						cb();
+					}
+					broadcast(opts.eventFragsChain, opts.eventFragsLoad, $$);
+				}
+			};
 			$$.adjustments = null;
 		}
 
@@ -2993,34 +3001,24 @@
 					x.ccnt(false);
 				}
 			};
-			$$.domDone = function(hasErrors) {
-				// DOM done, but child fragments may exist
-				if (!$$.cancelled && !hasErrors) {
-					broadcast(opts.eventFragChain, opts.eventFragAfterDom, t,
-							$$);
-				}
+			$$.domStart = function() {
+				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, $$);
+			};
+			$$.domEnd = function(hasErrors) {
+				// DOM ended, but child fragments may exist
+				broadcast(opts.eventFragChain, opts.eventFragAfterDom, t, $$);
 			};
 			var arc = new AppReplCache();
 			// handles processing of fragments
 			$$.rslt = function(r, rr, xhr, ts, e) {
-				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, $$);
-				if ($$.cancelled) {
-					$$.domDone(false);
-					return;
-				}
+				var xIsJ = r instanceof jQuery;
 				if (ts || e) {
 					t.addError('Error at ' + $$.toString() + ': ' + ts + '- '
 							+ e, $$, e, ts, xhr);
-					$$.domDone(true);
-					return;
-				}
-				var xIsJ = r instanceof jQuery;
-				if (xIsJ && r.is('script')) {
+				} else if (xIsJ && r.is('script')) {
 					if (xhr && xhr.status != 200) {
 						t.addError(xhr.status + ': ' + ts + ' path siphon="'
 								+ $$.frp.pathSiphon() + '"', $$, e, ts, xhr);
-						$$.domDone(true);
-						return;
 					} else if (!xhr && $$.frp.pathSiphon()
 							&& $$.frs.resultSiphon()) {
 						var sd = $$.frp.pathSiphon().indexOf(DATA_JS);
@@ -3040,19 +3038,23 @@
 					$$.fds.add(t.destScope, arc, $$.frs.add(arc, rr, r), rr, $$
 							.isModel(xhr), ts, xhr);
 				}
-				$$.domDone(false);
+				$$.domStart();
 			};
 			$$.dest = function() {
 				var $adds = null;
 				try {
 					$adds = arc.appendReplaceAll();
+					if (!$adds) {
+						t.addError('Nothing to add to the desitination(s) '
+								+ ' for ' + $$.toString(), $$, e);
+					}
 				} catch (e) {
 					t.addError(
 							'Error while adding desitination results to the DOM '
 									+ ' for ' + $$.toString(), $$, e);
 				}
+				$$.domEnd();
 				if (!$adds) {
-					$$.domDone(true);
 					return;
 				}
 				// make post template DOM adjustments- no need for URL updates-
@@ -3061,11 +3063,10 @@
 				htmlDomAdjust(t, $$, $adds, false);
 				return $$.destResults = jqAdd($$.destResults, $adds);
 			};
-			$$.nav = function(no, be) {
+			$$.nav = function(no) {
 				var rtn = null, dcb = null, lcb = null;
-				if (be) {
+				if (opts.eventIsBroadcast) {
 					t.len++;
-					t.cnt++;
 					broadcast(opts.eventFragsChain, opts.eventFragsBeforeHttp,
 							t);
 					if (t.cancelled) {
@@ -3076,10 +3077,8 @@
 					if ($$.cancelled) {
 						return;
 					}
-					broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t,
-							$$);
 					dcb = function() {
-						$$.domDone(false);
+						$$.domEnd();
 					};
 					// wait for the window to complete, then fire events
 					lcb = function($frm, e) {
@@ -3087,11 +3086,8 @@
 							t.addError('Error while waiting for navigation '
 									+ 'window to complete loading', $$, e);
 						}
-						broadcast(opts.eventFragChain, opts.eventFragLoad, t,
-								$$);
-						broadcast(opts.eventFragsChain, opts.eventFragsLoad, t,
-								$$);
-						t.cnt--;
+						$$.done();
+						t.done();
 					};
 				}
 				no = no ? no : $$.navOpts;
@@ -3110,6 +3106,7 @@
 								+ vars[i].value + '" />';
 					}
 					fd.append(ips);
+					$$.domStart();
 					// submit form
 					rtn = no.getWin(null, fd, opts.readyStateDelay,
 							opts.readyStateTimeout, dcb, lcb);
@@ -3119,6 +3116,7 @@
 					if (vars) {
 						loc += '?' + vars;
 					}
+					$$.domStart();
 					// open window or change location
 					rtn = no.getWin(loc, null, opts.readyStateDelay,
 							opts.readyStateTimeout, dcb, lcb);
@@ -3367,7 +3365,7 @@
 				if (f) {
 					f.done();
 				}
-				if (t.hasJustCompleted()) {
+				t.done(function() {
 					if (typeof func === 'function') {
 						func(t.actionScope, t.cnt, t.getErrors());
 					}
@@ -3377,8 +3375,7 @@
 							refreshNamedAnchor();
 						}
 					}
-					broadcast(opts.eventFragsChain, opts.eventFragsLoad, t);
-				}
+				});
 			}
 			function hndlFunc(f, cb, r, status, xhr) {
 				if (f.frs.getFunc() && f.frs.getFunc().isValid) {
