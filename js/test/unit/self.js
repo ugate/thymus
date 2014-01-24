@@ -1,21 +1,13 @@
 $(function () {
 
-	var test = null;
-	module('self-targeting', {
-		setup : function() {
-			test = new Harness.Test();
-		},
-		teardown : function() {
-			test = test.destroy();
-		}
-	});
+	module('self-targeting');
 
 	function buttonTest(httpMethod, type) {
 		type = type ? type : '';
 		var name = httpMethod.toUpperCase() + ' ' + type;
 		asyncTest(name, function () {
 			// QUnit.config.current.testName
-			test.asyncNavRegister( 
+			Harness.currentRun.currentModule().asyncNavRegister( 
 				'<div>' +
 				'<button type="button" class="' + Harness.TEST_CSS_CLASS + '" ' +
 					'data-thx-' + httpMethod + '="click" data-thx-' + httpMethod + '-path="frags/user/user1" ' +

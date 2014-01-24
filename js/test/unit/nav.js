@@ -1,20 +1,13 @@
 $(function () {
 
-	var test = null;
-	module('navigation', {
-		setup : function() {
-			test = new Harness.Test();
-		},
-		teardown : function() {
-			test = test.destroy();
-		}
-	});
+	module('navigation');
 
 	asyncTest('should perform full page transfer in iframe with parameters', function () {
 		// generate random in-line frame ID/name
 		var loadVerifySelector = '#username';
 		var iframeId = Harness.generateIframeId();
-		var d = new Harness.Data();
+		var m = Harness.currentRun.currentModule();
+		var d = m.currentTest();
 		d.html = 
 			'<div>' +
 				'<button type="button" class="' + Harness.TEST_CSS_CLASS + '" ' +
@@ -40,7 +33,7 @@ $(function () {
 				'</div>' +
 				'<input type="text" ' + d.keyVal('text value 3', true) + '/>' +
 			'</div>';
-		test.asyncNavRegister( 
+		m.asyncNavRegister( 
 				d.html,
 			function(event) {
 				var f = window[event.fragWinTarget];
