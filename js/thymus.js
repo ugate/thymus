@@ -29,7 +29,7 @@
 	this.DFTL_RSLT_NAME = NS + '-results';
 	this.VARS_ATTR_TYPE = 'with';
 	this.DOM_ATTR_TYPES = [ 'type', 'params', 'path', 'result', 'dest',
-			'target', VARS_ATTR_TYPE ];
+			'target', 'delegate', VARS_ATTR_TYPE ];
 	this.DOM_ATTR_AGENT = 'agent';
 	this.HTTP_METHODS = [ 'GET', 'POST', 'DELETE', 'PUT' ];
 	this.DTEXT = 'text';
@@ -62,10 +62,12 @@
 	 *            the parent element that
 	 * @param el
 	 *            the element that will be broadcasting the event
-	 * @param m
-	 *            the HTTP method
 	 * @param en
 	 *            the event name
+	 * @param m
+	 *            the HTTP method
+	 * @param del
+	 *            an optional event delegate selector
 	 * @param fx
 	 *            the function that will be executed when an incoming event is
 	 *            received (parameters: current parent element, reference to the
@@ -74,7 +76,7 @@
 	 *            an optional function that will be called once the event has
 	 *            completed
 	 */
-	function DomEventFunc(pel, el, en, m, fx, rfx) {
+	function DomEventFunc(pel, el, en, m, del, fx, rfx) {
 		var $el = $(el);
 		var $pel = $(pel);
 		var func = fx;
@@ -89,11 +91,11 @@
 			$pel = pel ? $(pel) : $pel;
 			func = fx || func;
 			if ((en && en != event) || add == false) {
-				$el.off(event, on);
+				$el.off(event, del, on);
 				event = en || event;
 			}
 			if (add == true) {
-				$el.on(event, on);
+				$el.on(event, del, on);
 			}
 		};
 		this.isMatch = function(m, el) {
@@ -127,12 +129,14 @@
 	 *            the element the event is for
 	 * @param evt
 	 *            the event name
+	 * @param del
+	 *            an optional event delegate selector
 	 * @param fx
 	 *            the function to execute when the event occurs (when the
 	 *            function returns <code>true</code> the event listener will
 	 *            be turned off)
 	 */
-	function addOrUpdateEventFunc(ctx, a, m, pel, el, evt, fx) {
+	function addOrUpdateEventFunc(ctx, a, m, pel, el, evt, del, fx) {
 		var en = getEventName(evt, false);
 		if (el) {
 			// prevent duplicating event listeners
@@ -151,8 +155,8 @@
 					eventFuncs[fn] = null;
 				}
 			}
-			eventFuncs[fn] = new DomEventFunc(pel, el, en, m, fx, fxCheck);
-			eventFuncs[fn].getElement().on('remove', function() {
+			eventFuncs[fn] = new DomEventFunc(pel, el, en, m, del, fx, fxCheck);
+			eventFuncs[fn].getElement().on('remove', del, function() {
 				fxCheck(true);
 			});
 		} else {
@@ -1421,44 +1425,46 @@
 		 *            present)
 		 */
 		function SiphonAttrs(m, evt, a, s, el, vars, ml, scope, ma) {
-			this.selector = s ? s : '';
-			this.method = m ? m : opts.ajaxTypeDefault;
-			this.eventSiphon = evt;
-			this.matchAttr = ma;
-			this.matchVal = '';
-			this.paramsSiphon = '';
-			this.pathSiphon = '';
-			this.resultSiphon = '';
-			this.destSiphon = '';
-			this.typeSiphon = '';
-			this.targetSiphon = '';
-			this.agentSiphon = '';
-			this.withSiphon = '';
-			this.funcName = '';
-			this.sourceEvent = null;
-			this.isValid = ma || evt;
-			this.captureAttrs = function(el, vars, ml, ow) {
-				if (this.isValid && el) {
+			var $$ = this;
+			$$.selector = s ? s : '';
+			$$.method = m ? m : opts.ajaxTypeDefault;
+			$$.eventSiphon = evt;
+			$$.matchAttr = ma;
+			$$.matchVal = '';
+			$$.paramsSiphon = '';
+			$$.pathSiphon = '';
+			$$.resultSiphon = '';
+			$$.destSiphon = '';
+			$$.typeSiphon = '';
+			$$.targetSiphon = '';
+			$$.agentSiphon = '';
+			$$.delegateSiphon = '';
+			$$.withSiphon = '';
+			$$.funcName = '';
+			$$.sourceEvent = null;
+			$$.isValid = ma || evt;
+			$$.captureAttrs = function(el, vars, ml, ow) {
+				if ($$.isValid && el) {
 					try {
-						this.isValid = addSiphonAttrVals(el, this.method,
-								this.eventSiphon, this, DOM_ATTR_TYPES, vars,
+						$$.isValid = addSiphonAttrVals(el, $$.method,
+								$$.eventSiphon, $$, DOM_ATTR_TYPES, vars,
 								ml, scope, ow);
 					} catch (e) {
-						log('Unable to capture siphons', e, this);
-						this.isValid = false;
+						log('Unable to capture siphons', e, $$);
+						$$.isValid = false;
 					}
-					return this.isValid;
+					return $$.isValid;
 				}
 				return false;
 			};
-			if (this.isValid) {
+			if ($$.isValid) {
 				if (a) {
-					this.selector = '';
-					this.action = a;
-					this.onEvent = '';
+					$$.selector = '';
+					$$.action = a;
+					$$.onEvent = '';
 				}
 				if (el) {
-					this.captureAttrs(el, vars, ml, true);
+					$$.captureAttrs(el, vars, ml, true);
 				}
 			}
 		}
@@ -1766,7 +1772,8 @@
 					so.eventAttrs = a.items;
 					so.typeSiphon = a.type;
 					var rtn = addOrUpdateEventFunc(ctx, so.action, so.method,
-							f.pel, el, so.eventSiphon, function(pel, ib, sevt) {
+							f.pel, el, so.eventSiphon, so.delegateSiphon, 
+							function(pel, ib, sevt) {
 								var $ib = $(ib);
 								if (!so.captureAttrs($ib, t.siphon.vars, false,
 										true)) {
@@ -2947,6 +2954,7 @@
 			// short-hand attrs may have path and result siphon
 			a = a ? a.split(opts.multiSep) : null;
 			$$.eventSiphon = siphon.eventSiphon;
+			$$.delegateSiphon = siphon.delegateSiphon;
 			$$.method = siphon.method ? siphon.method : opts.ajaxTypeDefault;
 			$$.getVars = function() {
 				return siphon.vars ? siphon.vars.get($$.method) : null;
@@ -3738,6 +3746,10 @@
 			postAgentAttrs : [ 'data-thx-post-agent' ],
 			putAgentAttrs : [ 'data-thx-put-agent' ],
 			deleteAgentAttrs : [ 'data-thx-delete-agent' ],
+			getDelegateAttrs : [ 'data-thx-get-delegate' ],
+			postDelegateAttrs : [ 'data-thx-post-delegate' ],
+			putDelegateAttrs : [ 'data-thx-put-delegate' ],
+			deleteDelegateAttrs : [ 'data-thx-delete-delegate' ],
 			getWithAttrs : [ 'data-thx-get-with' ],
 			postWithAttrs : [ 'data-thx-post-with' ],
 			putWithAttrs : [ 'data-thx-put-with' ],

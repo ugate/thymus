@@ -100,7 +100,7 @@ var Harness = {
 		}
 		var ss = s.match(Harness.REGEX_PARAMS_STR);
 		var il = ss.length - 1, p = null, oa = [];
-		for (var i = 0; i <= il; i++) {
+		for ( var i = 0; i <= il; i++) {
 			p = ss[i];
 			if (i == il) {
 				// remove possible hashes
@@ -362,7 +362,7 @@ var Harness = {
 			function listenAll(n, evt, cb, noIgnoreHttp405) {
 				var ihe = false;
 				var ucb = false;
-				for (var i = 0; i < Harness.EVTS.length; i++) {
+				for ( var i = 0; i < Harness.EVTS.length; i++) {
 					ucb = Harness.EVTS[i] == evt;
 					if (!ihe) {
 						ihe = ucb;
@@ -510,7 +510,7 @@ var Harness = {
 								return exclude ? true : false;
 							}
 							var io = 0;
-							for (var i = 0; i < this.vals.length; i++) {
+							for ( var i = 0; i < this.vals.length; i++) {
 								io = ovals.indexOf(this.vals[i]);
 								if ((!exclude && io == -1)
 										|| (exclude && io > -1)) {
@@ -648,7 +648,7 @@ var Harness = {
 				}
 				isDone = true;
 				data.warned = warns.length;
-				for (var i = 0; i < warns.length; i++) {
+				for ( var i = 0; i < warns.length; i++) {
 					var $t = $('#' + warns[i].id);
 					var $li = $t.find('.qunit-assert-list > li:nth-child('
 							+ warns[i].anum + ')');
@@ -678,7 +678,7 @@ var Harness = {
 		Harness.EVTS = [ Harness.EVT_FRAGS_BHTTP, Harness.EVT_FRAG_BHTTP,
 				Harness.EVT_FRAG_BDOM, Harness.EVT_FRAG_ADOM,
 				Harness.EVT_FRAG_LOAD, Harness.EVT_FRAGS_LOAD ];
-		QUnit.config.testTimeout = 3000;
+		QUnit.config.testTimeout = 10000;
 		/*
 		 * QUnit.config.autostart = false; function init(event) { QUnit.start(); }
 		 */
@@ -695,28 +695,35 @@ var Harness = {
 		});
 
 		// proxy so we can track queue count
-		var module = QUnit.module;
-		QUnit.module = function() {
+		function overrideQUnit(n, fx) {
+			var ofx = QUnit[n];
+			QUnit[n] = function() {
+				fx.apply(QUnit, arguments);
+				if (typeof ofx === 'function') {
+					try {
+						ofx.apply(this, arguments);
+					} catch (e) {
+						Harness.ok(false, e.message + ' at '
+								+ extractStacktrace(e));
+					}
+				}
+			};
+		}
+		overrideQUnit('module', function() {
 			Harness.moduleCount++;
-			module.apply(this, arguments);
-		};
-		var test = QUnit.test;
-		QUnit.test = function() {
+		});
+		overrideQUnit('test', function() {
 			Harness.testCount++;
-			test.apply(this, arguments);
-		};
-		var asyncTest = QUnit.asyncTest;
-		QUnit.asyncTest = function() {
+		});
+		overrideQUnit('asyncTest', function() {
 			Harness.asyncTestCount++;
-			asyncTest.apply(this, arguments);
-		};
+		});
 		function loader() {
 			var l = $('#testLoader');
 			var h = Harness;
 			var r = h.currentRun;
 			if (!r.currentModule()) {
-				l.attr('max',
-						h.moduleCount + h.testCount + h.asyncTestCount);
+				l.attr('max', h.moduleCount + h.testCount + h.asyncTestCount);
 			}
 			l.val(parseInt(l.val()) + 1);
 		}
