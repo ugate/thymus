@@ -292,7 +292,7 @@ var Harness = {
 			 * handling the request
 			 * 
 			 * @constructor
-			 * @param ms
+			 * @param ss
 			 *            the HTTP methods to call
 			 */
 			function HttpCapable(ss) {
@@ -300,11 +300,11 @@ var Harness = {
 				this.get = function(m) {
 					return ms[m];
 				};
-				function put(m, f, s) {
+				function put(m, f, s, t) {
 					if (ms[m]) {
-						ms[m].add(f, s);
+						ms[m].add(f, s, t);
 					} else {
-						ms[m] = new Item(f, s);
+						ms[m] = new Item(f, s, t);
 					}
 				}
 				function Item(f, s, t) {
@@ -322,10 +322,10 @@ var Harness = {
 					this.add(f, s, t);
 				}
 				function done(r, status, xhr) {
-					put(false, xhr.status, xhr.statusText);
+					put(this.type, false, xhr.status, xhr.statusText);
 				}
 				function fail(xhr, ts, e) {
-					put(true, xhr.status, xhr.statusText);
+					put(this.type, true, xhr.status, xhr.statusText);
 				}
 				for (var i = 0; i < ss.length; i++) {
 					$.ajax({
