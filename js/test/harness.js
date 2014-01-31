@@ -526,8 +526,7 @@ var Harness = {
 						if (cstat != 200) {
 							var umsg = event.httpMethod + ' is unsupported ';
 							if (httpStatusWarnRange
-									&& httpStatusWarnRange
-											.inRange(event.error.statusCode)) {
+									&& httpStatusWarnRange.inRange(cstat)) {
 								Harness.ok('warn', umsg);
 							} else {
 								Harness.ok(false, umsg);
