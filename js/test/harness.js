@@ -530,7 +530,8 @@ var Harness = {
 						if (httpc && httpc.failed) {
 							var umsg = event.httpMethod + ' ' + httpc.text;
 							if (httpStatusWarnRange
-									&& httpStatusWarnRange.inRange(cstat)) {
+									&& httpStatusWarnRange
+											.inRange(httpc.status)) {
 								Harness.ok('warn', umsg);
 							} else {
 								Harness.ok(false, umsg);
