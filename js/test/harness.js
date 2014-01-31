@@ -174,7 +174,8 @@ var Harness = {
 				+ '</head><body>' + html + '</body></html>';
 		var i = document.createElement('iframe');
 		i.name = i.id = id;
-		document.getElementById(Harness.TEST_FIXTURE_ID).appendChild(i);
+		(Harness.TEST_FIXTURE_ID == 'body' ? document.body : document
+				.getElementById(Harness.TEST_FIXTURE_ID)).appendChild(i);
 		i.src = 'javascript:document.write(\'' + ihtml + '\')';
 		return $('#' + id);
 	},
@@ -222,6 +223,9 @@ var Harness = {
 			var isDone = false;
 			var modules = [];
 			var moduleIndex = 0;
+			var httpPost = httpCapableCall('post');
+			var httpPut = httpCapableCall('put');
+			var httpDelete = httpCapableCall('delete');
 
 			/**
 			 * @returns the current {Module}
@@ -269,6 +273,53 @@ var Harness = {
 				}
 				isDone = true;
 			};
+
+			/**
+			 * Gets the HTTP status code for an HTTP method
+			 * 
+			 * @param m
+			 *            the HTTP method
+			 * @returns the status code
+			 */
+			$$.httpCapableStatus = function(m) {
+				var t = m.toLowerCase();
+				return t == 'post' ? httpPost : t == 'put' ? httpPut
+						: t == 'delete' ? httpDelete : 200;
+			};
+
+			/**
+			 * Checks if the HTTP method is supported on the current server
+			 * 
+			 * @param type
+			 *            the HTTP method type
+			 * @returns the initial value before call to the server
+			 */
+			function httpCapableCall(type) {
+				var t = type.toLowerCase();
+				function set(s) {
+					if (t == 'post') {
+						httpPost = s;
+					} else if (t == 'put') {
+						httpPut = s;
+					} else {
+						httpDelete = s;
+					}
+				}
+				function done(r, status, xhr) {
+					set(xhr.status);
+				}
+				function fail(xhr, ts, e) {
+					set(xhr.status);
+				}
+				$.ajax({
+					url : window.location,
+					type : type,
+					async : true,
+					cache : false
+				}).done(done).fail(fail);
+				return null;
+			}
+			;
 		}
 
 		/**
@@ -469,10 +520,34 @@ var Harness = {
 				p.thymus(a);
 				Harness.ok(true, Harness.ACTION_NAV_REG, 'Action executed');
 				if (uevt) {
-					function callback(event, doc) {
-						if (!$$.hasError(event) && typeof fx === 'function') {
-							return fx(event, doc);
+					function iframeCheck(event, doc) {
+						var cstat = Harness.currentRun
+								.httpCapableStatus(event.httpMethod);
+						if (cstat != 200) {
+							var umsg = event.httpMethod + ' is unsupported ';
+							if (httpStatusWarnRange
+									&& httpStatusWarnRange
+											.inRange(event.error.statusCode)) {
+								Harness.ok('warn', umsg);
+							} else {
+								Harness.ok(false, umsg);
+							}
+							return false;
 						}
+						var w = window[event.fragWinTarget];
+						if (!w) {
+							ok(false, 'loaded, but window['
+									+ event.fragWinTarget + '] cannot be found');
+							return true;
+						}
+						var $h = $('html', w.document);
+						if ($h.length <= 0) {
+							ok(false,
+									'loaded, but cannot be find any HTML in window['
+											+ event.fragWinTarget + ']');
+							return true;
+						}
+						return true;
 					}
 					// need to override teardown because testDone will not show
 					// added assertions done within callback
@@ -486,50 +561,24 @@ var Harness = {
 						tevt = tevt ? tevt : uevt;
 						// need to listen on parent in case the action removes
 						// the node
-						listenAll(n, tevt,
-								function(event) {
-									try {
-										postEvent(event, iframeId, callback(
-												event, doc));
-									} catch (e) {
-										Harness.ok(false, e);
-									}
-								}, httpStatusWarnRange);
+						listenAll(n, tevt, function(event) {
+							try {
+								if (!$$.hasError(event)
+										&& typeof fx === 'function') {
+									var c = !iframeId
+											|| iframeCheck(event, doc);
+									var rtn = !c ? null : fx(event, doc);
+									start();
+									return rtn;
+								}
+							} catch (e) {
+								Harness.ok(false, e);
+							}
+						}, httpStatusWarnRange);
 					}
 					if (!noInvoke) {
 						n.trigger(uevt);
 						Harness.ok(true, uevt, 'Event triggered');
-					}
-				}
-				function postEvent(event, iframeId, cb) {
-					if (iframeId && typeof cb === 'function') {
-						var w = window[event.fragWinTarget];
-						if (!w) {
-							ok(false, 'loaded, but window['
-									+ event.fragWinTarget + '] cannot be found');
-							return start();
-						}
-						var $h = $('html', w.document);
-						if ($h.length <= 0) {
-							ok(false,
-									'loaded, but cannot be find any HTML in window['
-											+ event.fragWinTarget + ']');
-							return start();
-						}
-						// TODO : in some instances we need to wait until any
-						// fragments that may exist within the iframe are loaded
-						// before notifying the callback, but that may not
-						// always be the case. need a to verify frags exist
-						$h.on(Harness.EVT_FRAGS_LOAD, function(event) {
-							try {
-								cb(event);
-								start();
-							} catch (e) {
-								Harness.ok(false, e);
-							}
-						});
-					} else if (!$$.hasError(event)) {
-						return start();
 					}
 				}
 				return n;

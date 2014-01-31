@@ -40,7 +40,7 @@ $(function () {
 			);
 			Harness.currentRun.currentModule().asyncNavRegister($t,
 			function(event) {
-				var $p, $el, valid, rpl = type.indexOf('replace') >= 0;
+				var $p, $el, valid, rpl = event.fragType.toLowerCase() == 'replace';
 				if (rpl) {
 					$p = $(event.target);
 					valid = $p.parent().length == 0;
