@@ -223,9 +223,7 @@ var Harness = {
 			var isDone = false;
 			var modules = [];
 			var moduleIndex = 0;
-			var httpPost = httpCapableCall('post');
-			var httpPut = httpCapableCall('put');
-			var httpDelete = httpCapableCall('delete');
+			var httpc = new HttpCapable([ 'post', 'put', 'delete' ]);
 
 			/**
 			 * @returns the current {Module}
@@ -275,51 +273,68 @@ var Harness = {
 			};
 
 			/**
-			 * Gets the HTTP status code for an HTTP method
+			 * Gets an object representing the checked HTTP methods
 			 * 
 			 * @param m
 			 *            the HTTP method
-			 * @returns the status code
+			 * @returns the an object with failed, status, text when the HTTP
+			 *          method was checked or null when it was not checked
 			 */
-			$$.httpCapableStatus = function(m) {
+			$$.httpCapable = function(m) {
 				var t = m.toLowerCase();
-				return t == 'post' ? httpPost : t == 'put' ? httpPut
-						: t == 'delete' ? httpDelete : 200;
+				t = httpc.get(t);
+				return t ? t.get(s) : null;
 			};
 
 			/**
-			 * Checks if the HTTP method is supported on the current server
+			 * HTTP method capabilities that calls the server for each of the
+			 * passed HTTP methods to determine if the server is capable of
+			 * handling the request
 			 * 
-			 * @param type
-			 *            the HTTP method type
-			 * @returns the initial value before call to the server
+			 * @param ms
+			 *            the HTTP methods to call
 			 */
-			function httpCapableCall(type) {
-				var t = type.toLowerCase();
-				function set(s) {
-					if (t == 'post') {
-						httpPost = s;
-					} else if (t == 'put') {
-						httpPut = s;
+			function HttpCapable(ms) {
+				var ms = [];
+				this.get = function(m) {
+					return ms[m];
+				};
+				function put(m, f, s) {
+					if (ms[m]) {
+						ms[m].add(f, s);
 					} else {
-						httpDelete = s;
+						ms[m] = new Item(f, s);
 					}
 				}
+				function Item(f, s, t) {
+					var a = [];
+					this.add = function(f, s, t) {
+						a[s] = {
+							failed : f,
+							status : s,
+							text : t
+						};
+					};
+					this.get = function(s) {
+						return a[s];
+					};
+					this.add(f, s, t);
+				}
 				function done(r, status, xhr) {
-					set(xhr.status);
+					put(false, xhr.status, xhr.statusText);
 				}
 				function fail(xhr, ts, e) {
-					set(xhr.status);
+					put(true, xhr.status, xhr.statusText);
 				}
-				$.ajax({
-					url : window.location,
-					type : type,
-					async : true,
-					cache : false
-				}).done(done).fail(fail);
-				return null;
+				for (var i = 0; i < ms.length; i++) {
+					$.ajax({
+						url : window.location,
+						type : type,
+						async : true,
+						cache : false
+					}).done(done).fail(fail);
+				}
 			}
-			;
 		}
 
 		/**
@@ -521,9 +536,9 @@ var Harness = {
 				Harness.ok(true, Harness.ACTION_NAV_REG, 'Action executed');
 				if (uevt) {
 					function iframeCheck(event, doc) {
-						var cstat = Harness.currentRun
-								.httpCapableStatus(event.httpMethod);
-						if (cstat != 200) {
+						var httpc = Harness.currentRun
+								.httpCapable(event.httpMethod);
+						if (httpc && httpc.failed) {
 							var umsg = event.httpMethod + ' is unsupported ';
 							if (httpStatusWarnRange
 									&& httpStatusWarnRange.inRange(cstat)) {
