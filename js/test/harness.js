@@ -11,8 +11,10 @@ var Harness = {
 	EVT_FRAG_LOAD : 'load.thx.frag',
 	EVT_FRAGS_LOAD : 'load.thx.frags',
 	TEST_CSS_CLASS : 'qunit',
+	TEST_FIXTURE_ID : 'qunit-fixture',
 	TEST_FIXTURE_SEL : '#qunit-fixture',
 	REGEX_PARAMS_STR : /([^&=]+)=([^&]*)/g,
+	replaceEventDelay : 500,
 	currentRun : null,
 	moduleCount : 0,
 	testCount : 0,
@@ -80,15 +82,15 @@ var Harness = {
 	},
 
 	/**
-	 * Generates an associative array with key as the parameter name and values
-	 * as and array of found values
+	 * Generates a mapping with a key as the parameter name and values as and
+	 * array of found values
 	 * 
 	 * @param o
 	 *            either the URL encoded string of parameters or a window to get
 	 *            the search parameters (defaults to the current windows search
 	 *            parameters)
-	 * @returns an object that contains an associative array of parameters
-	 *          "params" and a count of found parameters "cnt"
+	 * @returns an object that contains a mapping of parameters "params" and a
+	 *          count of found parameters "cnt"
 	 */
 	getParams : function(o) {
 		var s = typeof o === 'string' ? o
@@ -100,7 +102,7 @@ var Harness = {
 		}
 		var ss = s.match(Harness.REGEX_PARAMS_STR);
 		var il = ss.length - 1, p = null, oa = [];
-		for ( var i = 0; i <= il; i++) {
+		for (var i = 0; i <= il; i++) {
 			p = ss[i];
 			if (i == il) {
 				// remove possible hashes
@@ -128,6 +130,34 @@ var Harness = {
 	},
 
 	/**
+	 * Generates a mapping with a key as the parameter name and values as and
+	 * array of found values
+	 * 
+	 * @param o
+	 *            an object that contains parameter name/value properties
+	 * @returns an object that contains a mapping of parameters "params" and a
+	 *          count of found parameters "cnt"
+	 */
+	getParamsFromObj : function(o) {
+		var r = {
+			cnt : 0,
+			params : {}
+		};
+		for ( var k in o) {
+			if (o.hasOwnProperty(k)) {
+				if (!r.params[k]) {
+					r.params[k] = {
+						vals : []
+					};
+					r.cnt++;
+				}
+				r.params[k].vals.push(decodeURIComponent(o[k]));
+			}
+		}
+		return r;
+	},
+
+	/**
 	 * Adds an in-line frame to the test fixture
 	 * 
 	 * @param id
@@ -138,24 +168,14 @@ var Harness = {
 	 * @returns the in-line frame
 	 */
 	addIframe : function(id, html) {
-		var $i = $('<iframe id="'
-				+ id
-				+ '" name="'
-				+ id
-				+ '" width="100%" height="215" frameborder="0" scrolling="yes" '
-				+ 'marginheight="0" marginwidth="0" src="about:blank"> </iframe>');
-		var $win = null;
-		function wr() {
-			var $w = $(this).contents();
-			$w[0]
-					.write('<!doctype html><html><head></head><body></body></html>');
-			if (html) {
-				$w.find('body').append(html);
-			}
-			$win = $win ? $win.add($w) : $w;
-		}
-		$i.appendTo(Harness.TEST_FIXTURE_SEL).each(wr);
-		return $win;
+		var ihtml = '<!doctype html><html><head>'
+				+ '<meta http-equiv="content-type" content="text/html;charset=utf-8" />'
+				+ '</head><body>' + html + '</body></html>';
+		var i = document.createElement('iframe');
+		i.name = i.id = id;
+		document.getElementById(Harness.TEST_FIXTURE_ID).appendChild(i);
+		i.src = 'javascript:document.write(\'' + ihtml + '\')';
+		return $('#' + id);
 	},
 
 	/**
@@ -324,7 +344,7 @@ var Harness = {
 			 *            is received
 			 */
 			function listen(n, evt, cb, noIgnoreHttp405) {
-				n.on(evt, function(event) {
+				function on(event) {
 					var t = $$.currentTest();
 					Harness.ok(true, desc(event), '#' + ++t.eventCount
 							+ 'Event received');
@@ -337,10 +357,12 @@ var Harness = {
 							Harness.ok(false, event.error);
 						}
 						start();
-					} else if (typeof cb === 'function') {
+					}
+					if (typeof cb === 'function') {
 						cb(event);
 					}
-				});
+				}
+				n.on(evt, on);
 			}
 
 			/**
@@ -360,9 +382,8 @@ var Harness = {
 			 *            is received
 			 */
 			function listenAll(n, evt, cb, noIgnoreHttp405) {
-				var ihe = false;
-				var ucb = false;
-				for ( var i = 0; i < Harness.EVTS.length; i++) {
+				var ihe = false, ucb = false;
+				for (var i = 0; i < Harness.EVTS.length; i++) {
 					ucb = Harness.EVTS[i] == evt;
 					if (!ihe) {
 						ihe = ucb;
@@ -371,7 +392,7 @@ var Harness = {
 							ucb ? cb : i == 0 ? true : false, noIgnoreHttp405);
 				}
 				if (!ihe) {
-					listen(n, evt, null, cb, noIgnoreHttp405);
+					listen(n, evt, cb, noIgnoreHttp405);
 				}
 			}
 
@@ -398,7 +419,7 @@ var Harness = {
 			 */
 			$$.asyncNavRegister = function(html, fx, uevt, tevt, iframeId,
 					noInvoke, noIgnoreHttp405) {
-				var p = $(html);
+				var p = $(html).appendTo(Harness.TEST_FIXTURE_SEL);
 				var doc = iframeId ? Harness.addIframe(iframeId, p).contents()
 						: document;
 				var n = Harness.testSelect(p, '.' + Harness.TEST_CSS_CLASS);
@@ -419,7 +440,12 @@ var Harness = {
 				p.thymus(a);
 				Harness.ok(true, Harness.ACTION_NAV_REG, 'Action executed');
 				if (uevt) {
-					// need to proxy teardown because testDone will not show
+					function callback(event, doc) {
+						if (!$$.hasError(event) && typeof fx === 'function') {
+							return fx(event, doc);
+						}
+					}
+					// need to override teardown because testDone will not show
 					// added assertions done within callback
 					var teardown = QUnit.config.current.testEnvironment.teardown;
 					var test = $$.currentTest();
@@ -429,21 +455,67 @@ var Harness = {
 					};
 					if (typeof fx === 'function') {
 						tevt = tevt ? tevt : uevt;
-						listenAll(n, tevt, function(event) {
-							try {
-								fx(event, doc);
-							} catch (e) {
-								Harness.ok(false, e);
-							}
-							start();
-						});
+						// need to listen on parent in case the action removes
+						// the node
+						listenAll(n, tevt,
+								function(event) {
+									try {
+										postEvent(event, iframeId, callback(
+												event, doc));
+									} catch (e) {
+										Harness.ok(false, e);
+									}
+								});
 					}
 					if (!noInvoke) {
 						n.trigger(uevt);
 						Harness.ok(true, uevt, 'Event triggered');
 					}
 				}
+				function postEvent(event, iframeId, cb) {
+					if (iframeId && typeof cb === 'function') {
+						var w = window[event.fragWinTarget];
+						if (!w) {
+							ok(false, 'loaded, but window['
+									+ event.fragWinTarget + '] cannot be found');
+							return start();
+						}
+						var $h = $('html', w.document);
+						if ($h.length <= 0) {
+							ok(false,
+									'loaded, but cannot be find any HTML in window['
+											+ event.fragWinTarget + ']');
+							return start();
+						}
+						// TODO : in some instances we need to wait until any
+						// fragments that may exist within the iframe are loaded
+						// before notifying the callback, but that may not
+						// always be the case. need a to verify frags exist
+						$h.on(Harness.EVT_FRAGS_LOAD, function(event) {
+							try {
+								cb(event);
+								start();
+							} catch (e) {
+								Harness.ok(false, e);
+							}
+						});
+					} else if (!$$.hasError(event)) {
+						return start();
+					}
+				}
 				return n;
+			};
+
+			/**
+			 * Checks if a framework event has errors
+			 * 
+			 * @param event
+			 *            the event to check
+			 * @returns true when an error exists
+			 */
+			$$.hasError = function(event) {
+				return !event
+						|| (event.error || (event.errors && event.errors.length > 0));
 			};
 
 			/**
@@ -492,56 +564,28 @@ var Harness = {
 			var isDone = false;
 			var warns = [];
 
-			$$.keyVal = function(v, x, useLastKey, va, na) {
-				var k = 'param' + (useLastKey ? cnt : ++cnt);
-				var p = x ? noOutParams : outParams;
-				if (!useLastKey) {
-					p.cnt++;
-				}
-				if (!p.pa[k]) {
-					p.pa[k] = {
-						vals : [],
-						hasSameVals : function(ovals) {
-							return $(this.vals).not(ovals).length == 0
-									&& $(ovals).not(this.vals).length == 0;
-						},
-						chkVals : function(ovals, exclude) {
-							if (!ovals || ovals.length <= 0) {
-								return exclude ? true : false;
-							}
-							var io = 0;
-							for ( var i = 0; i < this.vals.length; i++) {
-								io = ovals.indexOf(this.vals[i]);
-								if ((!exclude && io == -1)
-										|| (exclude && io > -1)) {
-									return false;
-								}
-							}
-							return true;
-						}
-					};
-				}
-				if (v) {
-					p.pa[k].vals.push(typeof v === 'string' ? v : v.toString());
-				}
-				p.pa[k].key = k;
-				return (k && !useLastKey ? (na ? ' ' + na : ' name') + '="' + k
-						+ '" ' : '')
-						+ (v ? (va ? va == ' ' ? v : ' ' + va + '="' + v + '" '
-								: ' value="' + v + '" ') : '');
-			};
-			$$.validate = function(incomingParams, strict) {
-				Harness.ok(true, 'Validating incoming', pp, incomingParams);
-				var ips = Harness.getParams(incomingParams);
+			/**
+			 * Validates that the incoming parameters are passed with the
+			 * expected test parameters
+			 * 
+			 * @param params
+			 *            the incoming parameters to validate
+			 * @param strict
+			 *            true to ensure that there are no additional parameters
+			 *            present that are not within the expected parameters
+			 */
+			function validateParams(params, strict) {
+				Harness.ok(true, 'Validating incoming', pp, params);
+				var ips = typeof params === 'object' ? Harness
+						.getParamsFromObj(params) : Harness.getParams(params);
+				var op = null, ip = null;
 				// ensure we have the same amount of incoming parameters as we
-				// do
-				// parameters that were submitted
+				// do parameters that were submitted
 				if ((strict && ips.cnt != outParams.cnt)
 						|| (!strict && ips.cnt < outParams.cnt)) {
 					Harness.ok(false, 'Expected ' + outParams.cnt
 							+ ', but found ' + ips.cnt, pp);
 				}
-				var op = null, ip = null;
 				// verify parameters that should be present are indeed present
 				for ( var i in outParams.pa) {
 					op = outParams.pa[i];
@@ -588,6 +632,67 @@ var Harness = {
 								+ op.vals.join(',')
 								+ '"', pp);
 					}
+				}
+			}
+
+			$$.keyVal = function(v, x, useLastKey, va, na) {
+				var k = 'param' + (useLastKey ? cnt : ++cnt);
+				var p = x ? noOutParams : outParams;
+				if (!useLastKey) {
+					p.cnt++;
+				}
+				if (!p.pa[k]) {
+					p.pa[k] = {
+						vals : [],
+						hasSameVals : function(ovals) {
+							return $(this.vals).not(ovals).length == 0
+									&& $(ovals).not(this.vals).length == 0;
+						},
+						chkVals : function(ovals, exclude) {
+							if (!ovals || ovals.length <= 0) {
+								return exclude ? true : false;
+							}
+							var io = 0;
+							for (var i = 0; i < this.vals.length; i++) {
+								io = ovals.indexOf(this.vals[i]);
+								if ((!exclude && io == -1)
+										|| (exclude && io > -1)) {
+									return false;
+								}
+							}
+							return true;
+						}
+					};
+				}
+				if (v) {
+					p.pa[k].vals.push(typeof v === 'string' ? v : v.toString());
+				}
+				p.pa[k].key = k;
+				return (k && !useLastKey ? (na ? ' ' + na : ' name') + '="' + k
+						+ '" ' : '')
+						+ (v ? (va ? va == ' ' ? v : ' ' + va + '="' + v + '" '
+								: ' value="' + v + '" ') : '');
+			};
+			$$.validate = function(event, selectors, strict) {
+				validateParams(event.parameters, strict);
+				var doc = window.document;
+				if (event.fragWinTarget) {
+					var w = window[event.fragWinTarget];
+					if (!w) {
+						ok(false, 'window[' + event.fragWinTarget
+								+ '] cannot be found');
+						return;
+					}
+					doc = w.document;
+				}
+				var ss = $.isArray(selectors) ? selectors
+						: typeof selectors === 'string' ? [ selectors ] : [];
+				for (var i = 0; i < ss.length; i++) {
+					var $el = $(ss[i], doc);
+					var valid = $el.length > 0;
+					Harness.ok(valid, valid ? 'Found "' + ss[i] + '"'
+							: 'Cannot find "' + ss[i] + '" in loaded fragment',
+							null, $('body', doc));
 				}
 			};
 
@@ -648,21 +753,18 @@ var Harness = {
 				}
 				isDone = true;
 				data.warned = warns.length;
-				for ( var i = 0; i < warns.length; i++) {
+				for (var i = 0; i < warns.length; i++) {
 					var $t = $('#' + warns[i].id);
 					var $li = $t.find('.qunit-assert-list > li:nth-child('
 							+ warns[i].anum + ')');
-					$li.attr('style', function(i, s) {
-						return (s ? s : '')
-								+ 'border-left-color: #FFF68F !important;';
-					});
+					$li.addClass('thx-assert-warn');
 					if (warns[i].msg) {
-						var msg = '<pre style="color: #8a6d3b;background-color: #fcf8e3;border-color: #faebcc;">'
-								+ warns[i].msg + '</pre>';
+						var msg = '<pre class="thx-pre-warn">' + warns[i].msg
+								+ '</pre>';
 						$li.append(msg);
 					}
 					if (data.failed <= 0) {
-						$t.css('background-color', '#FFF68F');
+						$t.addClass('thx-warn');
 					}
 				}
 				warns = [];
@@ -674,6 +776,18 @@ var Harness = {
 			};
 		}
 
+		try {
+			Harness.ieVersion = (/MSIE\s*(\d+\.?\d*)/i)
+					.test(navigator.userAgent || "") ? parseFloat(RegExp.$1, 10)
+					: 0;
+		} catch (e) {
+			Harness.ieVersion = 0;
+			if (window.console && window.console.log) {
+				window.console.log('Unable to detect IE version: ', e);
+			} else {
+				throw e;
+			}
+		}
 		// configuration
 		Harness.EVTS = [ Harness.EVT_FRAGS_BHTTP, Harness.EVT_FRAG_BHTTP,
 				Harness.EVT_FRAG_BDOM, Harness.EVT_FRAG_ADOM,
@@ -688,11 +802,6 @@ var Harness = {
 					label : 'Verbose',
 					tooltip : 'Show extended information such as HTML result content for each individual test (that supports this feature).'
 				});
-		QUnit.config.urlConfig.push({
-			id : 'loader',
-			label : Harness.LOAD_CODE,
-			tooltip : 'Start tests or stop currently running tests.'
-		});
 
 		// proxy so we can track queue count
 		function overrideQUnit(n, fx) {
@@ -715,32 +824,39 @@ var Harness = {
 		overrideQUnit('test', function() {
 			Harness.testCount++;
 		});
-		overrideQUnit('asyncTest', function() {
-			Harness.asyncTestCount++;
-		});
 		function loader() {
-			var l = $('#testLoader');
+			// visual test progress indicator
+			var l = $('.meter');
 			var h = Harness;
-			var r = h.currentRun;
-			if (!r.currentModule()) {
-				l.attr('max', h.moduleCount + h.testCount + h.asyncTestCount);
+			if (!h.currentCount) {
+				h.currentCount = 0;
 			}
-			l.val(parseInt(l.val()) + 1);
+			var v = ++h.currentCount;
+			var cv = 100;
+			var tc = QUnit.config.testNumber ? 2 : h.testCount + 1;
+			if (v < tc) {
+				cv = v * (100 / tc);
+			} else {
+				l.removeClass('animate');
+			}
+			l.addClass(h.currentRun && h.currentRun.failed ? 'thx-fail'
+					: h.currentRun && h.currentRun.warned ? 'thx-warn'
+							: 'thx-pass');
+			l.css('width', cv + '%');
 		}
 
 		// listeners
 		QUnit.begin(function(data) {
+			loader();
 			Harness.currentRun = new Run(data);
 		});
 		QUnit.moduleStart(function(data) {
-			loader();
 			Harness.currentRun.pushModule(data);
 		});
 		QUnit.testStart(function(data) {
 			var h = Harness;
 			var r = h.currentRun;
 			if (!r.currentModule()) {
-				loader();
 				r.pushModule(data);
 			}
 			r.currentModule().pushTest(data);
@@ -749,11 +865,10 @@ var Harness = {
 			Harness.currentRun.currentModule().currentTest().asserted(data);
 		});
 		QUnit.testDone(function(data) {
-			loader();
 			Harness.currentRun.currentModule().currentTest().done(data);
+			loader();
 		});
 		QUnit.moduleDone(function(data) {
-			loader();
 			Harness.currentRun.currentModule().done(data);
 		});
 		QUnit.done(function(data) {
@@ -762,8 +877,6 @@ var Harness = {
 			// https://github.com/axemclion/grunt-saucelabs#test-result-details-with-qunit
 			window.global_test_results = data;
 		});
-	},
-
-	LOAD_CODE : 'Tests: <progress id="testLoader" value="0" max="100"></progress>'
+	}
 };
 Harness.init();

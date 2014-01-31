@@ -1,57 +1,67 @@
 $(function () {
 
+	// tests
 	module('navigation');
+	buttonTest('get', 'sync|transfer', 'login', '#username');
+	buttonTest('post', 'sync|transfer', 'login', '#username');
 
-	asyncTest('should perform full page transfer in iframe with parameters', function () {
-		// generate random in-line frame ID/name
-		var loadVerifySelector = '#username';
-		var iframeId = Harness.generateIframeId();
-		var m = Harness.currentRun.currentModule();
-		var d = m.currentTest();
-		d.html = 
-			'<div>' +
-				'<button type="button" class="' + Harness.TEST_CSS_CLASS + '" ' +
-					'data-thx-get="click" data-thx-get-path="?{#globalLoginPath}" ' +
-					'data-thx-get-type="sync|transfer" ' +
-					'data-thx-get-target="' + iframeId + '" ' +
-					'data-thx-get-params=".simple-nav-params :input"></button>' +
-				'<input id="globalLoginPath" type="hidden" value="login" />' +
-				'<div class="simple-nav-params">' +
-					'<input type="text" ' + d.keyVal('text value') + '/>' +
-					'<input type="checkbox" checked="checked" ' + d.keyVal('checkbox value 1') + '/>' +
-					'<input type="checkbox" ' + d.keyVal('checkbox value 2', true) + '/>' + 
-					'<input type="radio" ' + d.keyVal('radio value 1', true) + '/>' +
-					'<input type="radio" checked="checked" ' + d.keyVal('radio value 2') + '/>' +
-					'<select multiple="multiple" ' + d.keyVal() + '>' +
-						'<option ' + d.keyVal('select option 1', true, true) + '></option>' +
-						'<option selected="selected" ' + d.keyVal('select option 2', false, true) + '></option>' +
-					'</select>' +
-					'<input type="range" min="1" max="100" ' + d.keyVal(25) + '/>' +
-					'<textarea rows="4" cols="50" ' + d.keyVal() + '>' + d.keyVal('textarea value 1', false, true, ' ') + '</textarea>' +
-					'<input type="text" disabled="disabled" ' + d.keyVal('text value 2', true) + '/>' +
-					'<div><input type="text" ' + d.keyVal('nested text value 1') + '/></div>' +
-				'</div>' +
-				'<input type="text" ' + d.keyVal('text value 3', true) + '/>' +
-			'</div>';
-		m.asyncNavRegister( 
-				d.html,
-			function(event) {
-				var f = window[event.fragWinTarget];
-				if (!f) {
-					ok(false, 'loaded, but window[event.fragWinTarget] cannot be found');
-				}
-				// validate that the login page has been loaded by checking the presence of the user name element
-				var $u = $(loadVerifySelector, f.document);
-				var valid = $u.length > 0;
-				Harness.ok(valid, valid ? 'Found "' + loadVerifySelector + '"' : 
-					'Cannot find "' + loadVerifySelector + '" in loaded fragment', null, 
-					$('body', f.document));
-				// validate the parameters were passed
-				d.validate(event.parameters);
-			},
-			'click', Harness.EVT_FRAG_LOAD, iframeId
-		);
-	});
-
+	/**
+	 * Tests the various HTTP method verbs and siphon types
+	 * 
+	 * @param httpMethod
+	 *            the HTTP verb
+	 * @param type
+	 *            the type (e.g. include, etc.)
+	 * @param path
+	 *            the path to use for the navigation
+	 * @param valSel
+	 *            the selector string (or array of selectors) to lookup and
+	 *            validate against when the navigation completes
+	 */
+	function buttonTest(httpMethod, type, path, valSel) {
+		if (!type) {
+			throw ('type required');
+		}
+		var name = 'Full page ' + httpMethod.toUpperCase() + ' ' + type;
+		asyncTest(name, function () {
+			// generate random in-line frame ID/name
+			var iframeId = Harness.generateIframeId();
+			var m = Harness.currentRun.currentModule();
+			var d = m.currentTest();
+			d.html = 
+				'<div>' +
+					'<button type="button" class="' + Harness.TEST_CSS_CLASS + '" ' +
+						'data-thx-' + httpMethod + '="click" data-thx-' + httpMethod + '-path="?{#globalLoginPath}" ' +
+						'data-thx-' + httpMethod + '-type="' + type + '" ' +
+						'data-thx-' + httpMethod + '-target="' + iframeId + '" ' +
+						'data-thx-' + httpMethod + '-params=".simple-nav-params :input"></button>' +
+					'<input id="globalLoginPath" type="hidden" value="' + path + '" />' +
+					'<div class="simple-nav-params">' +
+						'<input type="text" ' + d.keyVal('text value') + '/>' +
+						'<input type="checkbox" checked="checked" ' + d.keyVal('checkbox value 1') + '/>' +
+						'<input type="checkbox" ' + d.keyVal('checkbox value 2', true) + '/>' + 
+						'<input type="radio" ' + d.keyVal('radio value 1', true) + '/>' +
+						'<input type="radio" checked="checked" ' + d.keyVal('radio value 2') + '/>' +
+						'<select multiple="multiple" ' + d.keyVal() + '>' +
+							'<option ' + d.keyVal('select option 1', true, true) + '></option>' +
+							'<option selected="selected" ' + d.keyVal('select option 2', false, true) + '></option>' +
+						'</select>' +
+						'<input type="range" min="1" max="100" ' + d.keyVal(25) + '/>' +
+						'<textarea rows="4" cols="50" ' + d.keyVal() + '>' + d.keyVal('textarea value 1', false, true, ' ') + '</textarea>' +
+						'<input type="text" disabled="disabled" ' + d.keyVal('text value 2', true) + '/>' +
+						'<div><input type="text" ' + d.keyVal('nested text value 1') + '/></div>' +
+					'</div>' +
+					'<input type="text" ' + d.keyVal('text value 3', true) + '/>' +
+				'</div>';
+			m.asyncNavRegister( 
+					d.html,
+				function(event, doc) {
+					// validate the parameters were passed, the login page is loaded and the user name element is present
+					d.validate(event, valSel);
+				},
+				'click', Harness.EVT_FRAG_LOAD, iframeId
+			);
+		});
+	}
 });
 //# sourceURL=test/js/nav.js

@@ -138,6 +138,17 @@
 					</div>
 					<div class="row row-thymus">
 						<div class="col-md-2">
+							<code>parentOrigin</code>
+						</div>
+						<div class="col-md-10">
+							the originating parent element (replacements remove the
+							initiating element from the DOM and will not contain a parent
+							node- see <a href="#fragseventprog">programmatic usage</a> for
+							additional details)
+						</div>
+					</div>
+					<div class="row row-thymus">
+						<div class="col-md-2">
 							<code>eventSiphon</code>
 						</div>
 						<div class="col-md-10">
@@ -163,7 +174,8 @@
 						</div>
 						<div class="col-md-10">
 							the resolved parameters from the <a href="#paramsiphon"><b>parameter
-									siphon</b></a> (if any)
+									siphon</b></a> in the form of a URL encoded string for HTTP GETs and in
+							object form for any other HTTP verbs (if any)
 						</div>
 					</div>
 					<div class="row row-thymus">
@@ -414,14 +426,9 @@
 				defined as the
 				<code>data-thx-onfrag</code>
 				must be available for execution at the time that the fragment event
-				received.<br /> <br /> <strong>Note:</strong> There are two ways
-				to manipulate/massage incoming fragment content. The first way is
-				using the
-				<code>data-thx-onfrag</code>
-				attribute and/or registering a <a href="#fraginjs">fragment
-					event listener</a>; Both of which require evaluating the supplied <a
-					href="#fragevent">fargment event</a>. The second way is using a <a
-					href="#funcfrags"><b>result siphon</b> handler</a>.
+				received.<br /> <br /> <strong>Note:</strong> For more-granular
+				control over fragment behavior use a <a href="#funcfrags"><b>result
+						siphon</b> handler</a>
 			</div>
 			<h3 id="frags">Fragments Events</h3>
 			<p>
@@ -792,6 +799,20 @@
 				is one of the supported <b>thymus.js</b> events (e.g.
 				<code>$('html').on('load.thx.frag', function(event){...})</code>
 				).
+			</p>
+			<p>
+				Just like any other DOM event, when elements are removed from the
+				DOM any relevant data/events associated with the elements will be
+				removed along with them. For this reason, any <b>event siphon</b>s
+				that are flagged as a replacements via <b>destination type
+					siphon</b> or <a href="#shorthand">short-hand</a> will result in <a
+					href="http://api.jquery.com/detach/">detachment</a> from the DOM
+				until after the final <a href="#fragsevent">fragments event</a> is
+				dispatched/triggered; after which a <a
+					href="http://api.jquery.com/remove/">removal</a> will occur. This
+				may also decrease the amount of time it takes to dispatch the
+				fragment events when there are a significant number of replacements
+				being made.
 			</p>
 			<h4 id="fragsoptsprog">Programmatic <b>thymus.js</b> Options</h4>
 			

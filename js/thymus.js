@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */// ============================================
-(function() {
+(function($) {
 	this.NS = this.displayName = 'thymus';
 	this.DFLT_PATH_SEP = '/';
 	this.REGEX_ABS_PATH = /([^:]\/|\\)(?:\/|\\)+/;
@@ -48,7 +48,6 @@
 	this.eventFuncCnt = 0;
 	this.ieVersion = 0;
 	this.ieVersionCompliant = 9;
-	this.jq = window.jQuery;
 	this.basePath = null;
 	this.updateUrls = false;
 	this.firstRun = true;
@@ -211,11 +210,31 @@
 				return $el;
 			}
 			pa = $el.prop(n);
-			if (typeof pa === 'undefined' || pa instanceof jQuery) {
+			if (typeof pa === 'undefined' || pa instanceof $) {
 				pa = $el.attr(n);
 			}
 		}
 		return pa;
+	}
+
+	/**
+	 * Detach version of JQuery's replaceWith
+	 */
+	function detachReplaceWith() {
+		var	args = jQuery.map(this, function(elem) {
+			return [ elem.nextSibling, elem.parentNode ];
+		}), i = 0;
+		this.domManip(arguments, function(elem) {
+			var next = args[i++], parent = args[i++];
+			if (parent) {
+				if (next && next.parentNode !== parent) {
+					next = this.nextSibling;
+				}
+				jQuery(this).detach();
+				parent.insertBefore(elem, next);
+			}
+		}, true);
+		return i ? this : this.detach();
 	}
 
 	/**
@@ -227,10 +246,11 @@
 	 *            the optional initial cache element
 	 */
 	function JqCache(c) {
+		var $$ = this;
 		var $c = c;
-		this.cache = function($x) {
-			if ($x instanceof jQuery) {
-				if ($c instanceof jQuery) {
+		$$.cache = function($x) {
+			if ($x instanceof $) {
+				if ($c instanceof $) {
 					$c = $c.add($x);
 				} else {
 					$c = $x;
@@ -238,9 +258,9 @@
 			}
 			return $c;
 		};
-		this.clear = function(n) {
+		$$.clear = function(n) {
 			$c = null;
-			return n ? this : null;
+			return n ? $$ : null;
 		};
 	}
 
@@ -255,16 +275,18 @@
 	 *            the optional initial origin/result cache element or text
 	 */
 	function ManipCache($dc, r) {
+		var $$ = this;
 		var dc = new JqCache($dc);
 		var rc = new JqCache(r);
-		this.rsltCache = function(r) {
-			return rc.cache(r instanceof jQuery ? r
+		$$.detachCache = new JqCache();
+		$$.rsltCache = function(r) {
+			return rc.cache(r instanceof $ ? r
 					: typeof r === 'object' ? $(r) : r);
 		};
-		this.destCache = function($dc) {
+		$$.destCache = function($dc) {
 			return dc.cache($dc);
 		};
-		this.manip = function(ia, alt) {
+		$$.manip = function(ia, alt) {
 			var $d = dc.cache();
 			var $r = rc.cache();
 			if ($d && $r) {
@@ -278,16 +300,19 @@
 				} else if (ia) {
 					$d.append(f ? f : alt ? alt : $r);
 				} else {
-					$d.replaceWith(f ? f : alt ? alt : $r);
+					// detach in order to keep event propigation
+					detachReplaceWith.apply($d, f ? f : alt ? alt : $r);
+					$$.detachCache.cache($d);
+					//$d.replaceWith(f ? f : alt ? alt : $r);
 				}
 				return $r;
 			}
 			return null;
 		};
-		this.clear = function(n) {
+		$$.clear = function(n) {
 			dc = dc.clear(n);
 			rc = rc.clear(n);
-			return n ? this : null;
+			return n ? $$ : null;
 		};
 	}
 
@@ -309,8 +334,10 @@
 	 *            the optional attribute origin/result cache
 	 */
 	function ManipsCache(ia, ndc, nrc, adc, arc) {
+		var $$ = this;
 		var nc = new ManipCache(ndc, nrc);
 		var ac = new ManipCache(adc, arc);
+		var dc = null;
 		var altnc = [];
 		var rc = null;
 		function alt(arr, x, fx) {
@@ -334,14 +361,17 @@
 			}
 			return null;
 		}
-		this.rsltCache = function(rc) {
+		$$.rsltCache = function(rc) {
 			return nc.rsltCache(rc);
 		};
-		this.destCache = function($dc, altr) {
+		$$.destCache = function($dc, altr) {
 			alt(altnc, $dc, altr);
 			return nc.destCache($dc);
 		};
-		this.manips = function(n) {
+		$$.detachCache = function() {
+			return dc;
+		};
+		$$.manips = function(n) {
 			rc = rc ? rc : new JqCache();
 			// when there are no alternatives we can perform the normal
 			// append/replaceWith operations- otherwise, we need to handle the
@@ -362,15 +392,16 @@
 					return $rs.clone(true, true);
 				}
 			} : null));
+			dc = nc.detachCache;
 			rc = rc.clear(n);
-			this.clear(n);
+			$$.clear(n);
 			return $r;
 		};
-		this.clear = function(n) {
+		$$.clear = function(n) {
 			nc = nc ? nc.clear(n) : n ? new ManipCache() : null;
 			ac = ac ? ac.clear(n) : n ? new ManipCache() : null;
 			rc = rc ? rc.clear(n) : n ? new ManipCache() : null;
-			return n ? this : null;
+			return n ? $$ : null;
 		};
 	}
 
@@ -381,13 +412,18 @@
 	 * @constructor
 	 */
 	function AppReplCache() {
+		var $$ = this;
 		var ach = new ManipsCache(true);
 		var rch = new ManipsCache(false);
+		var dc = null;
 		var ich = [];
 		function manips($r, c, n) {
 			return $r ? $r.add(c.manips(n)) : c.manips(n);
 		}
-		this.rsltCache = function(ia, rc, solo) {
+		$$.detachCache = function() {
+			return dc;
+		};
+		$$.rsltCache = function(ia, rc, solo) {
 			if (solo) {
 				// the result is destination specific
 				var rdc = new ManipsCache(ia);
@@ -398,7 +434,7 @@
 				return (ia ? ach : rch).rsltCache(rc);
 			}
 		};
-		this.destCache = function(ia, $dc, altr, rc) {
+		$$.destCache = function(ia, $dc, altr, rc) {
 			if (rc) {
 				for (var i = 0; i < ich.length; i++) {
 					if (rc.is(ich[i].rsltCache())) {
@@ -409,21 +445,22 @@
 				return (ia ? ach : rch).destCache($dc, altr);
 			}
 		};
-		this.appendReplaceAll = function(n) {
+		$$.appendReplaceAll = function(n) {
 			var $r = null;
 			for (var i = 0; i < ich.length; i++) {
 				$r = manips($r, ich[i], n);
 			}
 			$r = manips($r, ach, n);
 			$r = manips($r, rch, n);
-			this.clear(n);
+			dc = rch.detachCache();
+			$$.clear(n);
 			return $r;
 		};
-		this.clear = function(n) {
+		$$.clear = function(n) {
 			ach = ach ? ach.clear(n) : n ? new ManipsCache(true) : null;
 			rch = rch ? rch.clear(n) : n ? new ManipsCache(false) : null;
 			ich = n ? [] : null;
-			return n ? this : null;
+			return n ? $$ : null;
 		};
 	}
 
@@ -466,52 +503,87 @@
 			}
 			return ptype;
 		};
-		$$.getWin = function(loc, el, delay, timeout, dfx, lfx) {
+		$$.getWin = function(loc, delay, timeout, dfx, lfx) {
 			function opt(w) {
-				var $w = $(w), oe = null, ol = w.location.href, ohn = w.location.hostname;
+				var oe = null, ol = w.location.href, ohn = w.location.hostname;
 				var $b = $('body', w.document);
-				var $f = loc instanceof jQuery && loc.is('form') ? loc : null;
-				if (el) {
-					$b.append(el);
+				var $f = loc instanceof $ && loc.is('form') ? loc : null;
+				if ($f) {
+					$b.append($f);
 				}
 				if (dfx) {
-					dfx.call($w);
+					dfx.call($(w));
 				}
 				if (lfx) {
-					oe = function() {
-						if ($f) {
-							$f.off('submit', oe);
-						} else {
-							$w.off('unload', oe);
+					var li = 0;
+					function onOff(on) {
+						// do not cache window/document handles (IE may throw
+						// Permission Denied)
+						var wh = getWinHandle();
+						var $t = $f || $(wh);
+						var e = null;
+						if (li == 0) {
+							e = $f ? 'submit' : ieVersion > 0 ? 'ready' : 'unload';
+						} else if (li == 1) {
+							e = 'ready'; //e = ieVersion > 0 ? 'ready' : 'load';
+							$t = $(wh);
 						}
-						// wait for location to change before registering load
-						// listener or it will never fire
-						wait(delay, timeout, function(cnt, e) {
-							if (ohn != w.location.hostname) {
+						if (!e) {
+							return;
+						}
+						if (on) {
+							if (e == 'ready') {
+								// wait for the document to complete loading
+								wait(delay, timeout, wh.document, function(cnt, e) {
+									oe();
+								});
+							} else {
+								$t.on(e, oe);
+							}
+						} else {
+							try {
+								$t.off(e, oe);
+							} catch (e) {
+								// ignore
+							}
+							li++;
+						}
+					}
+					oe = function() {
+						onOff();
+						// wait for location to change before listening for
+						// ready/load state or it will never fire
+						wait(delay, timeout, null, function(cnt, e) {
+							if (ohn && ohn != w.location.hostname) {
 								// different host will not trigger load event-
 								// best effort exhausted
-								lfx.call($w, $f);
+								lfx.call($(getWinHandle()), $f);
 								return true;
 							}
 							if (ol != w.location.href) {
 								oe = function() {
-									$w.off('load', oe);
-									lfx.call($w, $f);
+									onOff();
+									lfx.call($(getWinHandle()), $f);
 								};
-								$w.load(oe);
+								onOff(true);
 								return true;
 							}
 						});
 					};
-					if ($f) {
-						$f.on('submit', oe);
-					} else {
-						$w.on('unload', oe);
-					}
+					onOff(true);
 				}
 				if ($f) {
 					$f.submit();
 				}
+			}
+			function getWinHandle(wr) {
+				var w = wr || window;
+				if ($$.target != '_self') {
+					var tn = $$.target.charAt(0) == '_' ? $$.target
+							.substring(1) : $$.target;
+					w = w[tn];
+				}
+				return w;
 			}
 			try {
 				if (!win && $$.type == '_blank' && !loc) {
@@ -521,18 +593,14 @@
 					opt(win);
 					return win;
 				} else if (!win) {
-					win = window;
-					if ($$.target != '_self') {
-						var tn = $$.target.charAt(0) == '_' ? $$.target
-								.substring(1) : $$.target;
-						win = window[tn];
-					}
+					win = getWinHandle(win);
 				}
-				if (loc) {
-					if (typeof loc === 'string') {
-						win = window.open(loc, $$.target, $$.options,
-								$$.history);
-					}
+				if (typeof loc === 'string') {
+					// opening window using the specified location (works with
+					// same window navigation as well)
+					win = window.open(loc, $$.target, $$.options, $$.history);
+					opt(win);
+				} else if (loc) {
 					opt(win);
 				}
 			} catch (e) {
@@ -630,23 +698,34 @@
 	/**
 	 * Waits for a predetermined amount of time before executing a function
 	 * multiple times until the function returns true or until a timeout is
-	 * reached
+	 * reached (executes function once when a document is provided and it has
+	 * finished loading)
 	 * 
 	 * @param delay
 	 *            the delay between checks in milliseconds
 	 * @param timeout
 	 *            the timeout in milliseconds
+	 * @param doc
+	 *            optional document reference to check for ready state before
+	 *            calling supplied function
 	 * @param fx
 	 *            the function to call for each interval
 	 */
-	function wait(delay, timeout, fx) {
-		var limit = 0, timer = null;
+	function wait(delay, timeout, doc, fx) {
+		var limit = 0;
+		var timer = null;
 		timer = setInterval(function() {
 			try {
 				if (limit >= timeout) {
 					clearInterval(timer);
-					fx(limit, new Error("Timmed out after "
-							+ (limit * timeout) + " milliseconds"));
+					fx(limit, new Error("Timmed out after " + (limit * timeout)
+							+ " milliseconds"));
+				} else if (doc) {
+					if (doc.readyState == 'loaded'
+							|| doc.readyState == 'complete') {
+						fx(limit);
+						clearInterval(timer);
+					}
 				} else if (fx(limit)) {
 					clearInterval(timer);
 				}
@@ -768,7 +847,7 @@
 	 *            the item to add to the JQuery object
 	 */
 	function jqAdd(o, ao) {
-		if (o instanceof jQuery) {
+		if (o instanceof $) {
 			return ao ? o.add(ao) : o;
 		}
 		return ao ? $(o).add(ao) : $(o);
@@ -1144,7 +1223,7 @@
 			// capture JQuery selector/directive and return the node value(s)
 			var xt = s ? s.split(drx) : null;
 			var $x = xt ? typeof el === 'function' ? el(xt[0])
-					: el instanceof jQuery ? el.find(xt[0]) : $(xt[0]) : null;
+					: el instanceof $ ? el.find(xt[0]) : $(xt[0]) : null;
 			if ($x && $x.length > 0) {
 				// directive may be have an event/attribute directive
 				var evt = '';
@@ -1339,7 +1418,7 @@
 			}
 			// validate/set action scope property
 			function sc(a, p, alt) {
-				a[p] = a[p] ? a[p] instanceof jQuery && a[p].length > 0 ? a[p]
+				a[p] = a[p] ? a[p] instanceof $ && a[p].length > 0 ? a[p]
 						: $(a[p]) : $(alt);
 				if (a[p].length <= 0) {
 					a[p] = null;
@@ -2017,7 +2096,7 @@
 			var t = '';
 			var e = null;
 			var v = null;
-			if ($el instanceof jQuery) {
+			if ($el instanceof $) {
 				$el.each(function(i, r) {
 					e = $(r);
 					if (e.is(':input') && !e.is(':button')) {
@@ -2050,7 +2129,7 @@
 		 */
 		function Resolver(s, d, cr, t) {
 			var $$ = this;
-			$$.selector = s instanceof jQuery ? s : s ? $.trim(s) : null;
+			$$.selector = s instanceof $ ? s : s ? $.trim(s) : null;
 			$$.directive = d ? $.trim(d) : '';
 			if ($$.directive) {
 				var ld = $$.directive.toLowerCase();
@@ -2065,7 +2144,7 @@
 				if (s && $$.selector) {
 					var $p = $el ? $el : $('html');
 					var sbe = null;
-					var jqs = $$.selector instanceof jQuery;
+					var jqs = $$.selector instanceof $;
 					if (jqs && $$.selector.is($p)) {
 						return $p;
 					} else if (jqs && $$.selector.is(DFTL_RSLT_NAME)) {
@@ -2123,7 +2202,7 @@
 				var r = null;
 				var cr = c ? new Resolver(c[0], c.length > 1 ? c[1] : '', t)
 						: null;
-				if (s instanceof jQuery || typeof s === 'string') {
+				if (s instanceof $ || typeof s === 'string') {
 					r = new Resolver(s, cr, t);
 				} else {
 					r = new Resolver(s[0], s.length > 1 ? s[1] : '', cr, t);
@@ -2159,7 +2238,7 @@
 			this.size = function() {
 				return rvs.length;
 			};
-			if (s instanceof jQuery) {
+			if (s instanceof $) {
 				// already selected
 				add(s);
 			} else {
@@ -2257,7 +2336,7 @@
 					return ps;
 				}
 			}
-			function add(r, $p, ps, uj) {
+			function add(r, $p, ps) {
 				if (isExcludedVal($p)) {
 					return ps;
 				}
@@ -2271,18 +2350,9 @@
 						$p, r.directive);
 				if (v !== undefined && v !== null) {
 					if ($.isArray(v)) {
-						if (uj) {
-							// convert each item in the array to a key/value
-							// pair and add the array to the master object
-							var vm = $.map(v, function(ev) {
-								return kv({}, k, ev);
-							});
-							ps = kv(ps, k, vm);
-						} else {
-							$.each(v, function(i, ev) {
-								ps = kv(ps, k, ev);
-							});
-						}
+						$.each(v, function(i, ev) {
+							ps = kv(ps, k, ev);
+						});
 					} else {
 						ps = kv(ps, k, v);
 					}
@@ -2313,7 +2383,7 @@
 			// replaced surrogate siphon resolvers and node siphon resolvers
 			this.params = function($el, uj, psn) {
 				try {
-					var $elc = $el instanceof jQuery ? $el : $ell ? $ell
+					var $elc = $el instanceof $ ? $el : $ell ? $ell
 							: t.searchScope ? t.searchScope : $('html');
 					// only trigger a capture when element has changed or a new
 					// parameter siphon has been requested
@@ -2330,7 +2400,7 @@
 							$p.each(function() {
 								// add the key/value parameters individually in
 								// order to handle the directive
-								x = add(r, $(this), x, uj);
+								x = add(r, $(this), x);
 							});
 						});
 						pspp = x;
@@ -2370,7 +2440,7 @@
 				try {
 					rsp = rsn ? rsn : rsp;
 					if (!rsp || rsn || (el && el.nodeType && !el.is(cel))) {
-						var iel = el instanceof jQuery;
+						var iel = el instanceof $;
 						rsp = siphonValues(rsp ? rsp : iel ? el : rs, f.method,
 								vars, opts.resultSep, null, el || t.searchScope);
 						if (!rsp && iel) {
@@ -2391,7 +2461,7 @@
 				}
 			};
 			this.add = function(arc, rr, r) {
-				var rIsJ = r instanceof jQuery;
+				var rIsJ = r instanceof $;
 				var rslt = null;
 				if (rr && rr.directive && rr.directive != DTEXT
 						&& rr.directive != DHTML) {
@@ -2405,7 +2475,7 @@
 				if (typeof rslt === 'string' && !opts.regexTags.test(rslt)) {
 					// prepare the non-HTML result string for DOM insertion
 					rslt = $(document.createTextNode(rslt));
-				} else if (rslt && !(rslt instanceof jQuery)) {
+				} else if (rslt && !(rslt instanceof $)) {
 					rslt = $(rslt);
 				}
 				if (rslt) {
@@ -2504,12 +2574,12 @@
 						propAttr($d, dr.directive, (v ? v : '')
 								+ getTextVals($r));
 					};
-				} else if (r instanceof jQuery && dr.directive == DTEXT) {
+				} else if (r instanceof $ && dr.directive == DTEXT) {
 					// result needs to be text
 					altr = function($d, $r) {
 						return getTextVals($r);
 					};
-				} else if ($altr instanceof jQuery) {
+				} else if ($altr instanceof $) {
 					// alternative result node provided
 					altr = function($d, $r) {
 						return $altr;
@@ -2535,7 +2605,7 @@
 					dsp = siphonValues(dsp || ds, f.method, vars, opts.destSep,
 							null, t.destScope);
 					dsr = new NodeResolvers(dsp ? dsp
-							: ds instanceof jQuery ? ds : '', opts.fragAttrs);
+							: ds instanceof $ ? ds : '', opts.fragAttrs);
 				}
 				return dsp;
 			};
@@ -2681,12 +2751,15 @@
 		 *            the event to broadcast (should contain a
 		 *            <code>source</code> or <code>scope</code> property
 		 *            that will contain the element to trigger the event)
+		 * @param ecb
+		 *            a callback function for handling errors
 		 * @returns true when the event has requested to prevent the default
 		 *          action
 		 */
-		function broadcastFragEvent(evt) {
+		function broadcastFragEvent(evt, ecb) {
+			var el = null;
 			try {
-				var el = evt.sourceEvent ? $(evt.sourceEvent.target)
+				el = evt.sourceEvent ? $(evt.sourceEvent.target)
 						: evt.source ? evt.source : evt.target ? evt.target
 								: evt.actionScope;
 				// TODO : audio/video custom event trigger will cause media to
@@ -2697,8 +2770,9 @@
 				try {
 					el.trigger(evt);
 				} catch (e) {
-					log('Error triggering '
-							+ (evt ? evt.type + ' ' + evt : 'unknown event'), e);
+					ecb('Error triggering fragment event '
+							+ (evt ? evt.type + ' ' + evt : 'unknown event'),
+							el, e);
 				}
 				var sfc = script && evt.chain === opts.eventFragChain ? propAttr(
 						script, opts.fragListenerAttr)
@@ -2719,14 +2793,15 @@
 								}
 							}
 						} catch (e) {
-							log('Error in ' + fs + ' ' + (evt ? evt : ''), e);
+							ecb('Error in ' + fs + ' ' + (evt ? evt : ''), el,
+									e);
 						}
 					}
 				}
 				return evt.isDefaultPrevented();
 			} catch (e) {
-				log('Error in '
-						+ (evt ? evt.type + ' ' + evt : 'unknown event'), e);
+				ecb('Error broadcasting fragment event for '
+						+ (evt ? evt.type + ' ' + evt : 'unknown event'), el, e);
 			}
 			return false;
 		}
@@ -2747,30 +2822,28 @@
 			if (!opts.eventIsBroadcast) {
 				return;
 			}
-			function fire(el) {
-				return broadcastFragEvent(chain == opts.eventFragChain ? genFragEvent(
-						type, t, f)
-						: genFragsEvent(chain, type, t), el);
+			function fire() {
+				var evt = chain == opts.eventFragChain ? genFragEvent(type, t,
+						f) : genFragsEvent(chain, type, t);
+				return broadcastFragEvent(evt, function(msg, el, e) {
+					// error may never reach listener- try to log it
+					var fmsg = msg + ' for ' + (f || t);
+					t.addError(fmsg, f, e);
+					log(fmsg, e);
+				});
 			}
 			if (chain == opts.eventFragChain || chain == opts.eventFragsChain) {
 				var bhttp = type == opts.eventFragsBeforeHttp
 						|| type == opts.eventFragBeforeHttp;
 				if (f) {
 					if (!f.frp.pathSiphon()) {
-						t.addError('Invalid URL for ' + f.toString(), f, null,
-								null, null);
+						t.addError('Invalid URL for ' + f.toString(), f);
 						f.cancelled = true;
 						if (bhttp) {
 							fire();
 						}
 					} else if (f) {
 						f.cancelled = fire();
-						// TODO : self-replacements need to also broadcast load events
-//						if (type == opts.eventFragAfterDom && !f.fds.destSiphon()
-//								&& f.navOpts.type() == TREP) {
-//							broadcast(chain, opts.eventFragLoad, t, f);
-//							broadcast(opts.eventFragsChain, opts.eventFragsLoad, t, f);
-//						}
 					}
 					if (f.cancelled) {
 						t.ccnt++;
@@ -2809,6 +2882,7 @@
 			var start = new Date();
 			var $$ = this;
 			$$.action = action;
+			$$.lastFrag = null;
 			$$.ctxPath = getAppCtxPath(opts.regexAbsPath, opts.pathSep,
 					bypassPath);
 			$$.navOpts = navOpts;
@@ -2818,8 +2892,9 @@
 			$$.len = 0;
 			var done = false;
 			var c = [];
+			var frags = [];
 			function setScope(p, s) {
-				if (s instanceof jQuery && s.length > 0) {
+				if (s instanceof $ && s.length > 0) {
 					$$[p] = s;
 				} else if (typeof $$[p] === 'undefined') {
 					$$[p] = $('html');
@@ -2847,7 +2922,7 @@
 				}
 			};
 			$$.resetSiphon(siphon, actionScope, searchScope, destScope);
-			$$.addFrag = function(f) {
+			$$.queueFrag = function(f) {
 				var url = f.pseudoUrl();
 				if (c[url]) {
 					c[url].frags[c[url].frags.length] = f;
@@ -2862,8 +2937,18 @@
 				}
 				return true;
 			};
-			$$.getFrags = function(f) {
+			$$.getQueuedFrags =  function(f) {
 				return c[f.pseudoUrl()];
+			};
+			$$.addFrag = function(f) {
+				frags.push(f);
+			};
+			$$.genFragObjs = function() {
+				var a = [];
+				for (var i=0; i<frags.length; i++) {
+					a.push(addFragProps({}, $$, frags[i]));
+				}
+				return a;
 			};
 			var e = [];
 			$$.addError = function(em, f, oc, hs, xhr) {
@@ -2902,7 +2987,23 @@
 						cb();
 					}
 					broadcast(opts.eventFragsChain, opts.eventFragsLoad, $$);
+					// actually remove detached elements (detached versus remove
+					// in order to maintain broadcast capabilities on replaced nodes)
+					var dc = $$.detachCache();
+					if (dc && dc.cache()) {
+						// cleanup data/events
+						dc.cache().remove();
+					}
 				}
+			};
+			var detachc = null;
+			$$.detachCache = function(cache) {
+				if (!detachc) {
+					detachc = cache;
+				} else if (cache) {
+					detachc.cache(cache.cache());
+				}
+				return detachc;
 			};
 			$$.adjustments = null;
 		}
@@ -2920,10 +3021,12 @@
 		 */
 		function Frag(pf, $fl, t) {
 			var $$ = this;
-			// var isHead = $fl instanceof jQuery ? $fl.is('head') : false;
+			t.addFrag($$);
+			// var isHead = $fl instanceof $ ? $fl.is('head') : false;
 			$$.pf = pf;
 			$$.pel = t.actionScope;
 			$$.el = $fl;
+			$$.parentOrigin = $fl.parent();
 			var siphon = t.siphon;
 			var loadSiphon = null;
 			// "a" will represent the short-hand attrs
@@ -2964,10 +3067,10 @@
 				// add user variables
 				siphon.vars.add($$.method, $$.ws);
 			}
-			$$.fps = new FragParamSiphon(t, $$.method, siphon.paramsSiphon,
+			$$.fps = new FragParamSiphon(t, $$, siphon.paramsSiphon,
 					siphon.vars);
-			$$.frs = new FragResultSiphon(t, $$, !a ? siphon.resultSiphon
-					: a && a.length > 1 ? $.trim(a[1]) : null, siphon.vars);
+			$$.frs = new FragResultSiphon(t, $$, !a ? siphon.resultSiphon : a
+					&& a.length > 1 ? $.trim(a[1]) : null, siphon.vars);
 			$$.frp = new FragPathSiphon(t, $$, !a ? siphon.pathSiphon : a
 					&& a.length > 0 ? $.trim(a[0]) : null, siphon.vars);
 			$$.fds = new FragDestSiphon(t, $$,
@@ -3008,6 +3111,8 @@
 				while (x = x.pf) {
 					x.ccnt(false);
 				}
+				// add detachments for global removal
+				t.detachCache($$.detachCache());
 			};
 			$$.domStart = function() {
 				broadcast(opts.eventFragChain, opts.eventFragBeforeDom, t, $$);
@@ -3019,7 +3124,7 @@
 			var arc = new AppReplCache();
 			// handles processing of fragments
 			$$.rslt = function(r, rr, xhr, ts, e) {
-				var xIsJ = r instanceof jQuery;
+				var xIsJ = r instanceof $;
 				if (ts || e) {
 					t.addError('Error at ' + $$.toString() + ': ' + ts + '- '
 							+ e, $$, e, ts, xhr);
@@ -3071,6 +3176,9 @@
 				htmlDomAdjust(t, $$, $adds, false);
 				return $$.destResults = jqAdd($$.destResults, $adds);
 			};
+			$$.detachCache = function() {
+				return arc.detachCache();
+			};
 			$$.nav = function(no) {
 				var rtn = null, dcb = null, lcb = null;
 				if (opts.eventIsBroadcast) {
@@ -3107,7 +3215,7 @@
 					var fd = $('<form style="display:none;" action="'
 							+ $$.frp.pathSiphon() + '" method="'
 							+ $$.method + '" />');
-					vars = $$.fps.params(true);
+					vars = $$.fps.params(null, true);
 					var ips = '';
 					for (var i = 0; i < vars.length; i++) {
 						ips += '<input name="' + vars[i].name + '" value="'
@@ -3116,7 +3224,7 @@
 					fd.append(ips);
 					$$.domStart();
 					// submit form
-					rtn = no.getWin(null, fd, opts.readyStateDelay,
+					rtn = no.getWin(fd, opts.readyStateDelay,
 							opts.readyStateTimeout, dcb, lcb);
 				} else {
 					var loc = $$.frp.pathSiphon();
@@ -3126,7 +3234,7 @@
 					}
 					$$.domStart();
 					// open window or change location
-					rtn = no.getWin(loc, null, opts.readyStateDelay,
+					rtn = no.getWin(loc, opts.readyStateDelay,
 							opts.readyStateTimeout, dcb, lcb);
 				}
 				return rtn;
@@ -3214,6 +3322,7 @@
 			o.fragStack = f ? f.getStack() : undefined;
 			o.fragAdjustments = f ? f.adjustments : undefined;
 			o.action = t.action;
+			o.parentOrigin = f ? f.parentOrigin : undefined;
 			o.sourceEvent = t.siphon.sourceEvent;
 			o.eventSiphon = f ? f.eventSiphon : undefined;
 			o.paramsSiphon = f ? f.fps.paramSiphon() : undefined;
@@ -3222,7 +3331,7 @@
 			o.resultSiphon = f ? f.frs.getFuncOrResultSiphon() : undefined;
 			o.destSiphon = f ? f.fds.destSiphon() : undefined;
 			o.agentSiphon = f ? f.as : undefined;
-			o.destResults = f ? f.destResults instanceof jQuery ? f.destResults
+			o.destResults = f ? f.destResults instanceof $ ? f.destResults
 					: f.el : undefined;
 			o.error = f ? f.e : undefined;
 			o.actionScope = f ? f.el : t.actionScope;
@@ -3282,6 +3391,7 @@
 			e.chain = chain;
 			e.sourceEvent = t.siphon.sourceEvent;
 			e.action = t.action;
+			e.frags = type == opts.eventFragsLoad ? t.genFragObjs() : undefined;
 			e.fragAdjustments = t.adjustments;
 			e.fragCancelCount = t.ccnt;
 			e.fragCount = t.cnt;
@@ -3572,9 +3682,9 @@
 					// retrieve it
 					// the queue will prevent duplicate calls to the same
 					// fragment path
-					if (t.addFrag(f)) {
+					if (t.queueFrag(f)) {
 						function adone(r, status, xhr) {
-							var tf = t.getFrags(f);
+							var tf = t.getQueuedFrags(f);
 							tf.result = r;
 							tf.status = status;
 							tf.xhr = xhr;
@@ -3593,7 +3703,7 @@
 							crossDomain : opts.ajaxCrossDomain
 						}).done(adone).fail(
 								function(xhr, ts, e) {
-									var tf = t.getFrags(f);
+									var tf = t.getQueuedFrags(f);
 									for (var i = 0; i < tf.frags.length; i++) {
 										t.addError('Error at '
 												+ tf.frags[i].toString() + ': '
@@ -3606,7 +3716,7 @@
 									}
 								});
 					} else {
-						var tf = t.getFrags(f);
+						var tf = t.getQueuedFrags(f);
 						if (tf.result) {
 							// fragment results already retrieved
 							lcont(f, cb, tf.result, tf.status, tf.xhr);
@@ -3625,7 +3735,7 @@
 							// process any nested fragments
 							if ($cf) {
 								var nf = false;
-								if (t.siphon.selector instanceof jQuery) {
+								if (t.siphon.selector instanceof $) {
 									// need to check destination(s) for nested
 									// fragments
 									var fsr = new Resolver(fragSelector);
@@ -3827,12 +3937,8 @@
 		};
 		$.fn[NS].defaults = defs;
 		try {
-			var t = document.createElement('b');
-			t.id = 4;
-			while (t.innerHTML = '<!--[if gt IE ' + ++t.id + ']>1<![endif]-->',
-					t.innerHTML > 0) {
-			}
-			ieVersion = t.id > 5 ? +t.id : 0;
+			ieVersion = (/MSIE\s*(\d+\.?\d*)/i).test(navigator.userAgent || "") ? 
+					parseFloat(RegExp.$1, 10) : 0;
 		} catch (e) {
 			log('Unable to detect IE version: ', e);
 		}
@@ -3961,7 +4067,7 @@
 			throw new Error('Unable to capture ' + BASE_PATH_ATTR);
 		}
 		// initialize
-		if (!jq) {
+		if (!$) {
 			loadJQuery();
 		} else {
 			init(null);
@@ -3978,9 +4084,9 @@
 		s.src = urlAdjust(su);
 		s.type = 'text/javascript';
 		s.onload = s.onreadystatechange = function() {
-			if (!jq
+			if (!$
 					&& (!this.readyState || this.readyState == 'loaded' || this.readyState == 'complete')) {
-				jq = true;
+				$ = window.jQuery;
 				init(s.src);
 			}
 		};
@@ -3990,4 +4096,4 @@
 
 	// start thymus.js
 	preInit();
-})();
+})(window.jQuery);
