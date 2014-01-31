@@ -291,10 +291,11 @@ var Harness = {
 			 * passed HTTP methods to determine if the server is capable of
 			 * handling the request
 			 * 
+			 * @constructor
 			 * @param ms
 			 *            the HTTP methods to call
 			 */
-			function HttpCapable(ms) {
+			function HttpCapable(ss) {
 				var ms = [];
 				this.get = function(m) {
 					return ms[m];
@@ -326,10 +327,10 @@ var Harness = {
 				function fail(xhr, ts, e) {
 					put(true, xhr.status, xhr.statusText);
 				}
-				for (var i = 0; i < ms.length; i++) {
+				for (var i = 0; i < ss.length; i++) {
 					$.ajax({
 						url : window.location,
-						type : type,
+						type : ss[i],
 						async : true,
 						cache : false
 					}).done(done).fail(fail);
