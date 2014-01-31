@@ -281,8 +281,7 @@ var Harness = {
 			 *          method was checked or null when it was not checked
 			 */
 			$$.httpCapable = function(m) {
-				t = httpc.get(m);
-				return t ? t.get(s) : null;
+				return httpc.get(m);
 			};
 
 			/**
@@ -301,25 +300,12 @@ var Harness = {
 					return ms[t];
 				};
 				function put(m, f, s, t) {
-					if (ms[m]) {
-						ms[m].add(f, s, t);
-					} else {
-						ms[m] = new Item(f, s, t);
-					}
+					ms[m] = new Item(f, s, t);
 				}
 				function Item(f, s, t) {
-					var a = [];
-					this.add = function(f, s, t) {
-						a[s] = {
-							failed : f,
-							status : s,
-							text : t
-						};
-					};
-					this.get = function(s) {
-						return a[s];
-					};
-					this.add(f, s, t);
+					this.failed = f;
+					this.status = s;
+					this.text = t;
 				}
 				function done(r, status, xhr) {
 					put(this.type.toLowerCase(), false, xhr.status,
@@ -542,7 +528,7 @@ var Harness = {
 						var httpc = Harness.currentRun
 								.httpCapable(event.httpMethod);
 						if (httpc && httpc.failed) {
-							var umsg = event.httpMethod + ' is unsupported ';
+							var umsg = event.httpMethod + ' ' + httpc.text;
 							if (httpStatusWarnRange
 									&& httpStatusWarnRange.inRange(cstat)) {
 								Harness.ok('warn', umsg);
