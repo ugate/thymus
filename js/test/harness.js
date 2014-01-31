@@ -14,7 +14,8 @@ var Harness = {
 	TEST_FIXTURE_ID : 'qunit-fixture',
 	TEST_FIXTURE_SEL : '#qunit-fixture',
 	REGEX_PARAMS_STR : /([^&=]+)=([^&]*)/g,
-	replaceEventDelay : 500,
+	DFLT_HTTP_STATUS_WARN_START : 400,
+	DFLT_HTTP_STATUS_WARN_END : 499,
 	currentRun : null,
 	moduleCount : 0,
 	testCount : 0,
@@ -186,6 +187,21 @@ var Harness = {
 	},
 
 	/**
+	 * HTTP status code range
+	 * 
+	 * @constructor
+	 * @param start
+	 *            of HTTP status code range
+	 * @param end
+	 *            of HTTP status code range
+	 */
+	HttpStatusRange : function(start, end) {
+		this.inRange = function(hsc) {
+			return hsc >= start && hsc <= end;
+		};
+	},
+
+	/**
 	 * Initializes the test harness
 	 */
 	init : function() {
@@ -339,18 +355,22 @@ var Harness = {
 			 * @param cb
 			 *            the callback function that will be called when an
 			 *            event is received
-			 * @param noIgnoreHttp405
-			 *            true to fail when an HTTP 405 (Method not supported)
-			 *            is received
+			 * @param httpStatusWarnRange
+			 *            a {Harness.HttpStatusRange} instance that will
+			 *            designate a range of HTTP status codes that will
+			 *            result in a warning, but will not cause the test to
+			 *            fail
 			 */
-			function listen(n, evt, cb, noIgnoreHttp405) {
+			function listen(n, evt, cb, httpStatusWarnRange) {
 				function on(event) {
 					var t = $$.currentTest();
 					Harness.ok(true, desc(event), '#' + ++t.eventCount
 							+ 'Event received');
 					if ((typeof cb === 'undefined' || cb != true)
 							&& event.error) {
-						if (event.error.statusCode == 405) {
+						if (httpStatusWarnRange
+								&& httpStatusWarnRange
+										.inRange(event.error.statusCode)) {
 							t.eventWarned++;
 							Harness.ok('warn', event.error);
 						} else {
@@ -377,11 +397,13 @@ var Harness = {
 			 * @param cb
 			 *            the callback function that will be called when an
 			 *            event is received
-			 * @param noIgnoreHttp405
-			 *            true to fail when an HTTP 405 (Method not supported)
-			 *            is received
+			 * @param httpStatusWarnRange
+			 *            a {Harness.HttpStatusRange} instance that will
+			 *            designate a range of HTTP status codes that will
+			 *            result in a warning, but will not cause the test to
+			 *            fail
 			 */
-			function listenAll(n, evt, cb, noIgnoreHttp405) {
+			function listenAll(n, evt, cb, httpStatusWarnRange) {
 				var ihe = false, ucb = false;
 				for (var i = 0; i < Harness.EVTS.length; i++) {
 					ucb = Harness.EVTS[i] == evt;
@@ -389,10 +411,11 @@ var Harness = {
 						ihe = ucb;
 					}
 					listen(n, Harness.EVTS[i],
-							ucb ? cb : i == 0 ? true : false, noIgnoreHttp405);
+							ucb ? cb : i == 0 ? true : false,
+							httpStatusWarnRange);
 				}
 				if (!ihe) {
-					listen(n, evt, cb, noIgnoreHttp405);
+					listen(n, evt, cb, httpStatusWarnRange);
 				}
 			}
 
@@ -413,12 +436,18 @@ var Harness = {
 			 *            appended to it's body
 			 * @param noInvoke
 			 *            true to prevent invocation of user event trigger
-			 * @param noIgnoreHttp405
-			 *            true to fail when an HTTP 405 (Method not supported)
-			 *            is received
+			 * @param httpStatusWarnRange
+			 *            a {Harness.HttpStatusRange} instance that will
+			 *            designate a range of HTTP status codes that will
+			 *            result in a warning, but will not cause the test to
+			 *            fail (defaults to 4xx range)
 			 */
 			$$.asyncNavRegister = function(html, fx, uevt, tevt, iframeId,
-					noInvoke, noIgnoreHttp405) {
+					noInvoke, httpStatusWarnRange) {
+				httpStatusWarnRange = !httpStatusWarnRange ? new Harness.HttpStatusRange(
+						Harness.DFLT_HTTP_STATUS_WARN_START,
+						Harness.DFLT_HTTP_STATUS_WARN_END)
+						: httpStatusWarnRange;
 				var p = $(html).appendTo(Harness.TEST_FIXTURE_SEL);
 				var doc = iframeId ? Harness.addIframe(iframeId, p).contents()
 						: document;
@@ -465,7 +494,7 @@ var Harness = {
 									} catch (e) {
 										Harness.ok(false, e);
 									}
-								});
+								}, httpStatusWarnRange);
 					}
 					if (!noInvoke) {
 						n.trigger(uevt);
