@@ -281,8 +281,7 @@ var Harness = {
 			 *          method was checked or null when it was not checked
 			 */
 			$$.httpCapable = function(m) {
-				var t = m.toLowerCase();
-				t = httpc.get(t);
+				t = httpc.get(m);
 				return t ? t.get(s) : null;
 			};
 
@@ -298,7 +297,8 @@ var Harness = {
 			function HttpCapable(ss) {
 				var ms = [];
 				this.get = function(m) {
-					return ms[m];
+					var t = m.toLowerCase();
+					return ms[t];
 				};
 				function put(m, f, s, t) {
 					if (ms[m]) {
@@ -322,10 +322,12 @@ var Harness = {
 					this.add(f, s, t);
 				}
 				function done(r, status, xhr) {
-					put(this.type, false, xhr.status, xhr.statusText);
+					put(this.type.toLowerCase(), false, xhr.status,
+							xhr.statusText);
 				}
 				function fail(xhr, ts, e) {
-					put(this.type, true, xhr.status, xhr.statusText);
+					put(this.type.toLowerCase(), true, xhr.status,
+							xhr.statusText);
 				}
 				for (var i = 0; i < ss.length; i++) {
 					$.ajax({
