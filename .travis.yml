@@ -1,9 +1,13 @@
 language: node_js
 node_js:
-- '0.10'
+  - '0.10'
 matrix:
   fast_finish: true
 env:
   global:
-  - secure: t2pkeRYFk0P7tjoL4VMxwT1ACrELdU4w5laXMtg6wMWH7HMEQakdlbQGIGUC1vSVGN+WNBoN6JC4pj4pgIIO4wW8Px84wxdtxDJAymnlTn49zxijHvF63euY4agwwGKIly+/Rt0rsjWb+yOb00AJXuWRjypMLc5RIIC2b41HUgc=
-  - secure: TLG9lzL1VRyml2WnlwFfuZfEqr8rqiECaR+aIYTA0kaxGlyo8mSLQKCKiqPEKq8oQiFPmkAU5XXu1I/55aiLu1Z7HptRchkjiXCs+JUGtj2mtlOCbc3llV3ifnxfitNWEmr7gC4vVeGnB3f9vf/fpWyaiTvWuNBLCUeJnfcRgVo=
+    - secure: t2pkeRYFk0P7tjoL4VMxwT1ACrELdU4w5laXMtg6wMWH7HMEQakdlbQGIGUC1vSVGN+WNBoN6JC4pj4pgIIO4wW8Px84wxdtxDJAymnlTn49zxijHvF63euY4agwwGKIly+/Rt0rsjWb+yOb00AJXuWRjypMLc5RIIC2b41HUgc=
+    - secure: TLG9lzL1VRyml2WnlwFfuZfEqr8rqiECaR+aIYTA0kaxGlyo8mSLQKCKiqPEKq8oQiFPmkAU5XXu1I/55aiLu1Z7HptRchkjiXCs+JUGtj2mtlOCbc3llV3ifnxfitNWEmr7gC4vVeGnB3f9vf/fpWyaiTvWuNBLCUeJnfcRgVo=
+  matrix:
+    - THX_TEST=core
+    - THX_TEST=validate-html
+    - THX_TEST=sauce-js-unit
