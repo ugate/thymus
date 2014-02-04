@@ -4,6 +4,26 @@
  * Copyright 2013-present Akira LLC
  * Licensed under MIT (https://github.com/ugate/thymus/blob/master/LICENSE)
  */
+//module.exports = function(grunt) {
+//  grunt.initConfig({
+//    connect: {
+//      server: {
+//        options: {
+//          base: "",
+//          port: 9999
+//        }
+//      }
+//    },
+//    watch: {}
+//  });
+//
+//  // Loading dependencies
+//  for (var key in grunt.file.readJSON("package.json").devDependencies) {
+//    if (key !== "grunt" && key.indexOf("grunt") === 0) grunt.loadNpmTasks(key);
+//  }
+//
+//  grunt.registerTask("dev", ["connect", "watch"]);
+//};
 module.exports = function(grunt) {
 	'use strict';
 
@@ -163,7 +183,7 @@ module.exports = function(grunt) {
 						options : {
 							build : process.env.TRAVIS_JOB_ID,
 							concurrency : 10,
-							urls : [ 'http://127.0.0.1:3000/js/tests/index.html' ],
+							urls : [ 'http://127.0.0.1:3000/js/test/index.html' ],
 							browsers : grunt.file
 									.readYAML('test-infra/sauce_browsers.yml')
 						}

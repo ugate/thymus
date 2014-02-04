@@ -1,7 +1,13 @@
 thymus
 ======
 
-<p id="thymusDesc"><b>thymus.js</b> is a front-end MQV (Model Query View) framework that aims to accelerate and simplify web development. 
+<p>
+	<a href="https://saucelabs.com/u/thymus">
+		<img src="https://saucelabs.com/browser-matrix/thymus.svg" alt="Selenium Tests Status" style="max-width:100%" />
+	</a>
+</p>
+<p id="thymusDesc">
+<b>thymus.js</b> is a front-end MQV (Model Query View) framework that aims to accelerate and simplify web development. 
 Instead of applying typical JS-based MVC, MVVM or MVP concepts, <b>thymus.js</b> concentrates its efforts on simplicity and ease of use of 
 models/routes that are constructed on the fly using standard DOM selectors defined within HTML5+ attributes. Thus, reducing model/controller 
 redundancy on the client. That translates into a more translucent behavior that does not try force an application into any particular 
