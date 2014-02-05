@@ -24,7 +24,7 @@ module.exports = function(grunt) {
 		version : safariVersion,
 		platform : osxVersion
 	}, {
-		browserName : "chrome",
+		browserName : "google chrome",
 		version : chromeVersion,
 		platform : osxVersion
 	}, {
@@ -52,7 +52,7 @@ module.exports = function(grunt) {
 		version : "9",
 		platform : "Windows 7"
 	}, {
-		browserName : "chrome",
+		browserName : "google chrome",
 		version : chromeVersion,
 		platform : windowsVersion
 	}, {
@@ -60,7 +60,7 @@ module.exports = function(grunt) {
 		version : firefoxVersion,
 		platform : windowsVersion
 	}, {
-		browserName : "chrome",
+		browserName : "google chrome",
 		version : "30",
 		platform : "Linux"
 	}, {
