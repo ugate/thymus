@@ -34,8 +34,6 @@ module.exports = function(grunt) {
 		return string.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&');
 	};
 
-	// var updateShrinkwrap = require('./test-infra/shrinkwrap.js');
-
 	// Project configuration.
 	grunt
 			.initConfig({
@@ -52,7 +50,7 @@ module.exports = function(grunt) {
 
 				// Task configuration.
 				clean : {
-					dist : [ 'dist', 'docs/dist' ]
+					dist : [ 'dist', 'frags/docs/dist' ]
 				},
 
 				concat : {
