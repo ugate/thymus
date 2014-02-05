@@ -1,43 +1,41 @@
 {
-	"name": "thymus",
-	"description": "Front-end MQV (Model Query View) framework that aims to accelerate and simplify web development.",
-	"version": "1.0.0",
-	"keywords": [
-		"thymus",
-		"MQV"
-	],
-	"homepage": "http://thymusjs.org",
-	"author": "Akira LLC",
-	"scripts": {
-		"test": "grunt test"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/ugate/thymus.git"
-	},
-	"bugs": {
-		"url": "https://github.com/ugate/thymus/issues"
-	},
-	"licenses": [
-		{
-			"type": "MIT",
-			"url": "https://github.com/ugate/thymus/blob/master/LICENSE"
-		}
-	],
-	"devDependencies": {
-		"grunt": "~0.4.2",
-		"grunt-banner": "~0.2.0",
-		"grunt-contrib-clean": "~0.5.0",
-		"grunt-contrib-concat": "~0.3.0",
-		"grunt-contrib-connect": "~0.6.0",
-		"grunt-contrib-copy": "~0.5.0",
-		"grunt-contrib-qunit": "~0.4.0",
-		"grunt-contrib-uglify": "~0.3.0",
-		"grunt-contrib-watch": "~0.5.3",
-		"grunt-saucelabs": "~5.0.0",
-		"grunt-sed": "~0.1.1"
-	},
-	"scripts": {
-		"test": "grunt test"
-	}
+  "name": "thymus",
+  "description": "Front-end MQV (Model Query View) framework that aims to accelerate and simplify web development.",
+  "version": "1.0.0",
+  "keywords": [
+    "thymus",
+    "MQV"
+  ],
+  "homepage": "http://thymusjs.org",
+  "author": "Akira LLC",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ugate/thymus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ugate/thymus/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/ugate/thymus/blob/master/LICENSE"
+    }
+  ],
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-cli": "~0.1.13",
+    "grunt-banner": "~0.2.0",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-connect": "~0.6.0",
+    "grunt-contrib-copy": "~0.5.0",
+    "grunt-contrib-qunit": "~0.4.0",
+    "grunt-contrib-uglify": "~0.3.0",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-saucelabs": "~5.0.0",
+    "grunt-sed": "~0.1.1"
+  }
 }
