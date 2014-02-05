@@ -12,29 +12,37 @@ module.exports = function(grunt) {
 	// Mac: Opera not currently supported by Sauce Labs
 	// Android: Chrome not currently supported by Sauce Labs
 	// iOS: Chrome not currently supported by Sauce Labs
+	var firefoxVersion = "26";
+	var chromeVersion = "31";
+	var safariVersion = "7";
+	var ieVersion = "11";
+	var windowsVersion = "8.1";
+	var androidVersion = "4.0";
+	var osxVersion = "OS X 10.9";
 	var browsers = [ {
 		browserName : "safari",
-		version : "7",
-		platform : "OS X 10.9"
+		version : safariVersion,
+		platform : osxVersion
 	}, {
 		browserName : "chrome",
-		version : "31",
-		platform : "OS X 10.9"
+		version : chromeVersion,
+		platform : osxVersion
 	}, {
 		browserName : "firefox",
-		platform : "OS X 10.9"
+		version : firefoxVersion,
+		platform : osxVersion
 	}, {
 		browserName : "iphone",
-		version : "7",
-		platform : "OS X 10.9"
+		version : safariVersion,
+		platform : osxVersion
 	}, {
 		browserName : "ipad",
-		version : "7",
-		platform : "OS X 10.9"
+		version : safariVersion,
+		platform : osxVersion
 	}, {
 		browserName : "internet explorer",
-		version : "11",
-		platform : "Windows 8.1"
+		version : ieVersion,
+		platform : windowsVersion
 	}, {
 		browserName : "internet explorer",
 		version : "10",
@@ -45,25 +53,26 @@ module.exports = function(grunt) {
 		platform : "Windows 7"
 	}, {
 		browserName : "chrome",
-		version : "31",
-		platform : "Windows 8.1"
+		version : chromeVersion,
+		platform : windowsVersion
 	}, {
 		browserName : "firefox",
-		version : "26",
-		platform : "Windows 8.1"
+		version : firefoxVersion,
+		platform : windowsVersion
 	}, {
 		browserName : "chrome",
 		version : "30",
 		platform : "Linux"
 	}, {
 		browserName : "firefox",
-		version : "26",
+		version : firefoxVersion,
 		platform : "Linux"
 	}, {
 		browserName : "android",
-		version : "4.0",
+		version : androidVersion,
 		platform : "Linux"
 	} ];
+
 	// Force use of Unix newlines
 	grunt.util.linefeed = '\n';
 
