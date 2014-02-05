@@ -139,6 +139,7 @@ module.exports = function(grunt) {
 					all : {
 						options : {
 							build : process.env.TRAVIS_JOB_ID,
+							testname : process.env.TRAVIS_BUILD_NUMBER,
 							concurrency : 10,
 							urls : [ 'http://127.0.0.1:3000/js/test/index.html' ],
 							browsers : grunt.file
