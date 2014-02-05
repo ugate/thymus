@@ -4,29 +4,66 @@
  * Copyright 2013-present Akira LLC
  * Licensed under MIT (https://github.com/ugate/thymus/blob/master/LICENSE)
  */
-//module.exports = function(grunt) {
-//  grunt.initConfig({
-//    connect: {
-//      server: {
-//        options: {
-//          base: "",
-//          port: 9999
-//        }
-//      }
-//    },
-//    watch: {}
-//  });
-//
-//  // Loading dependencies
-//  for (var key in grunt.file.readJSON("package.json").devDependencies) {
-//    if (key !== "grunt" && key.indexOf("grunt") === 0) grunt.loadNpmTasks(key);
-//  }
-//
-//  grunt.registerTask("dev", ["connect", "watch"]);
-//};
 module.exports = function(grunt) {
 	'use strict';
 
+	// Docs: https://saucelabs.com/docs/platforms/webdriver
+	// Windows: Opera 15+ not currently supported by Sauce Labs
+	// Mac: Opera not currently supported by Sauce Labs
+	// Android: Chrome not currently supported by Sauce Labs
+	// iOS: Chrome not currently supported by Sauce Labs
+	var browsers = [ {
+		browserName : "safari",
+		version : "7",
+		platform : "OS X 10.9"
+	}, {
+		browserName : "chrome",
+		version : "31",
+		platform : "OS X 10.9"
+	}, {
+		browserName : "firefox",
+		platform : "OS X 10.9"
+	}, {
+		browserName : "iphone",
+		version : "7",
+		platform : "OS X 10.9"
+	}, {
+		browserName : "ipad",
+		version : "7",
+		platform : "OS X 10.9"
+	}, {
+		browserName : "internet explorer",
+		version : "11",
+		platform : "Windows 8.1"
+	}, {
+		browserName : "internet explorer",
+		version : "10",
+		platform : "Windows 8"
+	}, {
+		browserName : "internet explorer",
+		version : "9",
+		platform : "Windows 7"
+	}, {
+		browserName : "chrome",
+		version : "31",
+		platform : "Windows 8.1"
+	}, {
+		browserName : "firefox",
+		version : "26",
+		platform : "Windows 8.1"
+	}, {
+		browserName : "chrome",
+		version : "30",
+		platform : "Linux"
+	}, {
+		browserName : "firefox",
+		version : "26",
+		platform : "Linux"
+	}, {
+		browserName : "android",
+		version : "4.0",
+		platform : "Linux"
+	} ];
 	// Force use of Unix newlines
 	grunt.util.linefeed = '\n';
 
@@ -142,8 +179,7 @@ module.exports = function(grunt) {
 							testname : process.env.TRAVIS_BUILD_NUMBER,
 							concurrency : 10,
 							urls : [ 'http://127.0.0.1:3000/js/test/index.html' ],
-							browsers : grunt.file
-									.readYAML('test-infra/sauce_browsers.yml')
+							browsers : browsers
 						}
 					}
 				}
