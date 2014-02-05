@@ -108,11 +108,6 @@ module.exports = function(grunt) {
 				},
 
 				copy : {
-					fonts : {
-						expand : true,
-						src : 'fonts/*',
-						dest : 'dist/'
-					},
 					docs : {
 						expand : true,
 						cwd : './dist',
@@ -134,25 +129,6 @@ module.exports = function(grunt) {
 							port : 3000,
 							base : '.'
 						}
-					}
-				},
-
-				jekyll : {
-					docs : {}
-				},
-
-				validation : {
-					options : {
-						charset : 'utf-8',
-						doctype : 'HTML5',
-						failHard : true,
-						reset : true,
-						relaxerror : [
-								'Bad value X-UA-Compatible for attribute http-equiv on element meta.',
-								'Element img is missing required attribute src.' ]
-					},
-					files : {
-						src : '_gh_pages/**/*.html'
 					}
 				},
 
@@ -205,20 +181,8 @@ module.exports = function(grunt) {
 		scope : 'devDependencies'
 	});
 
-	// Docs HTML validation task
-	grunt.registerTask('validate-html', [ 'jekyll', 'validation' ]);
-
 	// Test task.
 	var testSubtasks = [];
-	// Skip core tests if running a different subset of the test suite
-	if (!process.env.THX_TEST || process.env.THX_TEST === 'core') {
-		testSubtasks = testSubtasks.concat([ 'dist-css', 'csslint', 'jshint',
-				'jscs', 'qunit', 'build-customizer-html' ]);
-	}
-	// Skip HTML validation if running a different subset of the test suite
-	if (!process.env.THX_TEST || process.env.THX_TEST === 'validate-html') {
-		testSubtasks.push('validate-html');
-	}
 	// Only run Sauce Labs tests if there's a Sauce access key
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
 	// Skip Sauce if running a different subset of the test suite
@@ -229,20 +193,20 @@ module.exports = function(grunt) {
 	grunt.registerTask('test', testSubtasks);
 
 	// JS distribution task.
-	grunt.registerTask('dist-js', [ 'concat', 'uglify' ]);
+//	grunt.registerTask('dist-js', [ 'concat', 'uglify' ]);
 
 	// Docs distribution task.
-	grunt.registerTask('dist-docs', 'copy:docs');
+//	grunt.registerTask('dist-docs', 'copy:docs');
 
 	// Full distribution task.
-	grunt.registerTask('dist', [ 'clean', 'dist-js', 'dist-docs' ]);
+//	grunt.registerTask('dist', [ 'clean', 'dist-js', 'dist-docs' ]);
 
 	// Default task.
-	grunt.registerTask('default', [ 'test', 'dist' ]);
+//	grunt.registerTask('default', [ 'test', 'dist' ]);
 
 	// Version numbering task.
 	// grunt change-version-number --oldver=A.B.C --newver=X.Y.Z
 	// This can be overzealous, so its changes should always be manually
 	// reviewed!
-	grunt.registerTask('change-version-number', 'sed');
+//	grunt.registerTask('change-version-number', 'sed');
 };
