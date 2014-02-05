@@ -34,7 +34,7 @@ module.exports = function(grunt) {
 		return string.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&');
 	};
 
-	//var updateShrinkwrap = require('./test-infra/shrinkwrap.js');
+	// var updateShrinkwrap = require('./test-infra/shrinkwrap.js');
 
 	// Project configuration.
 	grunt
@@ -48,28 +48,11 @@ module.exports = function(grunt) {
 						+ ' * Licensed under <%= _.pluck(pkg.licenses, "type") %> (<%= _.pluck(pkg.licenses, "url") %>)\n'
 						+ ' */\n',
 				jqueryCheck : 'if (typeof jQuery === \'undefined\') { throw new Error(\'thymus.js requires jQuery\') }\n\n',
+				sourceFiles : 'js/*.js',
 
 				// Task configuration.
 				clean : {
 					dist : [ 'dist', 'docs/dist' ]
-				},
-
-				jshint : {
-					options : {
-						jshintrc : 'js/.jshintrc'
-					},
-					grunt : {
-						src : [ 'Gruntfile.js' ]
-					},
-					src : {
-						src : 'js/*.js'
-					},
-					test : {
-						src : 'js/test/unit/*.js'
-					},
-					assets : {
-						src : []
-					}
 				},
 
 				concat : {
@@ -118,9 +101,9 @@ module.exports = function(grunt) {
 
 				qunit : {
 					options : {
-						inject : 'js/tests/unit/phantom.js'
+						inject : 'js/test/unit/phantom.js'
 					},
-					files : 'js/tests/*.html'
+					files : 'js/test/*.html'
 				},
 
 				connect : {
@@ -134,12 +117,12 @@ module.exports = function(grunt) {
 
 				watch : {
 					src : {
-						files : '<%= jshint.src.src %>',
-						tasks : [ 'jshint:src', 'qunit' ]
+						files : '<%= sourceFiles %>',
+						tasks : [ 'qunit' ]
 					},
 					test : {
-						files : '<%= jshint.test.src %>',
-						tasks : [ 'jshint:test', 'qunit' ]
+						files : '<%= sourceFiles %>',
+						tasks : [ 'qunit' ]
 					}
 				},
 
@@ -164,22 +147,15 @@ module.exports = function(grunt) {
 									.readYAML('test-infra/sauce_browsers.yml')
 						}
 					}
-				},
-
-				exec : {
-					npmUpdate : {
-						command : 'npm update'
-					},
-					npmShrinkWrap : {
-						command : 'npm shrinkwrap --dev'
-					}
 				}
 			});
 
 	// These plugins provide necessary tasks.
-	require('load-grunt-tasks')(grunt, {
-		scope : 'devDependencies'
-	});
+	for ( var key in grunt.file.readJSON("package.json").devDependencies) {
+		if (key !== "grunt" && key.indexOf("grunt") === 0) {
+			grunt.loadNpmTasks(key);
+		}
+	}
 
 	// Test task.
 	var testSubtasks = [];
@@ -193,20 +169,20 @@ module.exports = function(grunt) {
 	grunt.registerTask('test', testSubtasks);
 
 	// JS distribution task.
-//	grunt.registerTask('dist-js', [ 'concat', 'uglify' ]);
+	// grunt.registerTask('dist-js', [ 'concat', 'uglify' ]);
 
 	// Docs distribution task.
-//	grunt.registerTask('dist-docs', 'copy:docs');
+	// grunt.registerTask('dist-docs', 'copy:docs');
 
 	// Full distribution task.
-//	grunt.registerTask('dist', [ 'clean', 'dist-js', 'dist-docs' ]);
+	// grunt.registerTask('dist', [ 'clean', 'dist-js', 'dist-docs' ]);
 
 	// Default task.
-//	grunt.registerTask('default', [ 'test', 'dist' ]);
+	// grunt.registerTask('default', [ 'test', 'dist' ]);
 
 	// Version numbering task.
 	// grunt change-version-number --oldver=A.B.C --newver=X.Y.Z
 	// This can be overzealous, so its changes should always be manually
 	// reviewed!
-//	grunt.registerTask('change-version-number', 'sed');
+	// grunt.registerTask('change-version-number', 'sed');
 };
