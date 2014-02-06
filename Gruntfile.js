@@ -134,7 +134,7 @@ module.exports = function(grunt) {
 						},
 						src : [ 'frags/docs/js/app.js',
 								'frags/docs/js/loader.js' ],
-						dest : 'docs/assets/js/docs.min.js'
+						dest : 'frags/docs/js/docs.min.js'
 					}
 				},
 
@@ -191,7 +191,10 @@ module.exports = function(grunt) {
 							build : process.env.TRAVIS_JOB_ID,
 							testname : process.env.TRAVIS_BUILD_NUMBER,
 							concurrency : 10,
-							urls : [ 'http://127.0.0.1:3000/js/test/index.html' ],
+							urls : [ 'http://thymusjs-test-host.local/js/test/index.html' ],
+							tags : [ process.env.TRAVIS_BRANCH,
+									process.env.TRAVIS_REPO_SLUG,
+									process.env.TRAVIS_BUILD_DIR ],
 							browsers : browsers
 						}
 					}
