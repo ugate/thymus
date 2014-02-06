@@ -214,6 +214,7 @@ module.exports = function(grunt) {
 			}
 		};
 	}
+
 	// These plugins provide necessary tasks.
 	for ( var key in grunt.file.readJSON("package.json").devDependencies) {
 		if (key !== "grunt" && key.indexOf("grunt") === 0) {
