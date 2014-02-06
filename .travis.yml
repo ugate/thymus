@@ -11,6 +11,6 @@ addons:
 env:
   global:
     - secure: t2pkeRYFk0P7tjoL4VMxwT1ACrELdU4w5laXMtg6wMWH7HMEQakdlbQGIGUC1vSVGN+WNBoN6JC4pj4pgIIO4wW8Px84wxdtxDJAymnlTn49zxijHvF63euY4agwwGKIly+/Rt0rsjWb+yOb00AJXuWRjypMLc5RIIC2b41HUgc=
-    - secure: iSewgtxVzS0DlUI+aiLkOsJd7HLgAKxABggAGil3mCaFLCeezGttqMiAchrI5gJyPA6dTcpx9yKIZjrQc0luyd8sHtvGjytyGHwRvZWnFzEoOOcltSmy6HAq4ZmAUULnmBQzY722mibt1bmYCYlyuX++rF3vfcWWW1wTK/GsU7w=
+    - secure: PgV9XbF212SsZDNL1uQJsAKg1efuVndbU6dEH7Lz4CIjie//dlvBfaeYBWJOZerW3QwjDdf48txOprRwv9158ErVB/oSDPU8S7yBKwEySO7jgwBadQQ6TJYKIwq+35iL0fwnQcj18oJwuER5L2d0Jxhl7sfDrXb4oy8Ap2FyBRs=
 matrix:
   fast_finish: true

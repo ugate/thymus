@@ -202,6 +202,18 @@ module.exports = function(grunt) {
 				}
 			});
 
+	function GOpt(opt) {
+		var ov = grunt.option(opt);
+		this.set = function(val) {
+			var nv = typeof val === 'undefined' ? ov : val;
+			try {
+				grunt.option(opt, nv);
+			} catch (e) {
+				grunt.log.writeln('Unable to set option: ' + opt
+						+ ' to value: ' + nv);
+			}
+		};
+	}
 	// These plugins provide necessary tasks.
 	for ( var key in grunt.file.readJSON("package.json").devDependencies) {
 		if (key !== "grunt" && key.indexOf("grunt") === 0) {
@@ -216,27 +228,28 @@ module.exports = function(grunt) {
 	// Skip Sauce if running a different subset of the test suite
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
 		testSubtasks.push('connect');
-		testSubtasks.push('saucelabs-qunit');
+		// verbose will cause private key output
+		testSubtasks.push({
+			name : 'saucelabs-qunit',
+			verbose : false
+		});
 	}
-	grunt.registerTask('test', function() {
+	grunt.registerTask('test', 'Run sub tests', function() {
 		for (var i = 0; i < testSubtasks.length; i++) {
 			var obj = typeof testSubtasks[i] === 'object' ? testSubtasks[i] : {
 				name : typeof testSubtasks[i]
 			};
-			var ov = grunt.option('verbose');
-			if (obj.verbose !== false) {
-				grunt.option('verbose', true);
+			var opt = new GOpt('verbose');
+			if (obj.verbose === false) {
+				opt.set(false);
 			}
 			try {
 				grunt.task.run(obj.name);
 			} catch (e) {
-				try {
-					grunt.option('verbose', ov);
-				} catch (e2) {
-					// consume
-				}
+				opt.set();
 				throw e;
 			}
+			opt.set();
 		}
 	});
 
