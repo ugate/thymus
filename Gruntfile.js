@@ -148,9 +148,9 @@ module.exports = function(grunt) {
 				},
 
 				qunit : {
-					options : {
-						inject : 'js/test/unit/phantom.js'
-					},
+//					options : {
+//						inject : 'js/test/unit/phantom.js'
+//					},
 					files : 'js/test/*.html'
 				},
 
@@ -159,7 +159,7 @@ module.exports = function(grunt) {
 						options : {
 							port : 3000,
 							base : '.',
-							hostname : '*'
+							hostname : 'thymusjs-test-host'
 						}
 					}
 				},
@@ -192,7 +192,7 @@ module.exports = function(grunt) {
 							build : process.env.TRAVIS_JOB_ID,
 							testname : process.env.TRAVIS_BUILD_NUMBER,
 							concurrency : 10,
-							urls : [ 'http://thymusjs-test-host:3000/js/test/index.html' ],
+							urls : [ 'http://<%= connect.server.options.hostname %>:<%= connect.server.options.port %>/js/test/index.html' ],
 							tags : [ process.env.TRAVIS_BRANCH,
 									process.env.TRAVIS_REPO_SLUG,
 									process.env.TRAVIS_BUILD_DIR ],

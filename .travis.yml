@@ -1,6 +1,10 @@
 language: node_js
 node_js:
   - "0.10"
+before_install:
+  - phantomjs --version
+before_script:
+  - npm install -g grunt-cli
 addons:
   hosts:
     - thymusjs-test-host
