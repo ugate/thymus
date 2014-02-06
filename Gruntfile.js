@@ -192,7 +192,7 @@ module.exports = function(grunt) {
 							build : process.env.TRAVIS_JOB_ID,
 							testname : process.env.TRAVIS_BUILD_NUMBER,
 							concurrency : 10,
-							urls : [ 'http://thymusjs-test-host/js/test/index.html' ],
+							urls : [ 'http://thymusjs-test-host:3000/js/test/index.html' ],
 							tags : [ process.env.TRAVIS_BRANCH,
 									process.env.TRAVIS_REPO_SLUG,
 									process.env.TRAVIS_BUILD_DIR ],
