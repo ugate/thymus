@@ -148,9 +148,9 @@ module.exports = function(grunt) {
 				},
 
 				qunit : {
-//					options : {
-//						inject : 'js/test/unit/phantom.js'
-//					},
+					// options : {
+					// inject : 'js/test/unit/phantom.js'
+					// },
 					files : 'js/test/*.html'
 				},
 
@@ -218,7 +218,27 @@ module.exports = function(grunt) {
 		testSubtasks.push('connect');
 		testSubtasks.push('saucelabs-qunit');
 	}
-	grunt.registerTask('test', testSubtasks);
+	grunt.registerTask('test', function() {
+		for (var i = 0; i < testSubtasks.length; i++) {
+			var obj = typeof testSubtasks[i] === 'object' ? testSubtasks[i] : {
+				name : typeof testSubtasks[i]
+			};
+			var ov = grunt.option('verbose');
+			if (obj.verbose !== false) {
+				grunt.option('verbose', true);
+			}
+			try {
+				grunt.task.run(obj.name);
+			} catch (e) {
+				try {
+					grunt.option('verbose', ov);
+				} catch (e2) {
+					// consume
+				}
+				throw e;
+			}
+		}
+	});
 
 	// JS distribution task.
 	// grunt.registerTask('dist-js', [ 'concat', 'uglify' ]);
