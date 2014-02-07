@@ -301,7 +301,6 @@
 						detachReplaceWith.call($d, drwArgs);
 					}
 					$$.detachCache.cache($d);
-					//$d.replaceWith(f ? f : alt ? alt : $r);
 				}
 				return $r;
 			}
