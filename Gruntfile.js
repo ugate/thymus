@@ -264,7 +264,7 @@ module.exports = function(grunt) {
 		var vlog = new MuteLog();
 		for (var i = 0; i < testSubtasks.length; i++) {
 			var obj = typeof testSubtasks[i] === 'object' ? testSubtasks[i] : {
-				name : typeof testSubtasks[i]
+				name : testSubtasks[i]
 			};
 			if (obj.verbose === false) {
 				vlog.off();
