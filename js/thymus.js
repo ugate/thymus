@@ -294,7 +294,12 @@
 					$d.append(f ? f : alt ? alt : $r);
 				} else {
 					// detach in order to keep event propigation
-					detachReplaceWith.apply($d, f ? f : alt ? alt : $r);
+					var drwArgs = f ? f : alt ? alt : $r;
+					if ($.isArray(drwArgs)) {
+						detachReplaceWith.apply($d, drwArgs);
+					} else {
+						detachReplaceWith.call($d, drwArgs);
+					}
 					$$.detachCache.cache($d);
 					//$d.replaceWith(f ? f : alt ? alt : $r);
 				}
