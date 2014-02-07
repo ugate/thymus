@@ -515,7 +515,10 @@
 						var $t = $f || $(wh);
 						var e = null;
 						if (li == 0) {
-							e = $f ? 'submit' : ieVersion > 0 ? 'ready' : 'unload';
+							// TODO : for some reason Linux wont fire unload (tested on chrome)
+							var linux = navigator.platform && 
+											navigator.platform.toLowerCase().indexOf('linux') >=0;
+							e = $f ? 'submit' : ieVersion > 0 || linux ? 'ready' : 'unload';
 						} else if (li == 1) {
 							e = 'ready'; //e = ieVersion > 0 ? 'ready' : 'load';
 							$t = $(wh);
