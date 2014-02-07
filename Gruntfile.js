@@ -143,7 +143,12 @@ module.exports = function(grunt) {
 					// options : {
 					// inject : 'js/test/unit/phantom.js'
 					// },
-					files : 'js/test/*.html'
+					// files : 'js/test/*.html'
+					all : {
+						options : {
+							urls : [ 'http://<%= connect.server.options.hostname %>:<%= connect.server.options.port %>/js/test/index.html' ]
+						}
+					}
 				},
 
 				connect : {
@@ -214,12 +219,12 @@ module.exports = function(grunt) {
 
 	// Test task.
 	var testSubtasks = [];
+	testSubtasks.push('connect');
+	testSubtasks.push('qunit');
 	// Only run Sauce Labs tests if there's a Sauce access key
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
 	// Skip Sauce if running a different subset of the test suite
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
-		testSubtasks.push('connect');
-		// verbose will cause private key output
 		testSubtasks.push('saucelabs-qunit');
 	}
 	grunt.registerTask('test', testSubtasks);
