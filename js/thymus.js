@@ -546,6 +546,7 @@
 						// wait for location to change before listening for
 						// ready/load state or it will never fire
 						wait(delay, timeout, null, function(cnt, e) {
+							var w = getWinHandle();
 							if (ohn && ohn != w.location.hostname) {
 								// different host will not trigger load event-
 								// best effort exhausted
@@ -555,7 +556,7 @@
 							if (ol != w.location.href) {
 								oe = function() {
 									onOff();
-									lfx.call($(getWinHandle()), $f);
+									lfx.call($(w), $f);
 								};
 								onOff(true);
 								return true;

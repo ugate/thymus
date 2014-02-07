@@ -36,10 +36,6 @@ module.exports = function(grunt) {
 		version : safariVersion,
 		platform : osxVersion
 	}, {
-		browserName : "ipad",
-		version : safariVersion,
-		platform : osxVersion
-	}, {
 		browserName : "internet explorer",
 		version : ieVersion,
 		platform : windowsVersion
@@ -50,10 +46,6 @@ module.exports = function(grunt) {
 	}, {
 		browserName : "internet explorer",
 		version : "9",
-		platform : "Windows 7"
-	}, {
-		browserName : "opera",
-		version : "12",
 		platform : "Windows 7"
 	}, {
 		browserName : "googlechrome",
