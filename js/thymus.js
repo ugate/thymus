@@ -38,6 +38,7 @@
 	this.TDFLT = TINC;
 	this.eventFuncs = {};
 	this.eventFuncCnt = 0;
+	this.isLinux = false;
 	this.ieVersion = 0;
 	this.ieVersionCompliant = 9;
 	this.basePath = null;
@@ -516,9 +517,7 @@
 						var e = null;
 						if (li == 0) {
 							// TODO : for some reason Linux wont fire unload (tested on chrome)
-							var linux = navigator.platform && 
-											navigator.platform.toLowerCase().indexOf('linux') >=0;
-							e = $f ? 'submit' : ieVersion > 0 || linux ? 'ready' : 'unload';
+							e = $f ? 'submit' : ieVersion > 0 || isLinux ? 'ready' : 'unload';
 						} else if (li == 1) {
 							e = 'ready'; //e = ieVersion > 0 ? 'ready' : 'load';
 							$t = $(wh);
@@ -3939,6 +3938,12 @@
 					&& ieVersion.length > 1 ? parseFloat(ieVersion[1], 10) : 0;
 		} catch (e) {
 			log('Unable to detect IE version: ', e);
+		}
+
+		try {
+			isLinux = navigator.platform.toLowerCase().indexOf('linux') >= 0;
+		} catch (e) {
+			log('Unable to detect Linux: ', e);
 		}
 
 		/**
