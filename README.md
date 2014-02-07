@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/ugate/thymus.png?branch=master)](https://travis-ci.org/ugate/thymus) [![Bower version](https://badge.fury.io/bo/thymus.png)](http://badge.fury.io/bo/thymus)
 
-[![Selenium Test Status](//saucelabs.com/browser-matrix/thymus.svg)](//saucelabs.com/u/thymus)
+[![Selenium Test Status](https://saucelabs.com/browser-matrix/thymus.svg)](https://saucelabs.com/u/thymus)
 
 <p id="thymusDesc">
 <b>thymus.js</b> is a front-end MQV (Model Query View) framework that aims to accelerate and simplify web development. 
