@@ -202,50 +202,23 @@ module.exports = function(grunt) {
 				}
 			});
 
-	/**
-	 * Allows for on/off/reset of grunt verbose option
-	 * 
-	 * @constructor
-	 * @param on
-	 *            initial state (true to mute, false to unmute, null/undefined
-	 *            to reset)
-	 */
-	function MuteLog(on) {
-		var ol = grunt.log.writeln;
-		var om = grunt.log.muted;
-		var st = false;
-		function writeln(msg) {
-			if (msg && msg.length && !grunt.log.muted) {
-				var ost = st;
-				onoff(false);
-				grunt.log.write(msg + '\n');
-				onoff(ost);
-			}
-			return grunt.log;
-		}
-		function onoff(on) {
-			grunt.log.muted = typeof on === 'boolean' ? on : om;
-			grunt.log.writeln = on === true ? writeln : ol;
-			st = on;
-		}
-		this.off = function() {
-			onoff(false);
-		};
-		this.on = function() {
-			onoff(true);
-		};
-		this.reset = function() {
-			onoff();
-		};
-		onoff(on);
-	}
-
 	// These plugins provide necessary tasks.
 	for ( var key in grunt.file.readJSON("package.json").devDependencies) {
 		if (key !== "grunt" && key.indexOf("grunt") === 0) {
 			grunt.loadNpmTasks(key);
 		}
 	}
+
+	// supress "key" options in verbose mode
+	var writeflags = grunt.log.writeflags;
+	grunt.log.writeflags = function(obj, prefix) {
+		if (typeof obj === 'object' && obj && obj.key) {
+			var obj2 = JSON.parse(JSON.stringify(obj));
+			obj2.key = '[SECURE]';
+			return writeflags(obj2, prefix);
+		}
+		return writeflags(obj, prefix);
+	};
 
 	// Test task.
 	var testSubtasks = [];
@@ -255,24 +228,9 @@ module.exports = function(grunt) {
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
 		testSubtasks.push('connect');
 		// verbose will cause private key output
-		testSubtasks.push({
-			name : 'saucelabs-qunit',
-			verbose : false
-		});
+		testSubtasks.push('saucelabs-qunit');
 	}
-	grunt.registerTask('test', 'Run sub tests', function() {
-		var vlog = new MuteLog();
-		for (var i = 0; i < testSubtasks.length; i++) {
-			var obj = typeof testSubtasks[i] === 'object' ? testSubtasks[i] : {
-				name : testSubtasks[i]
-			};
-			if (obj.verbose === false) {
-				vlog.off();
-			}
-			grunt.task.run(obj.name);
-			vlog.reset();
-		}
-	});
+	grunt.registerTask('test', testSubtasks);
 
 	// JS distribution task.
 	// grunt.registerTask('dist-js', [ 'concat', 'uglify' ]);

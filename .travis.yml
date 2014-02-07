@@ -10,7 +10,7 @@ addons:
     - thymusjs-test-host
 env:
   global:
-  - secure: t2pkeRYFk0P7tjoL4VMxwT1ACrELdU4w5laXMtg6wMWH7HMEQakdlbQGIGUC1vSVGN+WNBoN6JC4pj4pgIIO4wW8Px84wxdtxDJAymnlTn49zxijHvF63euY4agwwGKIly+/Rt0rsjWb+yOb00AJXuWRjypMLc5RIIC2b41HUgc=
-  - secure: wUncOYJxji4ja2eGaIL/UrmdLlo8Pt1DEGj4WjumAI9i/aKvf/MSFKzG/iKXK8+wD/tCvauvWu7g75Xsc0GYteLZC+wiLTf2CtIlAJo7b0h1IynZePusFSLrrghSMPzW5wG28qeL/FIl7aabpgZw7bmQW4M1/IlPLs7VnBycSBY=
+    - secure: t2pkeRYFk0P7tjoL4VMxwT1ACrELdU4w5laXMtg6wMWH7HMEQakdlbQGIGUC1vSVGN+WNBoN6JC4pj4pgIIO4wW8Px84wxdtxDJAymnlTn49zxijHvF63euY4agwwGKIly+/Rt0rsjWb+yOb00AJXuWRjypMLc5RIIC2b41HUgc=
+    - secure: mwEQnI/Fp2wmgU4ruXwvjlprH2HQK4/AP30MFdu8NsiluC17uIoAUyN+ydr6c+hZgZD176TvW0/E4WKYtXpJPDnsZeuen9wwlKFmqfHrXmQY3sxDJcsg/BVoYBJccs5krtlaKIg7jBfj1s2uRDrn18FreSA2D0mcCva/H9B5+II=
 matrix:
   fast_finish: true
