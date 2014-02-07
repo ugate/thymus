@@ -517,7 +517,7 @@
 						var e = null;
 						if (li == 0) {
 							// TODO : for some reason Linux wont fire unload (tested on chrome)
-							e = $f ? 'submit' : ieVersion > 0 || isLinux ? 'ready' : 'unload';
+							e = ieVersion > 0 || isLinux ? 'ready' : $f ? 'submit' : 'unload';
 						} else if (li == 1) {
 							e = 'ready'; //e = ieVersion > 0 ? 'ready' : 'load';
 							$t = $(wh);
@@ -548,11 +548,14 @@
 						// wait for location to change before listening for
 						// ready/load state or it will never fire
 						wait(delay, timeout, null, function(cnt, e) {
+							if (e) {
+								throw e;
+							}
 							var w = getWinHandle();
 							if (ohn && ohn != w.location.hostname) {
 								// different host will not trigger load event-
 								// best effort exhausted
-								lfx.call($(getWinHandle()), $f);
+								lfx.call($(w), $f);
 								return true;
 							}
 							if (ol != w.location.href) {
