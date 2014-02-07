@@ -3932,9 +3932,8 @@
 		try {
 			// TODO : better IE version detection
 			ieVersion = (ieVersion = (navigator.userAgent || "")
-					.match(/(?:(?:MSIE\s*)|(?:Trident.*rv:))(\d+\.?\d*)/i)).length > 1 ? parseFloat(
-					ieVersion[1], 10)
-					: 0;
+					.match(/(?:(?:MSIE\s*)|(?:Trident.*rv:))(\d+\.?\d*)/i))
+					&& ieVersion.length > 1 ? parseFloat(ieVersion[1], 10) : 0;
 		} catch (e) {
 			log('Unable to detect IE version: ', e);
 		}
