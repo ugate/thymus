@@ -202,17 +202,42 @@ module.exports = function(grunt) {
 				}
 			});
 
-	function GOpt(opt) {
-		var ov = grunt.option(opt);
-		this.set = function(val) {
-			var nv = typeof val === 'undefined' ? ov : val;
-			try {
-				grunt.option(opt, nv);
-			} catch (e) {
-				grunt.log.writeln('Unable to set option: ' + opt
-						+ ' to value: ' + nv);
+	/**
+	 * Allows for on/off/reset of grunt verbose option
+	 * 
+	 * @constructor
+	 * @param on
+	 *            initial state (true to mute, false to unmute, null/undefined
+	 *            to reset)
+	 */
+	function MuteLog(on) {
+		var ol = grunt.log.writeln;
+		var om = grunt.log.muted;
+		var st = false;
+		function writeln(msg) {
+			if (msg && msg.length && !grunt.log.muted) {
+				var ost = st;
+				onoff(false);
+				grunt.log.write(msg + '\n');
+				onoff(ost);
 			}
+			return grunt.log;
+		}
+		function onoff(on) {
+			grunt.log.muted = typeof on === 'boolean' ? on : om;
+			grunt.log.writeln = on === true ? writeln : ol;
+			st = on;
+		}
+		this.off = function() {
+			onoff(false);
 		};
+		this.on = function() {
+			onoff(true);
+		};
+		this.reset = function() {
+			onoff();
+		};
+		onoff(on);
 	}
 
 	// These plugins provide necessary tasks.
@@ -236,21 +261,16 @@ module.exports = function(grunt) {
 		});
 	}
 	grunt.registerTask('test', 'Run sub tests', function() {
+		var vlog = new MuteLog();
 		for (var i = 0; i < testSubtasks.length; i++) {
 			var obj = typeof testSubtasks[i] === 'object' ? testSubtasks[i] : {
 				name : typeof testSubtasks[i]
 			};
-			var opt = new GOpt('verbose');
 			if (obj.verbose === false) {
-				opt.set(false);
+				vlog.off();
 			}
-			try {
-				grunt.task.run(obj.name);
-			} catch (e) {
-				opt.set();
-				throw e;
-			}
-			opt.set();
+			grunt.task.run(obj.name);
+			vlog.reset();
 		}
 	});
 
