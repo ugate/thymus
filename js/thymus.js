@@ -532,7 +532,7 @@
 						if (on) {
 							if (e == 'ready') {
 								// wait for the document to complete loading
-								wait(delay, timeout, wh.document, function(cnt, e) {
+								wait(delay, timeout, getWinHandle, function(cnt, e) {
 									oe();
 								});
 							} else {
@@ -707,24 +707,26 @@
 	 *            the delay between checks in milliseconds
 	 * @param timeout
 	 *            the timeout in milliseconds
-	 * @param doc
-	 *            optional document reference to check for ready state before
-	 *            calling supplied function
+	 * @param winFx
+	 *            optional function that will return a window that will be used
+	 *            for document reference to check for ready state before calling
+	 *            supplied callback function
 	 * @param fx
 	 *            the function to call for each interval
 	 */
-	function wait(delay, timeout, doc, fx) {
+	function wait(delay, timeout, winFx, fx) {
 		var limit = 0;
 		var timer = null;
 		timer = setInterval(function() {
 			try {
+				var win = null;
 				if (limit >= timeout) {
 					clearInterval(timer);
 					fx(limit, new Error("Timmed out after " + (limit * timeout)
 							+ " milliseconds"));
-				} else if (doc) {
-					if (doc.readyState == 'loaded'
-							|| doc.readyState == 'complete') {
+				} else if (typeof winFx === 'function' && (win = winFx())) {
+					if (win.document.readyState == 'loaded'
+							|| win.document.readyState == 'complete') {
 						fx(limit);
 						clearInterval(timer);
 					}
