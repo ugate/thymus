@@ -55,7 +55,7 @@ $(function () {
 				'</div>';
 			m.asyncNavRegister( 
 					d.html,
-				function(event, doc) {
+				function(event) {
 					// validate the parameters were passed, the login page is loaded and the user name element is present
 					d.validate(event, valSel);
 				},

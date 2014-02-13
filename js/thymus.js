@@ -501,15 +501,15 @@
 			return ptype;
 		};
 		$$.getWin = function(loc, delay, timeout, dfx, lfx) {
-			function opt(w) {
+			function opt() {
+				var w = getWinHandle();
 				var oe = null, ol = w.location.href, ohn = w.location.hostname;
-				var $b = $('body', w.document);
 				var $f = loc instanceof $ && loc.is('form') ? loc : null;
 				if ($f) {
-					$b.append($f);
+					$('body', w.document).append($f);
 				}
 				if (dfx) {
-					dfx.call($(w));
+					dfx.call();
 				}
 				if (lfx) {
 					var li = 0;
@@ -553,22 +553,27 @@
 						// ready/load state or it will never fire
 						wait(delay, timeout, null, function(cnt, e) {
 							if (e) {
-								throw e;
+								lfx.call(e);
+								return;
 							}
-							var w = getWinHandle();
-							if (ohn && ohn != w.location.hostname) {
-								// different host will not trigger load event-
-								// best effort exhausted
-								lfx.call($(w), $f);
-								return true;
-							}
-							if (ol != w.location.href) {
-								oe = function() {
-									onOff();
-									lfx.call($(w), $f);
-								};
-								onOff(true);
-								return true;
+							try {
+								var w = getWinHandle();
+								if (ohn && ohn != w.location.hostname) {
+									// different host will not trigger load
+									// event- best effort exhausted
+									lfx.call();
+									return true;
+								}
+								if (ol != w.location.href) {
+									oe = function() {
+										onOff();
+										lfx.call();
+									};
+									onOff(true);
+									return true;
+								}
+							} catch (e2) {
+								lfx.call(e2);
 							}
 						});
 					};
@@ -592,7 +597,7 @@
 					win = window.open('about:blank', $$.target, $$.options,
 							$$.history);
 					win.document.write('<html><body></body></html>');
-					opt(win);
+					opt();
 					return win;
 				} else if (!win) {
 					win = getWinHandle(win);
@@ -601,9 +606,9 @@
 					// opening window using the specified location (works with
 					// same window navigation as well)
 					win = window.open(loc, $$.target, $$.options, $$.history);
-					opt(win);
+					opt();
 				} else if (loc) {
-					opt(win);
+					opt();
 				}
 			} catch (e) {
 				if (lfx) {
@@ -3201,7 +3206,7 @@
 						$$.domEnd();
 					};
 					// wait for the window to complete, then fire events
-					lcb = function($frm, e) {
+					lcb = function(e) {
 						if (e) {
 							t.addError('Error while waiting for navigation '
 									+ 'window to complete loading', $$, e);

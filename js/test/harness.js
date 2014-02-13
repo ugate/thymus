@@ -504,8 +504,10 @@ var Harness = {
 						Harness.DFLT_HTTP_STATUS_WARN_END)
 						: httpStatusWarnRange;
 				var p = $(html).appendTo(Harness.TEST_FIXTURE_SEL);
-				var doc = iframeId ? Harness.addIframe(iframeId, p).contents()
-						: document;
+				if (iframeId) {
+					Harness.addIframe(iframeId, p);
+				}
+				;
 				var n = Harness.testSelect(p, '.' + Harness.TEST_CSS_CLASS);
 				if (n.length <= 0) {
 					Harness.ok(false, 'Unable to find .'
@@ -524,7 +526,7 @@ var Harness = {
 				p.thymus(a);
 				Harness.ok(true, Harness.ACTION_NAV_REG, 'Action executed');
 				if (uevt) {
-					function iframeCheck(event, doc) {
+					function iframeCheck(event) {
 						var httpc = Harness.currentRun
 								.httpCapable(event.httpMethod);
 						if (httpc && httpc.failed) {
@@ -569,9 +571,8 @@ var Harness = {
 							try {
 								if (!$$.hasError(event)
 										&& typeof fx === 'function') {
-									var c = !iframeId
-											|| iframeCheck(event, doc);
-									var rtn = !c ? null : fx(event, doc);
+									var c = !iframeId || iframeCheck(event);
+									var rtn = !c ? null : fx(event);
 									start();
 									return rtn;
 								}
