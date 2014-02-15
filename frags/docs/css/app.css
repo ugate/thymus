@@ -94,6 +94,23 @@ div.app-scroll .scroll-spy {
 	overflow-y: auto;
 }
 
+img {
+	height: auto;
+	vertical-align: middle;
+	border: 0;
+	-ms-interpolation-mode: bicubic;
+}
+
+.logo-large {
+	height: 70px;
+	width: 220px;
+}
+
+.logo-small {
+	height: 32px;
+	width: 100px;
+}
+
 .thymus-well {
 	overflow: auto;
 }
