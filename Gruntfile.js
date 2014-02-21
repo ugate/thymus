@@ -5,8 +5,8 @@
  * Licensed under MIT (https://github.com/ugate/thymus/blob/master/LICENSE)
  */
 var exec = require('child_process').exec;
-var browsers = require('./grunt/browsers').browsers;
-var pckPaths = require('./grunt/pckPaths').pckPaths;
+var browsers = require('./grunt/browsers');
+var pckPaths = require('./grunt/pckPaths');
 pckPaths.basePath = '.';
 
 module.exports = function(grunt) {
