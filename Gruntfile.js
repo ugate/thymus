@@ -172,6 +172,7 @@ module.exports = function(grunt) {
 	});
 
 	// Test tasks
+	// TODO : move includes/copy
 	var testSubtasks = [ /* 'clean', */'includes', 'copy:docs', 'connect', 'qunit' ];
 	// Only run Sauce Labs tests if there's a Sauce access key
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
