@@ -39,7 +39,7 @@ var pckPaths = {
 				var incPath = typeof p.trim === 'function' ? p.trim() : p
 						.replace(/^\s+|\s+$/g, '');
 				incPath = pp + incPath;
-				var rslt = $$.getScriptInclude.call($$, path, incPath);
+				var rslt = $$.getScriptInclude.call($$, path, incPath, cb);
 				$$.processedIncludePaths.push(incPath);
 				return $$.processScriptIncludes(rslt, incPath, cb);
 			});
