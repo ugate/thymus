@@ -167,13 +167,14 @@ module.exports = function(grunt) {
 				parentPath, incPath) {
 			return grunt.file.read(incPath);
 		});
-		grunt.file.write(pckPaths.distScriptPath + grunt.config.pkg.name
-				+ '.js', script);
+		grunt.file
+				.write(pckPaths.distScriptPath + '<%= pkg.name %>.js', script);
 	});
 
 	// Test tasks
 	// TODO : move includes/copy
-	var testSubtasks = [ /* 'clean', */'includes', 'copy:docs', 'connect', 'qunit' ];
+	var testSubtasks = [ /* 'clean', */'includes', 'copy:docs', 'connect',
+			'qunit' ];
 	// Only run Sauce Labs tests if there's a Sauce access key
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
 	// Skip Sauce if running a different subset of the test suite
