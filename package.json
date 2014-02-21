@@ -9,7 +9,7 @@
   "homepage": "http://thymusjs.org",
   "author": "Akira LLC",
   "scripts": {
-    "test": "grunt default --verbose --stack"
+    "test": "grunt test --verbose --stack"
   },
   "repository": {
     "type": "git",

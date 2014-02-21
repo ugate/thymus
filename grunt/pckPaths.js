@@ -7,7 +7,7 @@
  * Where <b><code>[PATH]</code></b> is the path to the JS script that will
  * replace the inclusion expression.
  */
-var pckPaths = {
+pckPaths = {
 	basePath : '',
 	mainScriptPath : 'js/lib/thx.js',
 	distScriptPath : 'dist/js/',
