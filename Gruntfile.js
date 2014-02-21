@@ -6,7 +6,7 @@
  */
 var exec = require('child_process').exec;
 var browsers = require('./grunt/browsers').browsers;
-var pckPaths = require('./grunt/includes').pckPaths;
+var pckPaths = require('./grunt/pckPaths').pckPaths;
 pckPaths.basePath = '.';
 
 module.exports = function(grunt) {
