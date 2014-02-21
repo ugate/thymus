@@ -7,7 +7,7 @@
  * Where <b><code>[PATH]</code></b> is the path to the JS script that will
  * replace the inclusion expression.
  */
-pckPaths = {
+var pckPaths = {
 	basePath : '',
 	mainScriptPath : 'js/lib/thx.js',
 	distScriptPath : 'dist/js/',
@@ -115,4 +115,7 @@ pckPaths = {
 		}
 	}
 };
+if (typeof module !== 'undefined' && module.exports) {
+	module.exports = pckPaths;
+}
 //# sourceURL=pckPaths.js

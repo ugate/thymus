@@ -30,7 +30,7 @@ var linuxFFVer = "27";
 var linuxChromeVer = "32";
 
 // All platforms/browsers to be tested
-browsers = [ {
+var browsers = [ {
 	"browserName" : "safari",
 	"version" : osxSafariVer,
 	"platform" : osxVer
@@ -79,3 +79,5 @@ browsers = [ {
 	"version" : androidVer,
 	"platform" : "Linux"
 } ];
+
+module.exports = browsers;
