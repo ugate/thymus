@@ -4,83 +4,22 @@
  * Copyright 2013-present Akira LLC
  * Licensed under MIT (https://github.com/ugate/thymus/blob/master/LICENSE)
  */
+var exec = require('child_process').exec;
+var browsers = require('./grunt/browsers').browsers;
+var pckPaths = require('./grunt/includes').pckPaths;
+pckPaths.basePath = '.';
+
 module.exports = function(grunt) {
 	'use strict';
 
-	// Docs: https://saucelabs.com/docs/platforms/webdriver
-	// Windows: Opera 15+ not currently supported by Sauce Labs
-	// Mac: Opera not currently supported by Sauce Labs
-	// Android: Chrome not currently supported by Sauce Labs
-	// iOS: Chrome not currently supported by Sauce Labs
-	var firefoxVersion = "26";
-	var chromeVersion = "31";
-	var safariVersion = "7";
-	var ieVersion = "11";
-	var windowsVersion = "Windows 8.1";
-	var androidVersion = "4.0";
-	var osxVersion = "OS X 10.9";
-	var browsers = [ {
-		browserName : "safari",
-		version : safariVersion,
-		platform : osxVersion
-	}, {
-		browserName : "googlechrome",
-		version : chromeVersion,
-		platform : osxVersion
-	}, {
-		browserName : "firefox",
-		version : firefoxVersion,
-		platform : osxVersion
-	}, {
-		browserName : "iphone",
-		version : safariVersion,
-		platform : osxVersion
-	}, {
-		browserName : "internet explorer",
-		version : ieVersion,
-		platform : windowsVersion
-	}, {
-		browserName : "internet explorer",
-		version : "10",
-		platform : "Windows 8"
-	}, {
-		browserName : "internet explorer",
-		version : "9",
-		platform : "Windows 7"
-	}, {
-		browserName : "googlechrome",
-		version : chromeVersion,
-		platform : windowsVersion
-	}, {
-		browserName : "firefox",
-		version : firefoxVersion,
-		platform : windowsVersion
-	}, {
-		browserName : "googlechrome",
-		version : "30",
-		platform : "Linux"
-	}, {
-		browserName : "firefox",
-		version : firefoxVersion,
-		platform : "Linux"
-	}, {
-		browserName : "android",
-		version : androidVersion,
-		platform : "Linux"
-	} ];
-
 	// Force use of Unix newlines
 	grunt.util.linefeed = '\n';
-
 	RegExp.quote = function(string) {
 		return string.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&');
 	};
 
-	// Project configuration.
 	grunt
 			.initConfig({
-
-				// Metadata.
 				pkg : grunt.file.readJSON('package.json'),
 				banner : '/*!\n'
 						+ ' * thymus.js v<%= pkg.version %> (<%= pkg.homepage %>)\n'
@@ -92,50 +31,50 @@ module.exports = function(grunt) {
 
 				// Task configuration.
 				clean : {
-					dist : [ 'dist', 'frags/docs/dist' ]
-				},
-
-				concat : {
-					options : {
-						banner : '<%= banner %>\n<%= jqueryCheck %>',
-						stripBanners : false
-					},
-					thymus : {
-						// src : [ 'js/frags.js', 'js/events.js',
-						// 'js/context.js', 'js/siphons.js',
-						// 'js/plugin.js', 'js/util.js' ],
-						src : [ 'js/thymus.js' ],
-						dest : 'dist/js/<%= pkg.name %>.js'
-					}
+					dist : [ pckPaths.distScriptPath, pckPaths.distDocsPath ]
 				},
 
 				uglify : {
 					options : {
 						report : 'min'
 					},
-					thymus : {
+					js : {
 						options : {
 							banner : '<%= banner %>'
 						},
-						src : '<%= concat.thymus.dest %>',
-						dest : 'dist/js/<%= pkg.name %>.min.js'
+						src : pckPaths.distScriptPath + '<%= pkg.name %>.js',
+						dest : pckPaths.distScriptPath
+								+ '<%= pkg.name %>.min.js'
 					},
-					docsJs : {
+					docs : {
 						options : {
 							preserveComments : 'some'
 						},
-						src : [ 'frags/docs/js/app.js',
-								'frags/docs/js/loader.js' ],
-						dest : 'frags/docs/js/docs.min.js'
+						src : [ pckPaths.devDocsScriptPath + 'app.js',
+								pckPaths.devDocsScriptPath + 'loader.js' ],
+						dest : pckPaths.distDocsScriptPath + 'docs.min.js'
 					}
 				},
 
 				copy : {
 					docs : {
-						expand : true,
-						cwd : './dist',
-						src : [ '{css,js}/*.min.*', 'css/*.map' ],
-						dest : 'frags/docs/dist'
+						files : [
+								{
+									expand : true,
+									src : [ '**/*.{htm,html}' ],
+									dest : pckPaths.distDocsPath,
+									process : function(contents, path) {
+										// use distribution packaged script
+										return pckPaths
+												.replaceSrciptTagSrcById(
+														grunt.config.pkg.name,
+														contents);
+									}
+								}, {
+									expand : true,
+									src : [ '{css,js}/*.min.*', 'css/*.map' ],
+									dest : pckPaths.distDocsPath
+								} ]
 					}
 				},
 
@@ -146,7 +85,9 @@ module.exports = function(grunt) {
 					// files : 'js/test/*.html'
 					all : {
 						options : {
-							urls : [ 'http://<%= connect.server.options.hostname %>:<%= connect.server.options.port %>/js/test/index.html' ]
+							urls : [ 'http://<%= connect.server.options.hostname %>:<%= connect.server.options.port %>/'
+									+ pckPaths.testScriptPath
+									+ pckPaths.testMainFile ]
 						}
 					}
 				},
@@ -163,11 +104,11 @@ module.exports = function(grunt) {
 
 				watch : {
 					src : {
-						files : '<%= sourceFiles %>',
+						files : pckPaths.jsFiles,
 						tasks : [ 'qunit' ]
 					},
 					test : {
-						files : '<%= sourceFiles %>',
+						files : pckPaths.jsFiles,
 						tasks : [ 'qunit' ]
 					}
 				},
@@ -189,7 +130,9 @@ module.exports = function(grunt) {
 							build : process.env.TRAVIS_JOB_ID,
 							testname : process.env.TRAVIS_BUILD_NUMBER,
 							concurrency : 10,
-							urls : [ 'http://<%= connect.server.options.hostname %>:<%= connect.server.options.port %>/js/test/index.html' ],
+							urls : [ 'http://<%= connect.server.options.hostname %>:<%= connect.server.options.port %>/'
+									+ pckPaths.testScriptPath
+									+ pckPaths.testMainFile ],
 							tags : [ process.env.TRAVIS_BRANCH,
 									process.env.TRAVIS_REPO_SLUG,
 									process.env.TRAVIS_BUILD_DIR ],
@@ -199,14 +142,14 @@ module.exports = function(grunt) {
 				}
 			});
 
-	// These plugins provide necessary tasks.
-	for ( var key in grunt.file.readJSON("package.json").devDependencies) {
-		if (key !== "grunt" && key.indexOf("grunt") === 0) {
+	// Load tasks from package
+	for ( var key in grunt.file.readJSON('package.json').devDependencies) {
+		if (key !== 'grunt' && key.indexOf('grunt') === 0) {
 			grunt.loadNpmTasks(key);
 		}
 	}
 
-	// supress "key" options in verbose mode
+	// suppress "key" options in verbose mode
 	var writeflags = grunt.log.writeflags;
 	grunt.log.writeflags = function(obj, prefix) {
 		if (typeof obj === 'object' && obj && obj.key) {
@@ -217,10 +160,19 @@ module.exports = function(grunt) {
 		return writeflags(obj, prefix);
 	};
 
-	// Test task.
-	var testSubtasks = [];
-	testSubtasks.push('connect');
-	testSubtasks.push('qunit');
+	// Custom tasks
+	grunt.registerTask('includes', 'Process JS inclusions', function() {
+		grunt.log.writeln('Currently running the "default" task.');
+		var script = pckPaths.processScriptIncludes(null, null, function(
+				parentPath, incPath) {
+			return grunt.file.read(incPath);
+		});
+		grunt.file.write(pckPaths.distScriptPath + grunt.config.pkg.name
+				+ '.js', script);
+	});
+
+	// Test tasks
+	var testSubtasks = [ 'connect', 'qunit' ];
 	// Only run Sauce Labs tests if there's a Sauce access key
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
 	// Skip Sauce if running a different subset of the test suite
@@ -229,17 +181,39 @@ module.exports = function(grunt) {
 	}
 	grunt.registerTask('test', testSubtasks);
 
-	// JS distribution task.
-	// grunt.registerTask('dist-js', [ 'concat', 'uglify' ]);
+	// Distribution tasks
+	var distSubtasks = [ /* 'clean', */'includes', 'copy:docs', 'uglify:js',
+			'uglyfy:docs' ];
 
-	// Docs distribution task.
-	// grunt.registerTask('dist-docs', 'copy:docs');
+	// When a commit message contains "release v" followed by a version number
+	// (major.minor.path) push release and
+	var commitMsg = process.env.TRAVIS_COMMIT_MESSAGE;
+	if (typeof process.env.TRAVIS_COMMIT_MESSAGE === 'undefined') {
+		// TODO : the following can be removed once
+		// https://github.com/travis-ci/travis-ci/issues/965 is resolved
+		exec('git show -s --format=%B ' + process.env.TRAVIS_COMMIT
+				+ ' | tr -d \'\n\'', function(e, stdout, stderr) {
+			if (e) {
+				var em = 'Unable to capture commit message for commit number '
+						+ process.env.TRAVIS_COMMIT + ':\n  ' + stderr;
+				grunt.warn(em);
+				grunt.warn(e);
+			} else {
+				grunt.verbose(stdout);
+			}
+		});
+	}
+	if (commitMsg) {
+		var releaseVer = commitMsg
+				.match(/release v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?/im);
+		if (releaseVer.length) {
+			// TODO : release task - distSubtasks.push('');
+		}
+	}
+	grunt.registerTask('dist', distSubtasks);
 
-	// Full distribution task.
-	// grunt.registerTask('dist', [ 'clean', 'dist-js', 'dist-docs' ]);
-
-	// Default task.
-	// grunt.registerTask('default', [ 'test', 'dist' ]);
+	// Default tasks
+	grunt.registerTask('default', [ 'test', 'dist' ]);
 
 	// Version numbering task.
 	// grunt change-version-number --oldver=A.B.C --newver=X.Y.Z

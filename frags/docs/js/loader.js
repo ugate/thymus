@@ -1,5 +1,13 @@
-// Example listener usage and minimal progress bar for visual queue for fragment loading
+// Documentation/Demos site specific loading
 var $lt = null, $pt = null, $pi = null, loaded = false;
+
+/**
+ * Listener for individual fragment events that will update visual progression
+ * indicators
+ * 
+ * @param event
+ *            the fragment event
+ */
 function fragListener(event) {
 	// var $source = $(this);
 	var isl = event.type != 'load';
@@ -31,6 +39,13 @@ function fragListener(event) {
 	$pi = $pi ? $pi : $('#loadThymusProgPer');
 	$pi.css('width', p);
 }
+
+/**
+ * Listener for batch fragment events that will update visual progression
+ * 
+ * @param event
+ *            the batch fragment event
+ */
 function fragsListener(event) {
 	if (event.type != 'load') {
 		return;
@@ -51,6 +66,7 @@ function fragsListener(event) {
 	$('#fragTotal').text(event.fragCount);
 	initUI(event.errors, firstLoad);
 }
+
 /**
  * Example that shows how to use a <b>result siphon</b> handler. Takes the read
  * me mark down and captures any paragraph tags via a regular expression and
@@ -73,4 +89,5 @@ function handleReadme() {
 	var $d = $(d);
 	h.proceed($d);
 }
+
 //# sourceURL=loader.js
