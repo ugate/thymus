@@ -26,7 +26,6 @@
   ],
   "devDependencies": {
     "grunt": "~0.4.2",
-    "grunt-bump": "~0.0.13",
     "grunt-banner": "~0.2.0",
     "grunt-contrib-connect": "~0.6.0",
     "grunt-contrib-copy": "~0.5.0",

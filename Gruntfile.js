@@ -199,7 +199,7 @@ module.exports = function(grunt) {
 				grunt.warn(em);
 				grunt.warn(e);
 			} else {
-				grunt.verbose(stdout);
+				grunt.log.writeln('Commit message: ' + stdout);
 			}
 		});
 	}
