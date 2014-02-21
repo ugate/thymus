@@ -172,7 +172,7 @@ module.exports = function(grunt) {
 	});
 
 	// Test tasks
-	var testSubtasks = [ 'connect', 'qunit' ];
+	var testSubtasks = [ /* 'clean', */'includes', 'copy:docs', 'connect', 'qunit' ];
 	// Only run Sauce Labs tests if there's a Sauce access key
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
 	// Skip Sauce if running a different subset of the test suite
@@ -182,8 +182,7 @@ module.exports = function(grunt) {
 	grunt.registerTask('test', testSubtasks);
 
 	// Distribution tasks
-	var distSubtasks = [ /* 'clean', */'includes', 'copy:docs', 'uglify:js',
-			'uglyfy:docs' ];
+	var distSubtasks = [ 'uglify:js', 'uglyfy:docs' ];
 
 	// When a commit message contains "release v" followed by a version number
 	// (major.minor.path) push release and
