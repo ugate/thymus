@@ -50,7 +50,7 @@ var pckPaths = {
 							: '/' + path);
 			$$.processedIncludePaths.push(path);
 			js = $$.processScriptIncludes($$.getScriptInclude.call($$, null,
-					path), path, cb);
+					path, cb), path, cb);
 		}
 		return js + '\n\n';
 	},
