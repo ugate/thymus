@@ -62,23 +62,24 @@ module.exports = function(grunt) {
 						expand : true,
 						src : [ '**!(node_modules|lib)/**!(node_modules|lib)/*.{htm,html,css,js,md,png,ico}' ],
 						dest : fabricator.distPath,
-						process : function(contents, path) {
-							grunt.log.writeln('checking ' + path
-									+ '\n***START***\n' + contents
-									+ '\n***END***');
-							// use distribution packaged script
-							if (typeof contents === 'string') {
-								var rtn = fabricator.replaceSrciptTagSrcById(
-										grunt.config.pkg.name, contents);
-								if (rtn.replaceCount > 0) {
-									grunt.log.writeln('Updated '
-											+ rtn.replaceCount
-											+ ' script references for '
-											+ fabricator.distPath);
+						options : {
+							process : function(contents, path) {
+								// use distribution packaged script
+								if (typeof contents === 'string') {
+									var rtn = fabricator
+											.replaceSrciptTagSrcById(
+													grunt.config.pkg.name,
+													contents);
+									if (rtn.replaceCount > 0) {
+										grunt.log.writeln('Updated '
+												+ rtn.replaceCount
+												+ ' script references for '
+												+ fabricator.distPath);
+									}
+									return rtn.contents;
 								}
-								return rtn.contents;
+								return contents;
 							}
-							return contents;
 						}
 					}
 				},
