@@ -84,10 +84,15 @@ var fabricator = {
 		// replaces any references to a script tags source attribute
 		var $$ = this;
 		var scrPaths = $$.getScriptPath(id, envDesignator);
+		var rtn = {
+			contents : htmlStr,
+			replaceCount : 0
+		};
 		// replace any script tags with the specified ID
-		return htmlStr.replace(new RegExp('<script[^>]*id=["\']?' + id
+		rtn.contents = htmlStr.replace(new RegExp('<script[^>]*id=["\']?' + id
 				+ '["\']?[^>]*>(?:[\S\s]*?)<\/script>', 'img'), function(
 				scrMatch, offset, scrStr) {
+			rtn.replaceCount++;
 			// replace the matched script tag with the required attribute
 			// changes
 			return scrMatch.replace($$.regexSrc,
@@ -100,6 +105,7 @@ var fabricator = {
 						return srcMatch.replace(src, scrPaths.to);
 					});
 		});
+		return rtn;
 	},
 	getScriptPath : function(id, envDesignator) {
 		// returns from/to paths for a specified environment
@@ -107,7 +113,7 @@ var fabricator = {
 		var isDist = envDesignator !== $$.devDesignator;
 		return {
 			from : ep(id, !isDist),
-			to : ep(id, isDist),
+			to : ep(id, isDist)
 		};
 		function ep(f, isDist) {
 			return (isDist ? $$.distScriptPath : $$.devScriptPath) + f

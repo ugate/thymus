@@ -17,7 +17,7 @@ module.exports = function(grunt) {
 	RegExp.quote = function(string) {
 		return string.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&');
 	};
-	
+
 	var release = require('./grunt/tasks/release');
 	var pkg = grunt.file.readJSON('package.json');
 	grunt
@@ -63,10 +63,20 @@ module.exports = function(grunt) {
 						src : [ '**!(node_modules|lib)/**!(node_modules|lib)/*.{htm,html,css,js,md,png,ico}' ],
 						dest : fabricator.distPath,
 						process : function(contents, path) {
+							grunt.log.writeln('checking ' + path
+									+ '\n***START***\n' + contents
+									+ '\n***END***');
 							// use distribution packaged script
 							if (typeof contents === 'string') {
-								return fabricator.replaceSrciptTagSrcById(
+								var rtn = fabricator.replaceSrciptTagSrcById(
 										grunt.config.pkg.name, contents);
+								if (rtn.replaceCount > 0) {
+									grunt.log.writeln('Updated '
+											+ rtn.replaceCount
+											+ ' script references for '
+											+ fabricator.distPath);
+								}
+								return rtn.contents;
 							}
 							return contents;
 						}
