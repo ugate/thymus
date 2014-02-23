@@ -67,8 +67,7 @@ module.exports = function(grunt) {
 								// use distribution packaged script
 								if (typeof contents === 'string') {
 									var rtn = fabricator
-											.replaceSrciptTagSrcById(
-													grunt.config.pkg.name,
+											.replaceSrciptTagSrcById(pkg.name,
 													contents);
 									if (rtn.replaceCount > 0) {
 										grunt.log.writeln('Updated '
