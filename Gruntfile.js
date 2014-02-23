@@ -60,8 +60,8 @@ module.exports = function(grunt) {
 				copy : {
 					dist : {
 						expand : true,
-						src : [ '**.{htm,html,css,js,md,png,ico}',
-								'!(node_modules|lib)' ],
+						src : [ '/**/*.{htm,html,css,js,md,png,ico}',
+								'!(node_modules|lib|Gruntfile)' ],
 						dest : fabricator.distPath,
 						options : {
 							mode : true,
@@ -71,9 +71,9 @@ module.exports = function(grunt) {
 									return fabricator.replaceSrciptTagSrcById(
 											pkg.name, contents, function(from,
 													to) {
-												grunt.log.writeln('Changed '
-														+ from + ' to ' + to
-														+ ' for ' + path);
+												grunt.log.writeln('Updated\n'
+														+ from + '\nto:\n' + to
+														+ '\nfor: ' + path);
 											});
 								}
 								return contents;
@@ -165,14 +165,20 @@ module.exports = function(grunt) {
 	};
 
 	// Custom tasks
-	grunt.registerTask('includes', 'Process JS inclusions', function() {
-		grunt.log.writeln('Currently running the "default" task.');
-		var script = fabricator.processScriptIncludes(null, null, function(
-				parentPath, incPath) {
-			return grunt.file.read(incPath);
-		});
-		grunt.file.write(fabricator.distScriptPath + pkg.name + '.js', script);
-	});
+	grunt.registerTask('includes', 'Process JS inclusions',
+			function() {
+				grunt.log.writeln('Processing script includes');
+				var incCnt = 0;
+				var script = fabricator.processScriptIncludes(null, null,
+						function(parentPath, incPath) {
+							incCnt++;
+							return grunt.file.read(incPath);
+						});
+				var js = fabricator.distScriptPath + pkg.name + '.js';
+				grunt.file.write(js, script);
+				grunt.log.writeln('Generated ' + js + ' from ' + incCnt
+						+ ' inclusions');
+			});
 
 	// Test tasks
 	// TODO : move includes/copy
