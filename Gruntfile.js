@@ -60,7 +60,7 @@ module.exports = function(grunt) {
 				copy : {
 					dist : {
 						expand : true,
-						src : [ '**/*.{htm,html,css,md,png,ico}' ],
+						src : [ '**!(node_modules)/*.{htm,html,css,md,png,ico}' ],
 						dest : fabricator.distDocsPath,
 						process : function(contents, path) {
 							// use distribution packaged script
