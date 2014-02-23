@@ -4,6 +4,7 @@
  * Copyright 2013-present Akira LLC
  * Licensed under MIT (https://github.com/ugate/thymus/blob/master/LICENSE)
  */
+var exec = require('child_process').exec;
 var browsers = require('./grunt/browsers');
 var fabricator = require('./grunt/fabricator');
 fabricator.basePath = '.';
