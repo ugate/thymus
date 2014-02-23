@@ -60,23 +60,21 @@ module.exports = function(grunt) {
 				copy : {
 					dist : {
 						expand : true,
-						src : [ '**!(node_modules|lib)/**!(node_modules|lib)/*.{htm,html,css,js,md,png,ico}' ],
+						src : [ '**.{htm,html,css,js,md,png,ico}',
+								'!(node_modules|lib)' ],
 						dest : fabricator.distPath,
 						options : {
+							mode : true,
 							process : function(contents, path) {
 								// use distribution packaged script
 								if (typeof contents === 'string') {
-									var rtn = fabricator
-											.replaceSrciptTagSrcById(pkg.name,
-													contents);
-									if (rtn.replaceCount > 0) {
-										grunt.log.writeln('Updated '
-												+ rtn.replaceCount
-												+ ' script references for '
-												+ path + '\n***START***\n'
-												+ rtn.contents + '\n***END***');
-									}
-									return rtn.contents;
+									return fabricator.replaceSrciptTagSrcById(
+											pkg.name, contents, function(from,
+													to) {
+												grunt.log.writeln('Changed '
+														+ from + ' to ' + to
+														+ ' for ' + path);
+											});
 								}
 								return contents;
 							}
