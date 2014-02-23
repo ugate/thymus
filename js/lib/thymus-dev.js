@@ -11,7 +11,7 @@
 +function($) {
 	// request the inclusion script
 	var basePath = $('#thymus').attr('data-thx-base-path');
-	var libPath = basePath + '/grunt/pckPaths.js';
+	var libPath = basePath + '/grunt/fabricator.js';
 	$.ajax({
 		url : libPath,
 		dataType : 'script',
@@ -30,8 +30,8 @@
 	 *            XHR for the request
 	 */
 	function done(r, status, xhr) {
-		pckPaths.basePath = basePath;
-		var js = pckPaths.processScriptIncludes();
+		fabricator.basePath = basePath;
+		var js = fabricator.processScriptIncludes();
 		if (js) {
 			var scr = document.createElement('script');
 			scr.type = 'text/javascript';
@@ -63,8 +63,8 @@
 	 *            the script string to be wrapped
 	 */
 	function wrap(js) {
-		return '/* Pre-build concatenation for includes:\n * '
-				+ pckPaths.processedIncludePaths.join('\n * ') + '\n */\n' + js
+		return '/* Pre-build fabrication for includes:\n * '
+				+ fabricator.processedIncludePaths.join('\n * ') + '\n */\n' + js
 				+ '//# sourceURL=thymus.js';
 	}
 }(window.jQuery);

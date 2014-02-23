@@ -4,10 +4,9 @@
  * Copyright 2013-present Akira LLC
  * Licensed under MIT (https://github.com/ugate/thymus/blob/master/LICENSE)
  */
-var exec = require('child_process').exec;
 var browsers = require('./grunt/browsers');
-var pckPaths = require('./grunt/pckPaths');
-pckPaths.basePath = '.';
+var fabricator = require('./grunt/fabricator');
+fabricator.basePath = '.';
 
 module.exports = function(grunt) {
 	'use strict';
@@ -17,21 +16,23 @@ module.exports = function(grunt) {
 	RegExp.quote = function(string) {
 		return string.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&');
 	};
-
+	
+	var release = require('./grunt/tasks/release');
+	var pkg = grunt.file.readJSON('package.json');
 	grunt
 			.initConfig({
-				pkg : grunt.file.readJSON('package.json'),
+				pkg : pkg,
 				banner : '/*!\n'
-						+ ' * thymus.js v<%= pkg.version %> (<%= pkg.homepage %>)\n'
+						+ ' * <%= pkg.name %>.js v<%= pkg.version %> (<%= pkg.homepage %>)\n'
 						+ ' * Copyright 2013-<%= grunt.template.today("yyyy") %> <%= pkg.author %>\n'
 						+ ' * Licensed under <%= _.pluck(pkg.licenses, "type") %> (<%= _.pluck(pkg.licenses, "url") %>)\n'
 						+ ' */\n',
-				jqueryCheck : 'if (typeof jQuery === \'undefined\') { throw new Error(\'thymus.js requires jQuery\') }\n\n',
+				jqueryCheck : 'if (typeof jQuery === \'undefined\') { throw new Error(\'<%= pkg.name %>.js requires jQuery\') }\n\n',
 				sourceFiles : 'js/*.js',
 
 				// Task configuration.
 				clean : {
-					dist : [ pckPaths.distScriptPath, pckPaths.distDocsPath ]
+					dist : [ fabricator.distScriptPath, fabricator.distDocsPath ]
 				},
 
 				uglify : {
@@ -42,39 +43,32 @@ module.exports = function(grunt) {
 						options : {
 							banner : '<%= banner %>'
 						},
-						src : pckPaths.distScriptPath + '<%= pkg.name %>.js',
-						dest : pckPaths.distScriptPath
-								+ '<%= pkg.name %>.min.js'
+						src : fabricator.distScriptPath + pkg.name + '.js',
+						dest : fabricator.distScriptPath + pkg.name + '.min.js'
 					},
 					docs : {
 						options : {
 							preserveComments : 'some'
 						},
-						src : [ pckPaths.devDocsScriptPath + 'app.js',
-								pckPaths.devDocsScriptPath + 'loader.js' ],
-						dest : pckPaths.distDocsScriptPath + 'docs.min.js'
+						src : [ fabricator.devDocsScriptPath + 'app.js',
+								fabricator.devDocsScriptPath + 'loader.js' ],
+						dest : fabricator.distDocsScriptPath + 'docs.min.js'
 					}
 				},
 
 				copy : {
-					docs : {
-						files : [
-								{
-									expand : true,
-									src : [ '**/*.{htm,html}' ],
-									dest : pckPaths.distDocsPath,
-									process : function(contents, path) {
-										// use distribution packaged script
-										return pckPaths
-												.replaceSrciptTagSrcById(
-														grunt.config.pkg.name,
-														contents);
-									}
-								}, {
-									expand : true,
-									src : [ '{css,js}/*.min.*', 'css/*.map' ],
-									dest : pckPaths.distDocsPath
-								} ]
+					dist : {
+						expand : true,
+						src : [ '**/*.{htm,html,css,md,png,ico}' ],
+						dest : fabricator.distDocsPath,
+						process : function(contents, path) {
+							// use distribution packaged script
+							if (typeof contents === 'string') {
+								return fabricator.replaceSrciptTagSrcById(
+										grunt.config.pkg.name, contents);
+							}
+							return contents;
+						}
 					}
 				},
 
@@ -86,8 +80,8 @@ module.exports = function(grunt) {
 					all : {
 						options : {
 							urls : [ 'http://<%= connect.server.options.hostname %>:<%= connect.server.options.port %>/'
-									+ pckPaths.testScriptPath
-									+ pckPaths.testMainFile ]
+									+ fabricator.testScriptPath
+									+ fabricator.testMainFile ]
 						}
 					}
 				},
@@ -97,18 +91,18 @@ module.exports = function(grunt) {
 						options : {
 							port : 3000,
 							base : '.',
-							hostname : 'thymusjs-test-host'
+							hostname : pkg.name + '-test-host'
 						}
 					}
 				},
 
 				watch : {
 					src : {
-						files : pckPaths.jsFiles,
+						files : fabricator.jsFiles,
 						tasks : [ 'qunit' ]
 					},
 					test : {
-						files : pckPaths.jsFiles,
+						files : fabricator.jsFiles,
 						tasks : [ 'qunit' ]
 					}
 				},
@@ -131,8 +125,8 @@ module.exports = function(grunt) {
 							testname : process.env.TRAVIS_BUILD_NUMBER,
 							concurrency : 10,
 							urls : [ 'http://<%= connect.server.options.hostname %>:<%= connect.server.options.port %>/'
-									+ pckPaths.testScriptPath
-									+ pckPaths.testMainFile ],
+									+ fabricator.testScriptPath
+									+ fabricator.testMainFile ],
 							tags : [ process.env.TRAVIS_BRANCH,
 									process.env.TRAVIS_REPO_SLUG,
 									process.env.TRAVIS_BUILD_DIR ],
@@ -163,17 +157,16 @@ module.exports = function(grunt) {
 	// Custom tasks
 	grunt.registerTask('includes', 'Process JS inclusions', function() {
 		grunt.log.writeln('Currently running the "default" task.');
-		var script = pckPaths.processScriptIncludes(null, null, function(
+		var script = fabricator.processScriptIncludes(null, null, function(
 				parentPath, incPath) {
 			return grunt.file.read(incPath);
 		});
-		grunt.file
-				.write(pckPaths.distScriptPath + '<%= pkg.name %>.js', script);
+		grunt.file.write(fabricator.distScriptPath + pkg.name + '.js', script);
 	});
 
 	// Test tasks
 	// TODO : move includes/copy
-	var testSubtasks = [ /* 'clean', */'includes', 'copy:docs', 'connect',
+	var testSubtasks = [ /* 'clean', */'includes', 'copy:dist', 'connect',
 			'qunit' ];
 	// Only run Sauce Labs tests if there's a Sauce access key
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
@@ -184,7 +177,7 @@ module.exports = function(grunt) {
 	grunt.registerTask('test', testSubtasks);
 
 	// Distribution tasks
-	var distSubtasks = [ 'uglify:js', 'uglyfy:docs' ];
+	var distSubtasks = [ 'uglify:js', 'uglyfy:docs', 'release' ];
 
 	// When a commit message contains "release v" followed by a version number
 	// (major.minor.path) push release and

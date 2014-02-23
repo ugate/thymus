@@ -7,7 +7,7 @@
  * Where <b><code>[PATH]</code></b> is the path to the JS script that will
  * replace the inclusion expression.
  */
-var pckPaths = {
+var fabricator = {
 	basePath : '',
 	mainScriptPath : 'js/lib/thx.js',
 	distScriptPath : 'dist/js/',
@@ -17,7 +17,7 @@ var pckPaths = {
 	devDocsScriptPath : 'frags/docs/js/',
 	devDocsCssPath : 'frags/docs/css/',
 	jsFiles : 'js/**/*.js',
-	testScriptPath : 'js/test/',
+	testScriptPath : 'dist/js/test/',
 	testMainFile : 'index.html',
 	devDesignator : '-dev',
 	distDesignator : '',
@@ -116,6 +116,6 @@ var pckPaths = {
 	}
 };
 if (typeof module !== 'undefined' && module.exports) {
-	module.exports = pckPaths;
+	module.exports = fabricator;
 }
-//# sourceURL=pckPaths.js
+//# sourceURL=fabricator.js
