@@ -44,7 +44,7 @@ module.exports = function(grunt) {
 				// Generate change log for release using all messages since last tag/release
 				var chgLog = execOut(
 						'git log `git describe --tags --abbrev=0`..HEAD --pretty=format:"  * %s"',
-						options.chgLog, true);
+						options.chgLog, true, true);
 
 				// Generate list of authors/contributors since last tag/release
 				var authors = execOut(
@@ -65,7 +65,7 @@ module.exports = function(grunt) {
 			}
 		}
 
-		function execOut(cmd, wpath, nofail) {
+		function execOut(cmd, wpath, nofail, nodups) {
 			var rtn = '';
 			exec(cmd, function(e, stdout, stderr) {
 				if (e) {
@@ -76,6 +76,19 @@ module.exports = function(grunt) {
 					log(e);
 				} else {
 					rtn = stdout;
+					if (rtn && nodups) {
+						var rs = rtn.split(/\r?\n/g);
+						if (rs.length > 1) {
+							rtn = '';
+							var ll = '';
+							for (var i=0; i<rs.length; i++) {
+								if (rs[i] != ll) {
+									rtn += rs[i];
+								}
+								ll = rs[i];
+							}
+						}
+					}
 					if (rtn && wpath) {
 						grunt.file.write(options.destDir + wpath, rtn);
 					}
