@@ -73,7 +73,8 @@ module.exports = function(grunt) {
 										grunt.log.writeln('Updated '
 												+ rtn.replaceCount
 												+ ' script references for '
-												+ fabricator.distPath);
+												+ path + '\n***START***\n'
+												+ rtn.contents + '\n***END***');
 									}
 									return rtn.contents;
 								}
