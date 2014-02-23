@@ -33,7 +33,7 @@ module.exports = function(grunt) {
 
 				// Task configuration.
 				clean : {
-					dist : [ fabricator.distScriptPath, fabricator.distDocsPath ]
+					dist : [ fabricator.distPath ]
 				},
 
 				uglify : {
@@ -61,7 +61,7 @@ module.exports = function(grunt) {
 					dist : {
 						expand : true,
 						src : [ '**!(node_modules)/*.{htm,html,css,md,png,ico}' ],
-						dest : fabricator.distDocsPath,
+						dest : fabricator.distPath,
 						process : function(contents, path) {
 							// use distribution packaged script
 							if (typeof contents === 'string') {
