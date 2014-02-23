@@ -7,7 +7,7 @@ before_script:
   - npm install -g grunt-cli
 addons:
   hosts:
-    - thymusjs-test-host
+    - thymus-test-host
 env:
   global:
     - secure: t2pkeRYFk0P7tjoL4VMxwT1ACrELdU4w5laXMtg6wMWH7HMEQakdlbQGIGUC1vSVGN+WNBoN6JC4pj4pgIIO4wW8Px84wxdtxDJAymnlTn49zxijHvF63euY4agwwGKIly+/Rt0rsjWb+yOb00AJXuWRjypMLc5RIIC2b41HUgc=
