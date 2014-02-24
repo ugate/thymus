@@ -165,7 +165,7 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 				log(e);
 				done(false);
 			} else {
-				rtn = stdout;
+				var rtn = stdout;
 				if (rtn && cmd.nodups) {
 					var rs = rtn.split(/\r?\n/g);
 					if (rs.length > 1) {
