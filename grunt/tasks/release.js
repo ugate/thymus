@@ -2,6 +2,8 @@
  * When a commit message contains "release v" followed by a version number
  * (major.minor.patch) a tagged release will be issued
  * 
+ * @param grunt
+ *            the grunt instance
  * @param src
  *            the source directory (default: CWD)
  * @param destBranch
@@ -14,10 +16,8 @@
  * @param authors
  *            the optional authors file name to generate (default: AUTHORS.md)
  */
-module.exports = function(src, destBranch, destDir, chgLog, authors) {
+module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 	'use strict';
-
-	var grunt = this;
 
 	grunt.log.writeln('Currently running the "release" task.');
 
@@ -34,8 +34,6 @@ module.exports = function(src, destBranch, destDir, chgLog, authors) {
 	if (typeof commitMsg === 'undefined') {
 		// TODO : the following can be removed once
 		// https://github.com/travis-ci/travis-ci/issues/965 is resolved
-		var cmc = "git show -s --format=%B " + process.env.TRAVIS_COMMIT
-				+ " | tr -d '\\n'";
 		execAsync(new Command(
 			"git show -s --format=%B " + process.env.TRAVIS_COMMIT + " | tr -d '\\n'",
 			function(rtn) {
@@ -186,8 +184,8 @@ module.exports = function(src, destBranch, destDir, chgLog, authors) {
 				}
 				if (typeof cmd.cb === 'function') {
 					cmd.cb.call(cmd, rtn, ca.length);
-					execAsync(cmds);
 				}
+				execAsync(cmds);
 			}
 		});
 	}
