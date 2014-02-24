@@ -35,10 +35,8 @@ module.exports = function(src, destBranch, destDir, chgLog, authors) {
 	if (typeof commitMsg === 'undefined') {
 		// TODO : the following can be removed once
 		// https://github.com/travis-ci/travis-ci/issues/965 is resolved
-		commitMsg = execRslt('git show -s --format=%B '
-				+ process.env.TRAVIS_COMMIT + ' | tr -d \'\n\'',
-				'Unable to capture commit message for commit number '
-						+ process.env.TRAVIS_COMMIT);
+		commitMsg = execOut('git show -s --format=%B '
+				+ process.env.TRAVIS_COMMIT + ' | tr -d \'\n\'');
 	}
 	if (commitMsg) {
 		grunt.log.writeln('Commit message: ' + commitMsg);
