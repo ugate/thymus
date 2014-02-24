@@ -192,7 +192,7 @@ module.exports = function(grunt) {
 	}
 	buildTasks.push('uglify:js');
 	buildTasks.push('uglify:docs');
-	buildTasks.push('release');
+	buildTasks.push('release', release);
 	grunt.registerTask('test', buildTasks);
 
 	// Distribution tasks
