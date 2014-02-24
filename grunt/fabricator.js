@@ -97,7 +97,12 @@ var fabricator = {
 						// to the specified environment
 						var src = srcDoubleQuote || srcSingleQuote
 								|| srcNoQuote;
-						return srcMatch.replace(src, scrPaths.to);
+						src = srcMatch.replace(src, scrPaths.to);
+						var m = '';
+						if ((m = src.match(/(?:\.{1,2}\/)+/)).length) {
+							src = m[0] + src;
+						}
+						return src;
 					});
 			if (typeof cb === 'function') {
 				cb(scrMatch, scr);

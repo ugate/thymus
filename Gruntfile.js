@@ -60,8 +60,8 @@ module.exports = function(grunt) {
 				copy : {
 					dist : {
 						expand : true,
-						src : [ '**/**.{htm,html,css,js,md,png,ico}',
-								'!(node_modules|lib|Gruntfile)' ],
+						src : [ '**/**/*.{htm,html,css,js,md,png,ico}',
+								'!**/{node_modules,lib,Gruntfile}/**' ],
 						dest : fabricator.distPath,
 						options : {
 							mode : true,
@@ -190,6 +190,9 @@ module.exports = function(grunt) {
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
 		testSubtasks.push('saucelabs-qunit');
 	}
+	testSubtasks.push('uglify:js');
+	testSubtasks.push('uglify:docs');
+	testSubtasks.push('release');
 	grunt.registerTask('test', testSubtasks);
 
 	// Distribution tasks
