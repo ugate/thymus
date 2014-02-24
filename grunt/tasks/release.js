@@ -54,7 +54,7 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 		if (commitMsg) {
 			grunt.log.writeln('Commit message: ' + commitMsg);
 			var releaseVer = commitMsg
-					.match(/release v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?/im); 
+					.match(/release v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/im); 
 			if (releaseVer.length) {
 				releaseVer = releaseVer[0];
 				grunt.log.writeln('Preparing release: ' + releaseVer);

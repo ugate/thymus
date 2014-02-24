@@ -30,10 +30,7 @@ module.exports = function(grunt) {
 				jqueryCheck : 'if (typeof jQuery === \'undefined\') { throw new Error(\'<%= pkg.name %>.js requires jQuery\') }\n\n',
 				sourceFiles : 'js/*.js',
 
-				// Task configuration.
-				clean : {
-					dist : [ fabricator.distPath ]
-				},
+				// Task configuration
 
 				uglify : {
 					options : {
@@ -116,17 +113,6 @@ module.exports = function(grunt) {
 					}
 				},
 
-				sed : {
-					versionNumber : {
-						pattern : (function() {
-							var old = grunt.option('oldver');
-							return old ? RegExp.quote(old) : old;
-						})(),
-						replacement : grunt.option('newver'),
-						recursive : true
-					}
-				},
-
 				'saucelabs-qunit' : {
 					all : {
 						options : {
@@ -179,22 +165,22 @@ module.exports = function(grunt) {
 				grunt.log.writeln('Generated ' + js + ' from ' + incCnt
 						+ ' inclusions');
 			});
-	grunt.registerTask('release', 'Check for and tag release', function() {
-		require('./grunt/tasks/release').call(this, grunt, fabricator.distPath);
-	});
+	grunt.registerTask('release', 'Check for and tag release',
+			function() {
+				require('./grunt/tasks/release').call(this, grunt,
+						fabricator.distPath);
+			});
 
 	// Test tasks
 	// TODO : move includes/copy
-	var buildTasks = [ /* 'clean', */'includes', 'copy:dist', 'connect',
-			'qunit' ];
+	var buildTasks = [ /* 'clean', */'includes', 'copy:dist', 'uglify:js',
+			'uglify:docs', 'connect', 'qunit' ];
 	// Only run Sauce Labs tests if there's a Sauce access key
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
 	// Skip Sauce if running a different subset of the test suite
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
 		buildTasks.push('saucelabs-qunit');
 	}
-	buildTasks.push('uglify:js');
-	buildTasks.push('uglify:docs');
 	buildTasks.push('release');
 	grunt.registerTask('test', buildTasks);
 
