@@ -60,7 +60,7 @@ module.exports = function(grunt) {
 				copy : {
 					dist : {
 						expand : true,
-						src : [ '/**/*.{htm,html,css,js,md,png,ico}',
+						src : [ '**/**.{htm,html,css,js,md,png,ico}',
 								'!(node_modules|lib|Gruntfile)' ],
 						dest : fabricator.distPath,
 						options : {
