@@ -27,7 +27,6 @@ module.exports = function(grunt) {
 						+ ' * Copyright 2013-<%= grunt.template.today("yyyy") %> <%= pkg.author %>\n'
 						+ ' * Licensed under <%= _.pluck(pkg.licenses, "type") %> (<%= _.pluck(pkg.licenses, "url") %>)\n'
 						+ ' */\n',
-				jqueryCheck : 'if (typeof jQuery === \'undefined\') { throw new Error(\'<%= pkg.name %>.js requires jQuery\') }\n\n',
 				sourceFiles : 'js/*.js',
 
 				// Task configuration

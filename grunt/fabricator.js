@@ -8,6 +8,7 @@
  * replace the inclusion expression.
  */
 var fabricator = {
+	jqueryUrl : '//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js',
 	basePath : '',
 	mainScriptPath : 'js/lib/thx.js',
 	distPath : 'dist/',
@@ -107,7 +108,9 @@ var fabricator = {
 			if (typeof cb === 'function') {
 				cb(scrMatch, scr);
 			}
-			return scr;
+			return ($$.jqueryUrl ? '<script src="' + $$.jqueryUrl
+					+ '"></script>\n' : '')
+					+ scr;
 		});
 	},
 	getScriptPath : function(id, envDesignator) {
