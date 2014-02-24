@@ -956,10 +956,11 @@ var Harness = {
 		});
 		QUnit.done(function(data) {
 			Harness.currentRun.done(data);
+			window.global_test_results = data;
 		});
 		// See
 		// https://github.com/axemclion/grunt-saucelabs#test-result-details-with-qunit
-		var log = [];
+		/*var log = [];
 		QUnit.done = function(test_results) {
 			var tests = log.map(function(details) {
 				return {
@@ -984,7 +985,7 @@ var Harness = {
 					log.push(details);
 				}
 			};
-		});
+		});*/
 	}
 };
 Harness.init();
