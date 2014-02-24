@@ -173,8 +173,9 @@ module.exports = function(grunt) {
 							incCnt++;
 							return grunt.file.read(incPath);
 						});
+				var banner = grunt.template.process('<%= banner %>');
 				var js = fabricator.distScriptPath + pkg.name + '.js';
-				grunt.file.write(js, script);
+				grunt.file.write(js, banner + script);
 				grunt.log.writeln('Generated ' + js + ' from ' + incCnt
 						+ ' inclusions');
 			});
