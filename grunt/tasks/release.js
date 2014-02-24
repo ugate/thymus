@@ -17,9 +17,10 @@
 module.exports = function(src, destBranch, destDir, chgLog, authors) {
 	'use strict';
 
+	var grunt = this;
+
 	grunt.log.writeln('Currently running the "release" task.');
 
-	var grunt = this;
 	src = src || process.cwd();
 	destBranch = destBranch || 'gh-pages';
 	destDir = destDir || 'dist';
