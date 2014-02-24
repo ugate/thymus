@@ -18,7 +18,6 @@ module.exports = function(grunt) {
 		return string.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&');
 	};
 
-	var release = require('./grunt/tasks/release');
 	var pkg = grunt.file.readJSON('package.json');
 	grunt
 			.initConfig({
@@ -179,6 +178,9 @@ module.exports = function(grunt) {
 				grunt.log.writeln('Generated ' + js + ' from ' + incCnt
 						+ ' inclusions');
 			});
+	grunt.registerTask('release', 'Check for and tag release', function() {
+		require('./grunt/tasks/release').call(this, fabricator.distPath);
+	});
 
 	// Test tasks
 	// TODO : move includes/copy
@@ -188,11 +190,11 @@ module.exports = function(grunt) {
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
 	// Skip Sauce if running a different subset of the test suite
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
-		//testSubtasks.push('saucelabs-qunit');
+		// testSubtasks.push('saucelabs-qunit');
 	}
 	buildTasks.push('uglify:js');
 	buildTasks.push('uglify:docs');
-	buildTasks.push('release', release);
+	buildTasks.push('release');
 	grunt.registerTask('test', buildTasks);
 
 	// Distribution tasks
