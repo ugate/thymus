@@ -61,7 +61,7 @@ module.exports = function(grunt) {
 					dist : {
 						expand : true,
 						src : [ '**/**/*.{htm,html,css,js,md,png,ico}',
-								'!**/{node_modules,lib,Gruntfile}/**' ],
+								'!**/{node_modules,lib,Gruntfile,grunt}/**' ],
 						dest : fabricator.distPath,
 						options : {
 							mode : true,
@@ -182,18 +182,18 @@ module.exports = function(grunt) {
 
 	// Test tasks
 	// TODO : move includes/copy
-	var testSubtasks = [ /* 'clean', */'includes', 'copy:dist', 'connect',
+	var buildTasks = [ /* 'clean', */'includes', 'copy:dist', 'connect',
 			'qunit' ];
 	// Only run Sauce Labs tests if there's a Sauce access key
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
 	// Skip Sauce if running a different subset of the test suite
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
-		testSubtasks.push('saucelabs-qunit');
+		//testSubtasks.push('saucelabs-qunit');
 	}
-	// testSubtasks.push('uglify:js');
-	// testSubtasks.push('uglify:docs');
-	// testSubtasks.push('release');
-	grunt.registerTask('test', testSubtasks);
+	buildTasks.push('uglify:js');
+	buildTasks.push('uglify:docs');
+	buildTasks.push('release');
+	grunt.registerTask('test', buildTasks);
 
 	// Distribution tasks
 	var distSubtasks = [ 'uglify:js', 'uglyfy:docs', 'release' ];
