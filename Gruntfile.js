@@ -179,7 +179,7 @@ module.exports = function(grunt) {
 						+ ' inclusions');
 			});
 	grunt.registerTask('release', 'Check for and tag release', function() {
-		require('./grunt/tasks/release').call(this, fabricator.distPath);
+		require('./grunt/tasks/release').call(grunt, fabricator.distPath);
 	});
 
 	// Test tasks
