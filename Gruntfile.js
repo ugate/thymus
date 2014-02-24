@@ -71,7 +71,7 @@ module.exports = function(grunt) {
 									return fabricator.replaceSrciptTagSrcById(
 											pkg.name, contents, function(from,
 													to) {
-												grunt.log.writeln('Updated\n'
+												grunt.verbose('\nUpdated\n'
 														+ from + '\nto:\n' + to
 														+ '\nfor: ' + path);
 											});
@@ -190,39 +190,13 @@ module.exports = function(grunt) {
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
 		testSubtasks.push('saucelabs-qunit');
 	}
-	//testSubtasks.push('uglify:js');
-	//testSubtasks.push('uglify:docs');
-	//testSubtasks.push('release');
+	// testSubtasks.push('uglify:js');
+	// testSubtasks.push('uglify:docs');
+	// testSubtasks.push('release');
 	grunt.registerTask('test', testSubtasks);
 
 	// Distribution tasks
 	var distSubtasks = [ 'uglify:js', 'uglyfy:docs', 'release' ];
-
-	// When a commit message contains "release v" followed by a version number
-	// (major.minor.path) push release and
-	var commitMsg = process.env.TRAVIS_COMMIT_MESSAGE;
-	if (typeof process.env.TRAVIS_COMMIT_MESSAGE === 'undefined') {
-		// TODO : the following can be removed once
-		// https://github.com/travis-ci/travis-ci/issues/965 is resolved
-		exec('git show -s --format=%B ' + process.env.TRAVIS_COMMIT
-				+ ' | tr -d \'\n\'', function(e, stdout, stderr) {
-			if (e) {
-				var em = 'Unable to capture commit message for commit number '
-						+ process.env.TRAVIS_COMMIT + ':\n  ' + stderr;
-				grunt.warn(em);
-				grunt.warn(e);
-			} else {
-				grunt.log.writeln('Commit message: ' + stdout);
-			}
-		});
-	}
-	if (commitMsg) {
-		var releaseVer = commitMsg
-				.match(/release v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?/im);
-		if (releaseVer.length) {
-			// TODO : release task - distSubtasks.push('');
-		}
-	}
 	grunt.registerTask('dist', distSubtasks);
 
 	// Default tasks
