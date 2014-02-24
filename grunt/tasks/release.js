@@ -70,6 +70,8 @@ module.exports = function(src, destBranch, destDir, chgLog, authors) {
 			grunt.log.writeln('Released: ' + releaseVer + ' from subtree ' + opts.destDir 
 					+ ' under ' + opts.destBranch);
 		}
+	} else {
+		grunt.warn('Unable to capture commit message to check for release: ' + commitMsg);
 	}
 
 	/**
