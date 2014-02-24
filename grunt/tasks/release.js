@@ -38,7 +38,7 @@ module.exports = function(src, destBranch, destDir, chgLog, authors) {
 		var cmc = "git show -s --format=%B " + process.env.TRAVIS_COMMIT
 				+ " | tr -d '\\n'";
 		commitMsg = execOut(cmc);
-		grunt.log.writeln('Captured commit message: "' + cmc
+		grunt.log.writeln('Captured commit message: "' + commitMsg
 				+ '" from command "' + cmc + '"');
 	}
 	if (commitMsg) {
