@@ -98,7 +98,7 @@ var fabricator = {
 						var src = srcDoubleQuote || srcSingleQuote
 								|| srcNoQuote;
 						var to = scrPaths.to;
-						if ((m = src.match(/(?:\.{1,2}\/)+/)).length) {
+						if ((m = src.match(/(?:\.{1,2}\/)+/)) && m.length) {
 							to = m[0] + to;
 						}
 						src = srcMatch.replace(src, to);
