@@ -190,9 +190,9 @@ module.exports = function(grunt) {
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
 		testSubtasks.push('saucelabs-qunit');
 	}
-	testSubtasks.push('uglify:js');
-	testSubtasks.push('uglify:docs');
-	testSubtasks.push('release');
+	//testSubtasks.push('uglify:js');
+	//testSubtasks.push('uglify:docs');
+	//testSubtasks.push('release');
 	grunt.registerTask('test', testSubtasks);
 
 	// Distribution tasks
