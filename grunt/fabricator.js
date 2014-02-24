@@ -97,11 +97,11 @@ var fabricator = {
 						// to the specified environment
 						var src = srcDoubleQuote || srcSingleQuote
 								|| srcNoQuote;
-						src = srcMatch.replace(src, scrPaths.to);
-						var m = '';
+						var to = scrPaths.to;
 						if ((m = src.match(/(?:\.{1,2}\/)+/)).length) {
-							src = m[0] + src;
+							to = m[0] + to;
 						}
+						src = srcMatch.replace(src, to);
 						return src;
 					});
 			if (typeof cb === 'function') {
