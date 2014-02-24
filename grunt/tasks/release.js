@@ -54,13 +54,13 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 		if (commitMsg) {
 			grunt.log.writeln('Commit message: ' + commitMsg);
 			var releaseVer = commitMsg
-					.match(/release v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/im); 
+					.match(/released?\s*v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/im); 
 			if (releaseVer.length) {
 				releaseVer = releaseVer[0];
 				grunt.log.writeln('Preparing release: ' + releaseVer);
 				var cmds = [];
-				var chgLog = '';
-				var authors = '';
+				var chgLogRtn = '';
+				var authorsRtn = '';
 				var commitDistBrch = '';
 				var pushDistBrch = '';
 
@@ -69,21 +69,21 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 				cmds.push(new Command(
 					'git log `git describe --tags --abbrev=0`..HEAD --pretty=format:"  * %s"',
 					function (rtn, cnt) {
-						chgLog = rtn;
-					}, opts.chgLog, true, true
+						chgLogRtn = rtn;
+					}, chgLog, true, true
 				));
 
 				// Generate list of authors/contributors since last tag/release
 				cmds.push(new Command(
 					'git log --all --format="%aN <%aE>" | sort -u',
 					function (rtn, cnt) {
-						authors = rtn;
-					}, opts.authors, true
+						authorsRtn = rtn;
+					}, authors, true
 				));
 
 				// Commit local release destination changes
 				cmds.push(new Command(
-					'git add --all ' + opts.destDir + ' && git commit -m "' + commitMsg + '"',
+					'git add --all ' + destDir + ' && git commit -m "' + commitMsg + '"',
 					function (rtn, cnt) {
 						commitDistBrch = rtn;
 					}
@@ -91,7 +91,7 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 
 				// Push release changes
 				cmds.push(new Command(
-					'git subtree push --prefix ' + opts.destDir + ' origin ' + opts.destBranch,
+					'git subtree push --prefix ' + destDir + ' origin ' + destBranch,
 					function (rtn, cnt) {
 						pushDistBrch = rtn;
 					}
@@ -100,11 +100,11 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 				// Tag release
 				cmds.push(new Command(
 					function () {
-						return 'git tag -a ' + releaseVer + ' -m "' + chgLog +'"';
+						return 'git tag -a ' + releaseVer + ' -m "' + chgLogRtn +'"';
 					},
 					function (rtn, cnt) {
-						grunt.log.writeln('Released: ' + releaseVer + ' from subtree ' + opts.destDir 
-								+ ' under ' + opts.destBranch);
+						grunt.log.writeln('Released: ' + releaseVer + ' from subtree ' + destDir 
+								+ ' under ' + destBranch);
 						done();
 					}
 				));
@@ -180,7 +180,7 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 					}
 				}
 				if (rtn && cmd.wpath) {
-					grunt.file.write(opts.destDir + cmd.wpath, rtn);
+					grunt.file.write(destDir + cmd.wpath, rtn);
 				}
 				if (typeof cmd.cb === 'function') {
 					cmd.cb.call(cmd, rtn, ca.length);
