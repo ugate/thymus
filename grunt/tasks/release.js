@@ -35,8 +35,11 @@ module.exports = function(src, destBranch, destDir, chgLog, authors) {
 	if (typeof commitMsg === 'undefined') {
 		// TODO : the following can be removed once
 		// https://github.com/travis-ci/travis-ci/issues/965 is resolved
-		commitMsg = execOut('git show -s --format=%B '
-				+ process.env.TRAVIS_COMMIT + ' | tr -d \'\\n\'');
+		var cmc = "git show -s --format=%B " + process.env.TRAVIS_COMMIT
+				+ " | tr -d '\\n'";
+		commitMsg = execOut(cmc);
+		grunt.log.writeln('Captured commit message: "' + cmc
+				+ '" from command "' + cmc + '"');
 	}
 	if (commitMsg) {
 		grunt.log.writeln('Commit message: ' + commitMsg);
@@ -72,7 +75,7 @@ module.exports = function(src, destBranch, destDir, chgLog, authors) {
 		}
 	} else {
 		grunt.warn('Unable to capture commit message to check for release: ' 
-				+ process.env.TRAVIS_COMMIT + ' commit message: ' + commitMsg);
+				+ process.env.TRAVIS_COMMIT + ' commit message: ' + commitMsg + '\n');
 	}
 
 	/**
