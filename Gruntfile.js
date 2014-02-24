@@ -71,7 +71,7 @@ module.exports = function(grunt) {
 									return fabricator.replaceSrciptTagSrcById(
 											pkg.name, contents, function(from,
 													to) {
-												grunt.verbose('\nUpdated\n'
+												grunt.log.writeln('\nUpdated\n'
 														+ from + '\nto:\n' + to
 														+ '\nfor: ' + path);
 											});
