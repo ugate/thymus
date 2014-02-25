@@ -144,6 +144,7 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 		this.wpath = wpath;
 		this.nofail = nofail;
 		this.nodups = nodups;
+		this.retryCount = 0;
 	}
 
 	/**
@@ -165,7 +166,17 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 						+ ':\n  ' + stderr;
 				grunt.log.writeln(em);
 				grunt.log.writeln(e);
-				done(!cmd.nofail);
+				if (cmd.retryCount == 0
+						&& stderr.indexOf(".git/index.lock': File exists") >= 0) {
+					cmd.retryCount++;
+					cmds.unshift(new Command('rm -f '
+							+ stderr.substring(stderr.indexof("'") + 1,
+									stderr.lastIndexof("'") - 1)));
+					cmds.unshift(cmd);
+					execAsync(cmds);
+				} else {
+					done(!cmd.nofail);
+				}
 			} else {
 				var rtn = stdout;
 				if (rtn && cmd.nodups) {

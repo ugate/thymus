@@ -35,7 +35,7 @@ var browsers = [ {
 	"version" : osxSafariVer,
 	"platform" : osxVer
 }, {
-	"browserName" : "googlechrome",
+	"browserName" : "chrome",
 	"version" : osxChromeVer,
 	"platform" : osxVer
 }, {
@@ -59,7 +59,7 @@ var browsers = [ {
 	"version" : winLeg2IEVer,
 	"platform" : winLeg2Ver
 }, {
-	"browserName" : "googlechrome",
+	"browserName" : "chrome",
 	"version" : winChromeVer,
 	"platform" : winVer
 }, {
@@ -67,7 +67,7 @@ var browsers = [ {
 	"version" : winFFVer,
 	"platform" : winVer
 }, {
-	"browserName" : "googlechrome",
+	"browserName" : "chrome",
 	"version" : linuxChromeVer,
 	"platform" : "Linux"
 }, {
