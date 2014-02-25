@@ -54,9 +54,11 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 		if (commitMsg) {
 			grunt.log.writeln('Commit message: ' + commitMsg);
 			var releaseVer = commitMsg
-					.match(/released?\s*v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/im); 
+					.match(/released?\s*v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/im);
 			if (releaseVer.length) {
 				releaseVer = releaseVer[0];
+				// TODO : verify commit message release version is less than
+				// current version using "git describe --abbrev=0 --tags"
 				grunt.log.writeln('Preparing release: ' + releaseVer);
 				var cmds = [];
 				var chgLogRtn = '';
@@ -161,12 +163,8 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 				var em = 'Unable to execute "' + cmd.getCmd.call(cmd) + '" for commit number ' 
 							+ process.env.TRAVIS_COMMIT + ':\n  ' + stderr;
 				grunt.log.writeln(em);
-				if (cmd.nofail) {
-					grunt.log.writeln(e);
-				} else {
-					grunt.fail(e);
-				}
-				done(false);
+				grunt.log.writeln(e);
+				done(!cmd.nofail);
 			} else {
 				var rtn = stdout;
 				if (rtn && cmd.nodups) {
