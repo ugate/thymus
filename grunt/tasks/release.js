@@ -159,19 +159,19 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 			return;
 		}
 		var cmd = ca.shift();
-		exec(cmd.getCmd.call(cmd), function(e, stdout, stderr) {
+		var execCmd = cmd.getCmd.call(cmd);
+		grunt.log.writeln(execCmd);
+		exec(execCmd, function(e, stdout, stderr) {
 			if (e) {
-				var em = 'Unable to execute "' + cmd.getCmd.call(cmd)
-						+ '" for commit number ' + process.env.TRAVIS_COMMIT
-						+ ':\n  ' + stderr;
-				grunt.log.writeln(em);
-				grunt.log.writeln(e);
+				var em = 'Unable to execute "' + execCmd
+						+ '" for commit number '
+						+ process.env.TRAVIS_COMMIT + ':\n  ' + stderr;
+				grunt.log.error(em);
+				grunt.log.error(e);
 				if (cmd.retryCount == 0
 						&& stderr.indexOf(".git/index.lock': File exists") >= 0) {
 					cmd.retryCount++;
-					cmds.unshift(new Command('rm -f '
-							+ stderr.substring(stderr.indexof("'") + 1,
-									stderr.lastIndexof("'") - 1)));
+					cmds.unshift(new Command('rm -f ./.git/index.lock'));
 					cmds.unshift(cmd);
 					execAsync(cmds);
 				} else {
