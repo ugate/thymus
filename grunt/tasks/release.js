@@ -38,17 +38,17 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 		if (!commitMsg) {
 			grunt.log.error('Error capturing commit message for '
 					+ process.env.TRAVIS_COMMIT);
-			return done(false);
+			return;
 		}
 	}
 	grunt.log.writeln('Commit message: ' + commitMsg);
 	releaseVer = extractCommitMsgVer(commitMsg, true);
 	if (!releaseVer) {
-		return done(false);
+		return;
 	}
 	// TODO : verify commit message release version is less than
 	// current version using "git describe --abbrev=0 --tags"
-	grunt.log.writeln('Preparing release: ' + v);
+	grunt.log.writeln('Preparing release: ' + releaseVer);
 
 	// Generate change log for release using all messages since last
 	// tag/release
