@@ -171,7 +171,7 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 			var rv = commitMsg
 					.match(/released?\s*v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/im);
 			if (rv.length) {
-				v = releaseVer[0];
+				v = rv[0];
 				// TODO : verify commit message release version is less than
 				// current version using "git describe --abbrev=0 --tags"
 				grunt.log.writeln('Preparing release: ' + v);
