@@ -25,144 +25,96 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 	chgLog = chgLog || 'HISTORY.md';
 	authors = authors || 'AUTHORS.md';
 
-	var exec = require('child_process').exec;
-	var done = this.async();
-
-	var cmds = [];
-	var commitMsg = process.env.TRAVIS_COMMIT_MESSAGE;
+	var shell = require('shelljs');
 	var releaseVer = '';
 	var chgLogRtn = '';
 	var authorsRtn = '';
-	var commitDistBrch = '';
-	var pushDistBrch = '';
 
 	// Capture commit message
+	var commitMsg = process.env.TRAVIS_COMMIT_MESSAGE;
 	if (!commitMsg) {
-		cmds.push(new Command(
-			"git show -s --format=%B " + process.env.TRAVIS_COMMIT + " | tr -d '\\n'",
-			function(rtn, cnt) {
-				commitMsg = rtn;
-				releaseVer = extractCommitMsgVer(commitMsg);
-			}
-		));
-	} else {
-		releaseVer = extractCommitMsgVer(commitMsg);
+		commitMsg = runCmd("git show -s --format=%B "
+				+ process.env.TRAVIS_COMMIT + " | tr -d '\\n'");
+		if (!commitMsg) {
+			grunt.log.error('Error capturing commit message for '
+					+ process.env.TRAVIS_COMMIT);
+			return done(false);
+		}
 	}
-
-	// Grant push access using key
-	cmds.push(new Command('chmod 600 .travis/deploy_key.pem'));	
-	cmds.push(new Command('ssh-add .travis/deploy_key.pem'));	
+	grunt.log.writeln('Commit message: ' + commitMsg);
+	releaseVer = extractCommitMsgVer(commitMsg, true);
+	if (!releaseVer) {
+		return done(false);
+	}
+	// TODO : verify commit message release version is less than
+	// current version using "git describe --abbrev=0 --tags"
+	grunt.log.writeln('Preparing release: ' + v);
 
 	// Generate change log for release using all messages since last
 	// tag/release
-	cmds.push(new Command(
-		'git log `git describe --tags --abbrev=0`..HEAD --pretty=format:"  * %s"',
-		function (rtn, cnt) {
-			chgLogRtn = rtn;
-		}, chgLog, true, true
-	));
+	chgLogRtn = runCmd(
+			'git log `git describe --tags --abbrev=0`..HEAD --pretty=format:"  * %s"',
+			chgLog, true);
 
 	// Generate list of authors/contributors since last tag/release
-	cmds.push(new Command(
-		'git log --all --format="%aN <%aE>" | sort -u',
-		function (rtn, cnt) {
-			authorsRtn = rtn;
-		}, authors, true
-	));
+	authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u', authors);
 
 	// Commit local release destination changes
-	cmds.push(new Command(
-		'git add --all ' + destDir + ' && git commit -m "' + commitMsg + '"',
-		function (rtn, cnt) {
-			commitDistBrch = rtn;
-		}
-	));
+	if (runCmd('git add --all ' + destDir + ' && git commit -m "' + commitMsg
+			+ '"') === undefined) {
+		return;
+	}
 
 	// Push release changes
-	cmds.push(new Command(
-		'git subtree push --prefix ' + destDir + ' origin ' + destBranch,
-		function (rtn, cnt) {
-			pushDistBrch = rtn;
-		}
-	));
+	if (runCmd('git subtree push --prefix ' + destDir + ' origin ' + destBranch) === undefined) {
+		return;
+	}
 
 	// Tag release
-	cmds.push(new Command(
-		function () {
-			return 'git tag -a ' + releaseVer + ' -m "' + chgLogRtn +'"';
-		},
-		function (rtn, cnt) {
-			grunt.log.writeln('Released: ' + releaseVer + ' from subtree ' + destDir 
-					+ ' under ' + destBranch);
-			done();
-		}
-	));
-	
-	// execute commands
-	execAsync(cmds);
+	if (runCmd('git tag -a ' + releaseVer + ' -m "' + chgLogRtn + '"') === undefined) {
+		return;
+	}
+	grunt.log.writeln('Released: ' + releaseVer + ' from subtree ' + destDir
+			+ ' under ' + destBranch);
 
 	/**
-	 * Executes an array of {Command}
+	 * Executes a shell command
 	 * 
-	 * @param cmds
-	 *            the array of {Command} or (a single {Command})
+	 * @param cmd
+	 *            the command string to execute
+	 * @param wpath
+	 *            the optional path/file to write the results to
+	 * @param nodups
+	 *            true to remove duplicate entry lines from results
 	 */
-	function execAsync(cmds) {
-		var ca = cmds instanceof Command ? [ cmds ] : cmds;
-		if (!ca.length) {
+	function runCmd(cmd, wpath, nodups) {
+		var rtn = shell.exec(cmd, {
+			silent : true
+		});
+		if (rtn.code !== 0) {
+			grunt.log.error('Error "' + rtn.code + '" for commit number '
+					+ process.env.TRAVIS_COMMIT + ' ' + rtn.output);
 			return;
 		}
-		var cmd = ca.shift();
-		var execCmd = cmd.getCmd.call(cmd);
-		grunt.log.writeln(execCmd);
-		exec(execCmd, function(e, stdout, stderr) {
-			if (e) {
-				var em = 'Unable to execute "' + execCmd
-						+ '" for commit number '
-						+ process.env.TRAVIS_COMMIT + ':\n  ' + stderr;
-				grunt.log.error(em);
-				grunt.log.error(e);
-				if (cmd.retryCount == 0
-						&& stderr.indexOf(".git/index.lock': File exists") >= 0) {
-					// TODO : possible git issue with lock
-					cmd.retryCount++;
-					cmds.unshift(new Command('rm -f ./.git/index.lock'));
-					cmds.unshift(cmd);
-					execAsync(cmds);
-				} else {
-					cmds = [];
-					done(cmd.nofail === 'false');
-				}
-			} else {
-				var rtn = stdout;
-				if (rtn && cmd.nodups) {
-					// remove duplicate lines
-					var rs = rtn.split(/\r?\n/g);
-					if (rs.length > 1) {
-						rtn = '';
-						var ll = '';
-						for (var i=0; i<rs.length; i++) {
-							if (rs[i] != ll) {
-								rtn += rs[i];
-							}
-							ll = rs[i];
-						}
+		var output = rtn.output;
+		if (output && nodups) {
+			// remove duplicate lines
+			var rs = output.split(/\r?\n/g);
+			if (rs.length > 1) {
+				output = '';
+				var ll = '';
+				for (var i = 0; i < rs.length; i++) {
+					if (rs[i] != ll) {
+						output += rs[i];
 					}
+					ll = rs[i];
 				}
-				if (rtn && cmd.wpath) {
-					grunt.file.write(destDir + '/' + cmd.wpath, rtn);
-				}
-				if (typeof cmd.cb === 'function') {
-					// completion call back - kill queued commands when returning true 
-					if (cmd.cb.call(cmd, rtn, ca.length) === true) {
-						cmds = [];
-						done(cmd.nofail === 'false');
-						return;
-					}
-				}
-				execAsync(cmds);
 			}
-		});
+		}
+		if (output && wpath) {
+			grunt.file.write(destDir + '/' + wpath, output);
+		}
+		return output;
 	}
 
 	/**
@@ -171,50 +123,15 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 	 * @param commitMsg
 	 *            the commit message to extract the release version from
 	 */
-	function extractCommitMsgVer(commitMsg, validate) {
+	function extractCommitMsgVer(commitMsg) {
 		var v = '';
 		if (commitMsg) {
-			grunt.log.writeln('Commit message: ' + commitMsg);
 			var rv = commitMsg
 					.match(/released?\s*v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/im);
 			if (rv.length > 1) {
 				v = rv[1];
-				// TODO : verify commit message release version is less than
-				// current version using "git describe --abbrev=0 --tags"
-				grunt.log.writeln('Preparing release: ' + v);
 			}
-		} else if (validate) {
-			grunt.log.error('Unable to capture commit message to check for release: ' 
-					+ process.env.TRAVIS_COMMIT + ' commit message: ' + commitMsg);
-			cmds = [];
-			done(false);
 		}
 		return v;
-	}
-
-	/**
-	 * Command for execution
-	 * 
-	 * @param getCmd
-	 *            the command string or function that will return a command
-	 *            string
-	 * @param cb
-	 *            the function call back when the command completes
-	 * @param wpath
-	 *            the optional path/file to write the results to
-	 * @param nofail
-	 *            true to just log errors, else fail when an error occurs
-	 * @param nodups
-	 *            true to remove duplicate entry lines from results
-	 */
-	function Command(getCmd, cb, wpath, nofail, nodups) {
-		this.getCmd = typeof getCmd === 'function' ? getCmd : function() {
-			return getCmd;
-		};
-		this.cb = cb;
-		this.wpath = wpath;
-		this.nofail = nofail;
-		this.nodups = nodups;
-		this.retryCount = 0;
 	}
 };
