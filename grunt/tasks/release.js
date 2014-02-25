@@ -160,8 +160,9 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 		var cmd = ca.shift();
 		exec(cmd.getCmd.call(cmd), function(e, stdout, stderr) {
 			if (e) {
-				var em = 'Unable to execute "' + cmd.getCmd.call(cmd) + '" for commit number ' 
-							+ process.env.TRAVIS_COMMIT + ':\n  ' + stderr;
+				var em = 'Unable to execute "' + cmd.getCmd.call(cmd)
+						+ '" for commit number ' + process.env.TRAVIS_COMMIT
+						+ ':\n  ' + stderr;
 				grunt.log.writeln(em);
 				grunt.log.writeln(e);
 				done(!cmd.nofail);
