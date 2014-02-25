@@ -45,6 +45,8 @@
 			scr.appendChild(document.createTextNode(wrap(js)));
 			$(document).ready(function() {
 				document.body.appendChild(scr);
+				var t = 'Release v1.0.0'.match(/released?\s*v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/im);
+				console.log(t);
 			});
 		}
 	}

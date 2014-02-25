@@ -1,3 +1,4 @@
++function($) {
 $(function () {
 
 	// tests
@@ -58,4 +59,5 @@ $(function () {
 		});
 	}
 });
+}(window.jQuery);
 //# sourceURL=test/js/self.js

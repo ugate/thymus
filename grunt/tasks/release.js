@@ -122,13 +122,14 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 				grunt.log.error(e);
 				if (cmd.retryCount == 0
 						&& stderr.indexOf(".git/index.lock': File exists") >= 0) {
+					// TODO : possible git issue with lock
 					cmd.retryCount++;
 					cmds.unshift(new Command('rm -f ./.git/index.lock'));
 					cmds.unshift(cmd);
 					execAsync(cmds);
 				} else {
 					cmds = [];
-					done(!cmd.nofail);
+					done(cmd.nofail === 'true');
 				}
 			} else {
 				var rtn = stdout;
@@ -170,8 +171,8 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 			grunt.log.writeln('Commit message: ' + commitMsg);
 			var rv = commitMsg
 					.match(/released?\s*v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/im);
-			if (rv.length) {
-				v = rv[0];
+			if (rv.length > 1) {
+				v = rv[1];
 				// TODO : verify commit message release version is less than
 				// current version using "git describe --abbrev=0 --tags"
 				grunt.log.writeln('Preparing release: ' + v);
