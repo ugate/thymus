@@ -5,7 +5,7 @@ before_install:
 - phantomjs --version
 before_script:
 - npm install -g grunt-cli
-- npm install -g shelljs
+- npm install shelljs
 addons:
   hosts:
   - thymus-test-host
