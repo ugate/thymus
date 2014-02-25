@@ -5,14 +5,11 @@ before_install:
 - phantomjs --version
 before_script:
 - npm install -g grunt-cli
-- git config credential.helper "store --file=.git/credentials"
-- echo "https://${GH_TOKEN}:@github.com" > .git/credentials
 addons:
   hosts:
   - thymus-test-host
 env:
   global:
-  - secure: wMILot/uQ3AKfgeDUWNHdX3SM3w8xEEW4ThF1pZQHMumyRNoVTYb3DKlHEucyjhHJyRJYtxpHWXFDdOj2QvZjfOkGPIFEpihHoOmN4W7JzZFyskbdY0ri+akE5VSxkfFWHqkNTH31GCypRBl7DwXTtQJ4ryXNCVz+W5og5QO6TQ=
   - secure: t2pkeRYFk0P7tjoL4VMxwT1ACrELdU4w5laXMtg6wMWH7HMEQakdlbQGIGUC1vSVGN+WNBoN6JC4pj4pgIIO4wW8Px84wxdtxDJAymnlTn49zxijHvF63euY4agwwGKIly+/Rt0rsjWb+yOb00AJXuWRjypMLc5RIIC2b41HUgc=
   - secure: mwEQnI/Fp2wmgU4ruXwvjlprH2HQK4/AP30MFdu8NsiluC17uIoAUyN+ydr6c+hZgZD176TvW0/E4WKYtXpJPDnsZeuen9wwlKFmqfHrXmQY3sxDJcsg/BVoYBJccs5krtlaKIg7jBfj1s2uRDrn18FreSA2D0mcCva/H9B5+II=
 matrix:

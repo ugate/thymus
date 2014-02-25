@@ -19,8 +19,6 @@
 module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 	'use strict';
 
-	grunt.log.writeln('Currently running the "release" task.');
-
 	src = src || process.cwd();
 	destBranch = destBranch || 'gh-pages';
 	destDir = destDir || 'dist';
@@ -50,6 +48,10 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 	} else {
 		releaseVer = extractCommitMsgVer(commitMsg);
 	}
+
+	// Grant push access using key
+	cmds.push(new Command('chmod 600 .travis/deploy_key.pem'));	
+	cmds.push(new Command('ssh-add .travis/deploy_key.pem'));	
 
 	// Generate change log for release using all messages since last
 	// tag/release
@@ -129,11 +131,12 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 					execAsync(cmds);
 				} else {
 					cmds = [];
-					done(cmd.nofail === 'true');
+					done(cmd.nofail === 'false');
 				}
 			} else {
 				var rtn = stdout;
 				if (rtn && cmd.nodups) {
+					// remove duplicate lines
 					var rs = rtn.split(/\r?\n/g);
 					if (rs.length > 1) {
 						rtn = '';
@@ -150,7 +153,10 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 					grunt.file.write(destDir + '/' + cmd.wpath, rtn);
 				}
 				if (typeof cmd.cb === 'function') {
+					// completion call back - kill queued commands when returning true 
 					if (cmd.cb.call(cmd, rtn, ca.length) === true) {
+						cmds = [];
+						done(cmd.nofail === 'false');
 						return;
 					}
 				}
