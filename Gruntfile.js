@@ -167,12 +167,6 @@ module.exports = function(grunt) {
 						+ ' inclusions');
 			});
 
-	grunt.registerTask('release', 'Check for and tag release',
-			function() {
-				require('./grunt/tasks/release').call(this, grunt,
-						fabricator.distPath);
-			});
-
 	// Test tasks
 	// TODO : move includes/copy
 	var buildTasks = [ /* 'clean', */'includes', 'copy:dist', 'uglify:js',
