@@ -66,7 +66,8 @@ module.exports = function(grunt) {
 
 		// TODO : the following can be removed once
 		// https://github.com/travis-ci/travis-ci/issues/2002 is resolved
-		runCmd('git submodule add https://github.com/apenwarr/git-subtree.git subtree');
+		grunt.log
+				.writeln(runCmd('git submodule add https://github.com/apenwarr/git-subtree.git subtree'));
 
 		// TODO : verify commit message release version is less than
 		// current version using "git describe --abbrev=0 --tags"
@@ -114,6 +115,7 @@ module.exports = function(grunt) {
 	 *            true to remove duplicate entry lines from results
 	 */
 	function runCmd(cmd, wpath, nofail, nodups) {
+		grunt.log.writeln(cmd);
 		var rtn = shell.exec(cmd, {
 			silent : true
 		});
