@@ -169,7 +169,7 @@ module.exports = function(grunt) {
 
 	// Test tasks
 	// TODO : move includes/copy
-	var buildTasks = [ /* 'clean', */, 'details', 'includes', 'copy:dist', 'uglify:js',
+	var buildTasks = [ /* 'clean', */, 'includes', 'copy:dist', 'uglify:js',
 			'uglify:docs', 'connect', 'qunit' ];
 	// Only run Sauce Labs tests if there's a Sauce access key
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
