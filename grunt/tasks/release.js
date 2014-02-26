@@ -50,6 +50,10 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 	// current version using "git describe --abbrev=0 --tags"
 	grunt.log.writeln('Preparing release: ' + releaseVer);
 
+	// Set identity
+	runCmd('git config --global user.email "travis@travis-ci.org"');
+	runCmd('git config --global user.name "Travis"');
+
 	// Generate change log for release using all messages since last
 	// tag/release
 	chgLogRtn = runCmd(
