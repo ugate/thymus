@@ -180,12 +180,8 @@ module.exports = function(grunt) {
 	buildTasks.push('release');
 	grunt.registerTask('test', buildTasks);
 
-	// Distribution tasks
-	var distSubtasks = [ 'uglify:js', 'uglyfy:docs', 'release' ];
-	grunt.registerTask('dist', distSubtasks);
-
 	// Default tasks
-	grunt.registerTask('default', [ 'test', 'dist' ]);
+	grunt.registerTask('default', buildTasks);
 
 	// Version numbering task.
 	// grunt change-version-number --oldver=A.B.C --newver=X.Y.Z
