@@ -8,17 +8,6 @@ var shell = require('shelljs');
  * 
  * @param grunt
  *            the grunt instance
- * @param options.src
- *            the source directory (default: CWD)
- * @param options.destBranch
- *            the origin (default: gh-pages)
- * @param options.destDir
- *            the directory to subtree (default: dist)
- * @param options.chgLog
- *            the optional change log file name to generate (default:
- *            HISTORY.md)
- * @param options.authors
- *            the optional authors file name to generate (default: AUTHORS.md)
  */
 module.exports = function(grunt) {
 
