@@ -175,7 +175,7 @@ module.exports = function(grunt) {
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
 	// Skip Sauce if running a different subset of the test suite
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
-		//buildTasks.push('saucelabs-qunit');
+		buildTasks.push('saucelabs-qunit');
 	}
 	buildTasks.push('release');
 	grunt.registerTask('test', buildTasks);
