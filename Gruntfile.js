@@ -137,7 +137,7 @@ module.exports = function(grunt) {
 		}
 	}
 	// load project tasks
-	grunt.loadTasks('grunt/tasks');
+	//grunt.loadTasks('grunt/tasks');
 
 	// suppress "key" options in verbose mode
 	var writeflags = grunt.log.writeflags;
@@ -177,13 +177,13 @@ module.exports = function(grunt) {
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
 		//buildTasks.push('saucelabs-qunit');
 	}
-	buildTasks.push('release');
+	//buildTasks.push('release');
 	grunt.registerTask('test', buildTasks);
 
 	// Distribution tasks
-	var distSubtasks = [ 'uglify:js', 'uglyfy:docs', 'release' ];
-	grunt.registerTask('dist', distSubtasks);
-
-	// Default tasks
-	grunt.registerTask('default', [ 'test', 'dist' ]);
+//	var distSubtasks = [ 'uglify:js', 'uglyfy:docs', 'release' ];
+//	grunt.registerTask('dist', distSubtasks);
+//
+//	// Default tasks
+//	grunt.registerTask('default', [ 'test', 'dist' ]);
 };
