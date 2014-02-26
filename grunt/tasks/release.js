@@ -58,26 +58,20 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 	// tag/release
 	chgLogRtn = runCmd(
 			'git log `git describe --tags --abbrev=0`..HEAD --pretty=format:"  * %s"',
-			chgLog, true);
+			chgLog, false, true);
 
 	// Generate list of authors/contributors since last tag/release
-	authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u', authors);
+	authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u',
+			authors, true);
 
 	// Commit local release destination changes
-	if (runCmd('git add --all ' + destDir + ' && git commit -m "' + commitMsg
-			+ '"') === undefined) {
-		return;
-	}
+	runCmd('git add --all ' + destDir + ' && git commit -m "' + commitMsg + '"');
 
 	// Push release changes
-	if (runCmd('git subtree push --prefix ' + destDir + ' origin ' + destBranch) === undefined) {
-		return;
-	}
+	runCmd('git subtree push --prefix ' + destDir + ' origin ' + destBranch);
 
 	// Tag release
-	if (runCmd('git tag -a ' + releaseVer + ' -m "' + chgLogRtn + '"') === undefined) {
-		return;
-	}
+	runCmd('git tag -a ' + releaseVer + ' -m "' + chgLogRtn + '"');
 	grunt.log.writeln('Released: ' + releaseVer + ' from subtree ' + destDir
 			+ ' under ' + destBranch);
 
@@ -88,30 +82,40 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 	 *            the command string to execute
 	 * @param wpath
 	 *            the optional path/file to write the results to
+	 * @param nofail
+	 *            true to prevent throwing an error when the command fails to
+	 *            execute
 	 * @param nodups
 	 *            true to remove duplicate entry lines from results
 	 */
-	function runCmd(cmd, wpath, nodups) {
+	function runCmd(cmd, wpath, nofail, nodups) {
 		var rtn = shell.exec(cmd, {
 			silent : true
 		});
 		if (rtn.code !== 0) {
-			grunt.log.error('Error "' + rtn.code + '" for commit number '
-					+ process.env.TRAVIS_COMMIT + ' ' + rtn.output);
-			return;
+			var e = 'Error "' + rtn.code + '" for commit number '
+					+ process.env.TRAVIS_COMMIT + ' ' + rtn.output;
+			if (nofail) {
+				grunt.log.error(e);
+				return;
+			}
+			throw new Error(e);
 		}
 		var output = rtn.output;
 		if (output && nodups) {
 			// remove duplicate lines
 			var rs = output.match(/[^\r\n]+/g);
 			if (rs && rs.length > 1) {
-				output = '';
+				var no = '';
 				var ll = '';
 				for (var i = 0; i < rs.length; i++) {
 					if (rs[i] != ll) {
-						output += rs[i];
+						no += (rs[i] + '\n');
 					}
 					ll = rs[i];
+				}
+				if (no) {
+					output = no;
 				}
 			}
 		}
