@@ -136,6 +136,8 @@ module.exports = function(grunt) {
 			grunt.loadNpmTasks(key);
 		}
 	}
+	// load project tasks
+	grunt.loadTasks('grunt/tasks');
 
 	// suppress "key" options in verbose mode
 	var writeflags = grunt.log.writeflags;
@@ -164,6 +166,7 @@ module.exports = function(grunt) {
 				grunt.log.writeln('Generated ' + js + ' from ' + incCnt
 						+ ' inclusions');
 			});
+
 	grunt.registerTask('release', 'Check for and tag release',
 			function() {
 				require('./grunt/tasks/release').call(this, grunt,

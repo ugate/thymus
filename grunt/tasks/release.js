@@ -1,79 +1,104 @@
+'use strict';
+
+var shell = require('shelljs');
+
 /**
  * When a commit message contains "release v" followed by a version number
  * (major.minor.patch) a tagged release will be issued
  * 
  * @param grunt
  *            the grunt instance
- * @param src
+ * @param options.src
  *            the source directory (default: CWD)
- * @param destBranch
+ * @param options.destBranch
  *            the origin (default: gh-pages)
- * @param destDir
+ * @param options.destDir
  *            the directory to subtree (default: dist)
- * @param chgLog
+ * @param options.chgLog
  *            the optional change log file name to generate (default:
  *            HISTORY.md)
- * @param authors
+ * @param options.authors
  *            the optional authors file name to generate (default: AUTHORS.md)
  */
-module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
-	'use strict';
+module.exports = function(grunt) {
 
-	src = src || process.cwd();
-	destBranch = destBranch || 'gh-pages';
-	destDir = destDir || 'dist';
-	chgLog = chgLog || 'HISTORY.md';
-	authors = authors || 'AUTHORS.md';
+	grunt.registerTask('release',
+			'Release bundle using commit message (if present)', function() {
+				var options = this.options({
+					src : process.cwd(),
+					destBranch : 'gh-pages',
+					destDir : 'dist',
+					chgLog : 'HISTORY.md',
+					authors : 'AUTHORS.md'
+				});
+				release.call(this, options);
+			});
 
-	var shell = require('shelljs');
-	var releaseVer = '';
-	var chgLogRtn = '';
-	var authorsRtn = '';
+	/**
+	 * Checks for release commit message and performs release
+	 * 
+	 * @param options
+	 *            the grunt options
+	 */
+	function release(options) {
+		var releaseVer = '';
+		var chgLogRtn = '';
+		var authorsRtn = '';
 
-	// Capture commit message
-	var commitMsg = process.env.TRAVIS_COMMIT_MESSAGE;
-	if (!commitMsg) {
-		commitMsg = runCmd("git show -s --format=%B "
-				+ process.env.TRAVIS_COMMIT + " | tr -d '\\n'");
+		// Capture commit message
+		var commitMsg = process.env.TRAVIS_COMMIT_MESSAGE;
 		if (!commitMsg) {
-			grunt.log.error('Error capturing commit message for '
-					+ process.env.TRAVIS_COMMIT);
+			// TODO : the following can be removed once
+			// https://github.com/travis-ci/travis-ci/issues/965 is resolved
+			commitMsg = runCmd("git show -s --format=%B "
+					+ process.env.TRAVIS_COMMIT + " | tr -d '\\n'");
+			if (!commitMsg) {
+				grunt.log.error('Error capturing commit message for '
+						+ process.env.TRAVIS_COMMIT);
+				return;
+			}
+		}
+		grunt.log.writeln('Commit message: ' + commitMsg);
+		releaseVer = extractCommitMsgVer(commitMsg, true);
+		if (!releaseVer) {
 			return;
 		}
+
+		// TODO : the following can be removed once
+		// https://github.com/travis-ci/travis-ci/issues/2002 is resolved
+		runCmd('git submodule add https://github.com/apenwarr/git-subtree.git subtree');
+
+		// TODO : verify commit message release version is less than
+		// current version using "git describe --abbrev=0 --tags"
+		grunt.log.writeln('Preparing release: ' + releaseVer);
+
+		// Set identity
+		runCmd('git config --global user.email "travis@travis-ci.org"');
+		runCmd('git config --global user.name "Travis"');
+
+		// Generate change log for release using all messages since last
+		// tag/release
+		chgLogRtn = runCmd(
+				'git log `git describe --tags --abbrev=0`..HEAD --pretty=format:"  * %s"',
+				options.destDir + '/' + options.chgLog, false, true);
+
+		// Generate list of authors/contributors since last tag/release
+		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u',
+				options.destDir + '/' + options.authors, true);
+
+		// Commit local release destination changes
+		runCmd('git add --all ' + options.destDir + ' && git commit -m "'
+				+ commitMsg + '"');
+
+		// Push release changes
+		runCmd('git subtree push --prefix ' + options.destDir + ' origin '
+				+ options.destBranch);
+
+		// Tag release
+		runCmd('git tag -a ' + releaseVer + ' -m "' + chgLogRtn + '"');
+		grunt.log.writeln('Released: ' + releaseVer + ' from subtree '
+				+ options.destDir + ' under ' + options.destBranch);
 	}
-	grunt.log.writeln('Commit message: ' + commitMsg);
-	releaseVer = extractCommitMsgVer(commitMsg, true);
-	if (!releaseVer) {
-		return;
-	}
-	// TODO : verify commit message release version is less than
-	// current version using "git describe --abbrev=0 --tags"
-	grunt.log.writeln('Preparing release: ' + releaseVer);
-
-	// Set identity
-	runCmd('git config --global user.email "travis@travis-ci.org"');
-	runCmd('git config --global user.name "Travis"');
-
-	// Generate change log for release using all messages since last
-	// tag/release
-	chgLogRtn = runCmd(
-			'git log `git describe --tags --abbrev=0`..HEAD --pretty=format:"  * %s"',
-			chgLog, false, true);
-
-	// Generate list of authors/contributors since last tag/release
-	authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u',
-			authors, true);
-
-	// Commit local release destination changes
-	runCmd('git add --all ' + destDir + ' && git commit -m "' + commitMsg + '"');
-
-	// Push release changes
-	runCmd('git subtree push --prefix ' + destDir + ' origin ' + destBranch);
-
-	// Tag release
-	runCmd('git tag -a ' + releaseVer + ' -m "' + chgLogRtn + '"');
-	grunt.log.writeln('Released: ' + releaseVer + ' from subtree ' + destDir
-			+ ' under ' + destBranch);
 
 	/**
 	 * Executes a shell command
@@ -120,7 +145,7 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 			}
 		}
 		if (output && wpath) {
-			grunt.file.write(destDir + '/' + wpath, output);
+			grunt.file.write(wpath, output);
 		}
 		return output;
 	}

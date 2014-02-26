@@ -1,3 +1,0 @@
-[submodule "subtree"]
-      path = subtree
-      url = git://github.com/apenwarr/git-subtree.git
