@@ -103,8 +103,8 @@ module.exports = function(grunt, src, destBranch, destDir, chgLog, authors) {
 		var output = rtn.output;
 		if (output && nodups) {
 			// remove duplicate lines
-			var rs = output.split(/\r?\n/g);
-			if (rs.length > 1) {
+			var rs = output.match(/[^\r\n]+/g);
+			if (rs && rs.length > 1) {
 				output = '';
 				var ll = '';
 				for (var i = 0; i < rs.length; i++) {
