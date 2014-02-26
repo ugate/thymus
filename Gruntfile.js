@@ -177,15 +177,13 @@ module.exports = function(grunt) {
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
 		//buildTasks.push('saucelabs-qunit');
 	}
-	//buildTasks.push('release');
+	buildTasks.push('release');
 	grunt.registerTask('test', buildTasks);
 
-	// Default tasks
-	//grunt.registerTask('default', buildTasks);
+	// Distribution tasks
+	var distSubtasks = [ 'uglify:js', 'uglyfy:docs', 'release' ];
+	grunt.registerTask('dist', distSubtasks);
 
-	// Version numbering task.
-	// grunt change-version-number --oldver=A.B.C --newver=X.Y.Z
-	// This can be overzealous, so its changes should always be manually
-	// reviewed!
-	// grunt.registerTask('change-version-number', 'sed');
+	// Default tasks
+	grunt.registerTask('default', [ 'test', 'dist' ]);
 };
