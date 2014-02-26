@@ -181,7 +181,7 @@ module.exports = function(grunt) {
 	grunt.registerTask('test', buildTasks);
 
 	// Default tasks
-	grunt.registerTask('default', buildTasks);
+	//grunt.registerTask('default', buildTasks);
 
 	// Version numbering task.
 	// grunt change-version-number --oldver=A.B.C --newver=X.Y.Z
