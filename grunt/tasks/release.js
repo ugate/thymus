@@ -1,6 +1,9 @@
 'use strict';
 
 var shell = require('shelljs');
+var envl = require('./environment');
+var regexVer = /%VERSION%/gmi;
+var regexDupLines = /^(.*)(\r?\n\1)+$/gm;
 
 /**
  * When a commit message contains "release v" followed by a version number
@@ -11,13 +14,13 @@ var shell = require('shelljs');
  */
 module.exports = function(grunt) {
 
-	var commitNum = '';
-	var commitMsg = '';
+	var commit = null;
 
 	grunt.registerTask('release',
 			'Release bundle using commit message (if present)', function() {
 				var options = this.options({
 					src : process.cwd(),
+					commitMessage : '',
 					destBranch : 'gh-pages',
 					destDir : 'dist',
 					chgLog : 'HISTORY.md',
@@ -33,38 +36,19 @@ module.exports = function(grunt) {
 	 *            the grunt options
 	 */
 	function release(options) {
-		var releaseVer = '';
 		var chgLogRtn = '';
 		var authorsRtn = '';
 
 		// Capture commit message
-		commitNum = process.env.TRAVIS_COMMIT;
-		commitMsg = process.env.TRAVIS_COMMIT_MESSAGE;
-		if (!commitMsg) {
-			// TODO : the following can be removed once
-			// https://github.com/travis-ci/travis-ci/issues/965 is resolved
-			commitMsg = runCmd("git show -s --format=%B " + commitNum
-					+ " | tr -d '\\n'");
-			if (!commitMsg) {
-				grunt.log.error('Error capturing commit message for '
-						+ commitNum);
-				return;
-			}
-		}
-		grunt.log.writeln('Commit message: ' + commitMsg);
-		releaseVer = extractCommitMsgVer(commitMsg, true);
-		if (!releaseVer) {
+		commit = envl.getCommitNumber(grunt, options.commitMessage);
+		grunt.log.writeln('Commit message: ' + commit.message);
+		if (!commit.version) {
 			return;
 		}
 
-		// TODO : the following can be removed once
-		// https://github.com/travis-ci/travis-ci/issues/2002 is resolved
-		grunt.log
-				.writeln(runCmd('git submodule add https://github.com/apenwarr/git-subtree.git subtree'));
-
 		// TODO : verify commit message release version is less than
 		// current version using "git describe --abbrev=0 --tags"
-		grunt.log.writeln('Preparing release: ' + releaseVer);
+		grunt.log.writeln('Preparing release: ' + commit.version);
 
 		// Set identity
 		runCmd('git config --global user.email "travis@travis-ci.org"');
@@ -73,7 +57,7 @@ module.exports = function(grunt) {
 		// Generate change log for release using all messages since last
 		// tag/release
 		chgLogRtn = runCmd(
-				'git log `git describe --tags --abbrev=0`..HEAD --pretty=format:"  * %s"',
+				'git --no-pager log `git describe --tags --abbrev=0`..HEAD --pretty=format:"  * %s"',
 				options.destDir + '/' + options.chgLog, false, true, true);
 
 		// Generate list of authors/contributors since last tag/release
@@ -82,16 +66,30 @@ module.exports = function(grunt) {
 
 		// Commit local release destination changes
 		runCmd('git add --all ' + options.destDir + ' && git commit -m "'
-				+ commitMsg + '"');
+				+ commit.message + '\n' + envl.skipRef('ci') + '" -- '
+				+ options.destDir);
 
-		// Push release changes
-		runCmd('git subtree push --prefix ' + options.destDir + ' origin '
-				+ options.destBranch);
+		// Checkout destination branch
+		runCmd('git checkout ' + options.destBranch);
+		runCmd({
+			shell : 'rm',
+			args : [ '-rf', '*' ]
+		});
+		runCmd('git checkout master -- ' + options.destDir);
+		runCmd('git add ' + options.destDir);
+		runCmd('git commit -m "' + commitMsg + '"');
+		runCmd('git push ' + options.destBranch);
+
+		// Cleanup master
+		// runCmd('git checkout master');
+		// runCmd('git rm -r ' + options.destDir);
+		// runCmd('git commit -m "Removing release directory"');
+		runCmd('git push master');
 
 		// Tag release
-		runCmd('git tag -a ' + releaseVer + ' -m "' + chgLogRtn + '"');
-		grunt.log.writeln('Released: ' + releaseVer + ' from subtree '
-				+ options.destDir + ' under ' + options.destBranch);
+		runCmd('git tag -a ' + commit.version + ' -m "' + chgLogRtn + '"');
+		grunt.log.writeln('Released: ' + commit.version + ' from '
+				+ options.destDir + ' to ' + options.destBranch);
 	}
 
 	/**
@@ -111,9 +109,14 @@ module.exports = function(grunt) {
 	 */
 	function runCmd(cmd, wpath, nofail, shortlog, nodups) {
 		grunt.log.writeln('>> ' + cmd);
-		var rtn = shell.exec(cmd, {
-			silent : true
-		});
+		var rtn = null;
+		if (typeof cmd === 'string') {
+			rtn = shell.exec(cmd, {
+				silent : true
+			});
+		} else {
+			rtn = shell[cmd.shell].apply(shell, cmd.args);
+		}
 		if (rtn.code !== 0) {
 			var e = 'Error "' + rtn.code + '" for commit number ' + commitNum
 					+ ' ' + rtn.output;
@@ -121,12 +124,12 @@ module.exports = function(grunt) {
 				grunt.log.error(e);
 				return;
 			}
-			throw new Error(e);
+			throw grunt.util.error(e);
 		}
 		var output = rtn.output;
 		if (output && nodups) {
 			// remove duplicate lines
-			output = output.replace(/^(.*)(\r?\n\1)+$/gm, '$1');
+			output = output.replace(regexDupLines, '$1');
 		}
 		grunt.log.writeln('<< '
 				+ (shortlog === true ? output.length + ' characters' : output));
@@ -134,23 +137,5 @@ module.exports = function(grunt) {
 			grunt.file.write(wpath, output);
 		}
 		return output;
-	}
-
-	/**
-	 * Extracts a release version from a commit message
-	 * 
-	 * @param commitMsg
-	 *            the commit message to extract the release version from
-	 */
-	function extractCommitMsgVer(commitMsg) {
-		var v = '';
-		if (commitMsg) {
-			var rv = commitMsg
-					.match(/released?\s*v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/im);
-			if (rv.length > 1) {
-				v = rv[1];
-			}
-		}
-		return v;
 	}
 };

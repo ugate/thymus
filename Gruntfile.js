@@ -2,6 +2,7 @@
 
 var browsers = require('./grunt/browsers');
 var fabricator = require('./grunt/fabricator');
+var envl = require('./grunt/environment');
 fabricator.basePath = '.';
 
 module.exports = function(grunt) {
@@ -129,6 +130,8 @@ module.exports = function(grunt) {
 				}
 			});
 
+	var commit = envl.getCommit(grunt);
+
 	// Load tasks from package
 	for ( var key in grunt.file.readJSON('package.json').devDependencies) {
 		if (key !== 'grunt' && key.indexOf('grunt') === 0) {
@@ -168,16 +171,22 @@ module.exports = function(grunt) {
 
 	// Test tasks
 	// TODO : move includes/copy
-	var buildTasks = [ 'clean', 'includes', 'copy:dist', 'uglify:js',
-			'uglify:docs', 'connect', 'qunit' ];
+	var buildTasks = new envl.Tasks(commit.skips);
+	buildTasks.add('clean');
+	buildTasks.add('includes');
+	buildTasks.add('copy:dist');
+	buildTasks.add('uglify:js');
+	buildTasks.add('uglify:docs');
+	buildTasks.add('connect');
+	buildTasks.add('qunit');
 	// Only run Sauce Labs tests if there's a Sauce access key
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
 	// Skip Sauce if running a different subset of the test suite
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
-		// buildTasks.push('saucelabs-qunit');
+		buildTasks.add('saucelabs-qunit');
 	}
-	buildTasks.push('release');
-	grunt.registerTask('test', buildTasks);
+	buildTasks.add('release');
+	grunt.registerTask('test', buildTasks.tasks);
 
 	// Default tasks
 	grunt.registerTask('default', [ 'test' ]);
