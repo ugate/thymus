@@ -8,6 +8,12 @@ before_script:
 addons:
   hosts:
   - thymus-test-host
+deploy:
+  provider: npm
+  on:
+    tags: true
+  api_key:
+    secure: NaoCIkXypjDZZgfYZk1KGzDe/Jh5uAneNA6YykIN9Gky+MirT5hYrnHaywJdzzVfbfp0a1DQ1H5m2M0ZOQL9OhUn0wSC6+XuBMV1BDxPIEmEAqbbMQjwmHa0Vhdlm/rYhCX+3hUhcTrCMDpuO5LymN4r9QnnNYqpb6oP4xMAXbM=
 env:
   global:
   - secure: t2pkeRYFk0P7tjoL4VMxwT1ACrELdU4w5laXMtg6wMWH7HMEQakdlbQGIGUC1vSVGN+WNBoN6JC4pj4pgIIO4wW8Px84wxdtxDJAymnlTn49zxijHvF63euY4agwwGKIly+/Rt0rsjWb+yOb00AJXuWRjypMLc5RIIC2b41HUgc=

@@ -74,7 +74,7 @@ module.exports = function(grunt) {
 		// tag/release
 		chgLogRtn = runCmd(
 				'git log `git describe --tags --abbrev=0`..HEAD --pretty=format:"  * %s"',
-				options.destDir + '/' + options.chgLog, false, true);
+				options.destDir + '/' + options.chgLog, false, true, true);
 
 		// Generate list of authors/contributors since last tag/release
 		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u',
@@ -104,11 +104,13 @@ module.exports = function(grunt) {
 	 * @param nofail
 	 *            true to prevent throwing an error when the command fails to
 	 *            execute
+	 * @param shortlog
+	 *            true to log only the length of the output
 	 * @param nodups
 	 *            true to remove duplicate entry lines from results
 	 */
-	function runCmd(cmd, wpath, nofail, nodups) {
-		grunt.log.writeln(cmd);
+	function runCmd(cmd, wpath, nofail, shortlog, nodups) {
+		grunt.log.writeln('>> ' + cmd);
 		var rtn = shell.exec(cmd, {
 			silent : true
 		});
@@ -124,21 +126,10 @@ module.exports = function(grunt) {
 		var output = rtn.output;
 		if (output && nodups) {
 			// remove duplicate lines
-			var rs = output.match(/[^\r\n]+/g);
-			if (rs && rs.length > 1) {
-				var no = '';
-				var ll = '';
-				for (var i = 0; i < rs.length; i++) {
-					if (rs[i] != ll) {
-						no += (rs[i] + '\n');
-					}
-					ll = rs[i];
-				}
-				if (no) {
-					output = no;
-				}
-			}
+			output = output.replace(/^(.*)(\r?\n\1)+$/gm, '$1');
 		}
+		grunt.log.writeln('<< '
+				+ (shortlog === true ? output.length + ' characters' : output));
 		if (output && wpath) {
 			grunt.file.write(wpath, output);
 		}
