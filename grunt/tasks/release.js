@@ -11,6 +11,9 @@ var shell = require('shelljs');
  */
 module.exports = function(grunt) {
 
+	var commitNum = '';
+	var commitMsg = '';
+
 	grunt.registerTask('release',
 			'Release bundle using commit message (if present)', function() {
 				var options = this.options({
@@ -35,15 +38,16 @@ module.exports = function(grunt) {
 		var authorsRtn = '';
 
 		// Capture commit message
-		var commitMsg = process.env.TRAVIS_COMMIT_MESSAGE;
+		commitNum = process.env.TRAVIS_COMMIT;
+		commitMsg = process.env.TRAVIS_COMMIT_MESSAGE;
 		if (!commitMsg) {
 			// TODO : the following can be removed once
 			// https://github.com/travis-ci/travis-ci/issues/965 is resolved
-			commitMsg = runCmd("git show -s --format=%B "
-					+ process.env.TRAVIS_COMMIT + " | tr -d '\\n'");
+			commitMsg = runCmd("git show -s --format=%B " + commitNum
+					+ " | tr -d '\\n'");
 			if (!commitMsg) {
 				grunt.log.error('Error capturing commit message for '
-						+ process.env.TRAVIS_COMMIT);
+						+ commitNum);
 				return;
 			}
 		}
@@ -109,8 +113,8 @@ module.exports = function(grunt) {
 			silent : true
 		});
 		if (rtn.code !== 0) {
-			var e = 'Error "' + rtn.code + '" for commit number '
-					+ process.env.TRAVIS_COMMIT + ' ' + rtn.output;
+			var e = 'Error "' + rtn.code + '" for commit number ' + commitNum
+					+ ' ' + rtn.output;
 			if (nofail) {
 				grunt.log.error(e);
 				return;

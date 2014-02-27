@@ -13,7 +13,7 @@ var fabricator = {
 	mainScriptPath : 'js/lib/thx.js',
 	distPath : 'dist/',
 	distScriptPath : 'dist/js/',
-	distDocsScriptPath : 'dist/docs/js/',
+	distDocsScriptPath : 'dist/frags/docs/js/',
 	devScriptPath : 'js/lib/',
 	devDocsScriptPath : 'frags/docs/js/',
 	devDocsCssPath : 'frags/docs/css/',

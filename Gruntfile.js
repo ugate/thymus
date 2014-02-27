@@ -1,16 +1,10 @@
-/*!
- * thymus.js Gruntfile
- * http://thymusjs.org
- * Copyright 2013-present Akira LLC
- * Licensed under MIT (https://github.com/ugate/thymus/blob/master/LICENSE)
- */
-var exec = require('child_process').exec;
+'use strict';
+
 var browsers = require('./grunt/browsers');
 var fabricator = require('./grunt/fabricator');
 fabricator.basePath = '.';
 
 module.exports = function(grunt) {
-	'use strict';
 
 	// Force use of Unix newlines
 	grunt.util.linefeed = '\n';
@@ -31,6 +25,10 @@ module.exports = function(grunt) {
 
 				// Task configuration
 
+				clean : {
+					dist : [ fabricator.distPath ]
+				},
+
 				uglify : {
 					options : {
 						report : 'min'
@@ -44,6 +42,7 @@ module.exports = function(grunt) {
 					},
 					docs : {
 						options : {
+							banner : '<%= banner %>',
 							preserveComments : 'some'
 						},
 						src : [ fabricator.devDocsScriptPath + 'app.js',
@@ -169,21 +168,17 @@ module.exports = function(grunt) {
 
 	// Test tasks
 	// TODO : move includes/copy
-	var buildTasks = [ /* 'clean', */, 'includes', 'copy:dist', 'uglify:js',
+	var buildTasks = [ 'clean', 'includes', 'copy:dist', 'uglify:js',
 			'uglify:docs', 'connect', 'qunit' ];
 	// Only run Sauce Labs tests if there's a Sauce access key
 	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
 	// Skip Sauce if running a different subset of the test suite
 	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
-		//buildTasks.push('saucelabs-qunit');
+		// buildTasks.push('saucelabs-qunit');
 	}
-	//buildTasks.push('release');
+	buildTasks.push('release');
 	grunt.registerTask('test', buildTasks);
 
-	// Distribution tasks
-//	var distSubtasks = [ 'uglify:js', 'uglyfy:docs', 'release' ];
-//	grunt.registerTask('dist', distSubtasks);
-//
-//	// Default tasks
-//	grunt.registerTask('default', [ 'test', 'dist' ]);
+	// Default tasks
+	grunt.registerTask('default', [ 'test' ]);
 };
