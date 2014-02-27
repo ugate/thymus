@@ -137,7 +137,7 @@ module.exports = function(grunt) {
 		}
 	}
 	// load project tasks
-	//grunt.loadTasks('grunt/tasks');
+	grunt.loadTasks('grunt/tasks');
 
 	// suppress "key" options in verbose mode
 	var writeflags = grunt.log.writeflags;
