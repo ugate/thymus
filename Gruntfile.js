@@ -169,8 +169,7 @@ module.exports = function(grunt) {
 						+ ' inclusions');
 			});
 
-	// Test tasks
-	// TODO : move includes/copy
+	// Build tasks
 	var buildTasks = new envl.Tasks(grunt, commit.skips);
 	buildTasks.add('clean');
 	buildTasks.add('includes');
