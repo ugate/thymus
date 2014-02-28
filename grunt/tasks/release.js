@@ -72,12 +72,12 @@ module.exports = function(grunt) {
 		runCmd('git commit -m "' + relMsg + '" -- ' + options.destDir);
 
 		// Checkout destination branch
-		runCmd('git checkout ' + options.destBranch);
+		runCmd('git checkout -b ' + options.destBranch);
 		runCmd({
 			shell : 'rm',
 			args : [ '-rf', '*' ]
 		});
-		runCmd('git checkout master -- ' + options.destDir);
+		runCmd('git checkout -b master -- ' + options.destDir);
 		runCmd('git add --force ' + options.destDir);
 		runCmd('git commit -m "' + relMsg + '"');
 		runCmd('git push ' + options.destBranch);
@@ -86,7 +86,7 @@ module.exports = function(grunt) {
 		// runCmd('git checkout master');
 		// runCmd('git rm -r ' + options.destDir);
 		// runCmd('git commit -m "Removing release directory"');
-		runCmd('git push master');
+		runCmd('git push -b master');
 
 		// Tag release
 		runCmd('git tag -a ' + commit.version + ' -m "' + chgLogRtn + '"');
