@@ -57,7 +57,7 @@ module.exports = {
 				skps = s;
 			}
 		}
-		grunt.log.writeln('Skipping "' + skips.join(',') + '" tasks');
+		grunt.log.writeln('Skipping "' + skps.join(',') + '" tasks');
 		return {
 			number : cn,
 			message : cm,
