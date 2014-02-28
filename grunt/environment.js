@@ -52,10 +52,9 @@ module.exports = {
 			if (rv.length > 1) {
 				v = rv[1];
 			}
-			var s = cm.match(regexSkips);
-			if (s) {
-				skps = s;
-			}
+			cm.replace(regexSkips, function(m, t, c, s) {
+				skps.push(t);
+			});
 		}
 		grunt.log.writeln('Skipping "' + skps.join(',') + '" tasks');
 		return {
@@ -90,7 +89,9 @@ module.exports = {
 		 *          skipped
 		 */
 		this.add = function(task) {
-			if (skips && skips.indexOf(task) >= 0) {
+			var noSauce = task == 'saucelabs-qunit'
+					&& (typeof process.env.SAUCE_ACCESS_KEY === 'undefined' || (process.env.THX_TEST && process.env.THX_TEST != task));
+			if (noSauce || (skips && skips.indexOf(task) >= 0)) {
 				grunt.log.writeln('Skipping "' + task + '" task');
 				return false;
 			}

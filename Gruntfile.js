@@ -179,12 +179,7 @@ module.exports = function(grunt) {
 	buildTasks.add('uglify:docs');
 	buildTasks.add('connect');
 	buildTasks.add('qunit');
-	// Only run Sauce Labs tests if there's a Sauce access key
-	if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined' &&
-	// Skip Sauce if running a different subset of the test suite
-	(!process.env.THX_TEST || process.env.THX_TEST === 'sauce-js-unit')) {
-		buildTasks.add('saucelabs-qunit');
-	}
+	buildTasks.add('saucelabs-qunit');
 	buildTasks.add('release');
 	grunt.registerTask('test', buildTasks.tasks);
 
