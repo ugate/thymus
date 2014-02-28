@@ -1,7 +1,7 @@
 'use strict';
 
 var shell = require('shelljs');
-var envl = require('../environment');
+var util = require('../util');
 var regexVer = /%VERSION%/gmi;
 var regexDupLines = /^(.*)(\r?\n\1)+$/gm;
 
@@ -40,7 +40,7 @@ module.exports = function(grunt) {
 		var authorsRtn = '';
 
 		// Capture commit message
-		commit = envl.getCommit(grunt, options.commitMessage);
+		commit = util.getCommit(grunt, options.commitMessage);
 		grunt.log.writeln('Commit message: ' + commit.message);
 		if (!commit.version) {
 			return;
@@ -49,7 +49,7 @@ module.exports = function(grunt) {
 		// TODO : verify commit message release version is less than
 		// current version using "git describe --abbrev=0 --tags"
 		grunt.log.writeln('Preparing release: ' + commit.version);
-		var relMsg = commit.message + ' ' + envl.skipRef('ci');
+		var relMsg = commit.message + ' ' + util.skipRef('ci');
 
 		// Set identity
 		runCmd('git config --global user.email "travis@travis-ci.org"');
@@ -67,31 +67,35 @@ module.exports = function(grunt) {
 		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u > '
 				+ authorsPath, null, true, false, authorsPath);
 
-		// Commit local release destination changes
-		runCmd('git add --force ' + options.destDir);
-		runCmd('git commit -m "' + relMsg + '" -- ' + options.destDir);
-
-		// Checkout destination branch
-		runCmd('git checkout -b ' + options.destBranch);
-		runCmd({
-			shell : 'rm',
-			args : [ '-rf', '*' ]
-		});
-		runCmd('git checkout -b master -- ' + options.destDir);
-		runCmd('git add --force ' + options.destDir);
-		runCmd('git commit -m "' + relMsg + '"');
-		runCmd('git push ' + options.destBranch);
-
 		// Cleanup master
 		// runCmd('git checkout master');
 		// runCmd('git rm -r ' + options.destDir);
 		// runCmd('git commit -m "Removing release directory"');
-		runCmd('git push -b master');
+		runCmd('git add --force ' + options.destDir);
+		runCmd('git commit -m "' + relMsg + '"');
+		runCmd('git push origin master');
 
 		// Tag release
 		runCmd('git tag -a ' + commit.version + ' -m "' + chgLogRtn + '"');
 		grunt.log.writeln('Released: ' + commit.version + ' from '
 				+ options.destDir + ' to ' + options.destBranch);
+
+		// Publish site
+		grunt.config.set('gh-pages.options.message', relMsg);
+		grunt.task.run([ 'gh-pages' ]);
+		// runCmd('git add --force ' + options.destDir);
+		// runCmd('git commit -m "' + relMsg + '" -- ' + options.destDir);
+		//
+		// // Checkout destination branch
+		// runCmd('git checkout ' + options.destBranch);
+		// runCmd({
+		// shell : 'rm',
+		// args : [ '-rf', '*' ]
+		// });
+		// runCmd('git checkout -b master -- ' + options.destDir);
+		// runCmd('git add --force ' + options.destDir);
+		// runCmd('git commit -m "' + relMsg + '"');
+		// runCmd('git push ' + options.destBranch);
 	}
 
 	/**

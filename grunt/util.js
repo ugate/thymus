@@ -71,10 +71,11 @@ module.exports = {
 	 * 
 	 * @param grunt
 	 *            the grunt instance
-	 * @param skips
-	 *            the array of tasks to skip
+	 * @param commit
+	 *            the object returned from {getCommit} that contains the array
+	 *            of tasks to skip
 	 */
-	Tasks : function(grunt, skips) {
+	Tasks : function(grunt, commit) {
 
 		/**
 		 * Tasks array (should call tasks.add to push)
@@ -92,7 +93,7 @@ module.exports = {
 		this.add = function(task) {
 			var noSauce = task == 'saucelabs-qunit'
 					&& (typeof process.env.SAUCE_ACCESS_KEY === 'undefined' || (process.env.THX_TEST && process.env.THX_TEST != task));
-			if (noSauce || (skips && skips.indexOf(task) >= 0)) {
+			if (noSauce || (commit.skips && commit.skips.indexOf(task) >= 0)) {
 				grunt.log.writeln('Skipping "' + task + '" task');
 				return false;
 			}

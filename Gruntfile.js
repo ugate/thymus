@@ -2,7 +2,7 @@
 
 var browsers = require('./grunt/browsers');
 var fabricator = require('./grunt/fabricator');
-var envl = require('./grunt/environment');
+var util = require('./grunt/util');
 fabricator.basePath = '.';
 
 module.exports = function(grunt) {
@@ -127,10 +127,17 @@ module.exports = function(grunt) {
 							browsers : browsers
 						}
 					}
+				},
+
+				'gh-pages' : {
+					options : {
+						base : fabricator.distPath
+					},
+					src : [ '**' ]
 				}
 			});
 
-	var commit = envl.getCommit(grunt);
+	var commit = util.getCommit(grunt);
 
 	// Load tasks from package
 	for ( var key in grunt.file.readJSON('package.json').devDependencies) {
@@ -170,7 +177,7 @@ module.exports = function(grunt) {
 			});
 
 	// Build tasks
-	var buildTasks = new envl.Tasks(grunt, commit.skips);
+	var buildTasks = new util.Tasks(grunt, commit);
 	buildTasks.add('clean');
 	buildTasks.add('includes');
 	buildTasks.add('copy:dist');
