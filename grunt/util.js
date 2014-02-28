@@ -61,11 +61,14 @@ module.exports = {
 			});
 		}
 		grunt.log.writeln('Skipping "' + skps.join(',') + '" tasks');
+		var sls = sl ? sl.split('/') : [];
 		return {
 			number : cn,
 			message : cm,
 			version : v,
 			slug : sl,
+			username : sls.length ? sls[0] : '',
+			reponame : sls.length > 1 ? sls[1] : '',
 			skips : skps
 		};
 	},

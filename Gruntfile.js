@@ -127,13 +127,6 @@ module.exports = function(grunt) {
 							browsers : browsers
 						}
 					}
-				},
-
-				'gh-pages' : {
-					options : {
-						base : fabricator.distPath
-					},
-					src : [ '**' ]
 				}
 			});
 

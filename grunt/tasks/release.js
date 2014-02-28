@@ -51,9 +51,12 @@ module.exports = function(grunt) {
 		grunt.log.writeln('Preparing release: ' + commit.version);
 		var relMsg = commit.message + ' ' + util.skipRef('ci');
 
-		// Set identity
+		// Setup
+		var link = '${GH_TOKEN}@github.com/' + commit.slug + '.git';
 		runCmd('git config --global user.email "travis@travis-ci.org"');
-		runCmd('git config --global user.name "Travis"');
+		runCmd('git config --global user.name "travis"');
+		runCmd('git remote rm origin');
+		runCmd('git remote add origin https://' + commit.username + ':' + link);
 
 		// Generate change log for release using all messages since last
 		// tag/release
@@ -73,19 +76,26 @@ module.exports = function(grunt) {
 		// runCmd('git commit -m "Removing release directory"');
 		runCmd('git add --force ' + options.destDir);
 		runCmd('git commit -m "' + relMsg + '"');
-		/*runCmd('git push origin master');
+		runCmd('git push -fq origin master');
 
 		// Tag release
 		runCmd('git tag -a ' + commit.version + ' -m "' + chgLogRtn + '"');
-		grunt.log.writeln('Released: ' + commit.version + ' from '
-				+ options.destDir + ' to ' + options.destBranch);
-*/
+		grunt.log.writeln('Released: ' + commit.version + ' in '
+				+ options.destDir);
+
 		// Publish site
-		if (commit.skips.indexOf('gh-pages') >= 0) {
-			return;
-		}
-		grunt.config.set('gh-pages.options.message', relMsg);
-		grunt.task.run([ 'gh-pages' ]);
+		runCmd('git clone --quiet --branch=' + options.destBranch + ' https://'
+				+ link + ' ' + options.destBranch + ' > /dev/null');
+		runCmd('cd ' + options.destBranch);
+		runCmd('git ls-files | xargs rm'); // remove all tracked files
+		runCmd('git commit -m "' + relMsg + '"');
+		runCmd('git push -fq origin ' + options.destBranch + ' > /dev/null');
+		
+		runCmd('git checkout master -- ' + options.destDir);
+		runCmd('git add --force ' + options.destDir);
+		runCmd('git commit -m "' + relMsg + '"');
+		runCmd('git push -fq origin ' + options.destBranch + ' > /dev/null');
+
 		// runCmd('git add --force ' + options.destDir);
 		// runCmd('git commit -m "' + relMsg + '" -- ' + options.destDir);
 		//
