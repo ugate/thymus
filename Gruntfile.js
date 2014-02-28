@@ -171,7 +171,7 @@ module.exports = function(grunt) {
 
 	// Test tasks
 	// TODO : move includes/copy
-	var buildTasks = new envl.Tasks(commit.skips);
+	var buildTasks = new envl.Tasks(grunt, commit.skips);
 	buildTasks.add('clean');
 	buildTasks.add('includes');
 	buildTasks.add('copy:dist');
