@@ -2,8 +2,6 @@
 
 var regexRelease = /released?\s*v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/mi;
 var regexSkips = /\[\s?skip\s+(.+)\]/gmi;
-var regexCommaSpaces = /\s*,+\s*/gm;
-var regexComma = /,/gm;
 
 /**
  * Environmental utility
@@ -56,9 +54,7 @@ module.exports = {
 			}
 			// extract skip tasks in format: [skip someTask]
 			cm.replace(regexSkips, function(m, t, c, s) {
-				// multiple tasks in same skip: [skip someTask1, someTask2]
-				var ts = t.replace(regexCommaSpaces, ',').split(regexComma);
-				skps.concat(ts);
+				skps.push(t);
 			});
 		}
 		grunt.log.writeln('Skipping "' + skps.join(',') + '" tasks');
