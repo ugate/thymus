@@ -68,8 +68,8 @@ module.exports = function(grunt) {
 				+ authorsPath, null, true, false, authorsPath);
 
 		// Commit local release destination changes
-		runCmd('git add --all ' + options.destDir + ' && git commit -m "'
-				+ relMsg + '" -- ' + options.destDir);
+		runCmd('git add ' + options.destDir);
+		runCmd('git commit -m "' + relMsg + '" -- ' + options.destDir);
 
 		// Checkout destination branch
 		runCmd('git checkout ' + options.destBranch);
