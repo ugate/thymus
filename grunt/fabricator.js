@@ -130,4 +130,4 @@ var fabricator = {
 if (typeof module !== 'undefined' && module.exports) {
 	module.exports = fabricator;
 }
-//# sourceURL=fabricator.js
+// # sourceURL=fabricator.js

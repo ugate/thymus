@@ -75,8 +75,8 @@ module.exports = function(grunt) {
 		// runCmd('git rm -r ' + options.destDir);
 		// runCmd('git commit -m "Removing release directory"');
 		runCmd('git add --force ' + options.destDir);
-		runCmd('git commit -m "' + relMsg + '"');
-		runCmd('git push -fq origin master');
+		runCmd('git commit --force -m "' + relMsg + '"');
+		runCmd('git push --force origin master');
 
 		// Tag release
 		runCmd('git tag -a ' + commit.version + ' -m "' + chgLogRtn + '"');
@@ -89,26 +89,12 @@ module.exports = function(grunt) {
 		runCmd('cd ' + options.destBranch);
 		runCmd('git ls-files | xargs rm'); // remove all tracked files
 		runCmd('git commit -m "' + relMsg + '"');
-		runCmd('git push -fq origin ' + options.destBranch + ' > /dev/null');
-		
-		runCmd('git checkout master -- ' + options.destDir);
-		runCmd('git add --force ' + options.destDir);
-		runCmd('git commit -m "' + relMsg + '"');
-		runCmd('git push -fq origin ' + options.destBranch + ' > /dev/null');
 
-		// runCmd('git add --force ' + options.destDir);
-		// runCmd('git commit -m "' + relMsg + '" -- ' + options.destDir);
-		//
-		// // Checkout destination branch
-		// runCmd('git checkout ' + options.destBranch);
-		// runCmd({
-		// shell : 'rm',
-		// args : [ '-rf', '*' ]
-		// });
-		// runCmd('git checkout -b master -- ' + options.destDir);
-		// runCmd('git add --force ' + options.destDir);
-		// runCmd('git commit -m "' + relMsg + '"');
-		// runCmd('git push ' + options.destBranch);
+		runCmd('cp -a ../' + commit.reponame + '/' + options.destBranch + '/* .');
+		//runCmd('git checkout master -- ' + options.destDir);
+		runCmd('git add -A');
+		runCmd('git commit -m "' + relMsg + '"');
+		runCmd('git push -f origin ' + options.destBranch + ' > /dev/null');
 	}
 
 	/**
@@ -128,7 +114,7 @@ module.exports = function(grunt) {
 	 *            lines removed and re-written
 	 */
 	function runCmd(cmd, wpath, nofail, shortlog, dupsPath) {
-		grunt.log.writeln('>> ' + cmd);
+		grunt.log.writeln(cmd);
 		var rtn = null;
 		if (typeof cmd === 'string') {
 			rtn = shell.exec(cmd, {
@@ -152,9 +138,6 @@ module.exports = function(grunt) {
 			output = grunt.file.read(dupsPath).replace(regexDupLines, '$1');
 			grunt.file.write(dupsPath, output);
 		}
-		grunt.log.writeln('<< '
-				+ (shortlog === true || !output.length ? output.length
-						+ ' characters' : output));
 		if (output && wpath) {
 			grunt.file.write(wpath, output);
 		}
