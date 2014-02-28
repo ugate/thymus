@@ -84,14 +84,16 @@ module.exports = function(grunt) {
 				+ options.destDir);
 
 		// Publish site
+		runCmd('cd ..');
 		runCmd('git clone --quiet --branch=' + options.destBranch + ' https://'
 				+ link + ' ' + options.destBranch + ' > /dev/null');
 		runCmd('cd ' + options.destBranch);
 		runCmd('git ls-files | xargs rm'); // remove all tracked files
 		runCmd('git commit -m "' + relMsg + '"');
 
-		runCmd('cp -a ../' + commit.reponame + '/' + options.destBranch + '/* .');
-		//runCmd('git checkout master -- ' + options.destDir);
+		runCmd('cp -a ../' + commit.reponame + '/' + options.destBranch
+				+ '/* .');
+		// runCmd('git checkout master -- ' + options.destDir);
 		runCmd('git add -A');
 		runCmd('git commit -m "' + relMsg + '"');
 		runCmd('git push -f origin ' + options.destBranch + ' > /dev/null');
