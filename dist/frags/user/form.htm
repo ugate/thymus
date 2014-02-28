@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!-- All relative href/src URLs should be relative to the application's context defined on the Thymus script  -->
+<body>
+<!-- 	<div data-thx-get="load" data-thx-get-path="frags/user/user1" data-thx-get-result="[class^=thymus-user]"></div> -->
+	<div class="user-card"
+		data-thx-include="frags/user/user1 :: [class^=thymus-user]">
+	</div>
+	<div class="user" data-src="/src/path/">
+		<span> <label class="control-label">Username:</label> <span>
+				<b class="user-name">jdoe</b>
+		</span></span>
+		<div>
+			<label class="radio-inline"> <input type="radio"
+				value="Radio1" /> Radio 1
+			</label> <label class="radio-inline"> <input type="radio"
+				value="Radio2" checked="checked" /> Radio 2
+			</label>
+		</div>
+		<div>
+			<label class="checkbox-inline"> <input type="checkbox"
+				value="Check1" checked="checked" /> Check 1
+			</label> <label class="checkbox-inline"><input type="checkbox"
+				value="Check1" /> Check 2 </label>
+		</div>
+		<div class="form-group">
+			<label class="control-label">Select:</label>
+			<div>
+				<select>
+					<option value="Opt1">Opt 1</option>
+					<option value="Opt2" selected="selected">Opt 2</option>
+				</select>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="control-label">Comment:</label>
+			<div>
+				<input type="text" value="Sample Comment" class="form-control" />
+			</div>
+		</div>
+		<div class="form-group">
+			<button class="btn btn-default user-btn">Go</button>
+		</div>
+	</div>
+</body>
+</html>

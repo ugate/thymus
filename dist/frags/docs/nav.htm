@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!-- All relative href/src URLs should be relative to the application's context defined on the Thymus script  -->
+<body>
+	<div id="navcontrol" class="panel panel-default">
+		<div class="panel-heading">
+			<h2>
+				Fragment Routing and Transition Control
+			</h2>
+		</div>
+		<div class="panel-body app-code">
+			<h3 id="httpmethods"><b>Siphon Attribute</b>s</h3>
+			<p>
+				There are times where it's desirable to load fragment views and/or
+				models after some action has taken place. In this case, one of the <a
+					href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html">HTTP
+					Methods</a>/<i>verbs</i> can be used whenever one or more <a
+					href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM events</a> are
+				received. <b>thymus.js</b> tries to conform to <a
+					href="http://en.wikipedia.org/wiki/Representational_state_transfer">RESTful</a>
+				conceptual design patterns. So naturally, wiring fragmented
+				model/views into <b>thymus.js</b> requires the use of guidelines set
+				forth by the established HTTP methods. Determining how <i>model</i>
+				data and/or <i>views</i> are transfered to a page is determined by
+				the type of HTTP method <i>verb</i> used on one of the corresponding
+				<code>data-thx-*VERB*</code>
+				<b>siphon attribute</b>s; where <i>*VERB*</i> would be replaced
+				with one of the following HTTP method <i>verbs</i> (e.g.
+				<code>data-thx-get</code>
+				):
+			</p>
+			<ul id="supportedhttpverbs">
+				<li class="badge">get</li>
+				<li class="badge">post</li>
+				<li class="badge">put</li>
+				<li class="badge">delete</li>
+			</ul>
+			<p>
+				From this point on we will refer to
+				<code>data-thx-*VERB*</code>
+				as a <b>siphon attribute</b> to reference the entire suite of
+				supported <b>thymus.js</b> event driven HTTP method verb attributes.
+				<b>siphon attribute</b>s should reside on the node where the DOM
+				event will be triggered. The semantics for <b>siphon attribute</b>
+				are separated into multiple facets that control behavior:
+			</p>
+			<div>
+				<div id="domevent" class="row row-thymus">
+					<div class="col-md-3">
+						<div>
+							<span class="label label-info">event siphon</span> &Dagger;
+						</div>
+						<div>
+							<code>data-thx-*VERB*</code>
+						</div>
+					</div>
+					<div class="col-md-9">
+						The <b>siphon attribute</b>'s <b>event siphon</b> parameter
+						indicates one or more <a
+							href="http://www.w3.org/TR/DOM-Level-3-Events/">DOM events</a>
+						separated by &quot;<b>::</b>&quot;. Each of which will trigger a
+						fragment transition from/to the client. While most of the DOM
+						events will directly translated into the normal <a
+							href="http://api.jquery.com/on/"><code>$.on(event,
+								...);</code></a> registrations, there is one special case that <b>thymus.js</b>
+						will pickup regardless of the element that the <b>siphon
+							attribute</b> is defined on. A
+						<code>load</code>
+						event will cause <b>thymus.js</b> to automatically process the
+						fragment when the page or fragment first loads provided that
+						loading has not been <a href="#fragsprog">deferred</a>. This type
+						of loading is very similar to <a href="#shorthand">the
+							short-hand</a> version, but allows for additional siphons to be
+						declared to permit more control over how fragments are handled.
+					</div>
+				</div>
+				<div id="domparamsiphon" class="row row-thymus">
+					<div class="col-md-3">
+						<div>
+							<span class="label label-info">parameter siphon</span> &dagger;
+						</div>
+						<div>
+							<code>data-thx-*VERB*-params</code>
+						</div>
+					</div>
+					<div class="col-md-9">
+						The <b>siphon attribute</b>'s <b>parameter siphon</b> is one
+						or more <a href="http://api.jquery.com/category/selectors/">JQuery
+							selectors</a> that correspond to one or more <b>event siphon</b>
+						events separated by &quot;<b>::</b>&quot;. Each of which will
+						capture parameters that will be sent along with the <b>path
+							siphon</b>. See the <a href="#otherfragtargets">fragment siphons
+							section</a> for more details on how <b>parameter siphon</b>s use
+						JQuery selectors.
+					</div>
+				</div>
+				<div id="domroutingpath" class="row row-thymus">
+					<div class="col-md-3">
+						<div>
+							<span class="label label-info">path siphon</span> &dagger;
+						</div>
+						<div>
+							<code>data-thx-*VERB*-path</code>
+						</div>
+					</div>
+					<div class="col-md-9">
+						The <b>siphon attribute</b>'s <b>path</b> that correspond to
+						one or more <b>event siphon</b>s separated by &quot;<b>::</b>&quot;.
+						Each of which should point to the location where the fragment will
+						be captured (e.g. <i>path/to/my/frag</i>). See the <a
+							href="#paths">path resolution section</a> for more details on how
+						paths are evaluated and <a href="#otherfragtargets">siphon
+							resolvers</a> to dynamically build paths based upon user input.
+					</div>
+				</div>
+				<div id="domresultsiphon" class="row row-thymus">
+					<div class="col-md-3">
+						<div>
+							<span class="label label-info">result siphon</span> &dagger;
+						</div>
+						<div>
+							<code>data-thx-*VERB*-result</code>
+						</div>
+					</div>
+					<div class="col-md-9">
+						The <b>siphon attribute</b>'s <b>result siphon</b> is
+						typically one or more <a
+							href="http://api.jquery.com/category/selectors/">JQuery
+							selectors</a>, but can also be a <a href="#fragshandler"><code>function</code>
+							that will handle the result</a>. Values can be separated by a &quot;<b>::</b>&quot;
+						to indicate which <i>event</i> within the <b>event siphon</b> the
+						value corresponds to. When a fragment result contains <i>view</i>
+						content or is XML <i>model</i> content the <b>result siphon</b>
+						will be used to select the portion of the fragment result that
+						will be used for insertion into the DOM. When the fragment result
+						contains <i>model</i> content that is not XML the <b>result
+							siphon</b> can either be omitted to use the entire fragment result or
+						contain a <a href="#fragshandler"><code>function</code></a> that
+						will manually handle selecting the portion of the fragment that
+						will be included in the DOM (e.g. using a 3rd party library to
+						handle the selection- like <a href="http://jsonselect.org/#tryit">json:select()</a>).
+						See the <a href="#otherfragtargets">fragment siphons section</a>
+						for more details on how <b>result siphon</b>s use JQuery
+						selectors.
+					</div>
+				</div>
+				<div id="domdestinationsiphon" class="row row-thymus">
+					<div class="col-md-3">
+						<div>
+							<span class="label label-info">destination siphon</span> &dagger;
+						</div>
+						<div>
+							<code>data-thx-*VERB*-dest</code>
+						</div>
+					</div>
+					<div class="col-md-9">
+						The <b>siphon attribute</b>'s <b>destination siphon</b> is one or
+						more <a href="http://api.jquery.com/category/selectors/">JQuery
+							selectors</a> that correspond to one or more <b>event siphon</b>s
+						separated by &quot;<b>::</b>&quot;. Each <b>destination siphon</b>
+						value will be used to define destination nodes within the DOM
+						where the <b>result siphon</b>ed fragment results will be placed.
+						How fragment results are placed within the destination is
+						determined by the <b>destination type siphon</b>. See the <a
+							href="#otherfragtargets">fragment siphons section</a> for more
+						details on how <b>destination siphon</b>s use JQuery selectors.
+					</div>
+				</div>
+				<div id="domdestinationtype" class="row row-thymus">
+					<div class="col-md-3">
+						<div>
+							<span class="label label-info">destination type siphon</span>
+							&dagger;
+						</div>
+						<div>
+							<code>data-thx-*VERB*-type</code>
+						</div>
+					</div>
+					<div class="col-md-9">
+						The <b>siphon attribute</b>'s <b>destination type siphon</b>
+						designates how a fragment result will be placed within the DOM.
+						Each
+						<b>DOM type</b> can define one or more of the values below
+						(separated by &quot;<b>::</b>&quot;). Each of which corresponds to
+						one or more
+						<b>event siphon</b> events. See the <a
+							href="#otherfragtargets">fragment siphons section</a> for more
+						details on how <b>destination
+							type siphon</b>s use JQuery selectors. Valid values are:
+						<ul>
+							<li><span class="badge">async|include</span> (default) or <span
+								class="badge">sync|include</span> - will append the fragment
+								result within the <b>destination siphon</b>. When there is no <b>destination
+									siphon</b> defined the fragment result will be appended to the node
+								where the <b>siphon attribute</b> is defined (<i>model</i>
+								fragment results will cause the last existing destination
+								content to be cloned, populated with the <i>model</i> data and
+								appended to the destination)</li>
+							<li><span class="badge">async|replace</span> or <span
+								class="badge">sync|replace</span> - will replace the <b>destination
+									siphon</b> with the fragment result. When there is no <b>destination
+									siphon</b> defined the node where the <b>siphon attribute</b>
+								is defined will be replaced with the fragment results (<i>model</i>
+								fragments will only replace the data and is synonymous to an
+								update)</li>
+							<li><span class="badge">async|update</span> or <span
+								class="badge">sync|update</span> - will first remove any
+								pre-existing <b>destination siphon</b>s before appending the
+								fragment result. When there is no <b>destination siphon</b>
+								defined any content within the node where the <b>siphon
+									attribute</b> is defined will be removed and replaced with the
+								fragment results (<i>model</i> fragments will only overwrite the
+								data and is synonymous to a replace)</li>
+							<li><span class="badge">sync|transfer</span> - will perform
+								a synchronous page transfer using <code>window.open</code> for
+								HTTP get calls or a dynamic form submission for all other <a
+								href="#supportedhttpverbs">supported HTTP verbs</a>. Types of
+								this nature will only use the <b>path siphon</b> and <b>parameter
+									siphon</b> (which is optional).</li>
+						</ul>
+					</div>
+				</div>
+				<div id="domdestinationtarget" class="row row-thymus">
+					<div class="col-md-3">
+						<div>
+							<span class="label label-info">target siphon</span> &dagger;
+						</div>
+						<div>
+							<code>data-thx-*VERB*-target</code>
+						</div>
+					</div>
+					<div class="col-md-9">
+						The <b>siphon attribute</b>'s <b>target siphon</b> designates the
+						window/frame to use for DOM interaction. Each <b>target siphon</b>
+						can define one or more of the values below (separated by &quot;<b>::</b>&quot;).
+						Each of which corresponds to one or more <b>event siphon</b>
+						events. Within each event relative target window options and
+						replace history option (same window only) can be passed by
+						appending a &quot;<b>|</b>&quot; delimited window options and
+						replace history option to the target- when applicable (e.g.
+						<code>_blank|toolbar=no,width=190,height=190|true</code>
+						). See the <a href="#otherfragtargets">fragment siphons
+							section</a> for more details on how <b>target siphon</b>s use JQuery
+						selectors. Valid values are:
+						<ul>
+							<li><span class="badge">_self</span> (default) - will target
+								the current window</li>
+							<li><span class="badge">_blank</span> - will target a new
+								window</li>
+							<li><span class="badge">_parent</span> - will target the
+								parent window or the current window when there is no parent</li>
+							<li><span class="badge">_top</span> - will target the
+								top-level window that does not have a parent or the current
+								window when there is no parent</li>
+							<li><span class="badge">window name</span> - the
+								window/frame name that will be targeted</li>
+						</ul>
+					</div>
+				</div>
+				<div id="domagentsiphon" class="row row-thymus">
+					<div class="col-md-3">
+						<div>
+							<span class="label label-info">agent siphon</span> &dagger;
+						</div>
+						<div>
+							<code>data-thx-*VERB*-agent</code>
+						</div>
+					</div>
+					<div class="col-md-9">
+						The <b>siphon attribute</b>'s <b>agent siphon</b> is one or more <a
+							href="http://api.jquery.com/category/selectors/">JQuery
+							selectors</a> that correspond to one or more <b>event siphon</b>s
+						separated by &quot;<b>::</b>&quot;. Each <b>agent siphon</b> value
+						will be used to define agent nodes within the DOM where any <b>siphon
+							attribute</b>s will be found that may be missing from the node where
+						the <b>agent siphon</b> is defined. See the <a
+							href="#otherfragtargets">fragment siphons section</a> for more
+						details on how <b>agent siphon</b>s use JQuery selectors and <a
+							href="#domagentsdetail">agents</a> for more details.
+					</div>
+				</div>
+			</div>
+			<div class="alert alert-info">
+				<small>&Dagger; indicates that any updates made to the
+					attribute require a <b><a href="#actionnavreg">call to
+							re-register the DOM action</a></b> before any changes will take effect
+				</small><br /> <small>&dagger; indicates that any updates made to
+					the attribute will automatically take effect the next time the DOM
+					event is triggered </small>
+			</div>
+			<h4 id="httpsimple">Full Page Navigation/Update</h4>
+			<p>
+				Typlically, navigating to other pages can be acomplished by using
+				links that contain an
+				<code>href</code>
+				or a submit
+				<code>button</code>
+				wrapped in a
+				<code>form</code>
+				. That may suffice in some situations. However, in other instances,
+				there may be a need to dynamically build the URL contained in the
+				<code>href</code>
+				and/or
+				<code>action</code>
+				or may need to be triggered outside a form or on an element other
+				than a link or submit button. There also may be a need to
+				dynamically build parameters that will be sent to the server that
+				may or may not reside within a form. Sure, adding some JavaScript
+				could easily solve the problem, but wouldn't be better to allow
+				JQuery selectors to do the work for us by building the URL parts and
+				parameters by <i>siphoning</i> them from other DOM elements? Not
+				only does that allow URLs for an application to be centralized, it
+				also allows them to be automatically built from user input that can
+				be scatterd throughout the page! It can even pull parameters from
+				attributes and node text! What if we were to tell you that this and
+				many other features can be done without a single line of JS? All
+				that is required is that the element contain a few <b>siphon
+					attribute</b>s. First, an <b>event siphon</b> will need to declared
+				that will define the event(s) that will trigger the call. Secondly,
+				a <b>path siphon</b> needs to be defined to give direction to the
+				process. The final attribute that will need to be defined is a
+				synchronous <b>destination type siphon</b> that will specify that a
+				full-page transfer will be performed. There is no <b>target
+					siphon</b> so the operation will occur in the current window/frame.
+				Also, an optional <b>parameter siphon</b> attribute can be used if
+				there are any parameters that need to be passed. Here's an example
+				that illustrates a full page update that dynamically <i>siphons</i>
+				the passed parameters using JQuery (see <a href="#otherfragtargets">siphon
+					resolver</a>s for more details on how to construct <b>path siphon</b>s):
+			</p>
+			<h4>Full page navigation/update example:</h4>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<h4>Demo</h4>
+						</div>
+						<div class="list-group-item">
+							<button type="button" class="btn btn-primary"
+								data-thx-get="click" data-thx-get-path="?{#globalLoginPath}"
+								data-thx-get-type="sync|transfer"
+								data-thx-get-params=".simple-nav-params :input">Goto Sign In</button>
+							<input id="globalLoginPath" type="hidden" value="login" />
+							<div class="simple-nav-params">
+								<br />
+								<div class="form-group">
+									<input type="text" class="form-control" name="simpleNavParam1"
+										placeholder="Enter text to send as parameter 1" />
+								</div>
+								<div class="checkbox">
+									<label> <input type="checkbox"
+										class="simple-nav-params" name="simpleNavParam2" /> Param 2
+									</label>
+								</div>
+								<div class="radio">
+									<label> <input type="radio" name="simpleNavParam3"
+										value="radio 3" /> Param 3 (radio 1)
+									</label>
+								</div>
+								<div class="radio">
+									<label> <input type="radio" name="simpleNavParam3"
+										value="radio 2" /> Param 3 (radio 2)
+									</label>
+								</div>
+								<select name="simpleNavParam4" class="form-control"
+									multiple="multiple">
+									<option value="option 1">Param 4 (option 1)</option>
+									<option value="option 2">Param 4 (option 2)</option>
+								</select>
+								<div class="radio">
+									<label> <input type="range" name="simpleNavParam5"
+										min="1" max="100" /> Param 5
+									</label>
+								</div>
+								<div class="form-group">
+									<textarea rows="4" cols="50" name="simpleNavParam6"
+										style="width: 100%;"
+										placeholder="Enter text to send as parameter 6"></textarea>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<h4>Code</h4>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;?{#globalLoginPath}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;sync|transfer&quot;</span>
+	<span style="color: #FF0000">data-thx-get-params=</span><span style="color: #0000FF">&quot;.simple-nav-params :input&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	Goto Sign In<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;globalLoginPath&quot;</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;hidden&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;login&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;simple-nav-params&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;form-control&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam1&quot;</span>
+		<span style="color: #FF0000">placeholder=</span><span style="color: #0000FF">&quot;Enter text to send as parameter 1&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;label&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;checkbox&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;simple-nav-params&quot;</span>
+			<span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam2&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span> Param 2
+	<span style="color: #000080; font-weight: bold">&lt;/label&gt;</span> 
+	<span style="color: #000080; font-weight: bold">&lt;label&gt;</span> 
+		<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;radio&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam3&quot;</span>
+			<span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;radio 3&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span> Param 3 (radio 1)
+	<span style="color: #000080; font-weight: bold">&lt;/label&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;label&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;radio&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam3&quot;</span>
+			<span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;radio 2&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span> Param 3 (radio 2)
+	<span style="color: #000080; font-weight: bold">&lt;/label&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam4&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;form-control&quot;</span>
+		<span style="color: #FF0000">multiple=</span><span style="color: #0000FF">&quot;multiple&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;option 1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Param 4 (option 1)<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;option 2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Param 4 (option 2)<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;range&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;simpleNavParam5&quot;</span> 
+		<span style="color: #FF0000">min=</span><span style="color: #0000FF">&quot;1&quot;</span> <span style="color: #FF0000">max=</span><span style="color: #0000FF">&quot;100&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
+					</div>
+				</div>
+			</div>
+			<h4 id="httpasyncself">Self-targeting Asynchronous Transfers</h4>
+			<p>
+				A self-targeting asynchronous transfer is a node in which defines an
+				<b>event siphon</b>, a <b>path siphon</b> and any other pertinent <b>siphon
+					attribute</b>s. The difference is that it does not define a <b>destination
+					siphon</b>. In this case the <b>destination siphon</b> will default to
+				the node where the <b>siphon attribute</b> is defined. Consider the
+				following:
+			</p>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- assume a page contains the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/user&quot;</span> <span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;.user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Click to load next user...<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- when the div is clicked and the fragment is loaded and will result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/user&quot;</span> <span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;.user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Click to load next user...<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- another click on the div would result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/user&quot;</span> <span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;.user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Click to load next user...<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- and so on... --&gt;</span>
+</pre></div>
+			<h4>
+				Self-targeting <b>destination siphon</b> <i>include</i> example:
+			</h4>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<button id="demoStds" type="button" class="btn btn-primary"
+										data-thx-get="click" data-thx-get-path="frags/user/user1"
+										data-thx-get-result="[class^=&quot;thymus-user&quot;]">Run</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=?{#demoStds->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	Run<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+</pre></div>
+					</div>
+				</div>
+			</div>
+			<p>
+				In a similar fashion a self-targeting asynchronous transfer can be
+				<i>replaced</i> rather than <i>included</i>:
+			</p>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- assume a page contains the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/user&quot;</span> 
+			<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;.user-detail&quot;</span> <span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;replace&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		Load User
+	<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- when the button is clicked and the fragment is loaded and will result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
+			<h4>
+				Self-targeting <b>destination siphon</b> <i>replace</i> example:
+			</h4>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<button id="demoStdsr" type="button" class="btn btn-primary"
+										data-thx-get="click" data-thx-get-path="frags/user/user1"
+										data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+										data-thx-get-type="sync|replace">Run</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=frags/user/user1"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;sync|replace&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Run<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+</pre></div>
+					</div>
+				</div>
+			</div>
+			<h4 id="httpasyncdest">Explicit Destination Asynchronous Transfers</h4>
+			<p>
+				The most granular of the DOM event driven behaviors is one that
+				defines a <b>destination siphon</b>. The <b>destination siphon</b>t
+				tells <b>thymus.js</b> where the returned fragment should be placed.
+				Following the previous trend of examples...
+			</p>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- assume a fragment resides at path/to/user that contains --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- assume a page contains the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span>
+		<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/user&quot;</span> <span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;.user-detail&quot;</span> 
+		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Load User<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Users:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- when the button is clicked and the fragment is loaded and will result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span>
+		<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/user&quot;</span> <span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;.user-detail&quot;</span> 
+		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Load User<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Users:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- another click on the button would result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data:<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> 
+		<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span> <span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;path/to/user&quot;</span> <span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;.user-detail&quot;</span> 
+		<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Load User<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Users:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;user-detail&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- and so on... --&gt;</span>
+</pre></div>
+			<h4>
+				Explicit <b>destination siphon</b> <i>include</i> example:
+			</h4>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<button id="demoEdsi" type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="frags/user/user1"
+										data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+										data-thx-get-dest="#userDest2">Run</button>
+								</div>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<div id="userDest2"></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=?{#demoEdsi->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;button&quot;</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;btn btn-primary&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Run<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+</pre></div>
+					</div>
+				</div>
+			</div>
+			<p>
+				An <i>update</i> <b>siphon attribute</b> works similar to a <i>include</i>
+				<b>siphon attribute</b> except it will remove any prior
+				fragment insertions made before appending the fragment results. In
+				the example above, that would mean any
+				<code>.user-detail</code>
+				under
+				<code>userDest</code>
+				would get replaced with the current 
+				<code>.user-detail</code>
+				result.
+			</p>
+			<h4>
+				Explicit <b>destination siphon</b> <i>update</i> example:
+			</h4>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<select id="demoDomUpdateSel" class="btn btn-primary"
+										data-thx-get="load :: change"
+										data-thx-get-path="frags/user/?{#demoDomUpdateSel}"
+										data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+										data-thx-get-type="async|update" data-thx-get-dest="#userDest3">
+										<option value="user1">John Doe</option>
+										<option value="user2">Jane Wayne</option>
+										<option value="user3">Richard Roe</option>
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<div id="userDest3"></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=?{#demoDomUpdateSel->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
+							<small> See <a href="#otherfragtargets">siphon
+									resolver</a>s and <a href="#multidomevents">multiple DOM events</a>
+								for further explaination:
+							</small>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;select</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;demoDomUpdateSel&quot;</span>
+	<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;load :: change&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/?{#demoDomUpdateSel}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;async|update&quot;</span> <span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>John Doe<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user2&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Jane Wayne<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;option</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Richard Roe<span style="color: #000080; font-weight: bold">&lt;/option&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/select&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest3&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span><span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
+					</div>
+				</div>
+			</div>
+			<div id="explicitupdatewarn" class="alert alert-warning">
+				<strong>Warning:</strong> Any <strong>updates</strong> made that do
+				not have a <b>result siphon</b> defined will cause in the entire
+				contents of the destination to be cleared prior to DOM insertion
+				(instead of just nodes found within the destinations that match the
+				<b>result siphon</b> selectors).
+			</div>
+			<h3 id="multidomevents">Multiple DOM Events (on a given <b>event siphon</b>)</h3>
+			<p>
+				Each of the <b>siphon attribute</b>s can contain multiple
+				events separated by a &quot;<b>::</b>&quot; within a single <i>event
+					siphon</i>. For instance, a
+				<code>data-thx-get="click :: keyup"</code>
+				can be defined on a node that will register a <b>thymus.js</b>
+				listener event on a
+				<code>click</code>
+				and
+				<code>keyup</code>
+				event. Each event defined within an <b>event siphon</b> will
+				correspond to any other <b>siphon attribute</b>s with the same
+				HTTP verb that may be defined on the node at the same position. If a
+				<b>siphon attribute</b> does not have a value for the given <b>event
+					siphon</b>'s event, then the last parameterized siphon value will be
+				used. Consider the following:
+			</p>
+			<h4>
+				Multiple DOM events on a given <b>event siphon</b> example:
+			</h4>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<input id="demoMultiDomEventSiphon" type="text" data-thx-get="click :: keyup"
+										data-thx-get-path="frags/user/user1 :: frags/user/user2"
+										data-thx-get-result="[class^=&quot;thymus-user&quot;]"
+										data-thx-get-dest="#userMultiEvt1 :: #userMultiEvt2"
+										class="form-control thymus-green"
+										placeholder="Click or type anything here" />
+								</div>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<h4>User 1:</h4>
+							<div id="userMultiEvt1"></div>
+						</div>
+						<div class="list-group-item">
+							<h4>User 2:</h4>
+							<div id="userMultiEvt2"></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=?{#demoMultiDomEventSiphon->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;text&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click :: keyup&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/user1 :: frags/user/user2&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=&amp;quot;thymus-user&amp;quot;]&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userMultiEvt1 :: #userMultiEvt2&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;h4&gt;</span>User 1<span style="color: #000080; font-weight: bold">&lt;/h4&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userMultiEvt1&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;h4&gt;</span>User 2<span style="color: #000080; font-weight: bold">&lt;/h4&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userMultiEvt2&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+</pre></div>
+					</div>
+				</div>
+			</div>
+			<p>
+				When the text input receives a
+				<code>click</code>
+				event
+				<code>frags/user/user1</code>
+				is called and the result is caputred via the JQuery selector
+				<code>[class^=&quot;thymus-user&quot;]</code>
+				and includes (default) the results into the destination captured
+				from the JQuery selector
+				<code>#userMultiEvt1</code>
+				. Every time a
+				<code>keyup</code>
+				event is received
+				<code>frags/user/user2</code>
+				is called, the result is captured via the JQuery selector
+				<code>[class^=&quot;thymus-user&quot;]</code>
+				and is included within the destination captured from the JQuery
+				selector
+				<code>#userMultiEvt2</code>
+				.
+			</p>
+			<h4 id="domagentsdetail">
+				Agents
+			</h4>
+			<p>
+				Nodes that need to trigger similar transfers can become redundantly
+				verbose. That's why <b>thymus.js</b> provides a concept of an agent.
+				An agent can be thought of as a node that will provide a service on
+				behalf of other node(s). There is little difference between a node
+				with the typical <b>siphon attribute</b>s and an agent. So, any node
+				can become an agent without having to explicitly declare it as an
+				agent. However, other node(s) can add an <b>agent siphon</b> that
+				will contain a JQuery selector that will select the node(s) that
+				will act as an agent. This causes <b>thymus.js</b> to look at the
+				agent node(s) for any <b>siphon attribute</b>s that are missing from
+				the node where the <b>agent siphon</b> is defined. When the JQuery
+				selector returns more than one node, the first node that contains
+				the missing <b>siphon attribute</b> will be used until all <b>siphon
+					attribute</b>s are found or all of the selected agents are exhausted
+				(whichever occurs first). An agent itself can define it's own <b>event
+					siphon</b> if so desired, but it is optional. Lets take a look at an
+				example where we might want to use an agent.
+			</p>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<div class="btn-group" data-toggle="buttons" id="userDest2Grp"
+										data-thx-get-path="frags/user/?{[name=userDest2GrpOpts]:checked}"
+										data-thx-get-result="[class^=thymus-user]"
+										data-thx-get-dest="#userDestAgent"
+										data-thx-get-type="async|update">
+										<label class="btn btn-primary active">
+											<input type="radio" name="userDest2GrpOpts" value="user1" 
+												data-thx-get="load :: change" checked="checked"
+												data-thx-get-agent="#userDest2Grp" /> Include User1
+										</label>
+										<label class="btn btn-primary">
+											<input type="radio" name="userDest2GrpOpts" value="user2" 
+												data-thx-get="change" 
+												data-thx-get-agent="#userDest2Grp" /> Include User2
+										</label>
+										<label class="btn btn-primary">
+											<input type="radio" name="userDest2GrpOpts" value="user3" 
+												data-thx-get="change" 
+												data-thx-get-agent="#userDest2Grp" /> Include User3
+										</label>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<div id="userDestAgent"></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button type="button" class="btn btn-primary"
+										data-thx-get="click"
+										data-thx-get-path="user/example?page=?{[name=userDest2GrpOpts]:checked->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">Fragment</button>
+								</div>
+							</div>
+							<small> See <a href="#otherfragtargets">siphon
+									resolver</a>s for further explaination:
+							</small>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDest2Grp&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/?{[name=userDest2GrpOpts]:checked}&quot;</span>
+	<span style="color: #FF0000">data-thx-get-result=</span><span style="color: #0000FF">&quot;[class^=thymus-user]&quot;</span>
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;#userDestAgent&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;async|update&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;label&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;radio&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;userDest2GrpOpts&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user1&quot;</span> 
+			<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;load :: change&quot;</span> <span style="color: #FF0000">checked=</span><span style="color: #0000FF">&quot;checked&quot;</span>
+			<span style="color: #FF0000">data-thx-get-agent=</span><span style="color: #0000FF">&quot;#userDest2Grp&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span> Include User1
+	<span style="color: #000080; font-weight: bold">&lt;/label&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;label&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;radio&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;userDest2GrpOpts&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user2&quot;</span> 
+			<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;change&quot;</span> 
+			<span style="color: #FF0000">data-thx-get-agent=</span><span style="color: #0000FF">&quot;#userDest2Grp&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span> Include User2
+	<span style="color: #000080; font-weight: bold">&lt;/label&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;label&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;input</span> <span style="color: #FF0000">type=</span><span style="color: #0000FF">&quot;radio&quot;</span> <span style="color: #FF0000">name=</span><span style="color: #0000FF">&quot;userDest2GrpOpts&quot;</span> <span style="color: #FF0000">value=</span><span style="color: #0000FF">&quot;user3&quot;</span> 
+			<span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;change&quot;</span> 
+			<span style="color: #FF0000">data-thx-get-agent=</span><span style="color: #0000FF">&quot;#userDest2Grp&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span> Include User3
+	<span style="color: #000080; font-weight: bold">&lt;/label&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;userDestAgent&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+</pre></div>
+					</div>
+				</div>
+			</div>
+			<h3 id="shorthand">Auto Loading Fragments (short-hand)</h3>
+			<p>
+				A short-hand for loading fragments which is equivalent to a <b>event
+					siphon</b> with a
+				<code>load</code>
+				event and a separate <b>path siphon</b> attribute. Instead of two
+				attributes, the short-handed version combines the <b>path siphon</b>
+				and <b>result siphon</b> into one attribute separated by a "<b>::</b>"
+				(the separator can be overridden using the
+				<code>data-thx-separator</code>
+				attribute on the <b>thymus.js</b> script definition or <a
+					href="#fragsoptsprog">programmatically by passing the
+					appropriate option parameter</a>). It also infers the <b>destination
+					type siphon</b> based upon the short-hand attribute used. The
+				short-handed version can be used as either a replacement or
+				inclusion anywhere a
+				<code>data-thx-replace</code>
+				or
+				<code>data-thx-include</code>
+				<b>siphon attribute</b> is found throughout the document (including
+				within a fragment itself). It's use is limited to the <b>path
+					siphon</b> and <b>result siphon</b> defined within it and will not use
+				any other <b>siphon attribute</b>s that may be defined on the node.
+				Examples can be found under the <a href="#usage">fragment types
+					section</a>.
+			</p>
+			<p>
+				The following example demonstrates how to automatically load a
+				fragment using a
+				<code>data-thx-replace</code>
+				attribute:
+			</p>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
+<span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- that contains the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">class=</span><span
+								style="color: #0000FF">&quot;topnav&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- and the current page contains --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">data-thx-replace=</span><span
+								style="color: #0000FF">&quot;frags/nav/nav :: .topnav&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">class=</span><span
+								style="color: #0000FF">&quot;topnav&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
+</pre></div>
+			<p>
+				Of course, we could have also used a
+				<code>data-thx-include</code>
+				instead of
+				<code>data-thx-replace</code>
+				which would have appended the fragment rather than replacing the
+				placeholder:
+			</p>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
+<span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/nav/nav&quot; --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- that contains the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">class=</span><span
+								style="color: #0000FF">&quot;topnav&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;</span>
+	...
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- and the current page contains --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">data-thx-include=</span><span
+								style="color: #0000FF">&quot;frags/nav/nav :: .topnav&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;span&gt;</span>Top Nav<span
+								style="color: #000080; font-weight: bold">&lt;/span&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">data-thx-include=</span><span
+								style="color: #0000FF">&quot;frags/nav/nav :: .topnav&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;span&gt;</span>Top Nav<span
+								style="color: #000080; font-weight: bold">&lt;/span&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">class=</span><span
+								style="color: #0000FF">&quot;topnav&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
+</pre></div>
+			<p id="selfref">
+				<b>path siphon</b>s can also refer to fragments that exist in the
+				same page where the <b>path siphon</b> resides by using
+				<code>this</code>
+				or omitting the <b>path</b> altogether (e.g.
+				<code>data-thx-include="::.my-inline-frag"</code>
+				). Only use this approach when the fragment's <b>result siphon</b> is
+				not referencing nodes that reside in other fragments.
+			</p>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
+<span style="color: #008800; font-style: italic">&lt;!-- a page with --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">data-thx-include=</span><span
+								style="color: #0000FF">&quot;this :: .my-inline-frag&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">class=</span><span
+								style="color: #0000FF">&quot;my-inline-frag&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- would produce --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">data-thx-include=</span><span
+								style="color: #0000FF">&quot;this :: .my-inline-frag&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;</span>
+		...
+		<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">class=</span><span
+								style="color: #0000FF">&quot;my-inline-frag&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;</span>
+			...
+		<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">class=</span><span
+								style="color: #0000FF">&quot;my-inline-frag&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;</span>
+		...
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
+		</div>
+	</div>
+</body>
+</html>

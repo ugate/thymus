@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!-- All relative href/src URLs should be relative to the application's context defined on the Thymus script  -->
+<body>
+	<div id="usage" class="panel panel-default">
+		<div class="panel-heading">
+			<h2 id="fragusage">
+				Transclusion
+			</h2>
+		</div>
+		<div class="panel-body app-code">
+			<p>
+				As <a href="#navcontrol">previously discussed</a> fragments are
+				resolved using <b>siphon attribute</b>s that provide a mechanism
+				to move model/view content to and from the DOM. There are a few
+				use cases that are worth mentioning that will provide insight into
+				how fragment resolution is impacted during the process. For
+				simplicity sake we will use short-hand version for the <b>siphon
+					attribute</b>s in the examples to follow.
+			</p>
+			<h3 id="nestedfrags">Multi-Level Nested Fragments</h3>
+			<p>
+				Not only can fragments be <i>included</i>, <i>replaced</i>, <i>updated</i>,
+				etc. within the DOM, but the fragments themselves can load other
+				fragments (the number of levels of fragments within fragments can be
+				relatively endless). Just like normal fragments, each nested
+				fragment will be processed asynchronously from its parent fragment.
+				This ensures that as new fragments are discovered they will be
+				loaded and its content made available for any subsequent fragments
+				that are encountered that point to the same <b>path siphon</b>. It
+				also prevents unnecessary calls to fragment <b>path</b>s that might
+				be used in more than one <b>siphon attribute</b> throughout the
+				fragment load action. For instance, when a node is encountered that
+				contains
+				<code>frags/nav/nav</code>
+				as its <b>path siphon</b> and
+				<code>.topnav</code>
+				as its <b>result siphon</b> it may discover another node that has
+				its own <b>siphon attribute</b>s within the content from the initial
+				<b>path siphon</b>. Lets say the <b>siphon attribute</b> found
+				within the fragment's <b>path siphon</b>/<b>result siphon</b> is
+				another
+				<code>data-thx-replace</code>
+				that defines it's own <b>path siphon</b> as
+				<code>frags/user/user</code>
+				and <b>result siphon</b> as
+				<code>.user</code>
+				. <b>thymus.js</b> will proceeded to load
+				<code>frags/user/user</code>
+				, select
+				<code>.user</code>
+				and replace the defining DOM node with the node(s) selected from its
+				<b>result siphon</b>. To illustrate this concept consider the
+				following:
+			</p>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Demo:</button>
+								</div>
+								<div class="col-md-10">
+									<button id="tsr1" class="btn btn-primary" data-thx-get="click"
+										data-thx-get-type="async|update" data-thx-result="|{}"
+										data-thx-get-path="frags/user/form" 
+										data-thx-get-dest=".tsr1-1">Run</button>
+								</div>
+							</div>
+						</div>
+						<div class="list-group-item">
+							<strong>Nested Fragments:</strong>
+						</div>
+						<div class="list-group-item">
+							<div class="tsr1-1"></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="list-group">
+						<div class="list-group-item">
+							<div class="row">
+								<div class="col-md-2">
+									<button type="button" class="btn btn-default"
+										disabled="disabled">Code:</button>
+								</div>
+								<div class="col-md-10">
+									<button id="msr4Sel" class="btn btn-primary"
+										data-thx-get="click" 
+										data-thx-get-path="user/example?page=?{#tsr1->?{#tsr1->data-thx-get}->data-thx-get-path}"
+										data-thx-get-type="sync|transfer" data-thx-get-target="_blank">
+										Fragments</button>
+								</div>
+							</div>
+						</div>
+<div class="list-group-item thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;button</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;tsr1&quot;</span> <span style="color: #FF0000">data-thx-get=</span><span style="color: #0000FF">&quot;click&quot;</span>
+	<span style="color: #FF0000">data-thx-get-type=</span><span style="color: #0000FF">&quot;async|update&quot;</span>
+	<span style="color: #FF0000">data-thx-get-path=</span><span style="color: #0000FF">&quot;frags/user/form&quot;</span> 
+	<span style="color: #FF0000">data-thx-get-dest=</span><span style="color: #0000FF">&quot;.tsr1-1&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>Run<span style="color: #000080; font-weight: bold">&lt;/button&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;strong&gt;</span>Nested Fragments:<span style="color: #000080; font-weight: bold">&lt;/strong&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">class=</span><span style="color: #0000FF">&quot;tsr1-1&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+</pre></div>
+					</div>
+				</div>
+			</div>
+			<div class="alert alert-warning">
+				<strong>Warning:</strong> Keep in mind that any fragments loaded via
+				an <strong>update</strong> that have nested fragments that use <strong>replace</strong>
+				will not be removed from destination(s) prior to consecutive
+				transclusions. Therefore, those elements will behave like includes.
+				The only exception to this rule is <a href="#explicitupdatewarn">when
+					a <b>result siphon</b> has not been defined
+				</a>.
+			</div>
+			<h3 id="headfrags">Head Fragments</h3>
+			<p>
+				Almost every browser removes
+				<code>head</code>
+				attributes when parsing an HTML DOM. So, the <b>thymus.js</b>
+				script definition needs to have an additional attribute to handle
+				<code>head</code>
+				fragment inclusions (replcacements are treated the same as
+				includes for
+				<code>head</code>
+				tags). If the browser doesn't strip out the
+				<code>data-thx-include</code>
+				on the
+				<code>head</code>
+				tag it will be used. Otherwise, an attempt will be made to capture
+				<code>data-thx-head-frag</code>
+				as in the following example:
+			</p>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #000080; font-weight: bold">&lt;head</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;meta</span> <span style="color: #FF0000">charset=</span><span style="color: #0000FF">&quot;utf-8&quot;</span> <span style="color: #000080; font-weight: bold">/&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- Thymus script --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;script </span><span style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/thymus.js&quot;</span> <span style="color: #FF0000">id=</span><span style="color: #0000FF">&quot;thymus&quot;</span> <span style="color: #FF0000">data-thx-base-path=</span><span style="color: #0000FF">&quot;.&quot;</span>
+	<span style="color: #FF0000">data-thx-head-frag=</span><span style="color: #0000FF">&quot;data-thx-include=frags/head :: header&quot;</span><span style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/head&gt;</span>
+</pre></div>
+			<p>
+				Although this duplicates the inclusion defintion it does provide
+				for cross-browser support. If this redundency disrupts your inner
+				chi you can ommit the
+				<code>data-thx-include</code>
+				attribute from the
+				<code>head</code>
+				tag and the
+				<code>data-thx-head-frag</code>
+				will still be picked up.
+			</p>
+			<h3 id="scriptfrags">Script Fragments</h3>
+			<p>
+				<code>script</code>
+				tags will be inserted individually in the order they are defined
+				within a <b>result siphon</b>. Just like any other <b>result
+					siphon</b>s for <i>view</i>s,
+				<code>script</code>
+				tags found within a <b>result siphon</b> will also fire a <a
+					href="#frag">fragment event</a> for each script that is loaded
+				within the fragment destination. Multiple
+				<code>script</code>
+				tags can be wrapped in a parent node (like the following), but each
+				of them will still fire their own <a href="#frag">fragment event</a>
+				individually. After all of the containing
+				<code>script</code>
+				s have been loaded a <a href="#frag">fragment event</a> will be
+				fired for the node for which the
+				<code>script</code>
+				s are wrapped within.
+			</p>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%">
+<span style="color: #008800; font-style: italic">&lt;!-- assume a resource resides at &quot;frags/script&quot; --&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- that contains the following fragment --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>Never Rendered (outside fragment)<span
+								style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">id=</span><span
+								style="color: #0000FF">&quot;scripts&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;script </span><span
+								style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;//code.jquery.com/jquery.min.js&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;script </span><span
+								style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;js/app.js&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;script </span><span
+								style="color: #FF0000">src=</span><span style="color: #0000FF">&quot;data:text/javascript,function tst(m){alert(m)}&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;&lt;/script&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- and the current page contains --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>My Page<span
+								style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">data-thx-replace=</span><span
+								style="color: #0000FF">&quot;frags/script :: #scripts&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- would result in --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;body&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>My Page<span
+								style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span
+								style="color: #FF0000">id=</span><span
+								style="color: #0000FF">&quot;scripts&quot;</span><span
+								style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;script&gt;function</span> tst(m){alert(m)}<span
+								style="color: #000080; font-weight: bold">&lt;/script&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/body&gt;</span>
+</pre></div>
+			<div class="alert alert-info">
+				<strong>Note:</strong> You may have noticed that the
+				<code>script</code>
+				tags that are defined in the
+				<code>#scripts</code>
+				<b>result siphon</b> that have a normal URL
+				<code>src</code>
+				are not present in the resulting
+				<i>replacement</i>. This is because there is nothing to
+				<i>include</i>/<i>replace</i> in the DOM. However, any
+				<code>script</code>
+				that is inlined or contains a
+				<code>src</code>
+				with a
+				<code>data:text/javascript,</code>
+				will appear in the resulting DOM.
+			</div>
+			<div class="alert alert-success">
+				<strong>Tip:</strong> To make it easier to debug
+				<code>script</code>
+				that is dynamically loaded by <b>thymus.js</b> include a
+				<code>//# sourceURL=path/to/app.js</code>
+				at the end of its source file. Some browsers like <a
+					href="https://developers.google.com/chrome-developer-tools/docs/javascript-debugging?#source-maps">Google
+					Chrome</a> will interperate the comment as a source mapping that will
+				identify the
+				<code>script</code>
+				in the debugger.
+			</div>
+			<h3 id="textfrags">Raw Fragments</h3>
+			<p>
+				Fragments that are retrieved that have one of the
+				<code>content-type</code>
+				definitions below will be treated as raw read-only <i>view</i>s
+			</p>
+			<ul>
+				<li><code>text/plain</code></li>
+				<li><code>application/octet-stream</code></li>
+			</ul>
+			<p>
+				Because there is no <b>result siphon</b> assocaited with the
+				returned data it can be ommitted. So, only a <b>path</b> will
+				remain. Similar to the following:
+			</p>
+<div class="thymus-demo"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-style: italic">&lt;!-- the the following replacement --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-replace=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>Will be replaced.<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- will result in the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	This is the content from raw-data.txt
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- while the following include --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #008800; font-style: italic">&lt;!-- will result in the following --&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;div&gt;</span>
+	<span style="color: #000080; font-weight: bold">&lt;div</span> <span style="color: #FF0000">data-thx-include=</span><span style="color: #0000FF">&quot;user/raw-data.txt&quot;</span><span style="color: #000080; font-weight: bold">&gt;</span>
+		<span style="color: #000080; font-weight: bold">&lt;h1&gt;</span>User Data<span style="color: #000080; font-weight: bold">&lt;/h1&gt;</span>
+		This is the content from raw-data.txt
+	<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+<span style="color: #000080; font-weight: bold">&lt;/div&gt;</span>
+</pre></div>
+			<h2 id="modeltoview">Model Routing</h2>
+			<p>
+				Not all of the <a href="http://www.iana.org/assignments/media-types">standard
+					media types</a> are supported for <i>model</i> fragments, but where
+				they make sense <b>thymus.js</b> attempts to make a smooth
+				transition of <i>model</i> data into corresponding <i>views</i>.
+			</p>
+			<h3 id="jsonfrags">JSON Fragment Models</h3>
+			<p>
+				Fragments that are retrieved that have one of the JSON
+				<code>content-type</code>
+				definitions below will be interpreted as <i>model</i> data. How <i>model</i>
+				data is transferred to a corresponding <i>view(s)</i> is determined
+				by... Comming Soon!
+			</p>
+			<ul>
+				<li><code>text/json</code></li>
+				<li><code>application/*json</code> (where <b>*</b> is one of
+					the <a href="http://www.iana.org/assignments/media-types">standard
+						media types</a> for JSON)</li>
+			</ul>
+			<h3 id="xmlfrags">XML Fragment Models</h3>
+			<p>
+				Fragments that are retrieved that have one of the XML
+				<code>content-type</code>
+				definitions below will be interpreted as <i>model</i> data. How <i>model</i>
+				data is transferred to a corresponding <i>view(s)</i> is determined
+				by... Comming Soon!
+			</p>
+			<ul>
+				<li><code>text/xml</code></li>
+				<li><code>application/*+xml</code> (where <b>*</b> is one of
+					the <a href="http://www.iana.org/assignments/media-types">standard
+						media types</a> for XML)</li>
+			</ul>
+		</div>
+	</div>
+</body>
+</html>
