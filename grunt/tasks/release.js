@@ -51,13 +51,6 @@ module.exports = function(grunt) {
 		grunt.log.writeln('Preparing release: ' + commit.version);
 		var relMsg = commit.message + ' ' + util.skipRef('ci');
 
-		// Setup
-		var link = '${GH_TOKEN}@github.com/' + commit.slug + '.git';
-		runCmd('git config --global user.email "travis@travis-ci.org"');
-		runCmd('git config --global user.name "travis"');
-		runCmd('git remote rm origin');
-		runCmd('git remote add origin https://' + commit.username + ':' + link);
-
 		// Generate change log for release using all messages since last
 		// tag/release
 		var chgLogPath = options.destDir + '/' + options.chgLog;
@@ -70,6 +63,12 @@ module.exports = function(grunt) {
 		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u > '
 				+ authorsPath, null, true, false, authorsPath);
 
+		// Setup
+		var link = '${GH_TOKEN}@github.com/' + commit.slug + '.git';
+		runCmd('git config --global user.email "travis@travis-ci.org"');
+		runCmd('git config --global user.name "travis"');
+		runCmd('git remote rm origin');
+		runCmd('git remote add origin https://' + commit.username + ':' + link);
 		// Cleanup master
 		// runCmd('git checkout master');
 		// runCmd('git rm -r ' + options.destDir);
@@ -84,7 +83,7 @@ module.exports = function(grunt) {
 				+ options.destDir);
 
 		// Publish site
-		runCmd('cd ..');
+/*		runCmd('cd ..');
 		runCmd('git clone --quiet --branch=' + options.destBranch + ' https://'
 				+ link + ' ' + options.destBranch + ' > /dev/null');
 		runCmd('cd ' + options.destBranch);
@@ -97,6 +96,7 @@ module.exports = function(grunt) {
 		runCmd('git add -A');
 		runCmd('git commit -m "' + relMsg + '"');
 		runCmd('git push -f origin ' + options.destBranch + ' > /dev/null');
+*/
 	}
 
 	/**
@@ -142,6 +142,9 @@ module.exports = function(grunt) {
 		}
 		if (output && wpath) {
 			grunt.file.write(wpath, output);
+		}
+		if (output) {
+			grunt.log.writeln(output);
 		}
 		return output;
 	}
