@@ -73,7 +73,7 @@ module.exports = function(grunt) {
 		// runCmd('git commit -m "Removing release directory"');
 		runCmd('git add --force ' + options.destDir);
 		runCmd('git commit -m "' + relMsg + '"');
-		runCmd('git push origin master');
+		runCmd('git push master');
 
 		// Tag release
 		runCmd('git tag -a ' + commit.version + ' -m "' + chgLogRtn + '"');

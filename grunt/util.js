@@ -17,13 +17,16 @@ module.exports = {
 	 *            an optional commit message to use instead of extracting one
 	 * @param altNum
 	 *            an optional commit number to use instead of extracting one
+	 * @param altSlug
+	 *            an optional slug to use instead of extracting one
 	 * @param nofail
 	 *            true
 	 * @returns {Object} containing the commit number, message and version
 	 */
-	getCommit : function(grunt, altMsg, altNum, nofail) {
+	getCommit : function(grunt, altMsg, altNum, altSlug, nofail) {
 		var cn = altNum || process.env.TRAVIS_COMMIT;
 		var cm = altMsg || process.env.TRAVIS_COMMIT_MESSAGE;
+		var sl = altSlug || process.env.TRAVIS_REPO_SLUG;
 		var v = null;
 		if (!cm) {
 			// TODO : the following can be removed once
@@ -62,6 +65,7 @@ module.exports = {
 			number : cn,
 			message : cm,
 			version : v,
+			slug : sl,
 			skips : skps
 		};
 	},
