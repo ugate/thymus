@@ -69,6 +69,7 @@ module.exports = function(grunt) {
 		runCmd('git config --global user.name "travis"');
 		runCmd('git remote rm origin');
 		runCmd('git remote add origin https://' + commit.username + ':' + link);
+		runCmd('git checkout master');
 		// Cleanup master
 		// runCmd('git checkout master');
 		// runCmd('git rm -r ' + options.destDir);
