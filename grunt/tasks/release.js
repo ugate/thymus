@@ -121,8 +121,8 @@ module.exports = function(grunt) {
 			rtn = shell[cmd.shell].apply(shell, cmd.args);
 		}
 		if (rtn.code !== 0) {
-			var e = 'Error "' + rtn.code + '" for commit number ' + commitNum
-					+ ' ' + rtn.output;
+			var e = 'Error "' + rtn.code + '" for commit number '
+					+ commit.number + ' ' + rtn.output;
 			if (nofail) {
 				grunt.log.error(e);
 				return;
