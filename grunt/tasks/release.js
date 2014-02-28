@@ -1,7 +1,7 @@
 'use strict';
 
 var shell = require('shelljs');
-var envl = require('./environment');
+var envl = require('../environment');
 var regexVer = /%VERSION%/gmi;
 var regexDupLines = /^(.*)(\r?\n\1)+$/gm;
 
@@ -49,6 +49,7 @@ module.exports = function(grunt) {
 		// TODO : verify commit message release version is less than
 		// current version using "git describe --abbrev=0 --tags"
 		grunt.log.writeln('Preparing release: ' + commit.version);
+		var relMsg = commit.message + '\n' + envl.skipRef('ci');
 
 		// Set identity
 		runCmd('git config --global user.email "travis@travis-ci.org"');
@@ -66,8 +67,7 @@ module.exports = function(grunt) {
 
 		// Commit local release destination changes
 		runCmd('git add --all ' + options.destDir + ' && git commit -m "'
-				+ commit.message + '\n' + envl.skipRef('ci') + '" -- '
-				+ options.destDir);
+				+ relMsg + '" -- ' + options.destDir);
 
 		// Checkout destination branch
 		runCmd('git checkout ' + options.destBranch);
@@ -77,7 +77,7 @@ module.exports = function(grunt) {
 		});
 		runCmd('git checkout master -- ' + options.destDir);
 		runCmd('git add ' + options.destDir);
-		runCmd('git commit -m "' + commitMsg + '"');
+		runCmd('git commit -m "' + relMsg + '"');
 		runCmd('git push ' + options.destBranch);
 
 		// Cleanup master
