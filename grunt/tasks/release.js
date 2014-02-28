@@ -49,7 +49,7 @@ module.exports = function(grunt) {
 		// TODO : verify commit message release version is less than
 		// current version using "git describe --abbrev=0 --tags"
 		grunt.log.writeln('Preparing release: ' + commit.version);
-		var relMsg = commit.message + '\n' + envl.skipRef('ci');
+		var relMsg = commit.message + ' ' + envl.skipRef('ci');
 
 		// Set identity
 		runCmd('git config --global user.email "travis@travis-ci.org"');
@@ -57,13 +57,15 @@ module.exports = function(grunt) {
 
 		// Generate change log for release using all messages since last
 		// tag/release
+		var chgLogPath = options.destDir + '/' + options.chgLog;
 		chgLogRtn = runCmd(
-				'git --no-pager log `git describe --tags --abbrev=0`..HEAD --pretty=format:"  * %s"',
-				options.destDir + '/' + options.chgLog, false, true, true);
+				'git --no-pager log `git describe --tags --abbrev=0`..HEAD --pretty=format:"  * %s" > '
+						+ chgLogPath, null, false, true, chgLogPath);
 
 		// Generate list of authors/contributors since last tag/release
-		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u',
-				options.destDir + '/' + options.authors, true);
+		var authorsPath = options.destDir + '/' + options.authors;
+		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u > '
+				+ authorsPath, null, true, false, authorsPath);
 
 		// Commit local release destination changes
 		runCmd('git add --all ' + options.destDir + ' && git commit -m "'
@@ -104,10 +106,11 @@ module.exports = function(grunt) {
 	 *            execute
 	 * @param shortlog
 	 *            true to log only the length of the output
-	 * @param nodups
-	 *            true to remove duplicate entry lines from results
+	 * @param dupsPath
+	 *            path to the command output that will be read, duplicate entry
+	 *            lines removed and re-written
 	 */
-	function runCmd(cmd, wpath, nofail, shortlog, nodups) {
+	function runCmd(cmd, wpath, nofail, shortlog, dupsPath) {
 		grunt.log.writeln('>> ' + cmd);
 		var rtn = null;
 		if (typeof cmd === 'string') {
@@ -127,12 +130,14 @@ module.exports = function(grunt) {
 			throw grunt.util.error(e);
 		}
 		var output = rtn.output;
-		if (output && nodups) {
+		if (dupsPath) {
 			// remove duplicate lines
-			output = output.replace(regexDupLines, '$1');
+			output = grunt.file.read(dupsPath).replace(regexDupLines, '$1');
+			grunt.file.write(dupsPath, output);
 		}
 		grunt.log.writeln('<< '
-				+ (shortlog === true ? output.length + ' characters' : output));
+				+ (shortlog === true || !output.length ? output.length
+						+ ' characters' : output));
 		if (output && wpath) {
 			grunt.file.write(wpath, output);
 		}
