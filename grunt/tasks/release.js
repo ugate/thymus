@@ -78,7 +78,7 @@ module.exports = function(grunt) {
 			args : [ '-rf', '*' ]
 		});
 		runCmd('git checkout master -- ' + options.destDir);
-		runCmd('git add ' + options.destDir);
+		runCmd('git add --force ' + options.destDir);
 		runCmd('git commit -m "' + relMsg + '"');
 		runCmd('git push ' + options.destBranch);
 
