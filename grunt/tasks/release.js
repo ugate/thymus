@@ -73,13 +73,13 @@ module.exports = function(grunt) {
 		// runCmd('git commit -m "Removing release directory"');
 		runCmd('git add --force ' + options.destDir);
 		runCmd('git commit -m "' + relMsg + '"');
-		runCmd('git push origin master');
+		/*runCmd('git push origin master');
 
 		// Tag release
 		runCmd('git tag -a ' + commit.version + ' -m "' + chgLogRtn + '"');
 		grunt.log.writeln('Released: ' + commit.version + ' from '
 				+ options.destDir + ' to ' + options.destBranch);
-
+*/
 		// Publish site
 		if (commit.skips.indexOf('gh-pages') >= 0) {
 			return;
