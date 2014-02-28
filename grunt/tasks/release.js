@@ -40,7 +40,7 @@ module.exports = function(grunt) {
 		var authorsRtn = '';
 
 		// Capture commit message
-		commit = envl.getCommitNumber(grunt, options.commitMessage);
+		commit = envl.getCommit(grunt, options.commitMessage);
 		grunt.log.writeln('Commit message: ' + commit.message);
 		if (!commit.version) {
 			return;

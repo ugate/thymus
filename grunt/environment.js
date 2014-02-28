@@ -1,7 +1,7 @@
 'use strict';
 
 var regexRelease = /released?\s*v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/mi;
-var regexSkips = /\[\s?skip\s+.+\]/gmi;
+var regexSkips = /\[\s?skip\s+(.+)\]/gmi;
 
 /**
  * Environmental utility
@@ -57,6 +57,7 @@ module.exports = {
 				skps = s;
 			}
 		}
+		grunt.log.writeln('Skipping "' + skips.join(',') + '" tasks');
 		return {
 			number : cn,
 			message : cm,
@@ -68,10 +69,12 @@ module.exports = {
 	/**
 	 * Task array that takes into account possible skip options
 	 * 
+	 * @param grunt
+	 *            the grunt instance
 	 * @param skips
 	 *            the array of tasks to skip
 	 */
-	Tasks : function(skips) {
+	Tasks : function(grunt, skips) {
 
 		/**
 		 * Tasks array (should call tasks.add to push)
@@ -88,8 +91,10 @@ module.exports = {
 		 */
 		this.add = function(task) {
 			if (skips && skips.indexOf(task) >= 0) {
+				grunt.log.writeln('Skipping "' + task + '" task');
 				return false;
 			}
+			grunt.log.writeln('Queuing "' + task + '" task');
 			return this.tasks.push(task);
 		};
 	},
