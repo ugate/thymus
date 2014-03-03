@@ -55,11 +55,6 @@ module.exports = function(grunt) {
 		grunt.log.writeln('Preparing release: ' + commit.version);
 		var relMsg = commit.message + ' ' + util.skipRef('ci');
 
-		// Create distribution assets
-		var distAsset = commit.reponame + '-' + commit.version + '-dist.zip';
-		runCmd('git archive -v -o ' + distAsset + ' --format=zip '
-				+ options.destDir + '/');
-
 		// Generate change log for release using all messages since last
 		// tag/release
 		var chgLogPath = options.destDir + '/' + options.chgLog;
@@ -81,9 +76,14 @@ module.exports = function(grunt) {
 		runCmd('git checkout master');
 
 		// Commit changes to master
-		// runCmd('git add --force ' + options.destDir);
-		// runCmd('git commit -m "' + relMsg + '"');
+		runCmd('git add --force ' + options.destDir);
+		runCmd('git commit -m "' + relMsg + '"');
 		// runCmd('git push -f origin master');
+
+		// Create distribution assets
+		var distAsset = commit.reponame + '-' + commit.version + '-dist.zip';
+		runCmd('git archive -v -o ' + distAsset + ' --format=zip master '
+				+ options.destDir + '/');
 
 		// Tag release
 		runCmd('git tag -f -a ' + commit.versionTag + ' -m "' + chgLogRtn + '"');
