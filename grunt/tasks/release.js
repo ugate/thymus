@@ -50,15 +50,16 @@ module.exports = function(grunt) {
 			return;
 		}
 
-		// TODO : verify commit message release version is less than
-		// current version using "git describe --abbrev=0 --tags"
-		grunt.log.writeln('Preparing release: ' + commit.version);
+		// TODO : verify release version is less than last release version
+		var lastVerTag = runCmd('git describe --abbrev=0 --tags');
+		grunt.log.writeln('Preparing release: ' + commit.version
+				+ ' (last release: ' + lastVerTag + ')');
 		var relMsg = commit.message + ' ' + util.skipRef('ci');
 
 		// Generate change log for release using all messages since last
 		// tag/release
 		var chgLogPath = options.destDir + '/' + options.chgLog;
-		chgLogRtn = runCmd('git --no-pager log ' + commit.versionTag
+		chgLogRtn = runCmd('git --no-pager log ' + lastVerTag
 				+ '..HEAD --pretty=format:"  * %s" > ' + chgLogPath, null,
 				false, true, chgLogPath);
 
@@ -83,7 +84,7 @@ module.exports = function(grunt) {
 		// Create distribution assets
 		var distAsset = commit.reponame + '-' + commit.version + '-dist.zip';
 		runCmd('git archive -v -o ' + distAsset + ' --format=zip master '
-				+ options.destDir + '/');
+				+ options.destDir);
 
 		// Tag release
 		runCmd('git tag -f -a ' + commit.versionTag + ' -m "' + chgLogRtn + '"');
