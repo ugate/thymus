@@ -212,7 +212,7 @@ module.exports = function(grunt) {
 										return '/';
 									});
 							opts.path = opts.path.replace(/{(\?.+)}/, '$1='
-									+ commit.version);
+									+ commit.versionTag);
 							opts.headers = {
 								'Content-Type' : 'application/zip'
 							};
@@ -265,7 +265,7 @@ module.exports = function(grunt) {
 		fs.createReadStream(filePath, {
 			'flags' : 'r',
 			'encoding' : 'binary',
-			'mode' : 0666,
+			'mode' : '\0666',
 			'bufferSize' : chunkSize
 		}).addListener("data", function(chunk) {
 			// Since this is binary data, we cat use String.prototype.length We
