@@ -4,6 +4,7 @@ var shell = require('shelljs');
 var fs = require('fs');
 var zlib = require('zlib');
 var util = require('../util');
+var regexLastVer = /v(?=[^v]*$).+/g;
 var regexDupLines = /^(.*)(\r?\n\1)+$/gm;
 var regexKey = /(https?:\/\/|:)+(?=[^:]*$)[a-z0-9]+(@)/gmi;
 var regexHost = /^https?\:\/\/([^\/?#]+)(?:[\/?#]|$)/i;
@@ -51,7 +52,10 @@ module.exports = function(grunt) {
 		}
 
 		// TODO : verify release version is less than last release version
-		var lastVerTag = runCmd('git describe --abbrev=0 --tags --always');
+		var lastVerTag = runCmd('git ls-remote --tags').match(regexLastVer);
+		if (lastVerTag) {
+			lastVerTag = lastVerTag[0];
+		}
 		grunt.log.writeln('Preparing release: ' + commit.version
 				+ ' (last release: ' + lastVerTag + ')');
 		var relMsg = commit.message + ' ' + util.skipRef('ci');
