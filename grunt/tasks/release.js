@@ -50,15 +50,8 @@ module.exports = function(grunt) {
 			return;
 		}
 
-		// Setup
-		var link = '${GH_TOKEN}@github.com/' + commit.slug + '.git';
-		runCmd('git config --global user.email "travis@travis-ci.org"');
-		runCmd('git config --global user.name "travis"');
-		runCmd('git remote rm origin');
-		runCmd('git remote add origin https://' + commit.username + ':' + link);
-		runCmd('git checkout master');
-
 		// TODO : verify release version is less than last release version
+		runCmd('git fetch --tags');
 		var lastVerTag = runCmd('git describe --abbrev=0 --tags '
 				+ commit.number);
 		grunt.log.writeln('Preparing release: ' + commit.version
@@ -76,6 +69,14 @@ module.exports = function(grunt) {
 		var authorsPath = options.destDir + '/' + options.authors;
 		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u > '
 				+ authorsPath, null, true, false, authorsPath);
+
+		// Setup
+		var link = '${GH_TOKEN}@github.com/' + commit.slug + '.git';
+		runCmd('git config --global user.email "travis@travis-ci.org"');
+		runCmd('git config --global user.name "travis"');
+		runCmd('git remote rm origin');
+		runCmd('git remote add origin https://' + commit.username + ':' + link);
+		runCmd('git checkout master');
 
 		// Commit changes to master
 		runCmd('git add --force ' + options.destDir);
