@@ -66,6 +66,7 @@ module.exports = {
 			number : cn,
 			message : cm,
 			version : v,
+			versionTag : 'v' + v,
 			slug : sl,
 			username : sls.length ? sls[0] : '',
 			reponame : sls.length > 1 ? sls[1] : '',
