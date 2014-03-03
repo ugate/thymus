@@ -51,7 +51,8 @@ module.exports = function(grunt) {
 		}
 
 		// TODO : verify release version is less than last release version
-		var lastVerTag = runCmd('git describe --abbrev=0 --tags');
+		var lastVerTag = runCmd('git describe --abbrev=0 --tags '
+				+ commit.number);
 		grunt.log.writeln('Preparing release: ' + commit.version
 				+ ' (last release: ' + lastVerTag + ')');
 		var relMsg = commit.message + ' ' + util.skipRef('ci');
