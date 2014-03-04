@@ -52,6 +52,8 @@ module.exports = function(grunt) {
 			return;
 		}
 
+		// NOTE : clone depth needs to be high enough to capture details
+		// gathered by GIT (see depth option in .travis.yml)
 		// TODO : verify release version is less than last release version
 		var lastVerTag = runCmd('git describe --abbrev=0 --tags').replace(
 				regexLines, '');
@@ -86,7 +88,7 @@ module.exports = function(grunt) {
 
 		// Create distribution assets
 		var distAsset = commit.reponame + '-' + commit.version + '-dist.zip';
-		runCmd('git archive -v -o ' + distAsset + ' --format=zip master '
+		runCmd('git archive -v -o ' + distAsset + ' --format=zip HEAD '
 				+ options.destDir);
 
 		// Tag release
