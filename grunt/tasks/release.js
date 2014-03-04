@@ -94,10 +94,11 @@ module.exports = function(grunt) {
 		// Tag release
 		runCmd('git tag -f -a ' + commit.versionTag + ' -m "' + chgLogRtn + '"');
 		runCmd('git push -f origin ' + commit.versionTag);
-		grunt.log.writeln('Released: ' + commit.version + ' in '
-				+ options.destDir);
+		// git push --delete origin tagname
 
 		// Distribute archive asset for tagged release
+		grunt.log.writeln('Uploading "' + distAsset + '" release asset for '
+				+ commit.version);
 		var done = this.async();
 		uploadDistAsset(distAsset, commit, options, function(json, e) {
 			if (e) {
@@ -206,7 +207,7 @@ module.exports = function(grunt) {
 			res.on('data', function(d) {
 				var rls = null, rl = null;
 				try {
-					rls = JSON.parse(d);
+					rls = JSON.parse(d.replace(regexLines, ' '));
 					for (var i = 0; i < rls.length; i++) {
 						if (rls[i].tag_name == commit.versionTag) {
 							// upload asset
@@ -220,13 +221,15 @@ module.exports = function(grunt) {
 							opts.path = opts.path.replace(/{(\?.+)}/, '$1='
 									+ commit.versionTag);
 							opts.headers = {
-								'Content-Type' : 'application/zip'
+								'Content-Type' : 'application/zip',
+								'Authorization' : 'token ${GH_TOKEN}'
 							};
 							var req2 = https.request(opts, function(res2) {
 								res.on('data', function(d2) {
 									var cf = null;
 									try {
-										cf = JSON.parse(d2);
+										cf = JSON.parse(d2.replace(regexLines,
+												' '));
 										try {
 											cb(cf);
 										} catch (e) {
@@ -240,7 +243,7 @@ module.exports = function(grunt) {
 							req2.on('error', function(e) {
 								cb(rl, e);
 							});
-							reqWrite(req2, filePath);
+							streamWrite(req2, filePath);
 							break;
 						}
 					}
@@ -255,6 +258,42 @@ module.exports = function(grunt) {
 		});
 	}
 
+	function authGitHub(code, cb) {
+		var data = qs.stringify({
+			client_id : config.oauth_client_id, // your GitHub client_id
+			client_secret : config.oauth_client_secret, // and secret
+			code : code
+		// the access code we parsed earlier
+		});
+
+		var reqOptions = {
+			host : 'github.com',
+			port : '443',
+			path : '/login/oauth/access_token',
+			method : 'POST',
+			headers : {
+				'content-length' : data.length
+			}
+		};
+
+		var body = '';
+		var req = https.request(reqOptions, function(res) {
+			res.setEncoding('utf8');
+			res.on('data', function(chunk) {
+				body += chunk;
+			});
+			res.on('end', function() {
+				cb(null, qs.parse(body).access_token);
+			});
+		});
+
+		req.write(data);
+		req.end();
+		req.on('error', function(e) {
+			cb(e.message);
+		});
+	}
+
 	/**
 	 * Writes file to the specified stream
 	 * 
@@ -263,7 +302,7 @@ module.exports = function(grunt) {
 	 * @param filePath
 	 *            the file path to read from
 	 */
-	function reqWrite(stream, filePath) {
+	function streamWrite(stream, filePath) {
 		var chunkSize = 64 * 1024;
 		var bufSize = 64 * 1024;
 		var bufPos = 0;
