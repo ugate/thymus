@@ -52,10 +52,7 @@ module.exports = function(grunt) {
 		}
 
 		// TODO : verify release version is less than last release version
-		var lastVerTag = runCmd('git ls-remote --tags').match(regexLastVer);
-		if (lastVerTag) {
-			lastVerTag = lastVerTag[0];
-		}
+		var lastVerTag = runCmd('git describe --abbrev=0 --tags');
 		grunt.log.writeln('Preparing release: ' + commit.version
 				+ ' (last release: ' + lastVerTag + ')');
 		var relMsg = commit.message + ' ' + util.skipRef('ci');
@@ -78,7 +75,7 @@ module.exports = function(grunt) {
 		runCmd('git config --global user.name "travis"');
 		runCmd('git remote rm origin');
 		runCmd('git remote add origin https://' + commit.username + ':' + link);
-		runCmd('git checkout master');
+		//runCmd('git checkout master');
 
 		// Commit changes to master
 		runCmd('git add --force ' + options.destDir);
