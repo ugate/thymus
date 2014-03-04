@@ -5,6 +5,7 @@ var fs = require('fs');
 var zlib = require('zlib');
 var util = require('../util');
 var regexLastVer = /v(?=[^v]*$).+/g;
+var regexLines = /\r?\n/g;
 var regexDupLines = /^(.*)(\r?\n\1)+$/gm;
 var regexKey = /(https?:\/\/|:)+(?=[^:]*$)[a-z0-9]+(@)/gmi;
 var regexHost = /^https?\:\/\/([^\/?#]+)(?:[\/?#]|$)/i;
@@ -52,7 +53,8 @@ module.exports = function(grunt) {
 		}
 
 		// TODO : verify release version is less than last release version
-		var lastVerTag = runCmd('git describe --abbrev=0 --tags');
+		var lastVerTag = runCmd('git describe --abbrev=0 --tags').replace(
+				regexLines, '');
 		grunt.log.writeln('Preparing release: ' + commit.version
 				+ ' (last release: ' + lastVerTag + ')');
 		var relMsg = commit.message + ' ' + util.skipRef('ci');
@@ -75,7 +77,7 @@ module.exports = function(grunt) {
 		runCmd('git config --global user.name "travis"');
 		runCmd('git remote rm origin');
 		runCmd('git remote add origin https://' + commit.username + ':' + link);
-		//runCmd('git checkout master');
+		// runCmd('git checkout master');
 
 		// Commit changes to master
 		runCmd('git add --force ' + options.destDir);
@@ -172,7 +174,7 @@ module.exports = function(grunt) {
 		if (output) {
 			grunt.log.writeln(output.replace(regexKey, '$1[SECURE]$2'));
 		}
-		return output;
+		return output || '';
 	}
 
 	/**
@@ -203,7 +205,7 @@ module.exports = function(grunt) {
 				var rls = null, rl = null;
 				try {
 					rls = JSON.parse(d);
-					for ( var i = 0; i < rls.length; i++) {
+					for (var i = 0; i < rls.length; i++) {
 						if (rls[i].tag_name == commit.versionTag) {
 							// upload asset
 							rl = rls[i];
