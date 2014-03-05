@@ -100,20 +100,21 @@ module.exports = function(grunt) {
 		grunt.log.writeln('Uploading "' + distAsset + '" release asset for '
 				+ commit.version);
 		var done = this.async();
-		uploadDistAsset(distAsset, commit, options, function(json, e) {
-			if (e) {
-				grunt.log.error(grunt.util.error('Failed to upload asset '
-						+ distAsset, e));
-			} else if (cf.state != 'uploaded') {
-				e = grunt.util.error('Asset upload failed with state: '
-						+ cf.state);
-				grunt.log.error(e);
-			} else {
-				grunt.log.writeln('Distributed/' + cf.state + ' ' + distAsset
-						+ ' asset');
-			}
-			done(e);
-		});
+		uploadDistAsset(distAsset, 'application/zip', util.getGitToken(),
+				commit, options, function(json, e) {
+					if (e) {
+						grunt.log.error(grunt.util.error(
+								'Failed to upload asset ' + distAsset, e));
+					} else if (json && json.state != 'uploaded') {
+						e = grunt.util.error('Asset upload failed with state: '
+								+ json.state);
+						grunt.log.error(e);
+					} else {
+						grunt.log.writeln('Distributed/' + cf.state + ' '
+								+ distAsset + ' asset');
+					}
+					done(e);
+				});
 
 		// Publish site
 		/*
@@ -186,6 +187,11 @@ module.exports = function(grunt) {
 	 * 
 	 * @param filePath
 	 *            the path to the file that will be added
+	 * @param contentType
+	 *            the content type of the file being uploaded
+	 * @param authToken
+	 *            the authorization token that will be used for uploading the
+	 *            asset
 	 * @param commit
 	 *            the commit the asset is for
 	 * @param options
@@ -194,7 +200,19 @@ module.exports = function(grunt) {
 	 *            the call back function (passed parameters: JSON response,
 	 *            error)
 	 */
-	function uploadDistAsset(filePath, commit, options, cb) {
+	function uploadDistAsset(filePath, contentType, authToken, commit, options,
+			cb) {
+		if (!authToken) {
+			cb(null, grunt.util.error('Invalid authorization token'));
+			return;
+		}
+		function chk(o) {
+			if (o.message) {
+				throw grunt.util.error(o.message);
+			}
+			return o;
+		}
+		var fstat = fs.statSync(filePath);
 		var https = require('https');
 		var opts = {
 			hostname : 'api.github.com',
@@ -202,12 +220,18 @@ module.exports = function(grunt) {
 			path : '/repos/' + commit.slug + '/releases',
 			method : 'GET'
 		};
+		opts.headers = {
+			'User-Agent' : 'Thymus-App'
+		};
 		var req = https.request(opts, function(res) {
 			var sc = res.statusCode;
-			res.on('data', function(d) {
-				var rls = null, rl = null;
+			var data = '', data2 = '', rls = null, rl = null;
+			res.on('data', function(chunk) {
+				data += chunk;
+			});
+			res.on('end', function() {
 				try {
-					rls = JSON.parse(d.replace(regexLines, ' '));
+					rls = chk(JSON.parse(data.replace(regexLines, ' ')));
 					for (var i = 0; i < rls.length; i++) {
 						if (rls[i].tag_name == commit.versionTag) {
 							// upload asset
@@ -220,16 +244,22 @@ module.exports = function(grunt) {
 									});
 							opts.path = opts.path.replace(/{(\?.+)}/, '$1='
 									+ commit.versionTag);
-							opts.headers = {
-								'Content-Type' : 'application/zip',
-								'Authorization' : 'token ${GH_TOKEN}'
-							};
+							opts.headers['Content-Type'] = contentType;
+							opts.headers['Authorization'] = 'token '
+									+ process.env.GH_TOKEN;
+							opts.headers['Content-Length'] = fstat.size;
 							var req2 = https.request(opts, function(res2) {
-								res.on('data', function(d2) {
+								res2.on('data', function(chunk) {
+									data2 += chunk;
+								});
+								res2.on('end', function() {
 									var cf = null;
 									try {
-										cf = JSON.parse(d2.replace(regexLines,
-												' '));
+										cf = chk(JSON.parse(data2.replace(
+												regexLines, ' ')));
+										if (cf.message) {
+											throw grunt.util.error(cf.message);
+										}
 										try {
 											cb(cf);
 										} catch (e) {
@@ -255,42 +285,6 @@ module.exports = function(grunt) {
 		req.end();
 		req.on('error', function(e) {
 			cb(null, e);
-		});
-	}
-
-	function authGitHub(code, cb) {
-		var data = qs.stringify({
-			client_id : config.oauth_client_id, // your GitHub client_id
-			client_secret : config.oauth_client_secret, // and secret
-			code : code
-		// the access code we parsed earlier
-		});
-
-		var reqOptions = {
-			host : 'github.com',
-			port : '443',
-			path : '/login/oauth/access_token',
-			method : 'POST',
-			headers : {
-				'content-length' : data.length
-			}
-		};
-
-		var body = '';
-		var req = https.request(reqOptions, function(res) {
-			res.setEncoding('utf8');
-			res.on('data', function(chunk) {
-				body += chunk;
-			});
-			res.on('end', function() {
-				cb(null, qs.parse(body).access_token);
-			});
-		});
-
-		req.write(data);
-		req.end();
-		req.on('error', function(e) {
-			cb(e.message);
 		});
 	}
 

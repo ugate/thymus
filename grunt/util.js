@@ -120,5 +120,12 @@ module.exports = {
 	 */
 	skipRef : function(task) {
 		return task ? '[skip ' + task + ']' : task;
+	},
+
+	/**
+	 * @returns the GIT authentication token
+	 */
+	getGitToken : function() {
+		return process.env.GH_TOKEN;
 	}
 };
