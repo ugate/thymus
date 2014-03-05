@@ -32,16 +32,23 @@ module.exports = function(grunt) {
 					authors : 'AUTHORS.md',
 					distAsset : true
 				});
-				release.call(this, options);
+				var done = this.async();
+				try {
+					release.call(this, done, options);
+				} catch (e) {
+					done(e);
+				}
 			});
 
 	/**
 	 * Checks for release commit message and performs release
 	 * 
+	 * @param done
+	 *            the grunt done function
 	 * @param options
 	 *            the grunt options
 	 */
-	function release(options) {
+	function release(done, options) {
 		var chgLogRtn = '';
 		var authorsRtn = '';
 
@@ -98,20 +105,30 @@ module.exports = function(grunt) {
 
 		// Distribute archive asset for tagged release
 		grunt.log.writeln('Uploading "' + distAsset + '" release asset for '
-				+ commit.version);
-		var done = this.async();
-		uploadDistAsset(distAsset, 'application/zip', util.getGitToken(),
-				commit, options, function(json, e) {
-					if (e) {
-						grunt.log.error(grunt.util.error(
-								'Failed to upload asset ' + distAsset, e));
-					} else if (json && json.state != 'uploaded') {
-						e = grunt.util.error('Asset upload failed with state: '
-								+ json.state);
-						grunt.log.error(e);
-					} else {
-						grunt.log.writeln('Distributed/' + cf.state + ' '
-								+ distAsset + ' asset');
+				+ commit.versionTag);
+		uploadDistAsset(
+				distAsset,
+				'application/zip',
+				util.getGitToken(),
+				commit,
+				options,
+				function(json, e) {
+					try {
+						if (e) {
+							e = typeof e === 'string' ? grunt.util.error(e) : e;
+							grunt.log.error(grunt.util.error(
+									'Failed to upload asset ' + distAsset, e));
+						} else if (json && json.state != 'uploaded') {
+							e = grunt.util
+									.error('Asset upload failed with state: '
+											+ json.state);
+							grunt.log.error(e);
+						} else {
+							grunt.log.writeln('Distributed/' + cf.state + ' '
+									+ distAsset + ' asset');
+						}
+					} catch (e2) {
+						grunt.log.error(e2);
 					}
 					done(e);
 				});
@@ -208,7 +225,7 @@ module.exports = function(grunt) {
 		}
 		function chk(o) {
 			if (o.message) {
-				throw grunt.util.error(o.message);
+				throw new Error(o.message);
 			}
 			return o;
 		}
@@ -221,7 +238,7 @@ module.exports = function(grunt) {
 			method : 'GET'
 		};
 		opts.headers = {
-			'User-Agent' : 'Thymus-App'
+			'User-Agent' : commit.slug
 		};
 		var req = https.request(opts, function(res) {
 			var sc = res.statusCode;
@@ -231,6 +248,7 @@ module.exports = function(grunt) {
 			});
 			res.on('end', function() {
 				try {
+					grunt.log.writeln(data);
 					rls = chk(JSON.parse(data.replace(regexLines, ' ')));
 					for (var i = 0; i < rls.length; i++) {
 						if (rls[i].tag_name == commit.versionTag) {
@@ -255,11 +273,9 @@ module.exports = function(grunt) {
 								res2.on('end', function() {
 									var cf = null;
 									try {
+										grunt.log.writeln(data2);
 										cf = chk(JSON.parse(data2.replace(
 												regexLines, ' ')));
-										if (cf.message) {
-											throw grunt.util.error(cf.message);
-										}
 										try {
 											cb(cf);
 										} catch (e) {
