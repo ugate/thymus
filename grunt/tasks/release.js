@@ -9,6 +9,15 @@ var regexLines = /\r?\n/g;
 var regexDupLines = /^(.*)(\r?\n\1)+$/gm;
 var regexKey = /(https?:\/\/|:)+(?=[^:]*$)[a-z0-9]+(@)/gmi;
 var regexHost = /^https?\:\/\/([^\/?#]+)(?:[\/?#]|$)/i;
+var gitHubHostname = 'github';
+var gitHubRegexParam = /{(\?.+)}/;
+var gitHubReleaseTagName = 'tag_name';
+var gitHubReleaseUploadUrl = 'upload_url';
+var gitHubReleaseCommitish = 'target_commitish';
+var gitHubReleaseName = 'name';
+var gitHubReleaseBody = 'body';
+var gitHubReleaseDraftFlag = 'draft';
+var gitHubReleasePreFlag = 'prerelease';
 
 /**
  * When a commit message contains "release v" followed by a version number
@@ -30,7 +39,8 @@ module.exports = function(grunt) {
 					destDir : 'dist',
 					chgLog : 'HISTORY.md',
 					authors : 'AUTHORS.md',
-					distAsset : true
+					distAsset : true,
+					gitHostname : gitHubHostname
 				});
 				var done = this.async();
 				try {
@@ -73,12 +83,12 @@ module.exports = function(grunt) {
 		var chgLogPath = options.destDir + '/' + options.chgLog;
 		chgLogRtn = runCmd('git --no-pager log ' + lastVerTag
 				+ '..HEAD --pretty=format:"  * %s" > ' + chgLogPath, null,
-				false, true, chgLogPath);
+				false, chgLogPath);
 
 		// Generate list of authors/contributors since last tag/release
 		var authorsPath = options.destDir + '/' + options.authors;
 		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u > '
-				+ authorsPath, null, true, false, authorsPath);
+				+ authorsPath, null, false, authorsPath);
 
 		// Setup
 		var link = '${GH_TOKEN}@github.com/' + commit.slug + '.git';
@@ -99,39 +109,37 @@ module.exports = function(grunt) {
 				+ options.destDir);
 
 		// Tag release
-		runCmd('git tag -f -a ' + commit.versionTag + ' -m "' + chgLogRtn + '"');
-		runCmd('git push -f origin ' + commit.versionTag);
-		// git push --delete origin tagname
-
-		// Distribute archive asset for tagged release
-		grunt.log.writeln('Uploading "' + distAsset + '" release asset for '
-				+ commit.versionTag);
-		uploadDistAsset(
-				distAsset,
-				'application/zip',
-				util.getGitToken(),
-				commit,
-				options,
-				function(json, e) {
-					try {
-						if (e) {
-							e = typeof e === 'string' ? grunt.util.error(e) : e;
-							grunt.log.error(grunt.util.error(
-									'Failed to upload asset ' + distAsset, e));
-						} else if (json && json.state != 'uploaded') {
-							e = grunt.util
-									.error('Asset upload failed with state: '
-											+ json.state);
-							grunt.log.error(e);
-						} else {
-							grunt.log.writeln('Distributed/' + cf.state + ' '
-									+ distAsset + ' asset');
+		if (options.gitHostname.toLowerCase() !== gitHubHostname) {
+			runCmd('git tag -f -a ' + commit.versionTag + ' -m "' + chgLogRtn
+					+ '"');
+			runCmd('git push -f origin ' + commit.versionTag);
+			// git push --delete origin tagname
+		} else {
+			// Distribute archive asset for tagged release
+			grunt.log.writeln('Uploading "' + distAsset
+					+ '" release asset for ' + commit.versionTag);
+			uploadDistAsset(distAsset, 'application/zip', util.getGitToken(),
+					commit, chgLogRtn, options, function(step, json, e) {
+						try {
+							if (e) {
+								e = typeof e === 'string' ? grunt.util.error(e)
+										: e;
+								grunt.log.error(grunt.util.error('Failed to '
+										+ step + ' ' + distAsset, e));
+							} else if (json && json.state != 'uploaded') {
+								e = grunt.util.error(step
+										+ ' failed with state: ' + json.state);
+								grunt.log.error(e);
+							} else {
+								grunt.log.writeln('Distributed/' + cf.state
+										+ ' ' + distAsset + ' asset');
+							}
+						} catch (e2) {
+							grunt.log.error(e2);
 						}
-					} catch (e2) {
-						grunt.log.error(e2);
-					}
-					done(e);
-				});
+						done(e);
+					});
+		}
 
 		// Publish site
 		/*
@@ -158,13 +166,11 @@ module.exports = function(grunt) {
 	 * @param nofail
 	 *            true to prevent throwing an error when the command fails to
 	 *            execute
-	 * @param shortlog
-	 *            true to log only the length of the output
 	 * @param dupsPath
 	 *            path to the command output that will be read, duplicate entry
 	 *            lines removed and re-written
 	 */
-	function runCmd(cmd, wpath, nofail, shortlog, dupsPath) {
+	function runCmd(cmd, wpath, nofail, dupsPath) {
 		grunt.log.writeln(cmd);
 		var rtn = null;
 		if (typeof cmd === 'string') {
@@ -184,13 +190,15 @@ module.exports = function(grunt) {
 			throw grunt.util.error(e);
 		}
 		var output = rtn.output;
-		if (dupsPath) {
-			// remove duplicate lines
-			output = grunt.file.read(dupsPath).replace(regexDupLines, '$1');
-			grunt.file.write(dupsPath, output);
-		}
 		if (output && wpath) {
 			grunt.file.write(wpath, output);
+		}
+		if (dupsPath) {
+			// remove duplicate lines
+			output = grunt.file.read(dupsPath, {
+				encoding : grunt.file.defaultEncoding
+			}).replace(regexDupLines, '$1');
+			grunt.file.write(dupsPath, output);
 		}
 		if (output) {
 			grunt.log.writeln(output.replace(regexKey, '$1[SECURE]$2'));
@@ -211,96 +219,108 @@ module.exports = function(grunt) {
 	 *            asset
 	 * @param commit
 	 *            the commit the asset is for
+	 * @param desc
+	 *            release description (can be in markdown)
 	 * @param options
 	 *            the task options
 	 * @param cb
-	 *            the call back function (passed parameters: JSON response,
-	 *            error)
+	 *            the call back function (passed parameters: the current task,
+	 *            JSON response, error)
 	 */
-	function uploadDistAsset(filePath, contentType, authToken, commit, options,
-			cb) {
+	function uploadDistAsset(filePath, contentType, authToken, commit, desc,
+			options, cb) {
+		var step = 'release';
 		if (!authToken) {
-			cb(null, grunt.util.error('Invalid authorization token'));
+			cb(step, null, grunt.util.error('Invalid authorization token'));
 			return;
 		}
+
 		function chk(o) {
 			if (o.message) {
 				throw new Error(o.message);
 			}
 			return o;
 		}
+		// set new release API parameters
+		var params = new util.UrlParams(grunt, gitHubReleaseTagName,
+				commit.versionTag, gitHubReleaseName, commit.versionTag,
+				gitHubReleaseBody, desc, gitHubReleasePreFlag,
+				commit.preReleaseType != null);
 		var fstat = fs.statSync(filePath);
 		var https = require('https');
 		var opts = {
 			hostname : 'api.github.com',
 			port : 443,
-			path : '/repos/' + commit.slug + '/releases',
-			method : 'GET'
+			path : '/repos/' + commit.slug + '/releases' + params.get(),
+			method : 'POST'
 		};
 		opts.headers = {
-			'User-Agent' : commit.slug
+			'User-Agent' : commit.slug,
+			'Authorization' : 'token ' + process.env.GH_TOKEN
 		};
+		// post new tag/release
+		// see http://developer.github.com/v3/repos/releases/#create-a-release
 		var req = https.request(opts, function(res) {
 			var sc = res.statusCode;
-			var data = '', data2 = '', rls = null, rl = null;
+			var data = '', data2 = '', rl = null;
 			res.on('data', function(chunk) {
 				data += chunk;
 			});
 			res.on('end', function() {
 				try {
-					grunt.log.writeln(data);
-					rls = chk(JSON.parse(data.replace(regexLines, ' ')));
-					for (var i = 0; i < rls.length; i++) {
-						if (rls[i].tag_name == commit.versionTag) {
-							// upload asset
-							rl = rls[i];
-							opts.method = 'POST';
-							opts.path = rl.upload_url.replace(regexHost,
-									function(m, h) {
-										opts.hostname = h;
-										return '/';
-									});
-							opts.path = opts.path.replace(/{(\?.+)}/, '$1='
-									+ commit.versionTag);
-							opts.headers['Content-Type'] = contentType;
-							opts.headers['Authorization'] = 'token '
-									+ process.env.GH_TOKEN;
-							opts.headers['Content-Length'] = fstat.size;
-							var req2 = https.request(opts, function(res2) {
-								res2.on('data', function(chunk) {
-									data2 += chunk;
-								});
-								res2.on('end', function() {
-									var cf = null;
-									try {
-										grunt.log.writeln(data2);
-										cf = chk(JSON.parse(data2.replace(
-												regexLines, ' ')));
-										try {
-											cb(cf);
-										} catch (e) {
-											// consume
-										}
-									} catch (e) {
-										cb(cf || rl, e);
-									}
-								});
-							});
-							req2.on('error', function(e) {
-								cb(rl, e);
-							});
-							streamWrite(req2, filePath);
-							break;
+					rl = chk(JSON.parse(data.replace(regexLines, ' ')));
+					if (rl.tag_name == commit.versionTag) {
+						if (!filePath) {
+							cb(step, rl);
+							return;
 						}
+						// upload asset
+						step = 'upload asset';
+						opts.method = 'POST';
+						opts.path = rl[gitHubReleaseUploadUrl].replace(
+								regexHost, function(m, h) {
+									opts.hostname = h;
+									return '/';
+								});
+						opts.path = opts.path.replace(gitHubRegexParam, '$1='
+								+ commit.versionTag);
+						opts.headers['Content-Type'] = contentType;
+						opts.headers['Content-Length'] = fstat.size;
+						var req2 = https.request(opts, function(res2) {
+							res2.on('data', function(chunk) {
+								data2 += chunk;
+							});
+							res2.on('end', function() {
+								var cf = null;
+								try {
+									cf = chk(JSON.parse(data2.replace(
+											regexLines, ' ')));
+									try {
+										cb(step, cf);
+									} catch (e) {
+										// consume
+									}
+								} catch (e) {
+									cb(step, cf || rl, e);
+								}
+							});
+						});
+						req2.on('error', function(e) {
+							cb(step, rl, e);
+						});
+						streamWrite(req2, filePath);
+					} else {
+						cb(step, rl, 'No tag found for ' + commit.versionTag
+								+ ' in ' + tags.join(','));
 					}
 				} catch (e) {
-					cb(rl || rls, e);
+					cb(step, rl || rls, e);
 				}
 			});
 		});
 		req.end();
 		req.on('error', function(e) {
-			cb(null, e);
+			cb(step, null, e);
 		});
 	}
 

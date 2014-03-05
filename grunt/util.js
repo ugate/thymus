@@ -1,5 +1,6 @@
 'use strict';
 
+var regexPreRelease = /(alpha|beta)\.?(\d)?/mi;
 var regexRelease = /released?\s*v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/mi;
 var regexSkips = /\[\s?skip\s+(.+)\]/gmi;
 
@@ -27,7 +28,7 @@ module.exports = {
 		var cn = altNum || process.env.TRAVIS_COMMIT;
 		var cm = altMsg || process.env.TRAVIS_COMMIT_MESSAGE;
 		var sl = altSlug || process.env.TRAVIS_REPO_SLUG;
-		var v = null;
+		var v = null, pt = null, pv = null;
 		if (!cm) {
 			// TODO : the following can be removed once
 			// https://github.com/travis-ci/travis-ci/issues/965 is resolved
@@ -54,6 +55,13 @@ module.exports = {
 			var rv = cm.match(regexRelease);
 			if (rv.length > 1) {
 				v = rv[1];
+				var m = v.match(regexPreRelease);
+				if (m && m.length) {
+					pt = m[0];
+					if (m.length > 1) {
+						pv = m[1];
+					}
+				}
 			}
 			// extract skip tasks in format: [skip someTask]
 			cm.replace(regexSkips, function(m, t, c, s) {
@@ -70,6 +78,8 @@ module.exports = {
 			slug : sl,
 			username : sls.length ? sls[0] : '',
 			reponame : sls.length > 1 ? sls[1] : '',
+			preReleaseType : pt,
+			preReleaseVersion : pv,
 			skips : skps
 		};
 	},
@@ -77,6 +87,7 @@ module.exports = {
 	/**
 	 * Task array that takes into account possible skip options
 	 * 
+	 * @constructor
 	 * @param grunt
 	 *            the grunt instance
 	 * @param commit
@@ -127,5 +138,52 @@ module.exports = {
 	 */
 	getGitToken : function() {
 		return process.env.GH_TOKEN;
+	},
+
+	/**
+	 * URL parameter
+	 * 
+	 * @constructor
+	 * @param grunt
+	 *            the grunt instance
+	 * @param params
+	 *            an optional array of parameters
+	 */
+	UrlParams : function(grunt, params) {
+		var ps = [];
+
+		/**
+		 * Adds every passed argument to the URL parameters
+		 */
+		this.add = function() {
+			var args = arguments;
+			var n = '';
+			for (var i = 0; i < args.length; i++) {
+				if (i % 2 === 0) {
+					n = encodeURIComponent(args[i]);
+				} else {
+					ps.push(n + '=' + encodeURIComponent(args[i]));
+					n = '';
+				}
+			}
+		};
+
+		/**
+		 * @returns the URL encoded parameter string
+		 */
+		this.get = function() {
+			return (ps.length ? '?' : '') + ps.join('&');
+		};
+
+		/**
+		 * Clears out any existing URL parameters
+		 */
+		this.clear = function() {
+			ps = [];
+		};
+
+		if (params) {
+			this.add(params);
+		}
 	}
 };
