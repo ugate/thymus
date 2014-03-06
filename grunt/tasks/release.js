@@ -18,6 +18,7 @@ var gitHubReleaseId = 'id';
 var gitHubReleaseName = 'name';
 var gitHubReleaseBody = 'body';
 var gitHubReleaseDraftFlag = 'draft';
+var gitHubReleasePreFlag = 'prerelease';
 var gitHubReleaseErrorMsg = 'message';
 
 /**
@@ -309,8 +310,8 @@ module.exports = function(grunt) {
 		// set new release API parameters
 		var params = new util.UrlParams(grunt, gitHubReleaseTagName,
 				commit.versionTag, gitHubReleaseName, commit.versionTag,
-				gitHubReleaseBody, desc, gitHubReleasePreFlag,
-				commit.preReleaseType != null);
+				gitHubReleaseBody, desc, gitHubReleaseCommitish, commit.number,
+				gitHubReleasePreFlag, commit.preReleaseType != null);
 		var fstat = fs.statSync(filePath);
 		var releasePath = '/repos/' + commit.slug + '/releases';
 		var https = require('https');
