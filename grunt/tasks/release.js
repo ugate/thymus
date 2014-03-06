@@ -14,10 +14,11 @@ var gitHubRegexParam = /{(\?.+)}/;
 var gitHubReleaseTagName = 'tag_name';
 var gitHubReleaseUploadUrl = 'upload_url';
 var gitHubReleaseCommitish = 'target_commitish';
+var gitHubReleaseId = 'id';
 var gitHubReleaseName = 'name';
 var gitHubReleaseBody = 'body';
 var gitHubReleaseDraftFlag = 'draft';
-var gitHubReleasePreFlag = 'prerelease';
+var gitHubReleaseErrorMsg = 'message';
 
 /**
  * When a commit message contains "release v" followed by a version number
@@ -51,7 +52,8 @@ module.exports = function(grunt) {
 			});
 
 	/**
-	 * Checks for release commit message and performs release
+	 * When a release commit message is received a release is performed and a
+	 * repository web site is published
 	 * 
 	 * @param done
 	 *            the grunt done function
@@ -113,47 +115,106 @@ module.exports = function(grunt) {
 			runCmd('git tag -f -a ' + commit.versionTag + ' -m "' + chgLogRtn
 					+ '"');
 			runCmd('git push -f origin ' + commit.versionTag);
-			// git push --delete origin tagname
+			try {
+				// TODO : upload asset?
+				publish(function(step, o, e) {
+					// rollback
+					runCmd('git push --delete origin ' + commit.versionTag);
+				}, done, options, link, commit);
+			} catch (e) {
+				grunt.log.error(e);
+				done(false);
+			}
 		} else {
 			// Distribute archive asset for tagged release
 			grunt.log.writeln('Uploading "' + distAsset
 					+ '" release asset for ' + commit.versionTag);
-			uploadDistAsset(distAsset, 'application/zip', util.getGitToken(),
-					commit, chgLogRtn, options, function(step, json, e) {
-						try {
-							if (e) {
-								e = typeof e === 'string' ? grunt.util.error(e)
-										: e;
-								grunt.log.error(grunt.util.error('Failed to '
-										+ step + ' ' + distAsset, e));
-							} else if (json && json.state != 'uploaded') {
-								e = grunt.util.error(step
-										+ ' failed with state: ' + json.state);
-								grunt.log.error(e);
-							} else {
-								grunt.log.writeln('Distributed/' + cf.state
-										+ ' ' + distAsset + ' asset');
-							}
-						} catch (e2) {
-							grunt.log.error(e2);
+			releaseAndUploadAsset(distAsset, 'application/zip', util
+					.getGitToken(), commit, chgLogRtn, options, function(step,
+					json, rb, e) {
+				try {
+					if (e.length) {
+						grunt.log.error(new Error('Failed to ' + step + ' '
+								+ distAsset));
+						for (var i = 0; i < e.length; i++) {
+							grunt.log.error(e[i]);
 						}
-						done(e);
-					});
+						done(false);
+					} else if (json && json.state != 'uploaded') {
+						grunt.log.error(new Error(step + ' failed with state: '
+								+ json.state));
+						done(false);
+					} else {
+						grunt.log.writeln('Distributed/' + cf.state + ' '
+								+ distAsset + ' asset');
+						publish(rb, done, options, link, commit);
+					}
+				} catch (e2) {
+					grunt.log.error(e2);
+					done(false);
+				}
+			});
 		}
+	}
 
-		// Publish site
-		/*
-		 * runCmd('cd ..'); runCmd('git clone --quiet --branch=' +
-		 * options.destBranch + ' https://' + link + ' ' + options.destBranch + ' >
-		 * /dev/null'); runCmd('cd ' + options.destBranch); runCmd('git ls-files |
-		 * xargs rm'); // remove all tracked files runCmd('git commit -m "' +
-		 * relMsg + '"');
-		 * 
-		 * runCmd('cp -a ../' + commit.reponame + '/' + options.destBranch + '/*
-		 * .'); // runCmd('git checkout master -- ' + options.destDir);
-		 * runCmd('git add -A'); runCmd('git commit -m "' + relMsg + '"');
-		 * runCmd('git push -f origin ' + options.destBranch + ' > /dev/null');
-		 */
+	/**
+	 * Publish repository web site
+	 * 
+	 * @param rb
+	 *            the rollback function to call when the publish fails
+	 * @param done
+	 *            the grunt done function
+	 * @param options
+	 *            the grunt options
+	 * @param link
+	 *            the link to the repository
+	 * @param commit
+	 *            the commit object the release is for (should have a valid ID)
+	 */
+	function publish(rb, done, options, link, commit) {
+		if (!commit.releaseId) {
+			grunt.log.writeln('No release ID Skipping publishing to '
+					+ options.destBranch);
+			return;
+		}
+		try {
+			runCmd('cd ..');
+			runCmd('git clone --quiet --branch=' + options.destBranch
+					+ ' https://' + link + ' ' + options.destBranch
+					+ ' > /dev/null');
+			runCmd('cd ' + options.destBranch);
+			runCmd('git ls-files | xargs rm');
+			// remove all tracked files runCmd('git commit -m "' + relMsg +
+			// '"');
+
+			runCmd('cp -a ../' + commit.reponame + '/' + options.destBranch
+					+ '/*.');
+			// runCmd('git checkout master -- ' + options.destDir);
+			runCmd('git add -A');
+			runCmd('git commit -m "' + relMsg + '"');
+			runCmd('git push -f origin ' + options.destBranch + ' > /dev/null');
+
+			done();
+		} catch (e) {
+			if (typeof rb === 'function') {
+				rb(function(step, o, e2) {
+					if (e2) {
+						// rollback failed
+						grunt.log.error(new Error('Release rollback failed'));
+						for (var i = 0; i < e2.length; i++) {
+							grunt.log.error(e2[i]);
+						}
+						grunt.log.error(e);
+						done(false);
+					} else {
+						done();
+					}
+				});
+			} else {
+				grunt.log.error(e);
+				done(false);
+			}
+		}
 	}
 
 	/**
@@ -207,8 +268,11 @@ module.exports = function(grunt) {
 	}
 
 	/**
+	 * Tags/Releases from default branch (see
+	 * http://developer.github.com/v3/repos/releases/#create-a-release ) and
 	 * Uploads the file asset and associates it with a specified tagged release
-	 * see http://developer.github.com/v3/repos/releases/#upload-a-release-asset
+	 * (see
+	 * http://developer.github.com/v3/repos/releases/#upload-a-release-asset )
 	 * 
 	 * @param filePath
 	 *            the path to the file that will be added
@@ -218,7 +282,7 @@ module.exports = function(grunt) {
 	 *            the authorization token that will be used for uploading the
 	 *            asset
 	 * @param commit
-	 *            the commit the asset is for
+	 *            the commit object the asset is for
 	 * @param desc
 	 *            release description (can be in markdown)
 	 * @param options
@@ -227,17 +291,18 @@ module.exports = function(grunt) {
 	 *            the call back function (passed parameters: the current task,
 	 *            JSON response, error)
 	 */
-	function uploadDistAsset(filePath, contentType, authToken, commit, desc,
-			options, cb) {
+	function releaseAndUploadAsset(filePath, contentType, authToken, commit,
+			desc, options, cb) {
 		var step = 'release';
 		if (!authToken) {
-			cb(step, null, grunt.util.error('Invalid authorization token'));
+			cbi(null, grunt.util.error('Invalid authorization token'));
 			return;
 		}
-
+		var data = '', data2 = '', rl = null, cf = null, called = false, errors = [];
+		// check if API responded with an error message
 		function chk(o) {
-			if (o.message) {
-				throw new Error(o.message);
+			if (o[gitHubReleaseErrorMsg]) {
+				throw new Error(o[gitHubReleaseErrorMsg]);
 			}
 			return o;
 		}
@@ -247,11 +312,12 @@ module.exports = function(grunt) {
 				gitHubReleaseBody, desc, gitHubReleasePreFlag,
 				commit.preReleaseType != null);
 		var fstat = fs.statSync(filePath);
+		var releasePath = '/repos/' + commit.slug + '/releases';
 		var https = require('https');
 		var opts = {
 			hostname : 'api.github.com',
 			port : 443,
-			path : '/repos/' + commit.slug + '/releases' + params.get(),
+			path : releasePath + params.get(),
 			method : 'POST'
 		};
 		opts.headers = {
@@ -259,19 +325,18 @@ module.exports = function(grunt) {
 			'Authorization' : 'token ' + process.env.GH_TOKEN
 		};
 		// post new tag/release
-		// see http://developer.github.com/v3/repos/releases/#create-a-release
 		var req = https.request(opts, function(res) {
 			var sc = res.statusCode;
-			var data = '', data2 = '', rl = null;
 			res.on('data', function(chunk) {
 				data += chunk;
 			});
 			res.on('end', function() {
 				try {
 					rl = chk(JSON.parse(data.replace(regexLines, ' ')));
-					if (rl.tag_name == commit.versionTag) {
+					if (rl[gitHubReleaseTagName] == commit.versionTag) {
+						commit.releaseId = cf[gitHubReleaseId];
 						if (!filePath) {
-							cb(step, rl);
+							cbi();
 							return;
 						}
 						// upload asset
@@ -291,37 +356,112 @@ module.exports = function(grunt) {
 								data2 += chunk;
 							});
 							res2.on('end', function() {
-								var cf = null;
 								try {
 									cf = chk(JSON.parse(data2.replace(
 											regexLines, ' ')));
 									try {
-										cb(step, cf);
+										cbi();
 									} catch (e) {
 										// consume
 									}
 								} catch (e) {
-									cb(step, cf || rl, e);
+									cbi(e);
 								}
 							});
 						});
 						req2.on('error', function(e) {
-							cb(step, rl, e);
+							cbi(e);
 						});
 						streamWrite(req2, filePath);
 					} else {
-						cb(step, rl, 'No tag found for ' + commit.versionTag
-								+ ' in ' + tags.join(','));
+						cbi('No tag found for ' + commit.versionTag + ' in '
+								+ tags.join(','));
 					}
 				} catch (e) {
-					cb(step, rl || rls, e);
+					cbi(e);
 				}
 			});
 		});
 		req.end();
 		req.on('error', function(e) {
-			cb(step, null, e);
+			cbi(e);
 		});
+
+		/**
+		 * Handles callback once the release and asset upload completes or an
+		 * error occurs during the process. When one or more errors are present
+		 * and a prior tagged release has taken place, an attempt is made to
+		 * rollback the release by removing the tagged release via the external
+		 * GitHub API.
+		 * 
+		 * @param e
+		 *            an error object or string when the callback is taking
+		 *            place due to an error
+		 */
+		function cbi(e) {
+			if (called) {
+				return;
+			}
+			if (e) {
+				errors.unshift(typeof e === 'string' ? new Error(e) : e);
+			}
+			var o = cf || rl;
+			var rb = errors.length && commit.releaseId;
+
+			/**
+			 * Rollback callback
+			 * 
+			 * @param fx
+			 *            the callback function that will receive the last step
+			 *            taken before the rollback (e.g. release, asset upload,
+			 *            etc.), the last received object from the external API
+			 *            and an array of errors that prevented the rollback (if
+			 *            any).
+			 */
+			function rbcb(fx) {
+				var rberrors = [];
+				try {
+					if (!rb) {
+						fx(step, om, rberrors);
+						return;
+					}
+					// rollback release
+					opts.path = releasePath + '/' + commit.releaseId;
+					opts.method = 'DELETE';
+					req = https.request(opts, function(res) {
+						res.on('end', function() {
+							if (!called) {
+								fx(step, o, rberrors);
+							}
+						});
+					});
+					req.end();
+					req.on('error', function(e2) {
+						if (!called) {
+							rberrors.unshift(e2);
+							rberrors.unshift(new Error(
+									'Failed to rollback release ID '
+											+ commit.releaseId));
+							fx(step, o, rberrors);
+						}
+					});
+				} catch (e2) {
+					if (!called) {
+						rberrors.unshift(e2);
+						rberrors.unshift(new Error(
+								'Failed to call rollback for release ID '
+										+ commit.releaseId));
+						fx(step, o, rberrors);
+					}
+				}
+			}
+			try {
+				cb(step, o, rbcb, errors);
+			} catch (e) {
+				// consume
+			}
+			called = true;
+		}
 	}
 
 	/**
