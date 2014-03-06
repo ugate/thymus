@@ -308,6 +308,13 @@ module.exports = function(grunt) {
 			}
 			return o;
 		}
+		var json = {};
+		json[gitHubReleaseTagName] = commit.versionTag;
+		json[gitHubReleaseName] = commit.versionTag;
+		json[gitHubReleaseBody] = desc;
+		json[gitHubReleaseCommitish] = commit.number;
+		json[gitHubReleasePreFlag] = commit.preReleaseType != null;
+		json = JSON.stringify(json);
 		var fstat = fs.statSync(filePath);
 		var releasePath = '/repos/' + commit.slug + '/releases';
 		var https = require('https');
@@ -315,18 +322,14 @@ module.exports = function(grunt) {
 			hostname : 'api.github.com',
 			port : 443,
 			path : releasePath,
-			method : 'POST',
-			json : {}
+			method : 'POST'
 		};
 		opts.headers = {
 			'User-Agent' : commit.slug,
-			'Authorization' : 'token ' + process.env.GH_TOKEN
+			'Authorization' : 'token ' + process.env.GH_TOKEN,
+			'Content-Type' : 'application/json',
+			'Content-Length' : json.length
 		};
-		opts.json[gitHubReleaseTagName] = commit.versionTag;
-		opts.json[gitHubReleaseName] = commit.versionTag;
-		opts.json[gitHubReleaseBody] = desc;
-		opts.json[gitHubReleaseCommitish] = commit.number;
-		opts.json[gitHubReleasePreFlag] = commit.preReleaseType != null;
 		// post new tag/release
 		var req = https.request(opts, function(res) {
 			var sc = res.statusCode;
@@ -356,7 +359,6 @@ module.exports = function(grunt) {
 								+ commit.versionTag);
 						opts.headers['Content-Type'] = contentType;
 						opts.headers['Content-Length'] = fstat.size;
-						opts['json'] = undefined;
 						var req2 = https.request(opts, function(res2) {
 							res2.on('data', function(chunk) {
 								data2 += chunk;
@@ -388,7 +390,7 @@ module.exports = function(grunt) {
 				}
 			});
 		});
-		req.end();
+		req.end(json);
 		req.on('error', function(e) {
 			cbi(e);
 		});
@@ -438,7 +440,6 @@ module.exports = function(grunt) {
 					opts.method = 'DELETE';
 					opts.headers['Content-Type'] = undefined;
 					opts.headers['Content-Length'] = undefined;
-					opts['json'] = undefined;
 					req = https.request(opts, function(res) {
 						res.on('end', function() {
 							if (!called) {
