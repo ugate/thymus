@@ -90,7 +90,7 @@ module.exports = function(grunt) {
 		chgLogRtn = runCmd('git --no-pager log ' + lastVerTag
 				+ '..HEAD --pretty=format:"  * %s" > ' + chgLogPath, null,
 				false, chgLogPath);
-		if (options.chgLogRequired && !validateFile(chgLogRtn)) {
+		if (options.chgLogRequired && !validateFile(chgLogPath)) {
 			return done(false);
 		}
 
@@ -287,9 +287,12 @@ module.exports = function(grunt) {
 	 * @returns true when the file contains data or the path is invalid
 	 */
 	function validateFile(path) {
-		if (!path) {
-			grunt.log.error('Failed to find any entries in ' + chgLogPath
-					+ ' (file size: ' + fs.statSync(chgLogPath) + ')');
+		var stat = path ? fs.statSync(path) : {
+			size : 0
+		};
+		if (stat.size) {
+			grunt.log.error('Failed to find any entries in "' + path
+					+ '" (file size: ' + stat.size + ')');
 			return false;
 		}
 		return true;
