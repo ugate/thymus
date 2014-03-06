@@ -138,52 +138,5 @@ module.exports = {
 	 */
 	getGitToken : function() {
 		return process.env.GH_TOKEN;
-	},
-
-	/**
-	 * URL parameter
-	 * 
-	 * @constructor
-	 * @param grunt
-	 *            the grunt instance
-	 * @param params
-	 *            an optional array of parameters
-	 */
-	UrlParams : function(grunt, params) {
-		var ps = [];
-
-		/**
-		 * Adds every passed argument to the URL parameters
-		 */
-		this.add = function() {
-			var args = arguments;
-			var n = '';
-			for (var i = 0; i < args.length; i++) {
-				if (i % 2 === 0) {
-					n = encodeURIComponent(args[i]);
-				} else {
-					ps.push(n + '=' + encodeURIComponent(args[i]));
-					n = '';
-				}
-			}
-		};
-
-		/**
-		 * @returns the URL encoded parameter string
-		 */
-		this.get = function() {
-			return (ps.length ? '?' : '') + ps.join('&');
-		};
-
-		/**
-		 * Clears out any existing URL parameters
-		 */
-		this.clear = function() {
-			ps = [];
-		};
-
-		if (params) {
-			this.add(params);
-		}
 	}
 };

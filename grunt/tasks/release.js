@@ -101,9 +101,9 @@ module.exports = function(grunt) {
 		runCmd('git remote add origin https://' + commit.username + ':' + link);
 		// runCmd('git checkout master');
 
-		// Commit changes to master
+		// Commit changes to master (needed to generate archive asset)
 		runCmd('git add --force ' + options.destDir);
-		runCmd('git commit -m "' + relMsg + '"');
+		runCmd('git commit -q -m "' + relMsg + '"');
 		// runCmd('git push -f origin master');
 
 		// Create distribution assets
@@ -112,6 +112,8 @@ module.exports = function(grunt) {
 				+ options.destDir);
 
 		// Tag release
+		grunt.log.writeln('Releasing ' + commit.versionTag + ' via '
+				+ options.gitHostname);
 		if (options.gitHostname.toLowerCase() !== gitHubHostname) {
 			runCmd('git tag -f -a ' + commit.versionTag + ' -m "' + chgLogRtn
 					+ '"');
@@ -119,7 +121,8 @@ module.exports = function(grunt) {
 			try {
 				// TODO : upload asset?
 				publish(function(step, o, e) {
-					// rollback
+					grunt.log.writeln('Rolling back ' + commit.versionTag
+							+ ' release via ' + options.gitHostname);
 					runCmd('git push --delete origin ' + commit.versionTag);
 				}, done, options, link, commit);
 			} catch (e) {
@@ -127,9 +130,7 @@ module.exports = function(grunt) {
 				done(false);
 			}
 		} else {
-			// Distribute archive asset for tagged release
-			grunt.log.writeln('Uploading "' + distAsset
-					+ '" release asset for ' + commit.versionTag);
+			// Release and distribute archive asset for tagged release
 			releaseAndUploadAsset(distAsset, 'application/zip', util
 					.getGitToken(), commit, chgLogRtn, options, function(step,
 					json, rb, e) {
@@ -307,24 +308,25 @@ module.exports = function(grunt) {
 			}
 			return o;
 		}
-		// set new release API parameters
-		var params = new util.UrlParams(grunt, gitHubReleaseTagName,
-				commit.versionTag, gitHubReleaseName, commit.versionTag,
-				gitHubReleaseBody, desc, gitHubReleaseCommitish, commit.number,
-				gitHubReleasePreFlag, commit.preReleaseType != null);
 		var fstat = fs.statSync(filePath);
 		var releasePath = '/repos/' + commit.slug + '/releases';
 		var https = require('https');
 		var opts = {
 			hostname : 'api.github.com',
 			port : 443,
-			path : releasePath + params.get(),
-			method : 'POST'
+			path : releasePath,
+			method : 'POST',
+			json : {}
 		};
 		opts.headers = {
 			'User-Agent' : commit.slug,
 			'Authorization' : 'token ' + process.env.GH_TOKEN
 		};
+		opts.json[gitHubReleaseTagName] = commit.versionTag;
+		opts.json[gitHubReleaseName] = commit.versionTag;
+		opts.json[gitHubReleaseBody] = desc;
+		opts.json[gitHubReleaseCommitish] = commit.number;
+		opts.json[gitHubReleasePreFlag] = commit.preReleaseType != null;
 		// post new tag/release
 		var req = https.request(opts, function(res) {
 			var sc = res.statusCode;
@@ -340,7 +342,9 @@ module.exports = function(grunt) {
 							cbi();
 							return;
 						}
-						// upload asset
+						grunt.log.writeln('Uploading "' + filePath
+								+ '" release asset for ' + commit.versionTag
+								+ ' via ' + options.gitHostname);
 						step = 'upload asset';
 						opts.method = 'POST';
 						opts.path = rl[gitHubReleaseUploadUrl].replace(
@@ -352,6 +356,7 @@ module.exports = function(grunt) {
 								+ commit.versionTag);
 						opts.headers['Content-Type'] = contentType;
 						opts.headers['Content-Length'] = fstat.size;
+						opts['json'] = undefined;
 						var req2 = https.request(opts, function(res2) {
 							res2.on('data', function(chunk) {
 								data2 += chunk;
@@ -427,8 +432,13 @@ module.exports = function(grunt) {
 						return;
 					}
 					// rollback release
+					grunt.log.writeln('Rolling back ' + commit.versionTag
+							+ ' release via ' + options.gitHostname);
 					opts.path = releasePath + '/' + commit.releaseId;
 					opts.method = 'DELETE';
+					opts.headers['Content-Type'] = undefined;
+					opts.headers['Content-Length'] = undefined;
+					opts['json'] = undefined;
 					req = https.request(opts, function(res) {
 						res.on('end', function() {
 							if (!called) {
