@@ -3,6 +3,7 @@ node_js:
 - '0.10'
 git:
   depth: 2147483647
+  branch: master
 before_install:
 - phantomjs --version
 before_script:

@@ -45,6 +45,8 @@ module.exports = function(grunt) {
 					chgLogRequired : true,
 					authorsRequired : false,
 					distAsset : true,
+					distAssetFormat : 'zip',
+					distAssetCompressRatio : 9,
 					gitHostname : gitHubHostname
 				});
 				var done = this.async();
@@ -80,6 +82,9 @@ module.exports = function(grunt) {
 		// TODO : verify release version is less than last release version
 		var lastVerTag = runCmd('git describe --abbrev=0 --tags').replace(
 				regexLines, '');
+		if (!validateVersion(lastVerTag, commit.versionTag)) {
+			return done(false);
+		}
 		grunt.log.writeln('Preparing release: ' + commit.version
 				+ ' (last release: ' + lastVerTag + ')');
 		var relMsg = commit.message + ' ' + util.skipRef('ci');
@@ -116,9 +121,11 @@ module.exports = function(grunt) {
 		// runCmd('git push -f origin master');
 
 		// Create distribution assets
-		var distAsset = commit.reponame + '-' + commit.version + '-dist.zip';
-		runCmd('git archive -v -o ' + distAsset + ' --format=zip HEAD '
-				+ options.destDir);
+		var distAsset = commit.reponame + '-' + commit.version + '-dist.'
+				+ options.distAssetFormat;
+		runCmd('git archive -v --format=' + options.distAssetFormat + ' -'
+				+ options.distAssetCompressRatio + ' --format=zip HEAD:'
+				+ options.destDir + ' > ' + distAsset);
 
 		// Tag release
 		grunt.log.writeln('Releasing ' + commit.versionTag + ' via '
@@ -140,31 +147,39 @@ module.exports = function(grunt) {
 			}
 		} else {
 			// Release and distribute archive asset for tagged release
-			releaseAndUploadAsset(distAsset, 'application/zip', util
-					.getGitToken(), commit, chgLogRtn, options, function(step,
-					json, rb, e) {
-				try {
-					if (e.length) {
-						grunt.log.error(new Error('Failed to ' + step + ' '
-								+ distAsset));
-						for (var i = 0; i < e.length; i++) {
-							grunt.log.error(e[i]);
+			releaseAndUploadAsset(
+					{
+						path : distAsset,
+						name : distAsset
+					},
+					'application/zip',
+					util.getGitToken(),
+					commit,
+					chgLogRtn,
+					options,
+					function(step, json, rb, e) {
+						try {
+							if (e.length) {
+								grunt.log.error(new Error('Failed to ' + step
+										+ ' ' + distAsset));
+								for (var i = 0; i < e.length; i++) {
+									grunt.log.error(e[i]);
+								}
+								done(false);
+							} else if (json && json.state != 'uploaded') {
+								grunt.log.error(new Error(step
+										+ ' failed with state: ' + json.state));
+								done(false);
+							} else {
+								grunt.log.writeln('Distributed/' + cf.state
+										+ ' ' + distAsset + ' asset');
+								publish(rb, done, options, link, commit);
+							}
+						} catch (e2) {
+							grunt.log.error(e2);
+							done(false);
 						}
-						done(false);
-					} else if (json && json.state != 'uploaded') {
-						grunt.log.error(new Error(step + ' failed with state: '
-								+ json.state));
-						done(false);
-					} else {
-						grunt.log.writeln('Distributed/' + cf.state + ' '
-								+ distAsset + ' asset');
-						publish(rb, done, options, link, commit);
-					}
-				} catch (e2) {
-					grunt.log.error(e2);
-					done(false);
-				}
-			});
+					});
 		}
 	}
 
@@ -267,10 +282,10 @@ module.exports = function(grunt) {
 		}
 		if (dupsPath) {
 			// remove duplicate lines
-			output = grunt.file.read(dupsPath, {
-				encoding : grunt.file.defaultEncoding
-			}).replace(regexDupLines, '$1');
-			grunt.file.write(dupsPath, output);
+//			output = grunt.file.read(dupsPath, {
+//				encoding : grunt.file.defaultEncoding
+//			}).replace(regexDupLines, '$1');
+//			grunt.file.write(dupsPath, output);
 		}
 		if (output) {
 			grunt.log.writeln(output.replace(regexKey, '$1[SECURE]$2'));
@@ -290,13 +305,21 @@ module.exports = function(grunt) {
 		var stat = path ? fs.statSync(path) : {
 			size : 0
 		};
-		if (stat.size) {
+		if (!stat.size) {
 			grunt.log.error('Failed to find any entries in "' + path
 					+ '" (file size: ' + stat.size + ')');
 			return false;
 		}
 		return true;
 	}
+
+	function validateVersion(prev, curr) {
+		if (!prev) {
+			return true;
+		}
+		prev = prev
+	}
+
 	/**
 	 * Tags/Releases from default branch (see
 	 * http://developer.github.com/v3/repos/releases/#create-a-release ) and
@@ -304,8 +327,9 @@ module.exports = function(grunt) {
 	 * (see
 	 * http://developer.github.com/v3/repos/releases/#upload-a-release-asset )
 	 * 
-	 * @param filePath
-	 *            the path to the file that will be added
+	 * @param asset
+	 *            an object containing a <code>path</code> and
+	 *            <code>name</code> of the asset to be uploaded
 	 * @param contentType
 	 *            the content type of the file being uploaded
 	 * @param authToken
@@ -321,8 +345,8 @@ module.exports = function(grunt) {
 	 *            the call back function (passed parameters: the current task,
 	 *            JSON response, error)
 	 */
-	function releaseAndUploadAsset(filePath, contentType, authToken, commit,
-			desc, options, cb) {
+	function releaseAndUploadAsset(asset, contentType, authToken, commit, desc,
+			options, cb) {
 		var step = 'release';
 		if (!authToken) {
 			cbi(null, grunt.util.error('Invalid authorization token'));
@@ -343,7 +367,7 @@ module.exports = function(grunt) {
 		json[gitHubReleaseCommitish] = commit.number;
 		json[gitHubReleasePreFlag] = commit.preReleaseType != null;
 		json = JSON.stringify(json);
-		var fstat = filePath ? fs.statSync(filePath) : {
+		var fstat = asset && asset.path ? fs.statSync(asset.path) : {
 			size : 0
 		};
 		var releasePath = '/repos/' + commit.slug + '/releases';
@@ -375,7 +399,7 @@ module.exports = function(grunt) {
 							cbi();
 							return;
 						}
-						grunt.log.writeln('Uploading "' + filePath
+						grunt.log.writeln('Uploading "' + asset.path
 								+ '" release asset for ' + commit.versionTag
 								+ ' via ' + options.gitHostname);
 						step = 'upload asset';
@@ -386,7 +410,7 @@ module.exports = function(grunt) {
 									return '/';
 								});
 						opts.path = opts.path.replace(gitHubRegexParam, '$1='
-								+ commit.versionTag);
+								+ (asset.name || commit.versionTag));
 						opts.headers['Content-Type'] = contentType;
 						opts.headers['Content-Length'] = fstat.size;
 						var req2 = https.request(opts, function(res2) {
@@ -410,7 +434,7 @@ module.exports = function(grunt) {
 						req2.on('error', function(e) {
 							cbi(e);
 						});
-						streamWrite(req2, filePath);
+						streamWrite(req2, asset.path);
 					} else {
 						cbi('No tag found for ' + commit.versionTag + ' in '
 								+ tags.join(','));
