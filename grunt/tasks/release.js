@@ -19,6 +19,7 @@ var gitHubReleaseName = 'name';
 var gitHubReleaseBody = 'body';
 var gitHubReleaseDraftFlag = 'draft';
 var gitHubReleasePreFlag = 'prerelease';
+var gitHubReleaseErrors = 'errors';
 var gitHubReleaseErrorMsg = 'message';
 
 /**
@@ -304,7 +305,7 @@ module.exports = function(grunt) {
 		// check if API responded with an error message
 		function chk(o) {
 			if (o[gitHubReleaseErrorMsg]) {
-				throw new Error(o[gitHubReleaseErrorMsg]);
+				throw new Error(JSON.stringify(o));
 			}
 			return o;
 		}
