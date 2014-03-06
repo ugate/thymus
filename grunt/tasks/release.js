@@ -42,6 +42,8 @@ module.exports = function(grunt) {
 					destDir : 'dist',
 					chgLog : 'HISTORY.md',
 					authors : 'AUTHORS.md',
+					chgLogRequired : true,
+					authorsRequired : false,
 					distAsset : true,
 					gitHostname : gitHubHostname
 				});
@@ -88,11 +90,17 @@ module.exports = function(grunt) {
 		chgLogRtn = runCmd('git --no-pager log ' + lastVerTag
 				+ '..HEAD --pretty=format:"  * %s" > ' + chgLogPath, null,
 				false, chgLogPath);
+		if (options.chgLogRequired && !validateFile(chgLogRtn)) {
+			return done(false);
+		}
 
 		// Generate list of authors/contributors since last tag/release
 		var authorsPath = options.destDir + '/' + options.authors;
 		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u > '
 				+ authorsPath, null, false, authorsPath);
+		if (options.authorsRequired && !validateFile(authorsPath)) {
+			return done(false);
+		}
 
 		// Setup
 		var link = '${GH_TOKEN}@github.com/' + commit.slug + '.git';
@@ -271,6 +279,22 @@ module.exports = function(grunt) {
 	}
 
 	/**
+	 * Determines if a file has content and logs an error when the the file is
+	 * empty
+	 * 
+	 * @param path
+	 *            the path to the file
+	 * @returns true when the file contains data or the path is invalid
+	 */
+	function validateFile(path) {
+		if (!path) {
+			grunt.log.error('Failed to find any entries in ' + chgLogPath
+					+ ' (file size: ' + fs.statSync(chgLogPath) + ')');
+			return false;
+		}
+		return true;
+	}
+	/**
 	 * Tags/Releases from default branch (see
 	 * http://developer.github.com/v3/repos/releases/#create-a-release ) and
 	 * Uploads the file asset and associates it with a specified tagged release
@@ -316,7 +340,9 @@ module.exports = function(grunt) {
 		json[gitHubReleaseCommitish] = commit.number;
 		json[gitHubReleasePreFlag] = commit.preReleaseType != null;
 		json = JSON.stringify(json);
-		var fstat = fs.statSync(filePath);
+		var fstat = filePath ? fs.statSync(filePath) : {
+			size : 0
+		};
 		var releasePath = '/repos/' + commit.slug + '/releases';
 		var https = require('https');
 		var opts = {
@@ -341,8 +367,8 @@ module.exports = function(grunt) {
 				try {
 					rl = chk(JSON.parse(data.replace(regexLines, ' ')));
 					if (rl[gitHubReleaseTagName] == commit.versionTag) {
-						commit.releaseId = cf[gitHubReleaseId];
-						if (!filePath) {
+						commit.releaseId = rl[gitHubReleaseId];
+						if (fstat.size <= 0) {
 							cbi();
 							return;
 						}
