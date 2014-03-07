@@ -49,26 +49,22 @@ module.exports = function(grunt) {
 					distAssetCompressRatio : 9,
 					gitHostname : gitHubHostname
 				});
-				var done = this.async();
-				try {
-					release.call(this, done, options);
-				} catch (e) {
-					done(e);
-				}
+				release(this, options);
 			});
 
 	/**
 	 * When a release commit message is received a release is performed and a
 	 * repository web site is published
 	 * 
-	 * @param done
-	 *            the grunt done function
+	 * @param task
+	 *            the current running task instance
 	 * @param options
 	 *            the grunt options
 	 */
-	function release(done, options) {
+	function release(task, options) {
 		var chgLogRtn = '';
 		var authorsRtn = '';
+		var doneAsync = null;
 
 		// Capture commit message
 		commit = util.getCommit(grunt, options.commitMessage);
@@ -78,15 +74,13 @@ module.exports = function(grunt) {
 		}
 
 		// NOTE : clone depth needs to be high enough to capture details
-		// gathered by GIT (see depth option in .travis.yml)
-		// TODO : verify release version is less than last release version
+		// gathered by GIT (see git depth option in .travis.yml)
+		// TODO : verify release version using "semver"
 		var lastVerTag = runCmd('git describe --abbrev=0 --tags').replace(
 				regexLines, '');
-		if (!validateVersion(lastVerTag, commit.versionTag)) {
-			return done(false);
-		}
 		grunt.log.writeln('Preparing release: ' + commit.version
 				+ ' (last release: ' + lastVerTag + ')');
+		var useGitHub = options.gitHostname.toLowerCase() !== gitHubHostname;
 		var relMsg = commit.message + ' ' + util.skipRef('ci');
 
 		// Generate change log for release using all messages since last
@@ -130,7 +124,7 @@ module.exports = function(grunt) {
 		// Tag release
 		grunt.log.writeln('Releasing ' + commit.versionTag + ' via '
 				+ options.gitHostname);
-		if (options.gitHostname.toLowerCase() !== gitHubHostname) {
+		if (!useGitHub) {
 			runCmd('git tag -f -a ' + commit.versionTag + ' -m "' + chgLogRtn
 					+ '"');
 			runCmd('git push -f origin ' + commit.versionTag);
@@ -143,10 +137,12 @@ module.exports = function(grunt) {
 				}, done, options, link, commit);
 			} catch (e) {
 				grunt.log.error(e);
-				done(false);
+				return done(false);
 			}
 		} else {
 			// Release and distribute archive asset for tagged release
+			// Need asynchronous processing from this point on
+			doneAsync = task.async();
 			releaseAndUploadAsset(
 					{
 						path : distAsset,
@@ -180,6 +176,19 @@ module.exports = function(grunt) {
 							done(false);
 						}
 					});
+		}
+
+		/**
+		 * When running in asynchronous mode grunt will be notified the process
+		 * is complete
+		 * 
+		 * @param passed
+		 *            true when completed without error
+		 * @returns the return value from grunt when running in asynchronous
+		 *          mode, otherwise, the passed value
+		 */
+		function done(passed) {
+			return doneAsync ? doneAsync(passed) : passed;
 		}
 	}
 
@@ -282,10 +291,10 @@ module.exports = function(grunt) {
 		}
 		if (dupsPath) {
 			// remove duplicate lines
-//			output = grunt.file.read(dupsPath, {
-//				encoding : grunt.file.defaultEncoding
-//			}).replace(regexDupLines, '$1');
-//			grunt.file.write(dupsPath, output);
+			// output = grunt.file.read(dupsPath, {
+			// encoding : grunt.file.defaultEncoding
+			// }).replace(regexDupLines, '$1');
+			// grunt.file.write(dupsPath, output);
 		}
 		if (output) {
 			grunt.log.writeln(output.replace(regexKey, '$1[SECURE]$2'));
@@ -311,13 +320,6 @@ module.exports = function(grunt) {
 			return false;
 		}
 		return true;
-	}
-
-	function validateVersion(prev, curr) {
-		if (!prev) {
-			return true;
-		}
-		prev = prev
 	}
 
 	/**
@@ -365,7 +367,7 @@ module.exports = function(grunt) {
 		json[gitHubReleaseName] = commit.versionTag;
 		json[gitHubReleaseBody] = desc;
 		json[gitHubReleaseCommitish] = commit.number;
-		json[gitHubReleasePreFlag] = commit.preReleaseType != null;
+		json[gitHubReleasePreFlag] = commit.versionPrereleaseType != null;
 		json = JSON.stringify(json);
 		var fstat = asset && asset.path ? fs.statSync(asset.path) : {
 			size : 0
