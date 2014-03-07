@@ -42,6 +42,7 @@ module.exports = function(grunt) {
 					destDir : 'dist',
 					chgLog : 'HISTORY.md',
 					authors : 'AUTHORS.md',
+					chgLogLinePrefix : '  * ',
 					chgLogRequired : true,
 					authorsRequired : false,
 					distAsset : true,
@@ -62,12 +63,14 @@ module.exports = function(grunt) {
 	 *            the grunt options
 	 */
 	function release(task, options) {
+		var logger = new util.Logger(grunt.log.writeln, grunt.log.error,
+				grunt.log.warn);
 		var chgLogRtn = '';
 		var authorsRtn = '';
 		var doneAsync = null;
 
 		// Capture commit message
-		commit = util.getCommit(grunt, options.commitMessage);
+		commit = util.getCommit(logger, options.commitMessage);
 		grunt.log.writeln('Commit message: ' + commit.message);
 		if (!commit.version) {
 			return;
@@ -87,18 +90,18 @@ module.exports = function(grunt) {
 		// tag/release
 		var chgLogPath = options.destDir + '/' + options.chgLog;
 		chgLogRtn = runCmd('git --no-pager log ' + lastVerTag
-				+ '..HEAD --pretty=format:"  * %s" > ' + chgLogPath, null,
-				false, chgLogPath);
-		if (options.chgLogRequired && !validateFile(chgLogPath)) {
-			return done(false);
+				+ '..HEAD --pretty=format:"' + options.chgLogLinePrefix
+				+ '%s" > ' + chgLogPath, null, false, chgLogPath);
+		if (options.chgLogRequired && !validateFile(chgLogPath, logger)) {
+			return done();
 		}
 
 		// Generate list of authors/contributors since last tag/release
 		var authorsPath = options.destDir + '/' + options.authors;
 		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u > '
 				+ authorsPath, null, false, authorsPath);
-		if (options.authorsRequired && !validateFile(authorsPath)) {
-			return done(false);
+		if (options.authorsRequired && !validateFile(authorsPath, logger)) {
+			return done();
 		}
 
 		// Setup
@@ -136,44 +139,35 @@ module.exports = function(grunt) {
 					runCmd('git push --delete origin ' + commit.versionTag);
 				}, done, options, link, commit);
 			} catch (e) {
-				grunt.log.error(e);
-				return done(false);
+				logger.add(e);
+				return done();
 			}
 		} else {
 			// Release and distribute archive asset for tagged release
 			// Need asynchronous processing from this point on
 			doneAsync = task.async();
-			releaseAndUploadAsset(
-					{
-						path : distAsset,
-						name : distAsset
-					},
-					'application/zip',
-					util.getGitToken(),
-					commit,
-					chgLogRtn,
-					options,
-					function(step, json, rb, e) {
+			releaseAndUploadAsset({
+				path : distAsset,
+				name : distAsset
+			}, 'application/zip', util.getGitToken(), commit, chgLogRtn,
+					options, function(step, json, rb, e) {
 						try {
 							if (e.length) {
-								grunt.log.error(new Error('Failed to ' + step
-										+ ' ' + distAsset));
-								for (var i = 0; i < e.length; i++) {
-									grunt.log.error(e[i]);
-								}
-								done(false);
+								logger.add('Failed to ' + step + ' '
+										+ distAsset);
+								done();
 							} else if (json && json.state != 'uploaded') {
-								grunt.log.error(new Error(step
-										+ ' failed with state: ' + json.state));
-								done(false);
+								logger.add(step + ' failed with state: '
+										+ json.state);
+								done();
 							} else {
 								grunt.log.writeln('Distributed/' + cf.state
 										+ ' ' + distAsset + ' asset');
 								publish(rb, done, options, link, commit);
 							}
 						} catch (e2) {
-							grunt.log.error(e2);
-							done(false);
+							logger.add(e2);
+							done();
 						}
 					});
 		}
@@ -187,8 +181,14 @@ module.exports = function(grunt) {
 		 * @returns the return value from grunt when running in asynchronous
 		 *          mode, otherwise, the passed value
 		 */
-		function done(passed) {
-			return doneAsync ? doneAsync(passed) : passed;
+		function done() {
+			logger.dump();
+			if (doneAsync) {
+				return doneAsync(logger.warnErrorCount() <= 0);
+			} else if (!passed) {
+				throw new Error('Release failed');
+			}
+			return true;
 		}
 	}
 
@@ -206,7 +206,7 @@ module.exports = function(grunt) {
 	 * @param commit
 	 *            the commit object the release is for (should have a valid ID)
 	 */
-	function publish(rb, done, options, link, commit) {
+	function publish(rb, done, logger, options, link, commit) {
 		if (!commit.releaseId) {
 			grunt.log.writeln('No release ID Skipping publishing to '
 					+ options.destBranch);
@@ -235,19 +235,16 @@ module.exports = function(grunt) {
 				rb(function(step, o, e2) {
 					if (e2) {
 						// rollback failed
-						grunt.log.error(new Error('Release rollback failed'));
-						for (var i = 0; i < e2.length; i++) {
-							grunt.log.error(e2[i]);
-						}
-						grunt.log.error(e);
-						done(false);
+						logger.add('Release rollback failed');
+						logger.add(e);
+						done();
 					} else {
 						done();
 					}
 				});
 			} else {
-				grunt.log.error(e);
-				done(false);
+				logger.add(e);
+				done();
 			}
 		}
 	}
@@ -280,24 +277,32 @@ module.exports = function(grunt) {
 			var e = 'Error "' + rtn.code + '" for commit number '
 					+ commit.number + ' ' + rtn.output;
 			if (nofail) {
-				grunt.log.error(e);
+				logger.add(e);
 				return;
 			}
 			throw grunt.util.error(e);
 		}
 		var output = rtn.output;
+		if (output) {
+			output = output.replace(regexKey, '$1[SECURE]$2');
+		}
 		if (output && wpath) {
 			grunt.file.write(wpath, output);
 		}
 		if (dupsPath) {
 			// remove duplicate lines
-			// output = grunt.file.read(dupsPath, {
-			// encoding : grunt.file.defaultEncoding
-			// }).replace(regexDupLines, '$1');
-			// grunt.file.write(dupsPath, output);
+			if (!output) {
+				output = grunt.file.read(dupsPath, {
+					encoding : grunt.file.defaultEncoding
+				});
+			}
+			if (output) {
+				output = output.replace(regexDupLines, '$1');
+			}
+			grunt.file.write(dupsPath, output);
 		}
 		if (output) {
-			grunt.log.writeln(output.replace(regexKey, '$1[SECURE]$2'));
+			grunt.log.writeln(output);
 		}
 		return output || '';
 	}
@@ -308,14 +313,16 @@ module.exports = function(grunt) {
 	 * 
 	 * @param path
 	 *            the path to the file
+	 * @param logger
+	 *            the {util.Logger} instance
 	 * @returns true when the file contains data or the path is invalid
 	 */
-	function validateFile(path) {
+	function validateFile(path, logger) {
 		var stat = path ? fs.statSync(path) : {
 			size : 0
 		};
 		if (!stat.size) {
-			grunt.log.error('Failed to find any entries in "' + path
+			logger.add('Failed to find any entries in "' + path
 					+ '" (file size: ' + stat.size + ')');
 			return false;
 		}
@@ -343,18 +350,20 @@ module.exports = function(grunt) {
 	 *            release description (can be in markdown)
 	 * @param options
 	 *            the task options
+	 * @param logger
+	 *            the {util.Logger} instance
 	 * @param cb
 	 *            the call back function (passed parameters: the current task,
 	 *            JSON response, error)
 	 */
 	function releaseAndUploadAsset(asset, contentType, authToken, commit, desc,
-			options, cb) {
+			options, logger, cb) {
 		var step = 'release';
 		if (!authToken) {
 			cbi(null, grunt.util.error('Invalid authorization token'));
 			return;
 		}
-		var data = '', data2 = '', rl = null, cf = null, called = false, errors = [];
+		var data = '', data2 = '', rl = null, cf = null, called = false;
 		// check if API responded with an error message
 		function chk(o) {
 			if (o[gitHubReleaseErrorMsg]) {
@@ -453,10 +462,10 @@ module.exports = function(grunt) {
 
 		/**
 		 * Handles callback once the release and asset upload completes or an
-		 * error occurs during the process. When one or more errors are present
-		 * and a prior tagged release has taken place, an attempt is made to
-		 * rollback the release by removing the tagged release via the external
-		 * GitHub API.
+		 * error occurs during the process. When one or more error(s) are
+		 * present and a prior tagged release has taken place, an attempt is
+		 * made to rollback the release by removing the tagged release via the
+		 * external GitHub API.
 		 * 
 		 * @param e
 		 *            an error object or string when the callback is taking
@@ -466,11 +475,9 @@ module.exports = function(grunt) {
 			if (called) {
 				return;
 			}
-			if (e) {
-				errors.unshift(typeof e === 'string' ? new Error(e) : e);
-			}
+			logger.add(e);
 			var o = cf || rl;
-			var rb = errors.length && commit.releaseId;
+			var rb = logger.warnErrorCount() && commit.releaseId;
 
 			/**
 			 * Rollback callback
@@ -478,15 +485,13 @@ module.exports = function(grunt) {
 			 * @param fx
 			 *            the callback function that will receive the last step
 			 *            taken before the rollback (e.g. release, asset upload,
-			 *            etc.), the last received object from the external API
-			 *            and an array of errors that prevented the rollback (if
-			 *            any).
+			 *            etc.) and the last received object from the external
+			 *            API.
 			 */
 			function rbcb(fx) {
-				var rberrors = [];
 				try {
 					if (!rb) {
-						fx(step, om, rberrors);
+						fx(step, om);
 						return;
 					}
 					// rollback release
@@ -499,32 +504,30 @@ module.exports = function(grunt) {
 					req = https.request(opts, function(res) {
 						res.on('end', function() {
 							if (!called) {
-								fx(step, o, rberrors);
+								fx(step, o);
 							}
 						});
 					});
 					req.end();
 					req.on('error', function(e2) {
 						if (!called) {
-							rberrors.unshift(e2);
-							rberrors.unshift(new Error(
-									'Failed to rollback release ID '
-											+ commit.releaseId));
-							fx(step, o, rberrors);
+							logger.add(e2);
+							logger.add('Failed to rollback release ID '
+									+ commit.releaseId);
+							fx(step, o);
 						}
 					});
 				} catch (e2) {
 					if (!called) {
-						rberrors.unshift(e2);
-						rberrors.unshift(new Error(
-								'Failed to call rollback for release ID '
-										+ commit.releaseId));
-						fx(step, o, rberrors);
+						logger.add(e2);
+						logger.add('Failed to call rollback for release ID '
+								+ commit.releaseId);
+						fx(step, o);
 					}
 				}
 			}
 			try {
-				cb(step, o, rbcb, errors);
+				cb(step, o, rbcb);
 			} catch (e) {
 				// consume
 			}
