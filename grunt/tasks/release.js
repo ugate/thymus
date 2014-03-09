@@ -5,7 +5,7 @@ var fs = require('fs');
 var zlib = require('zlib');
 var util = require('../util');
 var regexLastVer = /v(?=[^v]*$).+/g;
-var regexLines = /\r?\n/g;
+var regexLines = /(\r?\n)/g;
 var regexDupLines = /^(.*)(\r?\n\1)+$/gm;
 var regexKey = /(https?:\/\/|:)+(?=[^:]*$)[a-z0-9]+(@)/gmi;
 var regexHost = /^https?\:\/\/([^\/?#]+)(?:[\/?#]|$)/i;
@@ -83,7 +83,7 @@ module.exports = function(grunt) {
 				regexLines, '');
 		grunt.log.writeln('Preparing release: ' + commit.version
 				+ ' (last release: ' + lastVerTag + ')');
-		var useGitHub = options.gitHostname.toLowerCase() !== gitHubHostname;
+		var useGitHub = options.gitHostname.toLowerCase() === gitHubHostname;
 		var relMsg = commit.message + ' ' + util.skipRef('ci');
 
 		// Generate change log for release using all messages since last
@@ -120,7 +120,7 @@ module.exports = function(grunt) {
 		// Create distribution assets
 		var distAsset = commit.reponame + '-' + commit.version + '-dist.'
 				+ options.distAssetFormat;
-		runCmd('git archive -v --format=' + options.distAssetFormat + ' -'
+		runCmd('git archive --format=' + options.distAssetFormat + ' -'
 				+ options.distAssetCompressRatio + ' --format=zip HEAD:'
 				+ options.destDir + ' > ' + distAsset);
 
@@ -128,8 +128,8 @@ module.exports = function(grunt) {
 		grunt.log.writeln('Releasing ' + commit.versionTag + ' via '
 				+ options.gitHostname);
 		if (!useGitHub) {
-			runCmd('git tag -f -a ' + commit.versionTag + ' -m "' + chgLogRtn
-					+ '"');
+			runCmd('git tag -f -a ' + commit.versionTag + ' -m "'
+					+ chgLogRtn.replace(regexLines, '$1 \\') + '"');
 			runCmd('git push -f origin ' + commit.versionTag);
 			try {
 				// TODO : upload asset?

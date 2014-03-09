@@ -61,6 +61,7 @@ module.exports = {
 			var v = [], rv = cm ? cm.match(regexRelease) : [];
 			v.push(rv.length > 1 ? rv[1] : '');
 			v.push(rv.length > 2 ? rv[2] : '');
+			v.push(rv.length > 3 ? rv[3] : '');
 			v.push(rv.length > 3 ? rv[2] + rv[3] : '');
 			v.push(rv.length > 4 ? parseInt(rv[4]) : 0);
 			v.push(rv.length > 5 ? parseInt(rv[5]) : 0);
@@ -73,14 +74,15 @@ module.exports = {
 		return {
 			number : cn,
 			message : cm,
-			versionType : v[0],
-			version : v[1],
-			versionTag : v[2],
-			versionMajor : v[3],
-			versionMinor : v[4],
-			versionPatch : v[5],
-			versionPrereleaseType : v[6],
-			versionPrerelease : v[7],
+			versionLabel : v[0],
+			versionType : v[1],
+			version : v[2],
+			versionTag : v[3],
+			versionMajor : v[4],
+			versionMinor : v[5],
+			versionPatch : v[6],
+			versionPrereleaseType : v[7],
+			versionPrerelease : v[8],
 			slug : sl,
 			username : sls.length ? sls[0] : '',
 			reponame : sls.length > 1 ? sls[1] : '',
@@ -179,7 +181,7 @@ module.exports = {
 			e = gen(e, isWarn);
 			var es = e ? [ e ] : errors;
 			var all = typeof isWarn === 'undefined';
-			for (var i = 0; i < es.length; i++) {
+			for ( var i = 0; i < es.length; i++) {
 				if (all || (isWarn && es[i].isWarn)) {
 					warn(es[i].e);
 					warn(es[i].stack);
