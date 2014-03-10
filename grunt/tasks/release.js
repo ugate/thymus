@@ -120,9 +120,9 @@ module.exports = function(grunt) {
 		// Create distribution assets
 		var distAsset = commit.reponame + '-' + commit.version + '-dist.'
 				+ options.distAssetFormat;
-		runCmd('git archive --format=' + options.distAssetFormat + ' -'
-				+ options.distAssetCompressRatio + ' --format=zip HEAD:'
-				+ options.destDir + ' > ' + distAsset);
+		runCmd('git archive -o ' + distAsset + ' --format='
+				+ options.distAssetFormat + ' -'
+				+ options.distAssetCompressRatio + ' HEAD:' + options.destDir);
 
 		// Tag release
 		grunt.log.writeln('Releasing ' + commit.versionTag + ' via '
@@ -150,7 +150,7 @@ module.exports = function(grunt) {
 				path : distAsset,
 				name : distAsset
 			}, 'application/zip', util.getGitToken(), commit, chgLogRtn,
-					options, function(step, json, rb, e) {
+					options, logger, function(step, json, rb, e) {
 						try {
 							if (e.length) {
 								logger.add('Failed to ' + step + ' '
