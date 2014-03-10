@@ -298,13 +298,14 @@ module.exports = function(grunt) {
 			}
 			if (output) {
 				output = output.replace(regexDupLines, '$1');
+				grunt.file.write(dupsPath, output);
 			}
-			grunt.file.write(dupsPath, output);
 		}
 		if (output) {
 			grunt.log.writeln(output);
+			return output;
 		}
-		return output || '';
+		return '';
 	}
 
 	/**
