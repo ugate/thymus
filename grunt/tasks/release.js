@@ -446,7 +446,10 @@ module.exports = function(grunt) {
 						req2.on('error', function(e) {
 							cbi(e);
 						});
-						streamWrite(req2, asset.path);
+						// stream asset to remote host
+						fs.createReadStream(asset.path, {
+							'bufferSize' : 4 * 1024
+						}).pipe(req2);
 					} else {
 						cbi('No tag found for ' + commit.versionTag + ' in '
 								+ tags.join(','));
@@ -534,46 +537,5 @@ module.exports = function(grunt) {
 			}
 			called = true;
 		}
-	}
-
-	/**
-	 * Writes file to the specified stream
-	 * 
-	 * @param stream
-	 *            the stream to write to
-	 * @param filePath
-	 *            the file path to read from
-	 */
-	function streamWrite(stream, filePath) {
-		var chunkSize = 64 * 1024;
-		var bufSize = 64 * 1024;
-		var bufPos = 0;
-		var buf = new Buffer(bufSize);
-		fs.createReadStream(filePath, {
-			'flags' : 'r',
-			'encoding' : 'binary',
-			'mode' : 438, /* 0666 */
-			'bufferSize' : chunkSize
-		}).addListener("data", function(chunk) {
-			// Since this is binary data, we cat use String.prototype.length We
-			// *WANT* the number of chars, since node uses UTF-16 for bin data
-			// meaning one byte bin data = one char = two bytes.
-			var bufNextPos = bufPos + chunk.length;
-			if (bufNextPos == bufSize) {
-				buf.write(chunk, 'binary', bufPos);
-				stream.write(buf);
-				bufPos = 0;
-			} else {
-				buf.write(chunk, 'binary', bufPos);
-				bufPos = bufNextPos;
-			}
-		}).addListener("close", function() {
-			if (bufPos != 0) {
-				stream.write(buf.slice(0, bufPos));
-				stream.end();
-			} else {
-				stream.close();
-			}
-		});
 	}
 };
