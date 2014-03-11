@@ -427,9 +427,11 @@ module.exports = function(grunt) {
 						opts.headers['Content-Length'] = fstat.size;
 						var req2 = https.request(opts, function(res2) {
 							res2.on('data', function(chunk) {
+								grunt.log.writeln('Receiving chunked data');
 								data2 += chunk;
 							});
 							res2.on('end', function() {
+								grunt.log.writeln('Received response');
 								try {
 									cf = chk(JSON.parse(data2.replace(
 											regexLines, ' ')));
@@ -442,16 +444,19 @@ module.exports = function(grunt) {
 									cbi(e);
 								}
 							});
+							grunt.log.writeln('Waiting for response');
 						});
 						req2.on('error', function(e) {
+							grunt.log.writeln('Received error response');
 							cbi(e);
 						});
 						// stream asset to remote host
+						grunt.log.writeln('Streaming "' + asset.path
+								+ '" release asset for ' + commit.versionTag
+								+ ' to ' + options.gitHostname);
 						fs.createReadStream(asset.path, {
-							'bufferSize' : 4 * 1024
-						}).pipe(req2, {
-							end : false
-						});
+							'bufferSize' : 64 * 1024
+						}).pipe(req2);
 					} else {
 						cbi('No tag found for ' + commit.versionTag + ' in '
 								+ tags.join(','));
