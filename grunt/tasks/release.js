@@ -431,14 +431,16 @@ module.exports = function(grunt) {
 								data2 += chunk;
 							});
 							res2.on('end', function() {
-								grunt.log.writeln('Received response');
 								try {
+									grunt.log.writeln('Received response:');
+									grunt.log.writeln(data2);
 									cf = chk(JSON.parse(data2.replace(
 											regexLines, ' ')));
 									try {
 										cbi();
 									} catch (e) {
-										// consume
+										// prevent cyclic error
+										grunt.log.error(e);
 									}
 								} catch (e) {
 									cbi(e);
@@ -451,9 +453,6 @@ module.exports = function(grunt) {
 							cbi(e);
 						});
 						// stream asset to remote host
-						grunt.log.writeln('Streaming "' + asset.path
-								+ '" release asset for ' + commit.versionTag
-								+ ' to ' + options.gitHostname);
 						fs.createReadStream(asset.path, {
 							'bufferSize' : 64 * 1024
 						}).pipe(req2);
@@ -483,6 +482,8 @@ module.exports = function(grunt) {
 		 *            place due to an error
 		 */
 		function cbi(e) {
+			grunt.log.writeln((called ? 'Already closed ' : 'Closing ')
+					+ ' release');
 			if (called) {
 				return;
 			}
