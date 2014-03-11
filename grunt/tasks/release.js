@@ -150,9 +150,9 @@ module.exports = function(grunt) {
 				path : distAsset,
 				name : distAsset
 			}, 'application/zip', util.getGitToken(), commit, chgLogRtn,
-					options, logger, function(step, json, rb, e) {
+					options, logger, function(step, json, rb) {
 						try {
-							if (e.length) {
+							if (logger.warnErrorCount() > 0) {
 								logger.add('Failed to ' + step + ' '
 										+ distAsset);
 								done();
@@ -165,8 +165,8 @@ module.exports = function(grunt) {
 										+ ' ' + distAsset + ' asset');
 								publish(rb, done, options, link, commit);
 							}
-						} catch (e2) {
-							logger.add(e2);
+						} catch (e) {
+							logger.add(e);
 							done();
 						}
 					});
@@ -541,7 +541,7 @@ module.exports = function(grunt) {
 			try {
 				cb(step, o, rbcb);
 			} catch (e) {
-				// consume
+				grunt.log.error(e);
 			}
 			called = true;
 		}
