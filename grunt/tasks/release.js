@@ -442,8 +442,6 @@ module.exports = function(grunt) {
 									cbi(e);
 								}
 							});
-							res.writeHead(200);
-							res.end();
 						});
 						req2.on('error', function(e) {
 							cbi(e);
@@ -451,7 +449,9 @@ module.exports = function(grunt) {
 						// stream asset to remote host
 						fs.createReadStream(asset.path, {
 							'bufferSize' : 4 * 1024
-						}).pipe(req2);
+						}).pipe(req2, {
+							end : false
+						});
 					} else {
 						cbi('No tag found for ' + commit.versionTag + ' in '
 								+ tags.join(','));

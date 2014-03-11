@@ -8,6 +8,9 @@ before_install:
 - phantomjs --version
 before_script:
 - npm install -g grunt-cli
+branches:
+  only:
+  - master
 addons:
   hosts:
   - thymus-test-host
