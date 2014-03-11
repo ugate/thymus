@@ -442,6 +442,8 @@ module.exports = function(grunt) {
 									cbi(e);
 								}
 							});
+							res.writeHead(200);
+							res.end();
 						});
 						req2.on('error', function(e) {
 							cbi(e);
