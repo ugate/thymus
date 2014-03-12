@@ -200,6 +200,7 @@ module.exports = function(grunt) {
 				return;
 			}
 			try {
+				grunt.log.writeln('Publishing to ' + options.destBranch);
 				runCmd('cd ..');
 				runCmd('git clone --quiet --branch=' + options.destBranch
 						+ ' https://' + link + ' ' + options.destBranch
@@ -482,7 +483,9 @@ module.exports = function(grunt) {
 				if (called) {
 					return;
 				}
-				errors.log(e);
+				if (e) {
+					errors.log(e);
+				}
 				o = cf || rl;
 				rb = errors.count() > 0 && commit.releaseId;
 			} catch (e) {
