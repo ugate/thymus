@@ -11,6 +11,7 @@ var fabricator = {
 	jqueryUrl : '//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js',
 	basePath : '',
 	mainScriptPath : 'js/lib/thx.js',
+	scriptPath : 'js/',
 	distPath : 'dist/',
 	distScriptPath : 'dist/js/',
 	distDocsScriptPath : 'dist/frags/docs/js/',
@@ -116,14 +117,19 @@ var fabricator = {
 	getScriptPath : function(id, envDesignator) {
 		// returns from/to paths for a specified environment
 		var $$ = this;
-		var isDist = envDesignator !== $$.devDesignator;
+		var isDist = typeof envDesignator === 'undefined' ? undefined
+				: envDesignator !== $$.devDesignator;
 		return {
-			from : ep(id, !isDist),
+			from : ep(id, isDist === undefined ? false : !isDist),
 			to : ep(id, isDist)
 		};
 		function ep(f, isDist) {
-			return (isDist ? $$.distScriptPath : $$.devScriptPath) + f
-					+ (isDist ? $$.distDesignator : $$.devDesignator) + '.js';
+			var no = typeof isDist === 'undefined';
+			return (no ? $$.scriptPath : isDist ? $$.distScriptPath
+					: $$.devScriptPath)
+					+ f
+					+ (no ? '' : isDist ? $$.distDesignator : $$.devDesignator)
+					+ '.js';
 		}
 	}
 };

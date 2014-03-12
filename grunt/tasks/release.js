@@ -205,20 +205,18 @@ module.exports = function(grunt) {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
 				runCmd('cd ..');
 				runCmd('git clone --quiet --branch=' + options.destBranch
-						+ ' https://' + link + ' ' + options.destBranch
-						+ ' > /dev/null');
+						+ ' https://' + link + ' ' + options.destBranch);
 				runCmd('cd ' + options.destBranch);
 				runCmd('git ls-files | xargs rm');
 				// remove all tracked files
 				runCmd('git commit -m "Removing ' + lastVerTag + '"');
 
 				runCmd('cp -R ../' + commit.reponame + '/' + options.destDir
-						+ ' .');
+						+ '/* .');
 				// runCmd('git checkout master -- ' + options.destDir);
 				runCmd('git add -A');
 				runCmd('git commit -m "' + relMsg + '"');
-				runCmd('git push -f origin ' + options.destBranch
-						+ ' > /dev/null');
+				runCmd('git push -f origin ' + options.destBranch);
 
 				done();
 			} catch (e) {
