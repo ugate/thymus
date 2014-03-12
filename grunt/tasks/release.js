@@ -211,7 +211,8 @@ module.exports = function(grunt) {
 				runCmd('git clone --quiet --branch=' + options.destBranch
 						+ ' https://' + link + ' ' + options.destBranch);
 				runCmd('cd ' + options.destBranch);
-				runCmd('git checkout -qf ' + options.destBranch);
+				// runCmd('git fetch -qf ' + options.destBranch);
+				// runCmd('git checkout -qf ' + options.destBranch);
 				runCmd('git rm -r --quiet .');
 				// remove all tracked files
 				runCmd('git commit -qm "Removing ' + lastVerTag + '"');
@@ -516,29 +517,27 @@ module.exports = function(grunt) {
 					opts.method = 'DELETE';
 					opts.headers['Content-Type'] = undefined;
 					opts.headers['Content-Length'] = undefined;
-					req = https.request(opts, function(res) {
+					opts.headers['Transfer-Encoding'] = undefined;
+					var rreq = https.request(opts, function(res) {
 						res.on('end', function() {
-							if (!called) {
-								fx(step, o);
-							}
+							var msg = 'Rollback complete for release ID: '
+									+ commit.releaseId;
+							grunt.log.writeln(msg);
+							fx(step, o);
 						});
 					});
-					req.end();
-					req.on('error', function(e2) {
-						if (!called) {
-							errors.log('Failed to rollback release ID '
-									+ commit.releaseId);
-							errors.log(e2);
-							fx(step, o);
-						}
-					});
-				} catch (e2) {
-					if (!called) {
-						errors.log('Failed to call rollback for release ID '
+					rreq.end();
+					rreq.on('error', function(e2) {
+						errors.log('Failed to rollback release ID '
 								+ commit.releaseId);
 						errors.log(e2);
 						fx(step, o);
-					}
+					});
+				} catch (e2) {
+					errors.log('Failed to call rollback for release ID '
+							+ commit.releaseId);
+					errors.log(e2);
+					fx(step, o);
 				}
 			}
 		}
