@@ -208,9 +208,8 @@ module.exports = function(grunt) {
 			try {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
 				runCmd('cd ..');
-				runCmd('git clone --quiet --depth=1 --branch='
-						+ options.destBranch + ' https://' + link + ' '
-						+ options.destBranch);
+				runCmd('git clone --quiet --branch=' + options.destBranch
+						+ ' https://' + link + ' ' + options.destBranch);
 				runCmd('cd ' + options.destBranch);
 				runCmd('git checkout -qf ' + options.destBranch);
 				runCmd('git rm -r --quiet .');
@@ -475,7 +474,7 @@ module.exports = function(grunt) {
 		 *            place due to an error
 		 */
 		function cbi(e) {
-			var o = null, rb = null;
+			var o = null;
 			try {
 				if (called) {
 					return;
@@ -484,7 +483,6 @@ module.exports = function(grunt) {
 					errors.log(e);
 				}
 				o = cf || rl;
-				rb = errors.count() > 0 && commit.releaseId;
 			} catch (e) {
 				errors.log(e);
 			}
@@ -507,7 +505,7 @@ module.exports = function(grunt) {
 			 */
 			function rbcb(fx) {
 				try {
-					if (!rb) {
+					if (errors.count() <= 0 || !commit.releaseId) {
 						fx(step, o);
 						return;
 					}
