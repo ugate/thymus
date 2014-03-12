@@ -168,7 +168,11 @@ module.exports = function(grunt) {
 							}
 						} catch (e) {
 							errors.log(e);
-							done();
+							if (typeof rb === 'function') {
+								rb(done);
+							} else {
+								done();
+							}
 						}
 					});
 		}
@@ -204,12 +208,14 @@ module.exports = function(grunt) {
 			try {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
 				runCmd('cd ..');
-				runCmd('git clone --quiet --branch=' + options.destBranch
-						+ ' https://' + link + ' ' + options.destBranch);
+				runCmd('git clone --quiet --depth=1 --branch='
+						+ options.destBranch + ' https://' + link + ' '
+						+ options.destBranch);
 				runCmd('cd ' + options.destBranch);
-				runCmd('git ls-files | xargs rm');
+				runCmd('git checkout -qf ' + options.destBranch);
+				runCmd('git rm -r --quiet .');
 				// remove all tracked files
-				runCmd('git commit -m "Removing ' + lastVerTag + '"');
+				runCmd('git commit -qm "Removing ' + lastVerTag + '"');
 
 				runCmd('cp -R ../' + commit.reponame + '/' + options.destDir
 						+ '/* .');
@@ -220,22 +226,15 @@ module.exports = function(grunt) {
 
 				done();
 			} catch (e) {
-				errors.log('Publish failed!');
-				errors.log(e);
 				if (typeof rb === 'function') {
-					rb(function(step, o, e2) {
-						if (e2) {
-							// rollback failed
-							errors.log('Release rollback failed');
-							errors.log(e);
-							done();
-						} else {
-							done();
-						}
-					});
+					errors.log('Publish failed! Rolling back release...');
+					errors.log(e);
+					rb(done);
 				} else {
 					errors
-							.log('Tagged release will need to be removed manually');
+							.log('Publish failed! '
+									+ 'Tagged release will need to be removed manually');
+					errors.log(e);
 					done();
 				}
 			}
