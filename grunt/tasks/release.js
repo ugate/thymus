@@ -2,7 +2,7 @@
 
 var shell = require('shelljs');
 var fs = require('fs');
-var zlib = require('zlib');
+// var zlib = require('zlib');
 var util = require('../util');
 var regexLastVer = /v(?=[^v]*$).+/g;
 var regexLines = /(\r?\n)/g;
@@ -14,6 +14,7 @@ var gitHubRegexParam = /{(\?.+)}/;
 var gitHubReleaseTagName = 'tag_name';
 var gitHubReleaseUploadUrl = 'upload_url';
 var gitHubReleaseCommitish = 'target_commitish';
+var gitHubReleaseAssetId = 'id';
 var gitHubReleaseId = 'id';
 var gitHubReleaseName = 'name';
 var gitHubReleaseBody = 'body';
@@ -23,7 +24,7 @@ var gitHubReleaseErrors = 'errors';
 var gitHubReleaseErrorMsg = 'message';
 
 /**
- * When a commit message contains "release v" followed by a version number
+ * When a commit message contains "release v" followed by a valid version number
  * (major.minor.patch) a tagged release will be issued
  * 
  * @param grunt
@@ -76,7 +77,8 @@ module.exports = function(grunt) {
 		}
 
 		// NOTE : clone depth needs to be high enough to capture details
-		// gathered by GIT (see git depth option in .travis.yml)
+		// gathered by GIT (e.g. change log details)- see git depth option in
+		// .travis.yml
 		// TODO : verify release version using "semver"
 		var lastVerTag = runCmd('git describe --abbrev=0 --tags').replace(
 				regexLines, '');
@@ -423,19 +425,20 @@ module.exports = function(grunt) {
 							});
 							res2.on('end', function() {
 								try {
-									grunt.log.writeln('Received response:');
-									grunt.log.writeln(data2);
 									cf = chk(JSON.parse(data2.replace(
 											regexLines, ' ')));
+									grunt.log.writeln('Asset ID '
+											+ cf[gitHubReleaseAssetId]
+											+ ' successfully uploaded');
 									try {
 										cbi();
 									} catch (e) {
-										// prevent
-										// cyclic
-										// error
+										// prevent cyclic error
 										grunt.log.error(e);
 									}
 								} catch (e) {
+									grunt.log.writeln('Received response:');
+									grunt.log.writeln(data2);
 									cbi(e);
 								}
 							});
@@ -445,8 +448,7 @@ module.exports = function(grunt) {
 							grunt.log.writeln('Received error response');
 							cbi(e);
 						});
-						// stream asset to
-						// remote host
+						// stream asset to remote host
 						fs.createReadStream(asset.path, {
 							'bufferSize' : 64 * 1024
 						}).pipe(req2);
@@ -511,7 +513,7 @@ module.exports = function(grunt) {
 			function rbcb(fx) {
 				try {
 					if (!rb) {
-						fx(step, om);
+						fx(step, o);
 						return;
 					}
 					// rollback release
