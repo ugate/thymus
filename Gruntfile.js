@@ -132,9 +132,7 @@ module.exports = function(grunt) {
 			});
 
 	// Retrieve commit details
-	var logger = new util.Logger(grunt.log.writeln, grunt.log.error,
-			grunt.log.error);
-	var commit = util.getCommit(logger);
+	var commit = util.getCommit(grunt.log.error, grunt.log.writeln);
 
 	// Load tasks from package
 	for ( var key in grunt.file.readJSON('package.json').devDependencies) {
@@ -174,7 +172,7 @@ module.exports = function(grunt) {
 			});
 
 	// Build tasks
-	var buildTasks = new util.Tasks(commit, logger);
+	var buildTasks = new util.Tasks(commit, grunt.log.writeln);
 	buildTasks.add('clean');
 	buildTasks.add('includes');
 	buildTasks.add('copy:dist');

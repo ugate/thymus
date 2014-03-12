@@ -31,8 +31,7 @@ var gitHubReleaseErrorMsg = 'message';
  */
 module.exports = function(grunt) {
 
-	var commit = null;
-
+	// register task
 	grunt.registerTask('release',
 			'Release bundle using commit message (if present)', function() {
 				var options = this.options({
@@ -58,19 +57,19 @@ module.exports = function(grunt) {
 	 * repository web site is published
 	 * 
 	 * @param task
-	 *            the current running task instance
+	 *            the currently running task
 	 * @param options
-	 *            the grunt options
+	 *            the task options
 	 */
 	function release(task, options) {
-		var logger = new util.Logger(grunt.log.writeln, grunt.log.error,
-				grunt.log.warn);
+		var errors = new Errors();
 		var chgLogRtn = '';
 		var authorsRtn = '';
 		var doneAsync = null;
 
 		// Capture commit message
-		commit = util.getCommit(logger, options.commitMessage);
+		var commit = util.getCommit(errors.log, grunt.log.writeln,
+				options.commitMessage);
 		grunt.log.writeln('Commit message: ' + commit.message);
 		if (!commit.version) {
 			return;
@@ -92,7 +91,7 @@ module.exports = function(grunt) {
 		chgLogRtn = runCmd('git --no-pager log ' + lastVerTag
 				+ '..HEAD --pretty=format:"' + options.chgLogLinePrefix
 				+ '%s" > ' + chgLogPath, null, false, chgLogPath);
-		if (options.chgLogRequired && !validateFile(chgLogPath, logger)) {
+		if (options.chgLogRequired && !validateFile(chgLogPath)) {
 			return done();
 		}
 
@@ -100,7 +99,7 @@ module.exports = function(grunt) {
 		var authorsPath = options.destDir + '/' + options.authors;
 		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u > '
 				+ authorsPath, null, false, authorsPath);
-		if (options.authorsRequired && !validateFile(authorsPath, logger)) {
+		if (options.authorsRequired && !validateFile(authorsPath)) {
 			return done();
 		}
 
@@ -139,7 +138,7 @@ module.exports = function(grunt) {
 					runCmd('git push --delete origin ' + commit.versionTag);
 				}, done, options, link, commit);
 			} catch (e) {
-				logger.add(e);
+				errors.log(e);
 				return done();
 			}
 		} else {
@@ -150,23 +149,23 @@ module.exports = function(grunt) {
 				path : distAsset,
 				name : distAsset
 			}, 'application/zip', util.getGitToken(), commit, chgLogRtn,
-					options, logger, function(step, json, rb) {
+					options, errors, function(step, json, rb) {
 						try {
-							if (logger.warnErrorCount() > 0) {
-								logger.add('Failed to ' + step + ' '
+							if (errors.count() > 0) {
+								errors.log('Failed to ' + step + ' '
 										+ distAsset);
 								done();
 							} else if (json && json.state != 'uploaded') {
-								logger.add(step + ' failed with state: '
+								errors.log(step + ' failed with state: '
 										+ json.state);
 								done();
 							} else {
 								grunt.log.writeln('Distributed/' + cf.state
 										+ ' ' + distAsset + ' asset');
-								publish(rb, done, options, link, commit);
+								publish(rb);
 							}
 						} catch (e) {
-							logger.add(e);
+							errors.log(e);
 							done();
 						}
 					});
@@ -176,158 +175,146 @@ module.exports = function(grunt) {
 		 * When running in asynchronous mode grunt will be notified the process
 		 * is complete
 		 * 
-		 * @param passed
-		 *            true when completed without error
 		 * @returns the return value from grunt when running in asynchronous
 		 *          mode, otherwise, the passed value
 		 */
 		function done() {
-			logger.dump();
 			if (doneAsync) {
-				return doneAsync(logger.warnErrorCount() <= 0);
-			} else if (!passed) {
+				return doneAsync(errors.count() <= 0);
+			} else if (errors.count() > 0) {
 				throw new Error('Release failed');
 			}
 			return true;
 		}
-	}
 
-	/**
-	 * Publish repository web site
-	 * 
-	 * @param rb
-	 *            the rollback function to call when the publish fails
-	 * @param done
-	 *            the grunt done function
-	 * @param options
-	 *            the grunt options
-	 * @param link
-	 *            the link to the repository
-	 * @param commit
-	 *            the commit object the release is for (should have a valid ID)
-	 */
-	function publish(rb, done, logger, options, link, commit) {
-		if (!commit.releaseId) {
-			grunt.log.writeln('No release ID Skipping publishing to '
-					+ options.destBranch);
-			return;
-		}
-		try {
-			runCmd('cd ..');
-			runCmd('git clone --quiet --branch=' + options.destBranch
-					+ ' https://' + link + ' ' + options.destBranch
-					+ ' > /dev/null');
-			runCmd('cd ' + options.destBranch);
-			runCmd('git ls-files | xargs rm');
-			// remove all tracked files runCmd('git commit -m "' + relMsg +
-			// '"');
-
-			runCmd('cp -a ../' + commit.reponame + '/' + options.destBranch
-					+ '/*.');
-			// runCmd('git checkout master -- ' + options.destDir);
-			runCmd('git add -A');
-			runCmd('git commit -m "' + relMsg + '"');
-			runCmd('git push -f origin ' + options.destBranch + ' > /dev/null');
-
-			done();
-		} catch (e) {
-			if (typeof rb === 'function') {
-				rb(function(step, o, e2) {
-					if (e2) {
-						// rollback failed
-						logger.add('Release rollback failed');
-						logger.add(e);
-						done();
-					} else {
-						done();
-					}
-				});
-			} else {
-				logger.add(e);
-				done();
-			}
-		}
-	}
-
-	/**
-	 * Executes a shell command
-	 * 
-	 * @param cmd
-	 *            the command string to execute
-	 * @param wpath
-	 *            the optional path/file to write the results to
-	 * @param nofail
-	 *            true to prevent throwing an error when the command fails to
-	 *            execute
-	 * @param dupsPath
-	 *            path to the command output that will be read, duplicate entry
-	 *            lines removed and re-written
-	 */
-	function runCmd(cmd, wpath, nofail, dupsPath) {
-		grunt.log.writeln(cmd);
-		var rtn = null;
-		if (typeof cmd === 'string') {
-			rtn = shell.exec(cmd, {
-				silent : true
-			});
-		} else {
-			rtn = shell[cmd.shell].apply(shell, cmd.args);
-		}
-		if (rtn.code !== 0) {
-			var e = 'Error "' + rtn.code + '" for commit number '
-					+ commit.number + ' ' + rtn.output;
-			if (nofail) {
-				logger.add(e);
+		/**
+		 * Publish repository web site (commit should have a valid ID)
+		 * 
+		 * @param rb
+		 *            the rollback function to call when the publish fails
+		 */
+		function publish(rb) {
+			if (!commit.releaseId) {
+				grunt.log.writeln('No release ID Skipping publishing to '
+						+ options.destBranch);
 				return;
 			}
-			throw grunt.util.error(e);
+			try {
+				runCmd('cd ..');
+				runCmd('git clone --quiet --branch=' + options.destBranch
+						+ ' https://' + link + ' ' + options.destBranch
+						+ ' > /dev/null');
+				runCmd('cd ' + options.destBranch);
+				runCmd('git ls-files | xargs rm');
+				// remove all tracked files runCmd('git commit -m "' + relMsg +
+				// '"');
+
+				runCmd('cp -a ../' + commit.reponame + '/' + options.destBranch
+						+ '/*.');
+				// runCmd('git checkout master -- ' + options.destDir);
+				runCmd('git add -A');
+				runCmd('git commit -m "' + relMsg + '"');
+				runCmd('git push -f origin ' + options.destBranch
+						+ ' > /dev/null');
+
+				done();
+			} catch (e) {
+				if (typeof rb === 'function') {
+					rb(function(step, o, e2) {
+						if (e2) {
+							// rollback failed
+							errors.log('Release rollback failed');
+							errors.log(e);
+							done();
+						} else {
+							done();
+						}
+					});
+				} else {
+					errors.log(e);
+					done();
+				}
+			}
 		}
-		var output = rtn.output;
-		if (output) {
-			output = output.replace(regexKey, '$1[SECURE]$2');
-		}
-		if (output && wpath) {
-			grunt.file.write(wpath, output);
-		}
-		if (dupsPath) {
-			// remove duplicate lines
-			if (!output) {
-				output = grunt.file.read(dupsPath, {
-					encoding : grunt.file.defaultEncoding
+
+		/**
+		 * Executes a shell command
+		 * 
+		 * @param cmd
+		 *            the command string to execute
+		 * @param wpath
+		 *            the optional path/file to write the results to
+		 * @param nofail
+		 *            true to prevent throwing an error when the command fails
+		 *            to execute
+		 * @param dupsPath
+		 *            path to the command output that will be read, duplicate
+		 *            entry lines removed and re-written
+		 */
+		function runCmd(cmd, wpath, nofail, dupsPath) {
+			grunt.log.writeln(cmd);
+			var rtn = null;
+			if (typeof cmd === 'string') {
+				rtn = shell.exec(cmd, {
+					silent : true
 				});
+			} else {
+				rtn = shell[cmd.shell].apply(shell, cmd.args);
+			}
+			if (rtn.code !== 0) {
+				var e = 'Error "' + rtn.code + '" for commit number '
+						+ commit.number + ' ' + rtn.output;
+				if (nofail) {
+					errors.log(e);
+					return;
+				}
+				throw grunt.util.error(e);
+			}
+			var output = rtn.output;
+			if (output) {
+				output = output.replace(regexKey, '$1[SECURE]$2');
+			}
+			if (output && wpath) {
+				grunt.file.write(wpath, output);
+			}
+			if (dupsPath) {
+				// remove duplicate lines
+				if (!output) {
+					output = grunt.file.read(dupsPath, {
+						encoding : grunt.file.defaultEncoding
+					});
+				}
+				if (output) {
+					output = output.replace(regexDupLines, '$1');
+					grunt.file.write(dupsPath, output);
+				}
 			}
 			if (output) {
-				output = output.replace(regexDupLines, '$1');
-				grunt.file.write(dupsPath, output);
+				grunt.log.writeln(output);
+				return output;
 			}
+			return '';
 		}
-		if (output) {
-			grunt.log.writeln(output);
-			return output;
-		}
-		return '';
-	}
 
-	/**
-	 * Determines if a file has content and logs an error when the the file is
-	 * empty
-	 * 
-	 * @param path
-	 *            the path to the file
-	 * @param logger
-	 *            the {util.Logger} instance
-	 * @returns true when the file contains data or the path is invalid
-	 */
-	function validateFile(path, logger) {
-		var stat = path ? fs.statSync(path) : {
-			size : 0
-		};
-		if (!stat.size) {
-			logger.add('Failed to find any entries in "' + path
-					+ '" (file size: ' + stat.size + ')');
-			return false;
+		/**
+		 * Determines if a file has content and logs an error when the the file
+		 * is empty
+		 * 
+		 * @param path
+		 *            the path to the file
+		 * @returns true when the file contains data or the path is invalid
+		 */
+		function validateFile(path) {
+			var stat = path ? fs.statSync(path) : {
+				size : 0
+			};
+			if (!stat.size) {
+				errors.log('Failed to find any entries in "' + path
+						+ '" (file size: ' + stat.size + ')');
+				return false;
+			}
+			return true;
 		}
-		return true;
 	}
 
 	/**
@@ -351,14 +338,14 @@ module.exports = function(grunt) {
 	 *            release description (can be in markdown)
 	 * @param options
 	 *            the task options
-	 * @param logger
-	 *            the {util.Logger} instance
+	 * @param errors
+	 *            the {Errors} instance
 	 * @param cb
 	 *            the call back function (passed parameters: the current task,
 	 *            JSON response, error)
 	 */
 	function releaseAndUploadAsset(asset, contentType, authToken, commit, desc,
-			options, logger, cb) {
+			options, errors, cb) {
 		var step = 'release';
 		if (!authToken) {
 			cbi(null, grunt.util.error('Invalid authorization token'));
@@ -368,7 +355,7 @@ module.exports = function(grunt) {
 		// check if API responded with an error message
 		function chk(o) {
 			if (o[gitHubReleaseErrorMsg]) {
-				throw new Error(JSON.stringify(o));
+				throw grunt.util.error(JSON.stringify(o));
 			}
 			return o;
 		}
@@ -439,7 +426,9 @@ module.exports = function(grunt) {
 									try {
 										cbi();
 									} catch (e) {
-										// prevent cyclic error
+										// prevent
+										// cyclic
+										// error
 										grunt.log.error(e);
 									}
 								} catch (e) {
@@ -452,7 +441,8 @@ module.exports = function(grunt) {
 							grunt.log.writeln('Received error response');
 							cbi(e);
 						});
-						// stream asset to remote host
+						// stream asset to
+						// remote host
 						fs.createReadStream(asset.path, {
 							'bufferSize' : 64 * 1024
 						}).pipe(req2);
@@ -487,9 +477,9 @@ module.exports = function(grunt) {
 			if (called) {
 				return;
 			}
-			logger.add(e);
+			errors.log(e);
 			var o = cf || rl;
-			var rb = logger.warnErrorCount() && commit.releaseId;
+			var rb = errors.count() > 0 && commit.releaseId;
 
 			/**
 			 * Rollback callback
@@ -523,17 +513,17 @@ module.exports = function(grunt) {
 					req.end();
 					req.on('error', function(e2) {
 						if (!called) {
-							logger.add(e2);
-							logger.add('Failed to rollback release ID '
+							errors.log('Failed to rollback release ID '
 									+ commit.releaseId);
+							errors.log(e2);
 							fx(step, o);
 						}
 					});
 				} catch (e2) {
 					if (!called) {
-						logger.add(e2);
-						logger.add('Failed to call rollback for release ID '
+						errors.log('Failed to call rollback for release ID '
 								+ commit.releaseId);
+						errors.log(e2);
 						fx(step, o);
 					}
 				}
@@ -541,9 +531,36 @@ module.exports = function(grunt) {
 			try {
 				cb(step, o, rbcb);
 			} catch (e) {
-				grunt.log.error(e);
+				errors.log(e);
 			}
 			called = true;
 		}
+	}
+
+	/**
+	 * Error tracking
+	 * 
+	 * @constructor
+	 */
+	function Errors() {
+		var errors = [];
+
+		/**
+		 * Logs an error
+		 * 
+		 * @param e
+		 *            the {Error} object or string
+		 */
+		this.log = function(e) {
+			e = e instanceof Error ? e : grunt.util.error(e);
+			grunt.log.error(e);
+		};
+
+		/**
+		 * @returns the number of errors logged
+		 */
+		this.count = function() {
+			return errors.length;
+		};
 	}
 };

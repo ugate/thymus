@@ -11,8 +11,10 @@ module.exports = {
 	/**
 	 * Gets the current commit details
 	 * 
-	 * @param logger
-	 *            the {Logger} instance
+	 * @param errorLogger
+	 *            the function that will handle logging errors
+	 * @param infoLogger
+	 *            the function that will handle logging general information
 	 * @param altMsg
 	 *            an optional commit message to use instead of extracting one
 	 * @param altNum
@@ -23,7 +25,10 @@ module.exports = {
 	 *            true
 	 * @returns {Object} containing the commit number, message and version
 	 */
-	getCommit : function(logger, altMsg, altNum, altSlug, nofail) {
+	getCommit : function(errorLogger, infoLogger, altMsg, altNum, altSlug,
+			nofail) {
+		var logi = infoLogger || console.log;
+		var loge = errorLogger || console.error;
 		var cn = altNum || process.env.TRAVIS_COMMIT;
 		var cm = altMsg || process.env.TRAVIS_COMMIT_MESSAGE;
 		var sl = altSlug || process.env.TRAVIS_REPO_SLUG;
@@ -36,15 +41,15 @@ module.exports = {
 				silent : true
 			});
 			if (rtn.code !== 0) {
-				var e = 'Error "' + rtn.code + '" for commit number ' + cn
-						+ ' ' + rtn.output;
+				var e = new Error('Error "' + rtn.code + '" for commit number '
+						+ cn + ' ' + rtn.output);
 				if (nofail) {
-					logger.add(e);
+					loge(e);
 					return {
 						error : e
 					};
 				}
-				throw logger.dump(e);
+				throw e;
 			}
 			cm = rtn.output;
 		}
@@ -55,7 +60,7 @@ module.exports = {
 				skps.push(t);
 			});
 		}
-		logger.info('Skipping "' + skps.join(',') + '" tasks');
+		logi('Skipping "' + skps.join(',') + '" tasks');
 		var sls = sl ? sl.split('/') : [];
 		function versionArray(str) {
 			var v = [], rv = cm ? cm.match(regexRelease) : [];
@@ -98,9 +103,10 @@ module.exports = {
 	 *            the object returned from {getCommit} that contains the array
 	 *            of tasks to skip
 	 * @param logger
-	 *            the {Logger} instance
+	 *            the function that will be used to log actions
 	 */
 	Tasks : function(commit, logger) {
+		var log = logger || console.log;
 
 		/**
 		 * Tasks array (should call tasks.add to push)
@@ -119,106 +125,12 @@ module.exports = {
 			var noSauce = task == 'saucelabs-qunit'
 					&& (typeof process.env.SAUCE_ACCESS_KEY === 'undefined' || (process.env.THX_TEST && process.env.THX_TEST != task));
 			if (noSauce || (commit.skips && commit.skips.indexOf(task) >= 0)) {
-				logger.info('Skipping "' + task + '" task');
+				log('Skipping "' + task + '" task');
 				return false;
 			}
-			logger.info('Queuing "' + task + '" task');
+			log('Queuing "' + task + '" task');
 			return this.tasks.push(task);
 		};
-	},
-
-	/**
-	 * Logger utility
-	 * 
-	 * @constructor
-	 * @param logger
-	 *            the informational logging function
-	 * @param warnLogger
-	 *            the warning function
-	 * @param errorLogger
-	 *            the error function
-	 */
-	Logger : function(logger, warnLogger, errorLogger) {
-		var errors = [];
-		var info = logger || console.log;
-		var warn = warnLogger || console.warn;
-		var error = errorLogger || console.error;
-
-		/**
-		 * Adds a warning/error to the stack
-		 * 
-		 * @param e
-		 *            the warning/error to add (string or {Error} object)
-		 * @param isWarn
-		 *            true to indicate warning
-		 */
-		this.add = function(e, isWarn) {
-			var eo = gen(e, isWarn);
-			return eo ? errors.unshift(eo) : -1;
-		};
-
-		/**
-		 * Logs a informational message
-		 * 
-		 * @param m
-		 *            the message to log
-		 */
-		this.info = function(m) {
-			info(m);
-		};
-
-		/**
-		 * Dumps either the specified error or the cached errors to the logger
-		 * 
-		 * @param e
-		 *            an optional error to dump (null dumps current
-		 *            error/warning cached stack)
-		 * @param isWarn
-		 *            true dumps only warnings, false dumps only errors,
-		 *            undefined dumps everything
-		 */
-		this.dump = function(e, isWarn) {
-			e = gen(e, isWarn);
-			var es = e ? [ e ] : errors;
-			var all = typeof isWarn === 'undefined';
-			for ( var i = 0; i < es.length; i++) {
-				if (all || (isWarn && es[i].isWarn)) {
-					warn(es[i].e);
-					warn(es[i].stack);
-				} else if (all || (!isWarn && !es[i].isWarn)) {
-					error(es[i].e);
-					error(es[i].stack);
-				}
-			}
-			return e ? e.e : null;
-		};
-
-		/**
-		 * @returns the number of added warnings/errors
-		 */
-		this.warnErrorCount = function() {
-			return errors.length;
-		};
-
-		/**
-		 * Generates an {Error} object
-		 * 
-		 * @param e
-		 *            the {Error} or error string
-		 * @returns an object with an {Error} and warning flag
-		 */
-		function gen(e, isWarn) {
-			var eo = null;
-			if (e instanceof Error) {
-				eo = e;
-			} else if (typeof e === 'string') {
-				eo = new Error(e);
-			}
-			return eo ? {
-				e : gen(e),
-				isWarn : isWarn
-			} : null;
-		}
 	},
 
 	/**
