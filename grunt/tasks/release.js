@@ -209,11 +209,11 @@ module.exports = function(grunt) {
 						+ ' > /dev/null');
 				runCmd('cd ' + options.destBranch);
 				runCmd('git ls-files | xargs rm');
-				// remove all tracked files runCmd('git commit -m "' + relMsg +
-				// '"');
+				// remove all tracked files
+				runCmd('git commit -m "Removing ' + lastVerTag + '"');
 
-				runCmd('cp -a ../' + commit.reponame + '/' + options.destBranch
-						+ '/*.');
+				runCmd('cp -R ../' + commit.reponame + '/' + options.destDir
+						+ ' .');
 				// runCmd('git checkout master -- ' + options.destDir);
 				runCmd('git add -A');
 				runCmd('git commit -m "' + relMsg + '"');
@@ -222,6 +222,8 @@ module.exports = function(grunt) {
 
 				done();
 			} catch (e) {
+				errors.log('Publish failed!');
+				errors.log(e);
 				if (typeof rb === 'function') {
 					rb(function(step, o, e2) {
 						if (e2) {
@@ -235,9 +237,7 @@ module.exports = function(grunt) {
 					});
 				} else {
 					errors
-							.log('Publish failed and there was no rollback mechanism in place. '
-									+ 'Tagged release will need to be removed manually');
-					errors.log(e);
+							.log('Tagged release will need to be removed manually');
 					done();
 				}
 			}
@@ -480,8 +480,6 @@ module.exports = function(grunt) {
 		function cbi(e) {
 			var o = null, rb = null;
 			try {
-				grunt.log.writeln((called ? 'Already closed ' : 'Closing ')
-						+ ' release');
 				if (called) {
 					return;
 				}

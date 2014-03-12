@@ -56,7 +56,7 @@ module.exports = function(grunt) {
 					dist : {
 						expand : true,
 						src : [ '**/**/*.{htm,html,css,js,md,png,jpg,gif,ico}',
-								'!**/{node_modules,lib,grunt}/**',
+								'!**/{node_modules,lib,grunt,dist}/**',
 								'!Gruntfile.js' ],
 						dest : fabricator.distPath,
 						options : {
