@@ -564,8 +564,7 @@ module.exports = function(grunt) {
 			e = e instanceof Error ? e : grunt.util.error(e);
 			if (e) {
 				errors.unshift(e);
-				grunt.log.error(e);
-				grunt.log.error(e.stack);
+				grunt.log.error(e.stack || e.message);
 			}
 		};
 
