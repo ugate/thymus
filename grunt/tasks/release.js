@@ -160,7 +160,7 @@ module.exports = function(grunt) {
 										+ json.state);
 								done();
 							} else {
-								grunt.log.writeln('Distributed/' + cf.state
+								grunt.log.writeln('Distributed/' + json.state
 										+ ' ' + distAsset + ' asset');
 								publish(rb);
 							}
@@ -231,6 +231,9 @@ module.exports = function(grunt) {
 						}
 					});
 				} else {
+					errors
+							.log('Publish failed and there was no rollback mechanism in place. '
+									+ 'Tagged release will need to be removed manually');
 					errors.log(e);
 					done();
 				}
@@ -472,14 +475,26 @@ module.exports = function(grunt) {
 		 *            place due to an error
 		 */
 		function cbi(e) {
-			grunt.log.writeln((called ? 'Already closed ' : 'Closing ')
-					+ ' release');
-			if (called) {
-				return;
+			var o = null, rb = null;
+			try {
+				grunt.log.writeln((called ? 'Already closed ' : 'Closing ')
+						+ ' release');
+				if (called) {
+					return;
+				}
+				errors.log(e);
+				o = cf || rl;
+				rb = errors.count() > 0 && commit.releaseId;
+			} catch (e) {
+				errors.log(e);
 			}
-			errors.log(e);
-			var o = cf || rl;
-			var rb = errors.count() > 0 && commit.releaseId;
+			try {
+				cb(step, o, rbcb);
+			} catch (e) {
+				errors.log('Failed to call release completion callback');
+				errors.log(e);
+			}
+			called = true;
 
 			/**
 			 * Rollback callback
@@ -528,12 +543,6 @@ module.exports = function(grunt) {
 					}
 				}
 			}
-			try {
-				cb(step, o, rbcb);
-			} catch (e) {
-				errors.log(e);
-			}
-			called = true;
 		}
 	}
 
@@ -553,7 +562,11 @@ module.exports = function(grunt) {
 		 */
 		this.log = function(e) {
 			e = e instanceof Error ? e : grunt.util.error(e);
-			grunt.log.error(e);
+			if (e) {
+				errors.unshift(e);
+				grunt.log.error(e);
+				grunt.log.error(e.stack);
+			}
 		};
 
 		/**
