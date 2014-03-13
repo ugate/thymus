@@ -208,10 +208,11 @@ module.exports = function(grunt) {
 			}
 			try {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
-				var pwd = runCmd('pwd').replace(regexLines, '');
-				var destPath = pth.join(pwd, options.destDir);
+				var destPath = runCmd('pwd').replace(regexLines, '');
+				destPath = pth.join(destPath, options.destDir);
 				runCmd('cd ..');
-				var ghPath = pth.join(pwd, options.destBranch);
+				var ghPath = runCmd('pwd').replace(regexLines, '');
+				ghPath = pth.join(ghPath, options.destBranch);
 				runCmd('git clone --quiet --branch=' + options.destBranch
 						+ ' https://' + link + ' ' + ghPath);
 				runCmd('cd ' + ghPath);
