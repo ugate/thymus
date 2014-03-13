@@ -209,13 +209,13 @@ module.exports = function(grunt) {
 			try {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
 				var destPath = pth.join(commit.buildDir, options.destDir);
-				var ghPath = pth.join(commit.buildDir.replace(commit.slug, ''),
+				var ghPath = commit.buildDir.replace(commit.reponame,
 						options.destBranch);
 				runCmd('git clone --quiet --branch=' + options.destBranch
 						+ ' https://' + link + ' ' + ghPath);
 				runCmd('cd ' + ghPath);
-				// runCmd('git fetch -qf ' + options.destBranch);
-				// runCmd('git checkout -qf ' + options.destBranch);
+				runCmd('git fetch --quiet ' + options.destBranch);
+				runCmd('git checkout --quiet ' + options.destBranch);
 				runCmd('git rm -r --quiet .');
 				// remove all tracked files
 				runCmd('git commit -qm "Removing ' + lastVerTag + '"');
