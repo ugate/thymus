@@ -211,10 +211,10 @@ module.exports = function(grunt) {
 				var destPath = pth.join(commit.buildDir, options.destDir);
 				var ghPath = commit.buildDir.replace(commit.reponame,
 						options.destBranch);
-				runCmd('git clone --quiet --branch=' + options.destBranch
-						+ ' https://' + link + ' ' + ghPath);
+				runCmd('mkdir ' + ghPath);
 				runCmd('cd ' + ghPath);
-				runCmd('git fetch --quiet ' + options.destBranch);
+				runCmd('git remote add -t ' + options.destBranch
+						+ ' -f origin https://' + commit.username + ':' + link);
 				runCmd('git checkout --quiet ' + options.destBranch);
 				runCmd('git rm -r --quiet .');
 				// remove all tracked files
