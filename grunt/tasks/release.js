@@ -208,11 +208,9 @@ module.exports = function(grunt) {
 			}
 			try {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
-				var destPath = runCmd('pwd').replace(regexLines, '');
-				destPath = pth.join(destPath, options.destDir);
-				runCmd('cd ..');
-				var ghPath = runCmd('pwd').replace(regexLines, '');
-				ghPath = pth.join(ghPath, options.destBranch);
+				var destPath = pth.join(commit.buildDir, options.destDir);
+				var ghPath = pth.join(commit.buildDir.replace(commit.slug, ''),
+						options.destBranch);
 				runCmd('git clone --quiet --branch=' + options.destBranch
 						+ ' https://' + link + ' ' + ghPath);
 				runCmd('cd ' + ghPath);
@@ -513,10 +511,10 @@ module.exports = function(grunt) {
 					// rollback release
 					opts.path = pth.join(releasePath, commit.releaseId
 							.toString());
+					opts.method = 'DELETE';
 					grunt.log.writeln('Rolling back ' + commit.versionTag
 							+ ' release via ' + options.gitHostname + ' '
-							+ opts.path);
-					opts.method = 'DELETE';
+							+ opts.method + ' ' + opts.path);
 					opts.headers['Content-Length'] = 0;
 					var rreq = https.request(opts, function(res) {
 						var rrdata = '';

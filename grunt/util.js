@@ -26,9 +26,10 @@ module.exports = {
 	 * @returns {Object} containing the commit number, message and version
 	 */
 	getCommit : function(errorLogger, infoLogger, altMsg, altNum, altSlug,
-			nofail) {
+			altBuildDir, nofail) {
 		var logi = infoLogger || console.log;
 		var loge = errorLogger || console.error;
+		var dr = altBuildDir || process.env.TRAVIS_BUILD_DIR;
 		var cn = altNum || process.env.TRAVIS_COMMIT;
 		var cm = altMsg || process.env.TRAVIS_COMMIT_MESSAGE;
 		var sl = altSlug || process.env.TRAVIS_REPO_SLUG;
@@ -88,6 +89,7 @@ module.exports = {
 			versionPatch : v[6],
 			versionPrereleaseType : v[7],
 			versionPrerelease : v[8],
+			buildDir : dr,
 			slug : sl,
 			username : sls.length ? sls[0] : '',
 			reponame : sls.length > 1 ? sls[1] : '',
