@@ -211,20 +211,21 @@ module.exports = function(grunt) {
 				var destPath = pth.join(commit.buildDir, options.destDir);
 				var ghPath = commit.buildDir.replace(commit.reponame,
 						options.destBranch);
-				runCmd('mkdir ' + ghPath);
 				runCmd('cd ' + ghPath);
-				runCmd('git remote add -t ' + options.destBranch
-						+ ' -f origin https://' + commit.username + ':' + link);
-				runCmd('git checkout --quiet ' + options.destBranch);
-				runCmd('git rm -r --quiet .');
-				// remove all tracked files
-				runCmd('git commit -qm "Removing ' + lastVerTag + '"');
+				ghPath = pth.join(ghPath, options.destBranch);
+				runCmd('git clone --quiet --branch=' + options.destBranch
+						+ ' https://' + link + ' ' + ghPath + ' > /dev/null');
+				// runCmd('git fetch -q ' + options.destBranch);
+				// runCmd('git checkout -q ' + options.destBranch);
+				runCmd('git rm -rfq .');
+				// runCmd('git commit -qm "Removing ' + lastVerTag + '"');
 
 				runCmd('cp -r ' + pth.join(destPath, '*') + ' .');
 				// runCmd('git checkout master -- ' + options.destDir);
-				runCmd('git add -A');
+				runCmd('git add -fq .');
 				runCmd('git commit -m "' + relMsg + '"');
-				runCmd('git push -f origin ' + options.destBranch);
+				runCmd('git push -fq origin ' + options.destBranch
+						+ ' > /dev/null');
 
 				done();
 			} catch (e) {
