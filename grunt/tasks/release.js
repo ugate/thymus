@@ -210,10 +210,12 @@ module.exports = function(grunt) {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
 				var destPath = pth.join(commit.buildDir, options.destDir);
 				var ghPath = commit.buildDir.replace(commit.reponame, '');
-				runCmd('cd ' + ghPath);
+				runCmd('mv ' + destPath + ' ' + ghPath);
+				destPath = pth.join(ghPath, options.destDir); 
 				ghPath = pth.join(ghPath, options.destBranch);
 				runCmd('git clone --quiet --branch=' + options.destBranch
 						+ ' https://' + link + ' ' + ghPath + ' > /dev/null');
+				runCmd('cd ' + ghPath);
 				// runCmd('git fetch -q ' + options.destBranch);
 				// runCmd('git checkout -q ' + options.destBranch);
 				runCmd('git rm -rfq .');
@@ -374,10 +376,11 @@ module.exports = function(grunt) {
 		var fstat = asset && asset.path ? fs.statSync(asset.path) : {
 			size : 0
 		};
+		var host = 'api.github.com';
 		var releasePath = '/repos/' + commit.slug + '/releases';
 		var https = require('https');
 		var opts = {
-			hostname : 'api.github.com',
+			hostname : host,
 			port : 443,
 			path : releasePath,
 			method : 'POST'
@@ -512,10 +515,11 @@ module.exports = function(grunt) {
 					opts.path = pth.join(releasePath, commit.releaseId
 							.toString());
 					opts.method = 'DELETE';
+					opts.hostname = host;
+					opts.headers['Content-Length'] = 0;
 					grunt.log.writeln('Rolling back ' + commit.versionTag
 							+ ' release via ' + options.gitHostname + ' '
 							+ opts.method + ' ' + opts.path);
-					opts.headers['Content-Length'] = 0;
 					var rreq = https.request(opts, function(res) {
 						var rrdata = '';
 						res.on('data', function(chunk) {
