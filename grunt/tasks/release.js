@@ -208,9 +208,10 @@ module.exports = function(grunt) {
 			}
 			try {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
-				var destPath = pth.join(process.cwd(), options.destDir);
+				var pwd = runCmd('pwd');
+				var destPath = pth.join(pwd, options.destDir);
 				runCmd('cd ..');
-				var ghPath = pth.join(process.cwd(), options.destBranch);
+				var ghPath = pth.join(pwd, options.destBranch);
 				runCmd('git clone --quiet --branch=' + options.destBranch
 						+ ' https://' + link + ' ' + ghPath);
 				runCmd('cd ' + ghPath);
@@ -220,9 +221,7 @@ module.exports = function(grunt) {
 				// remove all tracked files
 				runCmd('git commit -qm "Removing ' + lastVerTag + '"');
 
-				runCmd('cd ' + destPath);
-				runCmd('cp -r * ' + ghPath);
-				runCmd('cd ' + ghPath);
+				runCmd('cp -r ' + pth.join(destPath, '*') + ' .');
 				// runCmd('git checkout master -- ' + options.destDir);
 				runCmd('git add -A');
 				runCmd('git commit -m "' + relMsg + '"');
@@ -511,7 +510,8 @@ module.exports = function(grunt) {
 			function rbcb(fx) {
 				try {
 					// rollback release
-					opts.path = pth.join(releasePath, commit.releaseId);
+					opts.path = pth.join(releasePath, commit.releaseId
+							.toString());
 					grunt.log.writeln('Rolling back ' + commit.versionTag
 							+ ' release via ' + options.gitHostname + ' '
 							+ opts.path);
