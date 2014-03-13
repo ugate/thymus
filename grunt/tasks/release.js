@@ -207,21 +207,22 @@ module.exports = function(grunt) {
 				return;
 			}
 			try {
+				grunt.log.writeln('Publishing to ' + options.destBranch);
 				var destPath = pth.join(process.cwd(), options.destDir);
-				grunt.log.writeln('Publishing to ' + options.destBranch
-						+ ' (using "' + destPath + '")');
 				runCmd('cd ..');
 				var ghPath = pth.join(process.cwd(), options.destBranch);
 				runCmd('git clone --quiet --branch=' + options.destBranch
-						+ ' https://' + link + ' ' + options.destBranch);
-				runCmd('cd ' + options.destBranch);
+						+ ' https://' + link + ' ' + ghPath);
+				runCmd('cd ' + ghPath);
 				// runCmd('git fetch -qf ' + options.destBranch);
 				// runCmd('git checkout -qf ' + options.destBranch);
 				runCmd('git rm -r --quiet .');
 				// remove all tracked files
 				runCmd('git commit -qm "Removing ' + lastVerTag + '"');
 
-				runCmd('cp -R ' + pth.join(destPath, '/*') + ' .');
+				runCmd('cd ' + destPath);
+				runCmd('cp -r * ' + ghPath);
+				runCmd('cd ' + ghPath);
 				// runCmd('git checkout master -- ' + options.destDir);
 				runCmd('git add -A');
 				runCmd('git commit -m "' + relMsg + '"');
@@ -510,25 +511,30 @@ module.exports = function(grunt) {
 			function rbcb(fx) {
 				try {
 					// rollback release
+					opts.path = pth.join(releasePath, commit.releaseId);
 					grunt.log.writeln('Rolling back ' + commit.versionTag
-							+ ' release via ' + options.gitHostname);
-					opts.path = releasePath + '/' + commit.releaseId;
+							+ ' release via ' + options.gitHostname + ' '
+							+ opts.path);
 					opts.method = 'DELETE';
-					opts.headers['Content-Type'] = undefined;
-					opts.headers['Content-Length'] = undefined;
-					opts.headers['Transfer-Encoding'] = undefined;
+					opts.headers['Content-Length'] = 0;
 					var rreq = https.request(opts, function(res) {
 						var rrdata = '';
 						res.on('data', function(chunk) {
-							grunt.log.writeln('Rollback data received: '
-									+ chunk);
+							grunt.log.writeln('Receiving chunked data');
 							rrdata += chunk;
 						});
 						res.on('end', function() {
-							var msg = 'Rollback complete for release ID: '
-									+ commit.releaseId;
-							grunt.log.writeln(msg
-									+ (rrdata ? ' ' + rrdata + '\n' : ''));
+							var success = res.statusCode == 204;
+							var msg = 'Rollback '
+									+ (success ? 'complete' : 'ERROR')
+									+ ' for release ID: ' + commit.releaseId;
+							if (success) {
+								grunt.log.writeln(msg);
+								grunt.log.writeln(rrdata);
+							} else {
+								errors.log(msg);
+								errors.log(rrdata);
+							}
 							fx(step, o);
 						});
 					});
@@ -540,7 +546,7 @@ module.exports = function(grunt) {
 						fx(step, o);
 					});
 				} catch (e) {
-					errors.log('Failed to call rollback for release ID '
+					errors.log('Failed to request rollback for release ID '
 							+ commit.releaseId);
 					errors.log(e);
 					fx(step, o);
