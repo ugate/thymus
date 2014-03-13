@@ -223,7 +223,7 @@ module.exports = function(grunt) {
 
 				runCmd('cp -r ' + pth.join(destPath, '*') + ' .');
 				// runCmd('git checkout master -- ' + options.destDir);
-				runCmd('git add -fq .');
+				runCmd('git add --force .');
 				runCmd('git commit -m "' + relMsg + '"');
 				runCmd('git push -fq origin ' + options.destBranch
 						+ ' > /dev/null');
