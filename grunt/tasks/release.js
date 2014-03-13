@@ -209,8 +209,7 @@ module.exports = function(grunt) {
 			try {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
 				var destPath = pth.join(commit.buildDir, options.destDir);
-				var ghPath = commit.buildDir.replace(commit.reponame,
-						options.destBranch);
+				var ghPath = commit.buildDir.replace(commit.reponame, '');
 				runCmd('cd ' + ghPath);
 				ghPath = pth.join(ghPath, options.destBranch);
 				runCmd('git clone --quiet --branch=' + options.destBranch
