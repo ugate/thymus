@@ -208,7 +208,7 @@ module.exports = function(grunt) {
 			}
 			try {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
-				var pwd = runCmd('pwd');
+				var pwd = runCmd('pwd').replace(regexLines, '');
 				var destPath = pth.join(pwd, options.destDir);
 				runCmd('cd ..');
 				var ghPath = pth.join(pwd, options.destBranch);
