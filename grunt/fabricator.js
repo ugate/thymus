@@ -23,6 +23,7 @@ var fabricator = {
 	testMainFile : 'index.html',
 	devDesignator : '-dev',
 	distDesignator : '',
+	defaultDesignator : '.min',
 	processedIncludePaths : [],
 	regexInclude : /\/\*\!@include([\s\S]*?)\*\//ig,
 	regexSrc : /src\s*=\s*(?:"([^"]*)"|'([^']*)'|([\w\-.:]+))/img,
@@ -128,8 +129,8 @@ var fabricator = {
 			return (no ? $$.scriptPath : isDist ? $$.distScriptPath
 					: $$.devScriptPath)
 					+ f
-					+ (no ? '' : isDist ? $$.distDesignator : $$.devDesignator)
-					+ '.js';
+					+ (no ? $$.defaultDesignator : isDist ? $$.distDesignator
+							: $$.devDesignator) + '.js';
 		}
 	}
 };

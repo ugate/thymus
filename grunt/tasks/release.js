@@ -2,6 +2,7 @@
 
 var shell = require('shelljs');
 var fs = require('fs');
+var pth = require('path');
 // var zlib = require('zlib');
 var util = require('../util');
 var regexLastVer = /v(?=[^v]*$).+/g;
@@ -89,7 +90,7 @@ module.exports = function(grunt) {
 
 		// Generate change log for release using all messages since last
 		// tag/release
-		var chgLogPath = options.destDir + '/' + options.chgLog;
+		var chgLogPath = pth.join(options.destDir, options.chgLog);
 		chgLogRtn = runCmd('git --no-pager log ' + lastVerTag
 				+ '..HEAD --pretty=format:"' + options.chgLogLinePrefix
 				+ '%s" > ' + chgLogPath, null, false, chgLogPath);
@@ -98,7 +99,7 @@ module.exports = function(grunt) {
 		}
 
 		// Generate list of authors/contributors since last tag/release
-		var authorsPath = options.destDir + '/' + options.authors;
+		var authorsPath = pth.join(options.destDir, options.authors);
 		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u > '
 				+ authorsPath, null, false, authorsPath);
 		if (options.authorsRequired && !validateFile(authorsPath)) {
@@ -206,8 +207,11 @@ module.exports = function(grunt) {
 				return;
 			}
 			try {
-				grunt.log.writeln('Publishing to ' + options.destBranch);
+				var destPath = pth.join(process.cwd(), options.destDir);
+				grunt.log.writeln('Publishing to ' + options.destBranch
+						+ ' (using "' + destPath + '")');
 				runCmd('cd ..');
+				var ghPath = pth.join(process.cwd(), options.destBranch);
 				runCmd('git clone --quiet --branch=' + options.destBranch
 						+ ' https://' + link + ' ' + options.destBranch);
 				runCmd('cd ' + options.destBranch);
@@ -217,8 +221,7 @@ module.exports = function(grunt) {
 				// remove all tracked files
 				runCmd('git commit -qm "Removing ' + lastVerTag + '"');
 
-				runCmd('cp -R ../' + commit.reponame + '/' + options.destDir
-						+ '/* .');
+				runCmd('cp -R ' + pth.join(destPath, '/*') + ' .');
 				// runCmd('git checkout master -- ' + options.destDir);
 				runCmd('git add -A');
 				runCmd('git commit -m "' + relMsg + '"');
@@ -499,17 +502,13 @@ module.exports = function(grunt) {
 			 * Rollback callback
 			 * 
 			 * @param fx
-			 *            the callback function that will receive the last step
-			 *            taken before the rollback (e.g. release, asset upload,
-			 *            etc.) and the last received object from the external
-			 *            API.
+			 *            the callback function that will be called when the
+			 *            rollback completes- will receive the last step taken
+			 *            before the rollback (e.g. release, asset upload, etc.)
+			 *            and the last received object from the external API.
 			 */
 			function rbcb(fx) {
 				try {
-					if (errors.count() <= 0 || !commit.releaseId) {
-						fx(step, o);
-						return;
-					}
 					// rollback release
 					grunt.log.writeln('Rolling back ' + commit.versionTag
 							+ ' release via ' + options.gitHostname);
@@ -519,24 +518,31 @@ module.exports = function(grunt) {
 					opts.headers['Content-Length'] = undefined;
 					opts.headers['Transfer-Encoding'] = undefined;
 					var rreq = https.request(opts, function(res) {
+						var rrdata = '';
+						res.on('data', function(chunk) {
+							grunt.log.writeln('Rollback data received: '
+									+ chunk);
+							rrdata += chunk;
+						});
 						res.on('end', function() {
 							var msg = 'Rollback complete for release ID: '
 									+ commit.releaseId;
-							grunt.log.writeln(msg);
+							grunt.log.writeln(msg
+									+ (rrdata ? ' ' + rrdata + '\n' : ''));
 							fx(step, o);
 						});
 					});
 					rreq.end();
-					rreq.on('error', function(e2) {
+					rreq.on('error', function(e) {
 						errors.log('Failed to rollback release ID '
 								+ commit.releaseId);
-						errors.log(e2);
+						errors.log(e);
 						fx(step, o);
 					});
-				} catch (e2) {
+				} catch (e) {
 					errors.log('Failed to call rollback for release ID '
 							+ commit.releaseId);
-					errors.log(e2);
+					errors.log(e);
 					fx(step, o);
 				}
 			}
