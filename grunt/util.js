@@ -21,14 +21,21 @@ module.exports = {
 	 *            an optional commit number to use instead of extracting one
 	 * @param altSlug
 	 *            an optional slug to use instead of extracting one
+	 * @param altBranch
+	 *            an optional branch to use instead of the extracted one
+	 * @param altBuildDir
+	 *            an optional build directory to use instead of the extracted
+	 *            one
 	 * @param nofail
-	 *            true
+	 *            true to prevent failure when the commit message cannot be read
+	 *            (otherwise an {Error} is thrown)
 	 * @returns {Object} containing the commit number, message and version
 	 */
 	getCommit : function(errorLogger, infoLogger, altMsg, altNum, altSlug,
-			altBuildDir, nofail) {
+			altBranch, altBuildDir, nofail) {
 		var logi = infoLogger || console.log;
 		var loge = errorLogger || console.error;
+		var br = altBranch || process.env.TRAVIS_BRANCH;
 		var dr = altBuildDir || process.env.TRAVIS_BUILD_DIR;
 		var cn = altNum || process.env.TRAVIS_COMMIT;
 		var cm = altMsg || process.env.TRAVIS_COMMIT_MESSAGE;
@@ -90,6 +97,7 @@ module.exports = {
 			versionPrereleaseType : v[7],
 			versionPrerelease : v[8],
 			buildDir : dr,
+			branch : br,
 			slug : sl,
 			username : sls.length ? sls[0] : '',
 			reponame : sls.length > 1 ? sls[1] : '',

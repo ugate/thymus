@@ -83,7 +83,7 @@ module.exports = function(grunt) {
 		// gathered by GIT (e.g. change log details)- see git depth option in
 		// .travis.yml
 		// TODO : verify release version using "semver"
-		var lastVerTag = runCmd('git describe --abbrev=0 --tags').replace(
+		var lastVerTag = cmd('git describe --abbrev=0 --tags').replace(
 				regexLines, '');
 		grunt.log.writeln('Preparing release: ' + commit.version
 				+ ' (last release: ' + lastVerTag + ')');
@@ -93,7 +93,7 @@ module.exports = function(grunt) {
 		// Generate change log for release using all messages since last
 		// tag/release
 		var chgLogPath = pth.join(options.destDir, options.chgLog);
-		chgLogRtn = runCmd('git --no-pager log ' + lastVerTag
+		chgLogRtn = cmd('git --no-pager log ' + lastVerTag
 				+ '..HEAD --pretty=format:"' + options.chgLogLinePrefix
 				+ '%s" > ' + chgLogPath, null, false, chgLogPath);
 		if (options.chgLogRequired && !validateFile(chgLogPath)) {
@@ -102,7 +102,7 @@ module.exports = function(grunt) {
 
 		// Generate list of authors/contributors since last tag/release
 		var authorsPath = pth.join(options.destDir, options.authors);
-		authorsRtn = runCmd('git log --all --format="%aN <%aE>" | sort -u > '
+		authorsRtn = cmd('git log --all --format="%aN <%aE>" | sort -u > '
 				+ authorsPath, null, false, authorsPath);
 		if (options.authorsRequired && !validateFile(authorsPath)) {
 			return done();
@@ -110,21 +110,21 @@ module.exports = function(grunt) {
 
 		// Setup
 		var link = '${GH_TOKEN}@github.com/' + commit.slug + '.git';
-		runCmd('git config --global user.email "travis@travis-ci.org"');
-		runCmd('git config --global user.name "travis"');
-		runCmd('git remote rm origin');
-		runCmd('git remote add origin https://' + commit.username + ':' + link);
-		// runCmd('git checkout master');
+		cmd('git config --global user.email "travis@travis-ci.org"');
+		cmd('git config --global user.name "travis"');
+		cmd('git remote rm origin');
+		cmd('git remote add origin https://' + commit.username + ':' + link);
+		// cmd('git checkout master');
 
 		// Commit changes to master (needed to generate archive asset)
-		runCmd('git add --force ' + options.destDir);
-		runCmd('git commit -q -m "' + relMsg + '"');
-		// runCmd('git push -f origin master');
+		cmd('git add --force ' + options.destDir);
+		cmd('git commit -q -m "' + relMsg + '"');
+		// cmd('git push -f origin master');
 
 		// Create distribution assets
 		var distAsset = commit.reponame + '-' + commit.version + '-dist.'
 				+ options.distAssetFormat;
-		runCmd('git archive -o ' + distAsset + ' --format='
+		cmd('git archive -o ' + distAsset + ' --format='
 				+ options.distAssetFormat + ' -'
 				+ options.distAssetCompressRatio + ' HEAD:' + options.destDir);
 
@@ -132,9 +132,9 @@ module.exports = function(grunt) {
 		grunt.log.writeln('Releasing ' + commit.versionTag + ' via '
 				+ options.gitHostname);
 		if (!useGitHub) {
-			runCmd('git tag -f -a ' + commit.versionTag + ' -m "'
+			cmd('git tag -f -a ' + commit.versionTag + ' -m "'
 					+ chgLogRtn.replace(regexLines, '$1 \\') + '"');
-			runCmd('git push -f origin ' + commit.versionTag);
+			cmd('git push -f origin ' + commit.versionTag);
 			try {
 				// TODO : upload asset?
 				publish(function() {
@@ -193,7 +193,7 @@ module.exports = function(grunt) {
 		function done(removeTag) {
 			if (removeTag) {
 				try {
-					runCmd('git push --delete origin ' + commit.versionTag);
+					cmd('git push --delete origin ' + commit.versionTag);
 				} catch (e) {
 					errors.log('Unable to delete/rollback tag '
 							+ commit.versionTag, e);
@@ -224,21 +224,21 @@ module.exports = function(grunt) {
 				var destPath = pth.join(commit.buildDir, options.destDir);
 				var ghPath = commit.buildDir.replace(commit.reponame,
 						options.destBranch);
-				runCmd('mkdir ' + ghPath);
-				runCmd('cp -r ' + pth.join(destPath, '*') + ' ' + ghPath);
-				runCmd('git branch -D ' + options.destBranch);
-				runCmd('git checkout -b ' + options.destBranch);
-				// runCmd('git clone --quiet --branch=' + options.destBranch
+				cmd('mkdir ' + ghPath);
+				cmd('cp -r ' + pth.join(destPath, '*') + ' ' + ghPath);
+				cmd('git fetch origin');
+				cmd('git checkout --track origin/' + options.destBranch);
+				// cmd('git clone --quiet --branch=' + options.destBranch
 				// + ' https://' + link + ' ' + ghPath + ' > /dev/null');
-				runCmd('git rm -rfq .');
-				runCmd('cp -r ' + pth.join(ghPath, '*') + ' .');
-				// runCmd('mv ' + destPath + ' .');
-				// runCmd('git commit -qm "Removing ' + lastVerTag + '"');
+				cmd('git rm -rfq .');
+				cmd('cp -r ' + pth.join(ghPath, '*') + ' .');
+				// cmd('mv ' + destPath + ' .');
+				// cmd('git commit -qm "Removing ' + lastVerTag + '"');
 
-				// runCmd('git checkout master -- ' + options.destDir);
-				runCmd('git add -A && git commit -m "' + relMsg + '"');
-				runCmd('git push -f origin ' + options.destBranch);
-				// runCmd('git push -fq origin ' + options.destBranch
+				// cmd('git checkout master -- ' + options.destDir);
+				cmd('git add -A && git commit -m "' + relMsg + '"');
+				cmd('git push -f origin ' + options.destBranch);
+				// cmd('git push -fq origin ' + options.destBranch
 				// + ' > /dev/null');
 
 				done();
@@ -258,8 +258,8 @@ module.exports = function(grunt) {
 				}
 			} finally {
 				try {
-					runCmd('cd ' + commit.buildDir);
-					//runCmd('git checkout -b ' + options.destBranch);
+					cmd('cd ' + commit.buildDir);
+					cmd('git checkout -b ' + commit.branch);
 				} catch (e) {
 					errors.log('Post publish failed!', e);
 				}
@@ -269,7 +269,7 @@ module.exports = function(grunt) {
 		/**
 		 * Executes a shell command
 		 * 
-		 * @param cmd
+		 * @param c
 		 *            the command string to execute
 		 * @param wpath
 		 *            the optional path/file to write the results to
@@ -280,15 +280,15 @@ module.exports = function(grunt) {
 		 *            path to the command output that will be read, duplicate
 		 *            entry lines removed and re-written
 		 */
-		function runCmd(cmd, wpath, nofail, dupsPath) {
-			grunt.log.writeln(cmd);
+		function cmd(c, wpath, nofail, dupsPath) {
+			grunt.log.writeln(c);
 			var rtn = null;
-			if (typeof cmd === 'string') {
-				rtn = shell.exec(cmd, {
+			if (typeof c === 'string') {
+				rtn = shell.exec(c, {
 					silent : true
 				});
 			} else {
-				rtn = shell[cmd.shell].apply(shell, cmd.args);
+				rtn = shell[c.shell].apply(shell, c.args);
 			}
 			if (rtn.code !== 0) {
 				var e = 'Error "' + rtn.code + '" for commit number '
