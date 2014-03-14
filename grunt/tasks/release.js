@@ -43,6 +43,8 @@ module.exports = function(grunt) {
 					commitMessage : '',
 					destBranch : 'gh-pages',
 					destDir : 'dist',
+					destExcludeDirRegExp : /.?node_modules.?/gmi,
+					destExcludeFileRegExp : /.?\.zip.?/gmi,
 					chgLog : 'HISTORY.md',
 					authors : 'AUTHORS.md',
 					chgLogLinePrefix : '  * ',
@@ -224,22 +226,18 @@ module.exports = function(grunt) {
 				var destPath = pth.join(commit.buildDir, options.destDir);
 				var ghPath = commit.buildDir.replace(commit.reponame,
 						options.destBranch);
-				cmd('mkdir ' + ghPath);
-				cmd('cp -r ' + pth.join(destPath, '*') + ' ' + ghPath);
+				// copy all directories/files over that need to be published
+				copyRecursiveSync(destPath, ghPath,
+						options.destExcludeDirRegExp,
+						options.destExcludeFileRegExp);
+				// cmd('cp -r ' + pth.join(destPath, '*') + ' ' + ghPath);
 				cmd('git fetch origin');
 				cmd('git checkout --track origin/' + options.destBranch);
-				// cmd('git clone --quiet --branch=' + options.destBranch
-				// + ' https://' + link + ' ' + ghPath + ' > /dev/null');
 				cmd('git rm -rfq .');
-				cmd('cp -r ' + pth.join(ghPath, '*') + ' .');
-				// cmd('mv ' + destPath + ' .');
-				// cmd('git commit -qm "Removing ' + lastVerTag + '"');
-
-				// cmd('git checkout master -- ' + options.destDir);
+				copyRecursiveSync(ghPath, commit.buildDir);
+				// cmd('cp -r ' + pth.join(ghPath, '*') + ' .');
 				cmd('git add -A && git commit -m "' + relMsg + '"');
 				cmd('git push -f origin ' + options.destBranch);
-				// cmd('git push -fq origin ' + options.destBranch
-				// + ' > /dev/null');
 
 				done();
 			} catch (e) {
@@ -343,6 +341,39 @@ module.exports = function(grunt) {
 				return false;
 			}
 			return true;
+		}
+	}
+
+	/**
+	 * Copies files/directories recursively
+	 * 
+	 * @param src
+	 *            the source path
+	 * @param dest
+	 *            the destination path
+	 * @param dirExp
+	 *            an optional regular expression that will be tested for
+	 *            exclusion before each directory is copied
+	 * @param fileExp
+	 *            an optional regular expression that will be tested for
+	 *            exclusion before each file is copied
+	 */
+	function copyRecursiveSync(src, dest, dirExp, fileExp) {
+		var exists = fs.existsSync(src);
+		var stats = exists && fs.statSync(src);
+		var isDir = exists && stats.isDirectory();
+		if (exists && isDir) {
+			if ((isDir && dirExp && util.isRegExp(dirExp) && dirExp.test(src))
+					|| (isDir && fileExp && util.isRegExp(fileExp) && fileExp
+							.test(src))) {
+				return;
+			}
+			fs.mkdirSync(dest);
+			fs.readdirSync(src).forEach(function(name) {
+				copyRecursiveSync(pth.join(src, name), pth.join(dest, name));
+			});
+		} else {
+			fs.linkSync(src, dest);
 		}
 	}
 
