@@ -392,6 +392,7 @@ module.exports = function(grunt) {
 			r.exists = fs.existsSync(s);
 			r.stats = r.exists && fs.statSync(s);
 			r.isDir = r.exists && r.stats.isDirectory();
+			return r;
 		}
 		function crs(s, src, dest, dirExp, fileExp) {
 			var srcStats = safeStatsSync(src);
