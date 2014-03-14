@@ -232,7 +232,7 @@ module.exports = function(grunt) {
 						options.destExcludeDirRegExp,
 						options.destExcludeFileRegExp).toString());
 				// cmd('cp -r ' + pth.join(destPath, '*') + ' ' + ghPath);
-				cmd('git fetch origin/' + options.destBranch);
+				cmd('git fetch origin ' + options.destBranch);
 				cmd('git checkout --track origin/' + options.destBranch);
 				cmd('git rm -rfq .');
 				cmd('git clean -dfq .');
@@ -261,7 +261,7 @@ module.exports = function(grunt) {
 			} finally {
 				try {
 					cmd('cd ' + commit.buildDir);
-					cmd('git checkout -b ' + commit.branch);
+					cmd('git checkout ' + commit.branch);
 				} catch (e) {
 					errors.log('Post publish failed!', e);
 				}
