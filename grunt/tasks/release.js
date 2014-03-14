@@ -512,7 +512,9 @@ module.exports = function(grunt) {
 					return;
 				}
 				// log any errors that are passed
-				errors.log(arguments);
+				if (arguments.length) {
+					errors.log(arguments);
+				}
 				o = cf || rl;
 				cb(step, o, rbcb);
 			} catch (e) {
