@@ -226,15 +226,19 @@ module.exports = function(grunt) {
 				var destPath = pth.join(commit.buildDir, options.destDir);
 				var ghPath = commit.buildDir.replace(commit.reponame,
 						options.destBranch);
-				// copy all directories/files over that need to be published
-				copyRecursiveSync(destPath, ghPath,
+				// copy all directories/files over that need to be published so
+				// that they are not removed by the following steps
+				grunt.log.writeln(copyRecursiveSync(destPath, ghPath,
 						options.destExcludeDirRegExp,
-						options.destExcludeFileRegExp);
+						options.destExcludeFileRegExp).toString());
 				// cmd('cp -r ' + pth.join(destPath, '*') + ' ' + ghPath);
-				cmd('git fetch origin');
+				cmd('git fetch origin/' + options.destBranch);
 				cmd('git checkout --track origin/' + options.destBranch);
 				cmd('git rm -rfq .');
-				copyRecursiveSync(ghPath, commit.buildDir);
+				cmd('git clean -dfq .');
+				// copy the new publication directories/files
+				grunt.log.writeln(copyRecursiveSync(ghPath, commit.buildDir)
+						.toString());
 				// cmd('cp -r ' + pth.join(ghPath, '*') + ' .');
 				cmd('git add -A && git commit -m "' + relMsg + '"');
 				cmd('git push -f origin ' + options.destBranch);
@@ -357,23 +361,49 @@ module.exports = function(grunt) {
 	 * @param fileExp
 	 *            an optional regular expression that will be tested for
 	 *            exclusion before each file is copied
+	 * @returns {Object} status of the copied resources
 	 */
 	function copyRecursiveSync(src, dest, dirExp, fileExp) {
-		var exists = fs.existsSync(src);
-		var stats = exists && fs.statSync(src);
-		var isDir = exists && stats.isDirectory();
-		if (exists && isDir) {
-			if ((isDir && dirExp && util.isRegExp(dirExp) && dirExp.test(src))
-					|| (isDir && fileExp && util.isRegExp(fileExp) && fileExp
-							.test(src))) {
-				return;
+		var stats = {
+			dirCopiedCount : 0,
+			dirSkips : [],
+			fileCopiedCount : 0,
+			fileSkips : [],
+			toString : function() {
+				return this.dirCopiedCount
+						+ ' directories/'
+						+ this.fileCopiedCount
+						+ ' files copied'
+						+ (this.dirSkips.length > 0 ? ' Skipped directories: '
+								+ this.dirSkips.join(',') : '')
+						+ (this.fileSkips.length > 0 ? ' Skipped files: '
+								+ this.fileSkips.join(',') : '');
 			}
-			fs.mkdirSync(dest);
-			fs.readdirSync(src).forEach(function(name) {
-				copyRecursiveSync(pth.join(src, name), pth.join(dest, name));
-			});
-		} else {
-			fs.linkSync(src, dest);
+		};
+		crs(stats, src, dest, dirExp, fileExp);
+		return stats;
+		function crs(s, src, dest, dirExp, fileExp) {
+			var exists = fs.existsSync(src);
+			var stats = exists && fs.statSync(src);
+			var isDir = exists && stats.isDirectory();
+			if (exists && isDir) {
+				if (dirExp && util.isRegExp(dirExp) && dirExp.test(src)) {
+					s.dirSkips.push(src);
+					return;
+				}
+				fs.mkdirSync(dest);
+				s.dirCopiedCount++;
+				fs.readdirSync(src).forEach(function(name) {
+					crs(s, pth.join(src, name), pth.join(dest, name));
+				});
+			} else {
+				if (fileExp && util.isRegExp(fileExp) && fileExp.test(src)) {
+					s.fileSkips.push(src);
+					return;
+				}
+				fs.linkSync(src, dest);
+				s.fileCopiedCount++;
+			}
 		}
 	}
 
