@@ -222,17 +222,16 @@ module.exports = function(grunt) {
 			try {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
 				var destPath = pth.join(commit.buildDir, options.destDir);
-				var ghPath = commit.buildDir.replace(commit.reponame, '');
-				runCmd('cd ' + ghPath);
-				ghPath = pth.join(ghPath, options.destBranch);
+				var ghPath = commit.buildDir.replace(commit.reponame,
+						options.destBranch);
 				runCmd('mkdir ' + ghPath);
-				runCmd('cd ' + ghPath);
+				runCmd('cp -r ' + pth.join(destPath, '*') + ' ' + ghPath);
 				runCmd('git branch -D ' + options.destBranch);
 				runCmd('git checkout -b ' + options.destBranch);
 				// runCmd('git clone --quiet --branch=' + options.destBranch
 				// + ' https://' + link + ' ' + ghPath + ' > /dev/null');
 				runCmd('git rm -rfq .');
-				runCmd('cp -r ' + pth.join(destPath, '*') + ' .');
+				runCmd('cp -r ' + pth.join(ghPath, '*') + ' .');
 				// runCmd('mv ' + destPath + ' .');
 				// runCmd('git commit -qm "Removing ' + lastVerTag + '"');
 
@@ -260,6 +259,7 @@ module.exports = function(grunt) {
 			} finally {
 				try {
 					runCmd('cd ' + commit.buildDir);
+					//runCmd('git checkout -b ' + options.destBranch);
 				} catch (e) {
 					errors.log('Post publish failed!', e);
 				}
