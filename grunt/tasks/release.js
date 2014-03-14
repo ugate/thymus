@@ -266,7 +266,7 @@ module.exports = function(grunt) {
 			} finally {
 				try {
 					cmd('cd ' + commit.buildDir);
-					cmd('git checkout ' + commit.branch);
+					cmd('git checkout -q ' + commit.branch);
 				} catch (e) {
 					errors.log('Post publish failed!', e);
 				}
@@ -391,7 +391,7 @@ module.exports = function(grunt) {
 			var r = {};
 			r.exists = fs.existsSync(s);
 			r.stats = r.exists && fs.statSync(s);
-			r.isDir = r.exists && r.exists.isDirectory();
+			r.isDir = r.exists && r.stats.isDirectory();
 		}
 		function crs(s, src, dest, dirExp, fileExp) {
 			var srcStats = safeStatsSync(src);
