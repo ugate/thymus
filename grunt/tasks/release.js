@@ -144,7 +144,7 @@ module.exports = function(grunt) {
 							+ ' release via ' + options.gitHostname);
 					// nothing else to perform other than removing the tag
 					done(true);
-				}, done, options, link, commit);
+				});
 			} catch (e) {
 				errors.log('Publish failed!', e);
 				return done();
@@ -223,6 +223,10 @@ module.exports = function(grunt) {
 			}
 			try {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
+				if (distAsset) {
+					// remove uploaded asset file to prevent conflicts
+					fs.unlinkSync(distAsset);
+				}
 				var destPath = pth.join(commit.buildDir, options.destDir);
 				var ghPath = commit.buildDir.replace(commit.reponame,
 						options.destBranch);
@@ -233,7 +237,7 @@ module.exports = function(grunt) {
 						options.destExcludeFileRegExp).toString());
 				// cmd('cp -r ' + pth.join(destPath, '*') + ' ' + ghPath);
 				cmd('git fetch origin ' + options.destBranch);
-				cmd('git checkout --track origin/' + options.destBranch);
+				cmd('git checkout -q --track origin/' + options.destBranch);
 				cmd('git rm -rfq .');
 				cmd('git clean -dfq .');
 				// copy the new publication directories/files
