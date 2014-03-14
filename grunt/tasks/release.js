@@ -4,7 +4,8 @@ var shell = require('shelljs');
 var fs = require('fs');
 var pth = require('path');
 // var zlib = require('zlib');
-var util = require('../util');
+var util = require('util');
+var utilx = require('../util');
 var regexLastVer = /v(?=[^v]*$).+/g;
 var regexLines = /(\r?\n)/g;
 var regexDupLines = /^(.*)(\r?\n\1)+$/gm;
@@ -23,6 +24,7 @@ var gitHubReleaseDraftFlag = 'draft';
 var gitHubReleasePreFlag = 'prerelease';
 var gitHubReleaseErrors = 'errors';
 var gitHubReleaseErrorMsg = 'message';
+var gitHubSuccessHttpCodes = [ 200, 201, 204 ];
 
 /**
  * When a commit message contains "release v" followed by a valid version number
@@ -70,7 +72,7 @@ module.exports = function(grunt) {
 		var doneAsync = null;
 
 		// Capture commit message
-		var commit = util.getCommit(errors.log, grunt.log.writeln,
+		var commit = utilx.getCommit(errors.log, grunt.log.writeln,
 				options.commitMessage);
 		grunt.log.writeln('Commit message: ' + commit.message);
 		if (!commit.version) {
@@ -86,7 +88,7 @@ module.exports = function(grunt) {
 		grunt.log.writeln('Preparing release: ' + commit.version
 				+ ' (last release: ' + lastVerTag + ')');
 		var useGitHub = options.gitHostname.toLowerCase() === gitHubHostname;
-		var relMsg = commit.message + ' ' + util.skipRef('ci');
+		var relMsg = commit.message + ' ' + utilx.skipRef('ci');
 
 		// Generate change log for release using all messages since last
 		// tag/release
@@ -135,13 +137,14 @@ module.exports = function(grunt) {
 			runCmd('git push -f origin ' + commit.versionTag);
 			try {
 				// TODO : upload asset?
-				publish(function(step, o, e) {
+				publish(function() {
 					grunt.log.writeln('Rolling back ' + commit.versionTag
 							+ ' release via ' + options.gitHostname);
-					runCmd('git push --delete origin ' + commit.versionTag);
+					// nothing else to perform other than removing the tag
+					done(true);
 				}, done, options, link, commit);
 			} catch (e) {
-				errors.log(e);
+				errors.log('Publish failed!', e);
 				return done();
 			}
 		} else {
@@ -151,7 +154,7 @@ module.exports = function(grunt) {
 			releaseAndUploadAsset({
 				path : distAsset,
 				name : distAsset
-			}, 'application/zip', util.getGitToken(), commit, chgLogRtn,
+			}, 'application/zip', utilx.getGitToken(), commit, chgLogRtn,
 					options, errors, function(step, json, rb) {
 						try {
 							if (errors.count() > 0) {
@@ -168,7 +171,7 @@ module.exports = function(grunt) {
 								publish(rb);
 							}
 						} catch (e) {
-							errors.log(e);
+							errors.log('Post release failed!', e);
 							if (typeof rb === 'function') {
 								rb(done);
 							} else {
@@ -182,10 +185,20 @@ module.exports = function(grunt) {
 		 * When running in asynchronous mode grunt will be notified the process
 		 * is complete
 		 * 
+		 * @param removeTag
+		 *            true to indicate that the tag needs to be removed
 		 * @returns the return value from grunt when running in asynchronous
 		 *          mode, otherwise, the passed value
 		 */
-		function done() {
+		function done(removeTag) {
+			if (removeTag) {
+				try {
+					runCmd('git push --delete origin ' + commit.versionTag);
+				} catch (e) {
+					errors.log('Unable to delete/rollback tag '
+							+ commit.versionTag, e);
+				}
+			}
 			if (doneAsync) {
 				return doneAsync(errors.count() <= 0);
 			} else if (errors.count() > 0) {
@@ -210,36 +223,45 @@ module.exports = function(grunt) {
 				grunt.log.writeln('Publishing to ' + options.destBranch);
 				var destPath = pth.join(commit.buildDir, options.destDir);
 				var ghPath = commit.buildDir.replace(commit.reponame, '');
-				runCmd('mv ' + destPath + ' ' + ghPath);
-				destPath = pth.join(ghPath, options.destDir); 
-				ghPath = pth.join(ghPath, options.destBranch);
-				runCmd('git clone --quiet --branch=' + options.destBranch
-						+ ' https://' + link + ' ' + ghPath + ' > /dev/null');
 				runCmd('cd ' + ghPath);
-				// runCmd('git fetch -q ' + options.destBranch);
-				// runCmd('git checkout -q ' + options.destBranch);
+				ghPath = pth.join(ghPath, options.destBranch);
+				runCmd('mkdir ' + ghPath);
+				runCmd('cd ' + ghPath);
+				runCmd('git branch -D ' + options.destBranch);
+				runCmd('git checkout -b ' + options.destBranch);
+				// runCmd('git clone --quiet --branch=' + options.destBranch
+				// + ' https://' + link + ' ' + ghPath + ' > /dev/null');
 				runCmd('git rm -rfq .');
+				runCmd('cp -r ' + pth.join(destPath, '*') + ' .');
+				// runCmd('mv ' + destPath + ' .');
 				// runCmd('git commit -qm "Removing ' + lastVerTag + '"');
 
-				runCmd('cp -r ' + pth.join(destPath, '*') + ' .');
 				// runCmd('git checkout master -- ' + options.destDir);
-				runCmd('git add --force .');
-				runCmd('git commit -m "' + relMsg + '"');
-				runCmd('git push -fq origin ' + options.destBranch
-						+ ' > /dev/null');
+				runCmd('git add -A && git commit -m "' + relMsg + '"');
+				runCmd('git push -f origin ' + options.destBranch);
+				// runCmd('git push -fq origin ' + options.destBranch
+				// + ' > /dev/null');
 
 				done();
 			} catch (e) {
 				if (typeof rb === 'function') {
-					errors.log('Publish failed! Rolling back release...');
-					errors.log(e);
-					rb(done);
+					errors.log('Publish failed! Rolling back release...', e);
+					if (done === rb) {
+						done();
+					} else {
+						rb(done);
+					}
 				} else {
-					errors
-							.log('Publish failed! '
-									+ 'Tagged release will need to be removed manually');
-					errors.log(e);
+					var msg = 'Publish failed! '
+							+ 'Tagged release will need to be removed manually';
+					errors.log(msg, e);
 					done();
+				}
+			} finally {
+				try {
+					runCmd('cd ' + commit.buildDir);
+				} catch (e) {
+					errors.log('Post publish failed!', e);
 				}
 			}
 		}
@@ -399,8 +421,11 @@ module.exports = function(grunt) {
 			});
 			res.on('end', function() {
 				try {
-					rl = chk(JSON.parse(data.replace(regexLines, ' ')));
-					if (rl[gitHubReleaseTagName] == commit.versionTag) {
+					var success = gitHubSuccessHttpCodes
+							.indexOf(res.statusCode) >= 0;
+					rl = success ? chk(JSON
+							.parse(data.replace(regexLines, ' '))) : null;
+					if (rl && rl[gitHubReleaseTagName] == commit.versionTag) {
 						commit.releaseId = rl[gitHubReleaseId];
 						if (fstat.size <= 0) {
 							cbi();
@@ -427,28 +452,32 @@ module.exports = function(grunt) {
 							});
 							res2.on('end', function() {
 								try {
-									cf = chk(JSON.parse(data2.replace(
-											regexLines, ' ')));
-									grunt.log.writeln('Asset ID '
-											+ cf[gitHubReleaseAssetId]
-											+ ' successfully uploaded');
+									var success = gitHubSuccessHttpCodes
+											.indexOf(res2.statusCode) >= 0;
+									if (success) {
+										cf = chk(JSON.parse(data2.replace(
+												regexLines, ' ')));
+										grunt.log.writeln('Asset ID '
+												+ cf[gitHubReleaseAssetId]
+												+ ' successfully uploaded');
+									} else {
+										errors.log('Asset upload failed!',
+												data2);
+									}
 									try {
 										cbi();
 									} catch (e) {
 										// prevent cyclic error
-										grunt.log.error(e);
+										errors.log(e);
 									}
 								} catch (e) {
-									grunt.log.writeln('Received response:');
-									grunt.log.writeln(data2);
-									cbi(e);
+									cbi('Received response:', data2, e);
 								}
 							});
 							grunt.log.writeln('Waiting for response');
 						});
 						req2.on('error', function(e) {
-							grunt.log.writeln('Received error response');
-							cbi(e);
+							cbi('Received error response', e);
 						});
 						// stream asset to remote host
 						fs.createReadStream(asset.path, {
@@ -456,7 +485,8 @@ module.exports = function(grunt) {
 						}).pipe(req2);
 					} else {
 						cbi('No tag found for ' + commit.versionTag + ' in '
-								+ tags.join(','));
+								+ tags.join(',') + ' HTTP Status: '
+								+ res.statusCode + ' Response: \n' + data);
 					}
 				} catch (e) {
 					cbi(e);
@@ -473,30 +503,20 @@ module.exports = function(grunt) {
 		 * error occurs during the process. When one or more error(s) are
 		 * present and a prior tagged release has taken place, an attempt is
 		 * made to rollback the release by removing the tagged release via the
-		 * external GitHub API.
-		 * 
-		 * @param e
-		 *            an error object or string when the callback is taking
-		 *            place due to an error
+		 * external GitHub API. Optional error(s) can be passed to be logged.
 		 */
-		function cbi(e) {
+		function cbi() {
 			var o = null;
 			try {
 				if (called) {
 					return;
 				}
-				if (e) {
-					errors.log(e);
-				}
+				// log any errors that are passed
+				errors.log(arguments);
 				o = cf || rl;
-			} catch (e) {
-				errors.log(e);
-			}
-			try {
 				cb(step, o, rbcb);
 			} catch (e) {
-				errors.log('Failed to call release completion callback');
-				errors.log(e);
+				errors.log('Failed to call release completion callback', e);
 			}
 			called = true;
 
@@ -505,9 +525,10 @@ module.exports = function(grunt) {
 			 * 
 			 * @param fx
 			 *            the callback function that will be called when the
-			 *            rollback completes- will receive the last step taken
-			 *            before the rollback (e.g. release, asset upload, etc.)
-			 *            and the last received object from the external API.
+			 *            rollback completes- will receive boolean indicating if
+			 *            the rollback was a success, the last step taken before
+			 *            the rollback (e.g. release, asset upload, etc.) and
+			 *            the last received object from the external API.
 			 */
 			function rbcb(fx) {
 				try {
@@ -527,7 +548,8 @@ module.exports = function(grunt) {
 							rrdata += chunk;
 						});
 						res.on('end', function() {
-							var success = res.statusCode == 204;
+							var success = gitHubSuccessHttpCodes
+									.indexOf(res.statusCode) >= 0;
 							var msg = 'Rollback '
 									+ (success ? 'complete' : 'ERROR')
 									+ ' for release ID: ' + commit.releaseId;
@@ -535,24 +557,21 @@ module.exports = function(grunt) {
 								grunt.log.writeln(msg);
 								grunt.log.writeln(rrdata);
 							} else {
-								errors.log(msg);
-								errors.log(rrdata);
+								errors.log(msg, rrdata);
 							}
-							fx(step, o);
+							fx(true, step, o);
 						});
 					});
 					rreq.end();
 					rreq.on('error', function(e) {
 						errors.log('Failed to rollback release ID '
-								+ commit.releaseId);
-						errors.log(e);
-						fx(step, o);
+								+ commit.releaseId, e);
+						fx(false, step, o);
 					});
 				} catch (e) {
 					errors.log('Failed to request rollback for release ID '
-							+ commit.releaseId);
-					errors.log(e);
-					fx(step, o);
+							+ commit.releaseId, e);
+					fx(false, step, o);
 				}
 			}
 		}
@@ -567,16 +586,15 @@ module.exports = function(grunt) {
 		var errors = [];
 
 		/**
-		 * Logs an error
-		 * 
-		 * @param e
-		 *            the {Error} object or string
+		 * Logs one or more errors (can be {Error}, {Object} or {String})
 		 */
-		this.log = function(e) {
-			e = e instanceof Error ? e : grunt.util.error(e);
-			if (e) {
-				errors.unshift(e);
-				grunt.log.error(e.stack || e.message);
+		this.log = function() {
+			for (var i = 0; i < arguments.length; i++) {
+				if (util.isArray(arguments[i])) {
+					this.log(arguments[i]);
+				} else {
+					logError(arguments[i]);
+				}
 			}
 		};
 
@@ -586,5 +604,19 @@ module.exports = function(grunt) {
 		this.count = function() {
 			return errors.length;
 		};
+
+		/**
+		 * Logs an error
+		 * 
+		 * @param e
+		 *            the {Error} object or string
+		 */
+		function logError(e) {
+			e = e instanceof Error ? e : e ? grunt.util.error(e) : null;
+			if (e) {
+				errors.unshift(e);
+				grunt.log.error(e.stack || e.message);
+			}
+		}
 	}
 };
