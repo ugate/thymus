@@ -240,7 +240,8 @@ module.exports = function(grunt) {
 				cmd('git checkout -q --track origin/' + options.destBranch);
 				cmd('git rm -rfq .');
 				cmd('git clean -dfq .');
-				// copy the new publication directories/files
+				grunt.log.writeln('Copying publication directories/files from '
+						+ ghPath + ' to ' + commit.buildDir);
 				grunt.log.writeln(copyRecursiveSync(ghPath, commit.buildDir)
 						.toString());
 				// cmd('cp -r ' + pth.join(ghPath, '*') + ' .');
@@ -386,16 +387,23 @@ module.exports = function(grunt) {
 		};
 		crs(stats, src, dest, dirExp, fileExp);
 		return stats;
+		function safeStatsSync(s) {
+			var r = {};
+			r.exists = fs.existsSync(s);
+			r.stats = r.exists && fs.statSync(s);
+			r.isDir = r.exists && r.exists.isDirectory();
+		}
 		function crs(s, src, dest, dirExp, fileExp) {
-			var exists = fs.existsSync(src);
-			var stats = exists && fs.statSync(src);
-			var isDir = exists && stats.isDirectory();
-			if (exists && isDir) {
+			var srcStats = safeStatsSync(src);
+			if (srcStats.exists && srcStats.isDir) {
 				if (dirExp && util.isRegExp(dirExp) && dirExp.test(src)) {
 					s.dirSkips.push(src);
 					return;
 				}
-				fs.mkdirSync(dest);
+				var destStats = safeStatsSync(dest);
+				if (!destStats.exists) {
+					fs.mkdirSync(dest);
+				}
 				s.dirCopiedCount++;
 				fs.readdirSync(src).forEach(function(name) {
 					crs(s, pth.join(src, name), pth.join(dest, name));
