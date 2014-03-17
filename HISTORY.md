@@ -1,4 +1,4 @@
-<!-- Commit eae0eb19e2e43c59eea60ce64091efcf140ae005 -->
+<!-- Commit e8d21984f3ef1f2546d428aa00f5a6b52eca2277 -->
   * Release v1.0.0-beta.4 [skip saucelabs-qunit]
   * Release v1.0.0-beta.4
   * Release v1.0.0-beta.4 [skip saucelabs-qunit]
