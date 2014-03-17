@@ -97,7 +97,8 @@ module.exports = function(grunt) {
 		var chgLogPath = pth.join(options.destDir, options.chgLog);
 		chgLogRtn = cmd('git --no-pager log ' + lastVerTag
 				+ '..HEAD --pretty=format:"' + options.chgLogLinePrefix
-				+ '%s" > ' + chgLogPath, null, false, chgLogPath);
+				+ '%s" > ' + chgLogPath, null, false, chgLogPath,
+				'<!-- Commit ' + commit.number + ' -->\n');
 		if (options.chgLogRequired && !validateFile(chgLogPath)) {
 			return done();
 		}
@@ -286,8 +287,10 @@ module.exports = function(grunt) {
 		 * @param dupsPath
 		 *            path to the command output that will be read, duplicate
 		 *            entry lines removed and re-written
+		 * @param dupsPrefix
+		 *            an optional prefix to the duplication replacement path
 		 */
-		function cmd(c, wpath, nofail, dupsPath) {
+		function cmd(c, wpath, nofail, dupsPath, dupsPrefix) {
 			grunt.log.writeln(c);
 			var rtn = null;
 			if (typeof c === 'string') {
@@ -321,7 +324,8 @@ module.exports = function(grunt) {
 					});
 				}
 				if (output) {
-					output = output.replace(regexDupLines, '$1');
+					output = (dupsPrefix ? dupsPrefix : '')
+							+ output.replace(regexDupLines, '$1');
 					grunt.file.write(dupsPath, output);
 				}
 			}
@@ -665,7 +669,7 @@ module.exports = function(grunt) {
 		 * Logs one or more errors (can be {Error}, {Object} or {String})
 		 */
 		this.log = function() {
-			for (var i = 0; i < arguments.length; i++) {
+			for ( var i = 0; i < arguments.length; i++) {
 				if (util.isArray(arguments[i])) {
 					this.log(arguments[i]);
 				} else {
