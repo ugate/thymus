@@ -55,6 +55,7 @@ module.exports = function(grunt) {
 				copy : {
 					dist : {
 						expand : true,
+						noProcess : [ '**/*.{png,gif,jpg,ico,xcf}' ],
 						src : [ '**/**/*.{htm,html,css,js,md,png,jpg,gif,ico}',
 								'!**/{node_modules,lib,grunt,dist}/**',
 								'!Gruntfile.js', 'CNAME' ],
