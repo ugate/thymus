@@ -7,20 +7,23 @@
  * Where <b><code>[PATH]</code></b> is the path to the JS script that will
  * replace the inclusion expression.
  */
-var pckPaths = {
+var fabricator = {
+	jqueryUrl : '//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js',
 	basePath : '',
 	mainScriptPath : 'js/lib/thx.js',
+	scriptPath : 'js/',
+	distPath : 'dist/',
 	distScriptPath : 'dist/js/',
-	distDocsScriptPath : 'dist/docs/js/',
-	distDocsPath : 'dist/docs/',
+	distDocsScriptPath : 'dist/frags/docs/js/',
+	testScriptPath : 'dist/js/test/',
 	devScriptPath : 'js/lib/',
 	devDocsScriptPath : 'frags/docs/js/',
 	devDocsCssPath : 'frags/docs/css/',
 	jsFiles : 'js/**/*.js',
-	testScriptPath : 'js/test/',
 	testMainFile : 'index.html',
 	devDesignator : '-dev',
 	distDesignator : '',
+	defaultDesignator : '.min',
 	processedIncludePaths : [],
 	regexInclude : /\/\*\!@include([\s\S]*?)\*\//ig,
 	regexSrc : /src\s*=\s*(?:"([^"]*)"|'([^']*)'|([\w\-.:]+))/img,
@@ -77,7 +80,7 @@ var pckPaths = {
 		}
 		return rslt;
 	},
-	replaceSrciptTagSrcById : function(id, htmlStr, envDesignator) {
+	replaceSrciptTagSrcById : function(id, htmlStr, cb, envDesignator) {
 		if (!htmlStr || !id) {
 			return htmlStr;
 		}
@@ -90,32 +93,48 @@ var pckPaths = {
 				scrMatch, offset, scrStr) {
 			// replace the matched script tag with the required attribute
 			// changes
-			return scrMatch.replace($$.regexSrc,
+			var scr = scrMatch.replace($$.regexSrc,
 					function(srcMatch, srcDoubleQuote, srcSingleQuote,
 							srcNoQuote, offset, srcStr) {
 						// replace the source attribute with one that specific
 						// to the specified environment
 						var src = srcDoubleQuote || srcSingleQuote
 								|| srcNoQuote;
-						return srcMatch.replace(src, scrPaths.to);
+						var to = scrPaths.to;
+						if ((m = src.match(/(?:\.{1,2}\/)+/)) && m.length) {
+							to = m[0] + to;
+						}
+						src = srcMatch.replace(src, to);
+						return src;
 					});
+			if (typeof cb === 'function') {
+				cb(scrMatch, scr);
+			}
+			return ($$.jqueryUrl ? '<script src="' + $$.jqueryUrl
+					+ '"></script>\n' : '')
+					+ scr;
 		});
 	},
 	getScriptPath : function(id, envDesignator) {
 		// returns from/to paths for a specified environment
 		var $$ = this;
-		var isDist = envDesignator !== $$.devDesignator;
+		var isDist = typeof envDesignator === 'undefined' ? undefined
+				: envDesignator !== $$.devDesignator;
 		return {
-			from : ep(id, !isDist),
-			to : ep(id, isDist),
+			from : ep(id, isDist === undefined ? false : !isDist),
+			to : ep(id, isDist)
 		};
 		function ep(f, isDist) {
-			return (isDist ? $$.distScriptPath : $$.devScriptPath) + f
-					+ (isDist ? $$.distDesignator : $$.devDesignator) + '.js';
+			var no = typeof isDist === 'undefined';
+			return (no ? $$.scriptPath : isDist ? $$.distScriptPath
+					: $$.devScriptPath)
+					+ f
+					+ (no ? $$.defaultDesignator : isDist ? $$.distDesignator
+							: $$.devDesignator) + '.js';
 		}
 	}
 };
 if (typeof module !== 'undefined' && module.exports) {
-	module.exports = pckPaths;
+	module.exports = fabricator;
 }
-//# sourceURL=pckPaths.js
+// # sourceURL=fabricator.js

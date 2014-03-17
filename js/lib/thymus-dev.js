@@ -9,14 +9,21 @@
  * </p>
  */
 +function($) {
-	// request the inclusion script
-	var basePath = $('#thymus').attr('data-thx-base-path');
-	var libPath = basePath + '/grunt/pckPaths.js';
-	$.ajax({
-		url : libPath,
-		dataType : 'script',
-		cache : false
-	}).done(done).fail(fail);
+	var basePath = '';
+	loadJQuery('//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js');
+
+	/**
+	 * Initializes inclusions
+	 */
+	function init() {
+		basePath = $('#thymus').attr('data-thx-base-path');
+		var libPath = (basePath || '') + '/grunt/fabricator.js';
+		$.ajax({
+			url : libPath,
+			dataType : 'script',
+			cache : false
+		}).done(done).fail(fail);
+	}
 
 	/**
 	 * Once the includes script loads, processes any inclusions and add the
@@ -30,14 +37,42 @@
 	 *            XHR for the request
 	 */
 	function done(r, status, xhr) {
-		pckPaths.basePath = basePath;
-		var js = pckPaths.processScriptIncludes();
+		fabricator.basePath = basePath;
+		var js = fabricator.processScriptIncludes();
 		if (js) {
 			var scr = document.createElement('script');
 			scr.type = 'text/javascript';
 			scr.appendChild(document.createTextNode(wrap(js)));
-			document.body.appendChild(scr);
+			$(document).ready(function() {
+				document.body.appendChild(scr);
+				var t = 'Release v1.0.0'.match(/released?\s*v(\d+\.\d+\.\d+(?:-alpha(?:\.\d)?|-beta(?:\.\d)?)?)/im);
+				console.log(t);
+			});
 		}
+	}
+
+	/**
+	 * Loads JQuery
+	 * 
+	 * @param su
+	 *            script URL
+	 */
+	function loadJQuery(su) {
+		if ($) {
+			return init();
+		}
+		var s = document.createElement('script');
+		s.src = su;
+		s.type = 'text/javascript';
+		s.onload = s.onreadystatechange = function() {
+			if (!$
+					&& (!this.readyState || this.readyState == 'loaded' || this.readyState == 'complete')) {
+				$ = window.jQuery;
+				init();
+			}
+		};
+		s.src = su;
+		document.getElementsByTagName('head')[0].appendChild(s);
 	}
 
 	/**
@@ -63,8 +98,8 @@
 	 *            the script string to be wrapped
 	 */
 	function wrap(js) {
-		return '/* Pre-build concatenation for includes:\n * '
-				+ pckPaths.processedIncludePaths.join('\n * ') + '\n */\n' + js
-				+ '//# sourceURL=thymus.js';
+		return '/* Pre-build fabrication for includes:\n * '
+				+ fabricator.processedIncludePaths.join('\n * ') + '\n */\n'
+				+ js + '//# sourceURL=thymus.js';
 	}
 }(window.jQuery);

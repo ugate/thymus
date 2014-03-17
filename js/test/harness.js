@@ -103,7 +103,7 @@ var Harness = {
 		}
 		var ss = s.match(Harness.REGEX_PARAMS_STR);
 		var il = ss.length - 1, p = null, oa = [];
-		for (var i = 0; i <= il; i++) {
+		for ( var i = 0; i <= il; i++) {
 			p = ss[i];
 			if (i == il) {
 				// remove possible hashes
@@ -315,7 +315,7 @@ var Harness = {
 					put(this.type.toLowerCase(), true, xhr.status,
 							xhr.statusText);
 				}
-				for (var i = 0; i < ss.length; i++) {
+				for ( var i = 0; i < ss.length; i++) {
 					$.ajax({
 						url : window.location,
 						type : ss[i],
@@ -460,7 +460,7 @@ var Harness = {
 			 */
 			function listenAll(n, evt, cb, httpStatusWarnRange) {
 				var ihe = false, ucb = false;
-				for (var i = 0; i < Harness.EVTS.length; i++) {
+				for ( var i = 0; i < Harness.EVTS.length; i++) {
 					ucb = Harness.EVTS[i] == evt;
 					if (!ihe) {
 						ihe = ucb;
@@ -736,7 +736,7 @@ var Harness = {
 								return exclude ? true : false;
 							}
 							var io = 0;
-							for (var i = 0; i < this.vals.length; i++) {
+							for ( var i = 0; i < this.vals.length; i++) {
 								io = ovals.indexOf(this.vals[i]);
 								if ((!exclude && io == -1)
 										|| (exclude && io > -1)) {
@@ -770,7 +770,7 @@ var Harness = {
 				}
 				var ss = $.isArray(selectors) ? selectors
 						: typeof selectors === 'string' ? [ selectors ] : [];
-				for (var i = 0; i < ss.length; i++) {
+				for ( var i = 0; i < ss.length; i++) {
 					var $el = $(ss[i], doc);
 					var valid = $el.length > 0;
 					Harness.ok(valid, valid ? 'Found "' + ss[i] + '"'
@@ -836,7 +836,7 @@ var Harness = {
 				}
 				isDone = true;
 				data.warned = warns.length;
-				for (var i = 0; i < warns.length; i++) {
+				for ( var i = 0; i < warns.length; i++) {
 					var $t = $('#' + warns[i].id);
 					var $li = $t.find('.qunit-assert-list > li:nth-child('
 							+ warns[i].anum + ')');
@@ -956,9 +956,34 @@ var Harness = {
 		});
 		QUnit.done(function(data) {
 			Harness.currentRun.done(data);
-			// See
-			// https://github.com/axemclion/grunt-saucelabs#test-result-details-with-qunit
-			window.global_test_results = data;
+		});
+		// See
+		// https://github.com/axemclion/grunt-saucelabs#test-result-details-with-qunit
+		var log = [];
+		QUnit.done(function(test_results) {
+			var tests = log.map(function(details) {
+				return {
+					name : details.name,
+					result : details.result,
+					expected : details.expected,
+					actual : details.actual,
+					source : details.source
+				};
+			});
+			test_results.tests = tests;
+			// delaying results a bit cause in real-world
+			// scenario you won't get them immediately
+			setTimeout(function() {
+				window.global_test_results = test_results;
+			}, 2000);
+		});
+		QUnit.testStart(function(testDetails) {
+			QUnit.log(function(details) {
+				if (!details.result) {
+					details.name = testDetails.name;
+					log.push(details);
+				}
+			});
 		});
 	}
 };

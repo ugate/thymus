@@ -39,6 +39,10 @@
 	var firstRun = true;
 	var rootRun = true;
 
+	if (typeof $ === 'undefined') {
+		throw new Error('jQuery is required for ' + NS);
+	}
+
 	/*!@include	cache.js */
 	/*!@include event.js */
 	/*!@include nav.js */

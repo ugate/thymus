@@ -8,7 +8,7 @@
 var winVer = "Windows 8.1";
 var winIEVer = "11";
 var winFFVer = "27";
-var winChromeVer = "32";
+var winChromeVer = "33";
 
 // Windows Legacy
 var winLeg1Ver = "Windows 8";
@@ -19,7 +19,7 @@ var winLeg2IEVer = "9";
 // Apple
 var osxVer = "OS X 10.9";
 var osxFFVer = "26";
-var osxChromeVer = "31";
+var osxChromeVer = "32";
 var osxSafariVer = "7";
 
 // Android
@@ -35,7 +35,7 @@ var browsers = [ {
 	"version" : osxSafariVer,
 	"platform" : osxVer
 }, {
-	"browserName" : "googlechrome",
+	"browserName" : "chrome",
 	"version" : osxChromeVer,
 	"platform" : osxVer
 }, {
@@ -59,7 +59,7 @@ var browsers = [ {
 	"version" : winLeg2IEVer,
 	"platform" : winLeg2Ver
 }, {
-	"browserName" : "googlechrome",
+	"browserName" : "chrome",
 	"version" : winChromeVer,
 	"platform" : winVer
 }, {
@@ -67,7 +67,7 @@ var browsers = [ {
 	"version" : winFFVer,
 	"platform" : winVer
 }, {
-	"browserName" : "googlechrome",
+	"browserName" : "chrome",
 	"version" : linuxChromeVer,
 	"platform" : "Linux"
 }, {
