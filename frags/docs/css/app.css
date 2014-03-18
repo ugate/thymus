@@ -102,13 +102,13 @@ img {
 }
 
 .logo-large {
-	height: 70px;
-	width: 220px;
+	height: 150px;
+/* 	width: 150px; */
 }
 
 .logo-small {
-	height: 32px;
-	width: 100px;
+	height: 50px;
+	width: 50px;
 }
 
 .thymus-well {

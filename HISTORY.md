@@ -1,4 +1,7 @@
-<!-- Commit 444672eadccf745c6d4b37a2d9f3b513c26006a2 -->
+<!-- Commit c9e8fc98a939f192086aadce4eb00e7c80ca0618 -->
+  * Release v1.0.0-beta.4 [skip saucelabs-qunit]
+  * Merge branch 'master' of https://github.com/ugate/thymus
+  * CI build updates
   * Release v1.0.0-beta.4 [skip saucelabs-qunit]
   * Release v1.0.0-beta.4
   * Release v1.0.0-beta.4 [skip saucelabs-qunit]
