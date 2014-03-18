@@ -11,6 +11,7 @@ var regexLines = /(\r?\n)/g;
 var regexDupLines = /^(.*)(\r?\n\1)+$/gm;
 var regexKey = /(https?:\/\/|:)+(?=[^:]*$)[a-z0-9]+(@)/gmi;
 var regexHost = /^https?\:\/\/([^\/?#]+)(?:[\/?#]|$)/i;
+var regexHref = /(\shref*=s*["|\'])(https?:\/\/github\.com.*?tarball\/master.*?)(["|\'])/gmi;
 var gitHubHostname = 'github';
 var gitHubRegexParam = /{(\?.+)}/;
 var gitHubReleaseTagName = 'tag_name';
@@ -53,7 +54,9 @@ module.exports = function(grunt) {
 					distAsset : true,
 					distAssetFormat : 'zip',
 					distAssetCompressRatio : 9,
-					gitHostname : gitHubHostname
+					gitHostname : gitHubHostname,
+					distAssetUpdateRegExp : regexHref,
+					distAssetUpdateFiles : []
 				});
 				release(this, options);
 			});
@@ -236,6 +239,9 @@ module.exports = function(grunt) {
 				grunt.log.writeln(copyRecursiveSync(destPath, ghPath,
 						options.destExcludeDirRegExp,
 						options.destExcludeFileRegExp).toString());
+				// replace any content that need to be updated with the new
+				// asset URL
+				updatePublishAssetContent(ghPath);
 				// cmd('cp -r ' + pth.join(destPath, '*') + ' ' + ghPath);
 				cmd('git fetch origin ' + options.destBranch);
 				cmd('git checkout -q --track origin/' + options.destBranch);
@@ -271,6 +277,43 @@ module.exports = function(grunt) {
 				} catch (e) {
 					errors.log('Post publish failed!', e);
 				}
+			}
+		}
+
+		/**
+		 * Updates any content that needs to use the uploaded release asset
+		 * 
+		 * @param path
+		 *            the base path to that will be used to prefix each file
+		 *            used in the update process
+		 */
+		function updatePublishAssetContent(path) {
+			try {
+				// replace URLs that point to the old
+				if (commit.releaseAssetUrl && options.distAssetUpdateRegExp
+						&& options.distAssetUpdateFiles) {
+					var paths = options.distAssetUpdateFiles;
+					for (var i = 0; i < paths.length; i++) {
+						var p = pth.join(path, paths[i]), au = '';
+						var content = grunt.file.read(p, {
+							encoding : grunt.file.defaultEncoding
+						});
+						content = content.replace(
+								options.distAssetUpdateRegExp, function(m,
+										prefix, url, suffix) {
+									au = prefix + commit.releaseAssetUrl
+											+ suffix;
+									grunt.log.writeln('Replacing "' + m
+											+ '" with "' + au + '"');
+									return au;
+								});
+						if (au) {
+							grunt.file.write(p, content);
+						}
+					}
+				}
+			} catch (e) {
+				errors.log('Unable to update publish release asset URL', e);
 			}
 		}
 
@@ -538,6 +581,7 @@ module.exports = function(grunt) {
 										grunt.log.writeln('Asset ID '
 												+ cf[gitHubReleaseAssetId]
 												+ ' successfully uploaded');
+										setCommitAsset(cf);
 									} else {
 										errors.log('Asset upload failed!',
 												data2);
@@ -545,7 +589,9 @@ module.exports = function(grunt) {
 									try {
 										cbi();
 									} catch (e) {
-										// prevent cyclic error
+										// prevent
+										// cyclic
+										// error
 										errors.log(e);
 									}
 								} catch (e) {
@@ -557,7 +603,8 @@ module.exports = function(grunt) {
 						req2.on('error', function(e) {
 							cbi('Received error response', e);
 						});
-						// stream asset to remote host
+						// stream asset to
+						// remote host
 						fs.createReadStream(asset.path, {
 							'bufferSize' : 64 * 1024
 						}).pipe(req2);
@@ -655,6 +702,21 @@ module.exports = function(grunt) {
 				}
 			}
 		}
+
+		/**
+		 * Sets commit asset details on the commit object
+		 * 
+		 * @param cf
+		 *            the JSON object returned from the asset upload process
+		 */
+		function setCommitAsset(cf) {
+			if (!cf) {
+				return;
+			}
+			commit.releaseAssetUrl = 'https://github.com/' + commit.username
+					+ '/' + commit.reponame + '/releases/download/'
+					+ commit.versionTag + '/' + cf[gitHubReleaseName];
+		}
 	}
 
 	/**
@@ -669,7 +731,7 @@ module.exports = function(grunt) {
 		 * Logs one or more errors (can be {Error}, {Object} or {String})
 		 */
 		this.log = function() {
-			for ( var i = 0; i < arguments.length; i++) {
+			for (var i = 0; i < arguments.length; i++) {
 				if (util.isArray(arguments[i])) {
 					this.log(arguments[i]);
 				} else {

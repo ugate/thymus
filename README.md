@@ -1,4 +1,4 @@
-# <a href="http://thymusjs.org"><img src="artwrk/logo-black.png" /></a> 
+# <a href="http://thymusjs.org"><img src="artwrk/logo.png" /></a> 
 
 [![Build Status](https://travis-ci.org/ugate/thymus.png?branch=master)](https://travis-ci.org/ugate/thymus)
 

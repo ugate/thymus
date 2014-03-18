@@ -13,7 +13,7 @@
 							class="icon-bar"></span>
 					</button>
 					<a class="navbar-brand" th:href="@{/index.htm}" href="index.htm">
-						<img class="logo-small" src="artwrk/logo-white.png" />
+						<img class="logo-small" src="artwrk/logo-small.png" />
 					</a>
 				</div>
 				<div class="collapse navbar-collapse topnav-collapse">
@@ -37,12 +37,8 @@
 								class="fa fa-github app-icon-navbar app-tooltip-bottom"
 								title="View project on GitHub" th:title="#{github.view}"></i>
 						</a></li>
-						<li><a href="https://github.com/ugate/thymus/archive/v1.0.0-beta.3.tar.gz">
-								<i
-								class="fa fa-download app-icon-navbar app-tooltip-bottom"
-								title="Download .tar.gz file" th:title="#{github.download.gz}"></i>
-						</a></li>
-						<li><a href="https://github.com/ugate/thymus/archive/v1.0.0-beta.3.zip">
+						<li><a class="dl-link"
+							href="https://github.com/ugate/thymus/archive/v1.0.0-beta.3.zip">
 								<i class="fa fa-download app-icon-navbar app-tooltip-bottom"
 								title="Download .zip file" th:title="#{github.download.zip}"></i>
 						</a></li>

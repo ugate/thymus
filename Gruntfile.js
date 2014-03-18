@@ -129,6 +129,10 @@ module.exports = function(grunt) {
 							browsers : browsers
 						}
 					}
+				},
+
+				release : {
+					distAssetUpdateFiles : [ 'frags/nav/nav.htm' ]
 				}
 			});
 
