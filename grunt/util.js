@@ -160,5 +160,13 @@ module.exports = {
 	 */
 	getGitToken : function() {
 		return process.env.GH_TOKEN;
+	},
+
+	/**
+	 * @returns {___anonymous_regexRelease} used for extracting the version of
+	 *          the release
+	 */
+	getReleaseRegExp : function() {
+		return regexRelease;
 	}
 };

@@ -39,8 +39,10 @@ module.exports = function(grunt) {
 	// register task
 	grunt.registerTask('release',
 			'Release bundle using commit message (if present)', function() {
+				var rx = utilx.getReleaseRegExp();
 				var options = this.options({
 					src : process.cwd(),
+					releaseVersionRegExp : rx,
 					commitMessage : '',
 					destBranch : 'gh-pages',
 					destDir : 'dist',
@@ -48,9 +50,13 @@ module.exports = function(grunt) {
 					destExcludeFileRegExp : /.?\.zip.?/gmi,
 					chgLog : 'HISTORY.md',
 					authors : 'AUTHORS.md',
-					chgLogLinePrefix : '  * ',
+					chgLogLineFormat : '  * %s',
 					chgLogRequired : true,
+					chgLogSkipLineRegExp : new RegExp('.*' + rx + '.*\r?\n',
+							(rx.global ? 'g' : '') + (rx.multiline ? 'm' : '')
+									+ (rx.ignoreCase ? 'i' : '')),
 					authorsRequired : false,
+					authorsSkipLineRegExp : null,
 					distAsset : true,
 					distAssetFormat : 'zip',
 					distAssetCompressRatio : 9,
@@ -99,9 +105,10 @@ module.exports = function(grunt) {
 		// tag/release
 		var chgLogPath = pth.join(options.destDir, options.chgLog);
 		chgLogRtn = cmd('git --no-pager log ' + lastVerTag
-				+ '..HEAD --pretty=format:"' + options.chgLogLinePrefix
-				+ '%s" > ' + chgLogPath, null, false, chgLogPath,
-				'<!-- Commit ' + commit.number + ' -->\n');
+				+ '..HEAD --pretty=format:"' + options.chgLogLineFormat
+				+ '" > ' + chgLogPath, null, false, chgLogPath,
+				options.chgLogSkipLineRegExp, '<!-- Commit ' + commit.number
+						+ ' -->\n');
 		if (options.chgLogRequired && !validateFile(chgLogPath)) {
 			return done();
 		}
@@ -109,7 +116,8 @@ module.exports = function(grunt) {
 		// Generate list of authors/contributors since last tag/release
 		var authorsPath = pth.join(options.destDir, options.authors);
 		authorsRtn = cmd('git log --all --format="%aN <%aE>" | sort -u > '
-				+ authorsPath, null, false, authorsPath);
+				+ authorsPath, null, false, authorsPath,
+				options.authorsSkipLineRegExp);
 		if (options.authorsRequired && !validateFile(authorsPath)) {
 			return done();
 		}
@@ -330,10 +338,14 @@ module.exports = function(grunt) {
 		 * @param dupsPath
 		 *            path to the command output that will be read, duplicate
 		 *            entry lines removed and re-written
+		 * @param dupsSkipLineRegExp
+		 *            an optional {RegExp} to use for eliminating specific
+		 *            content from the output (only used when in conjunction
+		 *            with a valid duplicate path)
 		 * @param dupsPrefix
 		 *            an optional prefix to the duplication replacement path
 		 */
-		function cmd(c, wpath, nofail, dupsPath, dupsPrefix) {
+		function cmd(c, wpath, nofail, dupsPath, dupsSkipLineRegExp, dupsPrefix) {
 			grunt.log.writeln(c);
 			var rtn = null;
 			if (typeof c === 'string') {
@@ -367,8 +379,13 @@ module.exports = function(grunt) {
 					});
 				}
 				if (output) {
+					// replace duplicate lines
 					output = (dupsPrefix ? dupsPrefix : '')
 							+ output.replace(regexDupLines, '$1');
+					if (util.isRegExp(dupsSkipLineRegExp)) {
+						// optionally skip lines that match expression
+						output = output.replace(dupsSkipLineRegExp, '');
+					}
 					grunt.file.write(dupsPath, output);
 				}
 			}

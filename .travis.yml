@@ -16,6 +16,7 @@ addons:
   - thymus-test-host
 deploy:
   provider: npm
+  email: ugate.public@gmail.com
   on:
     tags: true
   api_key:
