@@ -1,18 +1,6 @@
-<!-- Commit bdefffe98c318a3bddc8ee908cf4ce7637d51cb0 -->
-  * Release v1.0.0-beta.4
-  * Release v1.0.0-beta.4 [skip saucelabs-qunit]
+<!-- Commit 5d3e44a3217b44adff58cefab26bf5a3b16aff15 -->
   * Merge branch 'master' of https://github.com/ugate/thymus
   * CI build updates
-  * Release v1.0.0-beta.4 [skip saucelabs-qunit]
-  * Release v1.0.0-beta.4
-  * Release v1.0.0-beta.4 [skip saucelabs-qunit]
-  * Release v1.0.0-beta.4[skip saucelabs-qunit] [skip ci]
-  * Release v1.0.0-beta.4 [skip saucelabs-qunit]
-  * Release v1.0.0-beta.4
-  * Release v1.0.0-beta.4 [skip saucelabs-qunit]
-  * Release v1.0.0-beta.4
-  * Release v1.0.0-beta.4 [skip ci]
-  * Release v1.0.0-beta.4
   * Initial release site
   * Initial dist
   * Separated JS sources using inclusion versus raw concatenation to avoid JS prefixes/suffixes. Also, permits pre-build inclusion.
