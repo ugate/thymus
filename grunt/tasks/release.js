@@ -128,12 +128,10 @@ module.exports = function(grunt) {
 		cmd('git config --global user.name "travis"');
 		cmd('git remote rm origin');
 		cmd('git remote add origin https://' + commit.username + ':' + link);
-		// cmd('git checkout master');
 
 		// Commit changes to master (needed to generate archive asset)
 		cmd('git add --force ' + options.destDir);
 		cmd('git commit -q -m "' + relMsg + '"');
-		// cmd('git push -f origin master');
 
 		// Create distribution assets
 		var distAsset = commit.reponame + '-' + commit.version + '-dist.'
@@ -249,7 +247,9 @@ module.exports = function(grunt) {
 						options.destExcludeFileRegExp).toString());
 				// replace any content that need to be updated with the new
 				// asset URL
-				updatePublishAssetContent(ghPath);
+				if (updatePublishAssetContent(ghPath)) {
+					cmd('git commit -q -m "' + relMsg + '"');
+				}
 				// cmd('cp -r ' + pth.join(destPath, '*') + ' ' + ghPath);
 				cmd('git fetch origin ' + options.destBranch);
 				cmd('git checkout -q --track origin/' + options.destBranch);
@@ -294,6 +294,8 @@ module.exports = function(grunt) {
 		 * @param path
 		 *            the base path to that will be used to prefix each file
 		 *            used in the update process
+		 * @returns {String} the replaced URL (undefined if nothing was
+		 *          replaced)
 		 */
 		function updatePublishAssetContent(path) {
 			try {
@@ -317,6 +319,7 @@ module.exports = function(grunt) {
 								});
 						if (au) {
 							grunt.file.write(p, content);
+							return au;
 						}
 					}
 				}
