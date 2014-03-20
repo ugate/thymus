@@ -52,9 +52,9 @@ module.exports = function(grunt) {
 					authors : 'AUTHORS.md',
 					chgLogLineFormat : '  * %s',
 					chgLogRequired : true,
-					chgLogSkipLineRegExp : new RegExp('.*' + rx + '.*\r?\n',
-							(rx.global ? 'g' : '') + (rx.multiline ? 'm' : '')
-									+ (rx.ignoreCase ? 'i' : '')),
+					chgLogSkipLineRegExp : new RegExp('.*' + rx.source
+							+ '.*\r?\n', 'g' + (rx.multiline ? 'm' : '')
+							+ (rx.ignoreCase ? 'i' : '')),
 					authorsRequired : false,
 					authorsSkipLineRegExp : null,
 					distAsset : true,

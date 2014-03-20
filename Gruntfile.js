@@ -132,7 +132,9 @@ module.exports = function(grunt) {
 				},
 
 				release : {
-					distAssetUpdateFiles : [ 'frags/nav/nav.htm' ]
+					options : {
+						distAssetUpdateFiles : [ 'frags/nav/nav.htm' ]
+					}
 				}
 			});
 
