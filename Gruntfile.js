@@ -4,6 +4,8 @@ var browsers = require('./grunt/browsers');
 var fabricator = require('./grunt/fabricator');
 var util = require('./grunt/util');
 fabricator.basePath = '.';
+var regexDistUrl = /(\shref\s*=\s*["|\']?)(\s*https?:\/\/github\.com.*?(?:tar|zip)ball\/master.*?)(["|\']?)/gmi;
+var regexDistTitle = /(<title[^>]*>)([\S\s]*)(<\/title>)/gmi;
 
 module.exports = function(grunt) {
 
@@ -133,7 +135,30 @@ module.exports = function(grunt) {
 
 				release : {
 					options : {
-						distAssetUpdateFiles : [ 'frags/nav/nav.htm' ]
+						distAssetUpdateFiles : [ 'frags/nav/nav.htm',
+								'frags/head.htm' ],
+						distAssetUpdateFunction : function(contents, path,
+								commit) {
+							if (commit.releaseAssetUrl) {
+								// replace master zip/tarball with released
+								// asset download URL
+								contents = contents.replace(regexDistUrl,
+										function(m, prefix, url, suffix) {
+											var au = prefix
+													+ commit.releaseAssetUrl
+													+ suffix;
+											grunt.log.writeln('Replacing "' + m
+													+ '" with "' + au + '"');
+											return au;
+										});
+							}
+							if (commit.version) {
+								// add version to the title
+								contents = contents.replace(regexDistTitle,
+										'$1$2 ' + commit.version + '$3');
+							}
+							return contents;
+						}
 					}
 				}
 			});

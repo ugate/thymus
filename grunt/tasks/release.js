@@ -11,7 +11,6 @@ var regexLines = /(\r?\n)/g;
 var regexDupLines = /^(.*)(\r?\n\1)+$/gm;
 var regexKey = /(https?:\/\/|:)+(?=[^:]*$)[a-z0-9]+(@)/gmi;
 var regexHost = /^https?\:\/\/([^\/?#]+)(?:[\/?#]|$)/i;
-var regexHref = /(\shref\s*=\s*["|\']?)(\s*https?:\/\/github\.com.*?(?:tar|zip)ball\/master.*?)(["|\']?)/gmi;
 var gitHubHostname = 'github';
 var gitHubRegexParam = /{(\?.+)}/;
 var gitHubReleaseTagName = 'tag_name';
@@ -61,7 +60,7 @@ module.exports = function(grunt) {
 					distAssetFormat : 'zip',
 					distAssetCompressRatio : 9,
 					gitHostname : gitHubHostname,
-					distAssetUpdateRegExp : regexHref,
+					distAssetUpdateFunction : null,
 					distAssetUpdateFiles : []
 				});
 				release(this, options);
@@ -245,11 +244,6 @@ module.exports = function(grunt) {
 				grunt.log.writeln(copyRecursiveSync(destPath, ghPath,
 						options.destExcludeDirRegExp,
 						options.destExcludeFileRegExp).toString());
-				// replace any content that need to be updated with the new
-				// asset URL
-				if (updatePublishAssetContent(ghPath)) {
-					cmd('git commit -q -m "' + relMsg + '"');
-				}
 				// cmd('cp -r ' + pth.join(destPath, '*') + ' ' + ghPath);
 				cmd('git fetch origin ' + options.destBranch);
 				cmd('git checkout -q --track origin/' + options.destBranch);
@@ -260,6 +254,7 @@ module.exports = function(grunt) {
 				grunt.log.writeln(copyRecursiveSync(ghPath, commit.buildDir)
 						.toString());
 				// cmd('cp -r ' + pth.join(ghPath, '*') + ' .');
+				updatePublishAssets(commit.buildDir);
 				cmd('git add -A && git commit -m "' + relMsg + '"');
 				cmd('git push -f origin ' + options.destBranch);
 
@@ -289,7 +284,7 @@ module.exports = function(grunt) {
 		}
 
 		/**
-		 * Updates any content that needs to use the uploaded release asset
+		 * Updates any publishing asset content
 		 * 
 		 * @param path
 		 *            the base path to that will be used to prefix each file
@@ -297,28 +292,20 @@ module.exports = function(grunt) {
 		 * @returns {String} the replaced URL (undefined if nothing was
 		 *          replaced)
 		 */
-		function updatePublishAssetContent(path) {
+		function updatePublishAssets(path) {
 			try {
-				// replace URLs that point to the old
-				if (commit.releaseAssetUrl && options.distAssetUpdateRegExp
-						&& options.distAssetUpdateFiles) {
+				if (options.distAssetUpdateFiles
+						&& typeof options.distAssetUpdateFunction === 'function') {
 					var paths = options.distAssetUpdateFiles;
 					for (var i = 0; i < paths.length; i++) {
 						var p = pth.join(path, paths[i]), au = '';
 						var content = grunt.file.read(p, {
 							encoding : grunt.file.defaultEncoding
 						});
-						content = content.replace(
-								options.distAssetUpdateRegExp, function(m,
-										prefix, url, suffix) {
-									au = prefix + commit.releaseAssetUrl
-											+ suffix;
-									grunt.log.writeln('Replacing "' + m
-											+ '" with "' + au + '"');
-									return au;
-								});
-						if (au) {
-							grunt.file.write(p, content);
+						var ec = options.distAssetUpdateFunction(content, p,
+								commit);
+						if (content !== ec) {
+							grunt.file.write(p, ec);
 							return au;
 						}
 					}
