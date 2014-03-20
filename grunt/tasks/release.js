@@ -51,7 +51,7 @@ module.exports = function(grunt) {
 					authors : 'AUTHORS.md',
 					chgLogLineFormat : '  * %s',
 					chgLogRequired : true,
-					chgLogSkipLineRegExp : new RegExp('.*' + rx.source
+					chgLogSkipLineRegExp : new RegExp('.*(?:' + rx.source + ')|(\[skip\s*CHANGELOG\])'
 							+ '.*\r?\n', 'g' + (rx.multiline ? 'm' : '')
 							+ (rx.ignoreCase ? 'i' : '')),
 					authorsRequired : false,

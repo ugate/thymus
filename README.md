@@ -1,6 +1,6 @@
 # <a href="http://thymusjs.org"><img src="artwrk/logo.png" /></a> 
 
-[![Build Status](https://travis-ci.org/ugate/thymus.png?branch=master)](https://travis-ci.org/ugate/thymus)
+[![NPM version](https://badge.fury.io/js/thymus.png)](http://badge.fury.io/js/thymus) [![Build Status](https://travis-ci.org/ugate/thymus.png?branch=master)](https://travis-ci.org/ugate/thymus) [![Coveralls Status](https://coveralls.io/repos/ugate/thymus/badge.png)](https://coveralls.io/r/ugate/thymus) [![devDependency Status](https://david-dm.org/ugate/thymus/dev-status.png)](https://david-dm.org/ugate/thymus#info=devDependencies)
 
 [![Selenium Test Status](https://saucelabs.com/browser-matrix/thymus.svg)](https://saucelabs.com/u/thymus)
 
