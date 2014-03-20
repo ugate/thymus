@@ -19,7 +19,7 @@ var winLeg2IEVer = "9";
 // Apple
 var osxVer = "OS X 10.9";
 var osxFFVer = "26";
-var osxChromeVer = "32";
+var osxChromeVer = "31";
 var osxSafariVer = "7";
 
 // Android

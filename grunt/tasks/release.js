@@ -11,7 +11,7 @@ var regexLines = /(\r?\n)/g;
 var regexDupLines = /^(.*)(\r?\n\1)+$/gm;
 var regexKey = /(https?:\/\/|:)+(?=[^:]*$)[a-z0-9]+(@)/gmi;
 var regexHost = /^https?\:\/\/([^\/?#]+)(?:[\/?#]|$)/i;
-var regexHref = /(\shref*=s*["|\'])(https?:\/\/github\.com.*?tarball\/master.*?)(["|\'])/gmi;
+var regexHref = /(\shref\s*=\s*["|\']?)(\s*https?:\/\/github\.com.*?(?:tar|zip)ball\/master.*?)(["|\']?)/gmi;
 var gitHubHostname = 'github';
 var gitHubRegexParam = /{(\?.+)}/;
 var gitHubReleaseTagName = 'tag_name';
